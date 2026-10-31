@@ -1,0 +1,40 @@
+# Ruby / Rails
+/.bundle
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/tmp/pids/*
+!/tmp/pids/
+!/tmp/pids/.keep
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/
+!/tmp/storage/.keep
+/config/*.key
+/config/credentials/*.key
+/.env*
+!/.env.example
+
+# Vite
+/public/vite*
+/node_modules
+node_modules/
+*.local
+
+# Tests
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/spec/examples.txt
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Agents (local-only settings)
+/.agents/settings.local.json
+

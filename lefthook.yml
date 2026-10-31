@@ -1,0 +1,19 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: rubocop
+      glob: "*.{rb,rake}"
+      run: bin/rubocop --force-exclusion {staged_files}
+
+    - name: eslint
+      glob: "*.{js,ts,tsx}"
+      run: pnpm exec eslint --no-warn-ignored {staged_files}
+
+    - name: prettier
+      glob: "*.{js,ts,tsx,css,json,md,yml,yaml}"
+      file_types: [not symlink]
+      run: pnpm exec prettier --check --ignore-unknown {staged_files}
+
+    - name: typecheck
+      glob: "*.{ts,tsx}"
+      run: pnpm typecheck

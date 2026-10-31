@@ -1,0 +1,9 @@
+public/
+tmp/
+vendor/
+log/
+coverage/
+pnpm-lock.yaml
+playwright-report/
+test-results/
+.agents/
