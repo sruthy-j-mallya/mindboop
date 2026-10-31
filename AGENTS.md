@@ -4,7 +4,7 @@ Read `README.md` for the stack and commands. Agent config lives in `.agents/` (`
 
 ## Conventions
 
-- Plans go in `.agents/plans/NNN-slug/PLAN.md`; update the plan's status when work lands.
+- Plans go in `.agents/plans/NNN-slug.md` (one file per plan, no folder); update the plan's status when work lands.
 - Toolchain is pinned in `mise.toml`; run commands through mise (`mise exec -- …` or an activated shell).
 - Use pnpm, never npm/yarn. New build-script deps must be added to `allowBuilds` in `pnpm-workspace.yaml`.
 - TypeScript is pinned to 6.x until typescript-eslint supports TS 7.
