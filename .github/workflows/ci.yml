@@ -52,8 +52,8 @@ jobs:
         run: pnpm test
       - name: Prepare database
         run: bin/rails db:prepare
-      - name: RSpec
-        run: bundle exec rspec
+      - name: Rails tests
+        run: bin/rails test
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
       - name: Playwright

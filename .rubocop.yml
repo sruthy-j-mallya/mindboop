@@ -1,8 +1,77 @@
 # Omakase Ruby styling for Rails
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
-# Overwrite or add rules to create your own house style
-#
-# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
-# Layout/SpaceInsideArrayLiteralBrackets:
-#   Enabled: false
+# House additions on top of omakase (see .agents/rules/code-standards.md)
+Bundler/OrderedGems:
+  Enabled: true
+
+Rails/Date:
+  Enabled: true
+
+Rails/TimeZone:
+  Enabled: true
+
+Layout/ClassStructure:
+  Enabled: true
+  Categories:
+    module_inclusion:
+      - include
+      - prepend
+      - extend
+      - has_secure_password
+    scopes:
+      - scope
+    attributes:
+      - attribute
+      - attr_accessor
+      - attr_reader
+      - attr_writer
+      - normalizes
+    enums:
+      - enum
+    delegates:
+      - delegate
+    associations:
+      - belongs_to
+      - has_one
+      - has_many
+      - has_and_belongs_to_many
+    validations:
+      - validates
+      - validate
+      - validates_with
+    callbacks:
+      - before_validation
+      - after_validation
+      - before_save
+      - around_save
+      - after_save
+      - before_create
+      - around_create
+      - after_create
+      - before_update
+      - around_update
+      - after_update
+      - before_destroy
+      - around_destroy
+      - after_destroy
+      - after_commit
+      - after_create_commit
+      - after_update_commit
+      - after_destroy_commit
+      - after_save_commit
+  ExpectedOrder:
+    - module_inclusion
+    - constants
+    - scopes
+    - attributes
+    - enums
+    - delegates
+    - associations
+    - validations
+    - callbacks
+    - public_class_methods
+    - initializer
+    - public_methods
+    - protected_methods
+    - private_methods

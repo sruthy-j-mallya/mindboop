@@ -12,7 +12,7 @@ CI.run do
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
 
   step "Tests: Vitest", "pnpm test"
-  step "Tests: RSpec", "bundle exec rspec"
+  step "Tests: Rails", "bin/rails test"
   step "Tests: Playwright", "pnpm e2e"
 
   # Optional: set a green GitHub commit status to unblock PR merge.

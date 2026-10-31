@@ -1,4 +1,5 @@
 import * as React from "react";
+
 import { cn } from "cn";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
@@ -67,4 +68,4 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
