@@ -1,0 +1,108 @@
+/*
+ * Mind Boop design tokens.
+ * Source: Figma Make "Design System for MindBoop" (src/styles/theme.css).
+ * Brand tokens are raw palette values; components should use the semantic tokens.
+ */
+
+:root {
+  /* Typography (Inter, as used by Notion, with Notion's system fallback stack) */
+  --font-family-sans:
+    "Inter Variable", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display",
+    "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-family-display: var(--font-family-sans);
+  --font-size: 16px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* Brand palette (from the Mind Boop logo) */
+  --brand-coral: #f5a392;
+  --brand-coral-light: #ffb8a8;
+  --brand-coral-dark: #e88b7a;
+  --brand-purple: #5a2855;
+  --brand-purple-light: #7a3875;
+  --brand-purple-dark: #3a1835;
+  --brand-beige: #e5c9a8;
+  --brand-yellow: #ffc757;
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Semantic colors — light */
+  --background: #fefcfb;
+  --foreground: #1f1417;
+  --card: #ffffff;
+  --card-foreground: #1f1417;
+  --popover: #ffffff;
+  --popover-foreground: #1f1417;
+  --primary: #5a2855;
+  --primary-foreground: #ffffff;
+  --secondary: #f5a392;
+  --secondary-foreground: #1f1417;
+  --muted: #f8f3f0;
+  --muted-foreground: #6b5a5d;
+  --accent: #f5e5f3;
+  --accent-foreground: #1f1417;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e5d7d3;
+  --input: transparent;
+  --input-background: #fbf6f4;
+  --switch-background: #d4c5c1;
+  --ring: #5a2855;
+
+  --chart-1: #5a2855;
+  --chart-2: #f5a392;
+  --chart-3: #ffc757;
+  --chart-4: #e5c9a8;
+  --chart-5: #7a3875;
+
+  --sidebar: #fefcfb;
+  --sidebar-foreground: #1f1417;
+  --sidebar-primary: #5a2855;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5e5f3;
+  --sidebar-accent-foreground: #1f1417;
+  --sidebar-border: #e5d7d3;
+  --sidebar-ring: #5a2855;
+}
+
+.dark {
+  /* Semantic colors — dark (brand palette is unchanged) */
+  --background: #1a0f12;
+  --foreground: #f8f3f0;
+  --card: #251719;
+  --card-foreground: #f8f3f0;
+  --popover: #251719;
+  --popover-foreground: #f8f3f0;
+  --primary: #9a5895;
+  --primary-foreground: #ffffff;
+  --secondary: #ffb8a8;
+  --secondary-foreground: #1a0f12;
+  --muted: #2d1f22;
+  --muted-foreground: #b5a4a7;
+  --accent: #3a1f35;
+  --accent-foreground: #c78bc2;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8f3f0;
+  --border: #3d2b2e;
+  --input: transparent;
+  --input-background: #2d1f22;
+  --switch-background: #4a3639;
+  --ring: #9a5895;
+
+  --chart-1: #9a5895;
+  --chart-2: #ffb8a8;
+  --chart-3: #ffd484;
+  --chart-4: #e5c9a8;
+  --chart-5: #c78bc2;
+
+  --sidebar: #1a0f12;
+  --sidebar-foreground: #f8f3f0;
+  --sidebar-primary: #9a5895;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #3a1f35;
+  --sidebar-accent-foreground: #c78bc2;
+  --sidebar-border: #3d2b2e;
+  --sidebar-ring: #9a5895;
+}

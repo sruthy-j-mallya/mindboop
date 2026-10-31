@@ -19,7 +19,7 @@ export function SignupPage() {
         signup.mutate(formValues(event, "email_address", "password", "password_confirmation"))
       }
       footer={
-        <Link to="/login" className="underline">
+        <Link to="/login" className="text-primary underline-offset-4 hover:underline">
           Already have an account? Sign in
         </Link>
       }

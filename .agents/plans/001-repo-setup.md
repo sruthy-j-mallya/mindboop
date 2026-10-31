@@ -34,13 +34,13 @@ vite_ruby, with a pnpm workspace (`packages/*`) for shared JS packages.
 
 - `.agents/` is the canonical directory for agent config (plans, skills, settings).
 - `.claude -> .agents` symlink so Claude Code picks it up.
-- Plans live in `.agents/plans/NNN-slug/PLAN.md`.
+- Plans live in `.agents/plans/NNN-slug.md` (one file per plan, no folder).
 
 ## Target layout
 
 ```
 .
-├── .agents/plans/001-repo-setup/PLAN.md
+├── .agents/plans/001-repo-setup.md
 ├── .claude -> .agents
 ├── .github/workflows/ci.yml
 ├── app/

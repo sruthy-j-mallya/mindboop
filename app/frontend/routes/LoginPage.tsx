@@ -18,10 +18,10 @@ export function LoginPage() {
       onSubmit={(event) => login.mutate(formValues(event, "email_address", "password"))}
       footer={
         <>
-          <Link to="/passwords/new" className="underline">
+          <Link to="/passwords/new" className="text-primary underline-offset-4 hover:underline">
             Forgot password?
           </Link>
-          <Link to="/signup" className="underline">
+          <Link to="/signup" className="text-primary underline-offset-4 hover:underline">
             Create an account
           </Link>
         </>
