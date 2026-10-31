@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("sign up, sign out and sign back in", async ({ page }) => {
-  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+  const email = `e2e-${crypto.randomUUID()}@example.com`;
   const password = "password123";
 
   await page.goto("/");

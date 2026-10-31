@@ -6,9 +6,11 @@ Rails 8.1 + React 19 monorepo. Rails serves a JSON API and an SPA shell; the Rea
 ## Stack
 
 - **Backend:** Rails 8.1, PostgreSQL, Rails 8 cookie-session auth (JSON endpoints under `/api`)
-- **Frontend:** React 19, TypeScript, React Router, TanStack Query, Tailwind CSS v4, shadcn/ui
+- **Backend extras:** Pundit (authorization), Jbuilder (JSON views)
+- **Frontend:** React 19, TypeScript, React Router, TanStack Query, axios, React Hook Form + Zod, Tailwind CSS v4,
+  shadcn/ui
 - **Tooling:** mise (Ruby/Node/pnpm), pnpm workspaces (`packages/*`), foreman, Lefthook
-- **Tests:** RSpec + FactoryBot, Vitest + Testing Library, Playwright
+- **Tests:** Minitest + FactoryBot, Vitest + Testing Library, Playwright
 - **Lint:** RuboCop (omakase), ESLint, Prettier, Brakeman, bundler-audit
 
 ## Setup
@@ -25,7 +27,7 @@ bin/setup        # bundle, pnpm install, db:prepare, then starts bin/dev
 | Command                                                           | What it does                                               |
 | ----------------------------------------------------------------- | ---------------------------------------------------------- |
 | `bin/dev`                                                         | Rails on :3000 + Vite dev server (HMR)                     |
-| `bundle exec rspec`                                               | Backend specs                                              |
+| `bin/rails test`                                                  | Backend tests (Minitest)                                   |
 | `pnpm test`                                                       | Vitest component/unit tests                                |
 | `pnpm e2e`                                                        | Playwright end-to-end tests (boots a test server on :5100) |
 | `bin/rubocop`, `pnpm lint`, `pnpm format:check`, `pnpm typecheck` | Linters                                                    |
@@ -36,11 +38,14 @@ bin/setup        # bundle, pnpm install, db:prepare, then starts bin/dev
 ```
 app/controllers/api/     JSON API controllers
 app/controllers/spa_controller.rb   Serves the React shell for client routes
-app/frontend/            React app (entrypoints, routes, components, lib)
+app/policies/            Pundit policies
+app/views/api/           Jbuilder JSON views
+app/frontend/            React app (apis, hooks/reactQuery, components, constants, utils, routes.ts)
 packages/                Shared JS workspace packages
-spec/                    RSpec
+test/                    Minitest
+docs/                    API and architecture notes
 e2e/                     Playwright
-.agents/                 Agent config and plans (.claude symlinks here)
+.agents/                 Agent config, rules and plans (.claude symlinks here)
 ```
 
 ## Adding shadcn components

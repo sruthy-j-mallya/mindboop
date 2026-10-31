@@ -29,7 +29,7 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-/spec/examples.txt
+/coverage/
 
 # OS / editor
 .DS_Store

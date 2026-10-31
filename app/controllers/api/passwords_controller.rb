@@ -1,6 +1,8 @@
 module Api
   class PasswordsController < BaseController
     allow_unauthenticated_access
+    # Access is granted by the reset token, not a policy.
+    skip_after_action :verify_authorized
     before_action :set_user_by_token, only: :update
     rate_limit to: 10, within: 3.minutes, only: :create, with: :too_many_requests
 
@@ -13,7 +15,7 @@ module Api
     end
 
     def update
-      @user.update!(params.permit(:password, :password_confirmation))
+      @user.update!(password_params)
       @user.sessions.destroy_all
       head :no_content
     end
@@ -23,6 +25,10 @@ module Api
         @user = User.find_by_password_reset_token!(params[:token])
       rescue ActiveSupport::MessageVerifier::InvalidSignature
         render json: { error: "Password reset link is invalid or has expired." }, status: :not_found
+      end
+
+      def password_params
+        params.permit(:password, :password_confirmation)
       end
   end
 end
