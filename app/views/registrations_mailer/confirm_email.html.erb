@@ -1,0 +1,6 @@
+<p>
+  Confirm your email address and choose a password on
+  <%= link_to "this sign-up page", complete_signup_url(@token) %>.
+
+  This link will expire in <%= distance_of_time_in_words(0, User::SIGNUP_TOKEN_EXPIRES_IN) %>.
+</p>

@@ -1,7 +1,7 @@
 import http from "@/apis/axios";
 import type { UserResponse } from "@/apis/sessions";
 
-export type SignupPayload = { emailAddress: string; password: string; passwordConfirmation: string };
+export type SignupPayload = { token: string; password: string; passwordConfirmation: string };
 
 const create = (payload: SignupPayload) =>
   http.post<UserResponse>("/registration", payload).then(({ data }) => data);

@@ -6,7 +6,7 @@ import AuthCard from "@/components/commons/AuthCard";
 import FormField from "@/components/commons/FormField";
 import TextLink from "@/components/commons/TextLink";
 import { Button } from "@/components/ui/button";
-import { useSignup } from "@/hooks/reactQuery/useRegistrationsApi";
+import { useRequestEmailConfirmation } from "@/hooks/reactQuery/useEmailConfirmationsApi";
 import { useCurrentUser } from "@/hooks/reactQuery/useSessionsApi";
 import routes from "@/routes";
 
@@ -14,7 +14,13 @@ import { INITIAL_FORM_VALUES, SIGNUP_VALIDATION_SCHEMA, type SignupFormValues } 
 
 const Signup = () => {
   const { data: user } = useCurrentUser();
-  const { mutate: signup, isPending, error } = useSignup();
+  const {
+    mutate: requestEmailConfirmation,
+    isPending,
+    isSuccess,
+    error,
+    variables,
+  } = useRequestEmailConfirmation();
   const {
     register,
     handleSubmit,
@@ -24,40 +30,39 @@ const Signup = () => {
     resolver: zodResolver(SIGNUP_VALIDATION_SCHEMA),
   });
 
-  const handleSignup = (values: SignupFormValues) => signup(values);
+  const handleSignup = (values: SignupFormValues) => requestEmailConfirmation(values);
+
+  const signInLink = <TextLink to={routes.login}>Already have an account? Sign in</TextLink>;
 
   if (user) return <Navigate replace to={routes.root} />;
 
+  if (isSuccess) {
+    return (
+      <AuthCard
+        description={`We sent a link to ${variables.emailAddress}. Open it to confirm your email and finish creating your account.`}
+        footer={signInLink}
+        title="Check your email"
+      />
+    );
+  }
+
   return (
     <AuthCard
+      description="We'll email you a link to confirm your address."
       error={error?.message}
-      footer={<TextLink to={routes.login}>Already have an account? Sign in</TextLink>}
+      footer={signInLink}
       title="Create an account"
       onSubmit={handleSubmit(handleSignup)}
     >
       <FormField
-        autoComplete="username"
+        autoComplete="email"
         error={errors.emailAddress?.message}
         label="Email"
         type="email"
         {...register("emailAddress")}
       />
-      <FormField
-        autoComplete="new-password"
-        error={errors.password?.message}
-        label="Password"
-        type="password"
-        {...register("password")}
-      />
-      <FormField
-        autoComplete="new-password"
-        error={errors.passwordConfirmation?.message}
-        label="Confirm password"
-        type="password"
-        {...register("passwordConfirmation")}
-      />
       <Button disabled={isPending} type="submit">
-        Sign up
+        Continue
       </Button>
     </AuthCard>
   );

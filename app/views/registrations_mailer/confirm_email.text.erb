@@ -1,0 +1,4 @@
+Confirm your email address and choose a password on
+<%= complete_signup_url(@token) %>
+
+This link will expire in <%= distance_of_time_in_words(0, User::SIGNUP_TOKEN_EXPIRES_IN) %>.
