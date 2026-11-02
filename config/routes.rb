@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     resource :session, only: %i[ show create destroy ]
+    resources :email_confirmations, only: :create
     resource :registration, only: :create
     resources :passwords, param: :token, only: %i[ create update ]
   end
@@ -11,6 +12,7 @@ Rails.application.routes.draw do
 
   # Rendered by React; named so mailers can link to it.
   get "passwords/:token/edit", to: "spa#show", as: :edit_password
+  get "signup/:token", to: "spa#show", as: :complete_signup
 
   root "spa#show"
   get "*path", to: "spa#show", constraints: ->(req) { req.format.html? && !req.path.start_with?("/rails/") }

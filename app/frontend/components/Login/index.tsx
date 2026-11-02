@@ -34,7 +34,7 @@ const Login = () => {
       footer={
         <>
           <TextLink to={routes.passwords.new}>Forgot password?</TextLink>
-          <TextLink to={routes.signup}>Create an account</TextLink>
+          <TextLink to={routes.signup.new}>Create an account</TextLink>
         </>
       }
       onSubmit={handleSubmit(handleLogin)}
