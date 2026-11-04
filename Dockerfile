@@ -7,8 +7,11 @@
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
-# Make sure RUBY_VERSION matches the Ruby version in .ruby-version
+# Make sure RUBY_VERSION matches the Ruby version in .ruby-version, NODE_VERSION matches mise.toml
+# and PNPM_VERSION matches packageManager in package.json
 ARG RUBY_VERSION=4.0.9
+ARG NODE_VERSION=26
+ARG PNPM_VERSION=12.9.1
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 # Rails app lives here
@@ -52,6 +55,22 @@ COPY . .
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
 
+# Throw-away stage that builds the React frontend with Vite into public/vite
+FROM docker.io/library/node:$NODE_VERSION-slim AS frontend
+ARG PNPM_VERSION
+
+WORKDIR /rails
+
+RUN npm install --global pnpm@$PNPM_VERSION
+
+# Install JavaScript packages (skip Lefthook's git hook install; there is no .git here)
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages ./packages
+RUN LEFTHOOK=0 pnpm install --frozen-lockfile
+
+# Build the frontend
+COPY . .
+RUN pnpm build
 
 
 # Final stage for app image
@@ -65,6 +84,7 @@ USER 1000:1000
 # Copy built artifacts: gems, application
 COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=rails:rails --from=build /rails /rails
+COPY --chown=rails:rails --from=frontend /rails/public/vite /rails/public/vite
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
