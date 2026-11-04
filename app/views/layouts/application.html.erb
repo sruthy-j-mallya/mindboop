@@ -11,6 +11,18 @@
 
     <%= yield :head %>
 
+    <%# Applies the saved theme (or the OS preference) before first paint. useTheme.ts handles later changes. %>
+    <%= javascript_tag do %>
+      (() => {
+        let theme = null;
+        try {
+          theme = localStorage.getItem("theme");
+        } catch {}
+        const isDark = theme ? theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.classList.toggle("dark", isDark);
+      })();
+    <% end %>
+
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="apple-touch-icon" href="/icon.png">
 

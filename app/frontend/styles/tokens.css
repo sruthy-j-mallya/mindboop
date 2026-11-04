@@ -68,6 +68,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   /* Semantic colors — dark (brand palette is unchanged) */
   --background: #1a0f12;
   --foreground: #f8f3f0;

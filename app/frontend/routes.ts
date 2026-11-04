@@ -1,6 +1,7 @@
 const routes = {
   root: "/",
   login: "/login",
+  settings: "/settings",
   signup: {
     new: "/signup",
     // Rails mailers link here through the `complete_signup` route.
