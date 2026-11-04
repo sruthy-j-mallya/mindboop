@@ -33,6 +33,10 @@ bin/setup        # bundle, pnpm install, db:prepare, then starts bin/dev
 | `bin/rubocop`, `pnpm lint`, `pnpm format:check`, `pnpm typecheck` | Linters                                                    |
 | `bin/ci`                                                          | Run every CI step locally                                  |
 
+## Deployment
+
+Railway (Docker + Postgres, Solid Queue in Puma, Resend mail). See [docs/deployment.md](docs/deployment.md).
+
 ## Layout
 
 ```

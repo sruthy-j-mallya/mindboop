@@ -1,4 +1,5 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "from@example.com"
+  self.delivery_job = Mailers::DeliveryJob
+
   layout "mailer"
 end

@@ -36,6 +36,9 @@ module Mindboop
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
+    # Production overrides this from MAILER_FROM.
+    config.action_mailer.default_options = { from: "from@example.com" }
+
     # Don't generate system test files.
     config.generators.system_tests = nil
   end

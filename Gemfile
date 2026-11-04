@@ -16,6 +16,10 @@ gem "puma", ">= 5.0"
 gem "pundit", "~> 2.5"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.4"
+# Production mail through Resend's HTTP API [https://resend.com/docs/send-with-rails]
+gem "resend", "~> 1.0"
+# Database-backed Active Job backend [https://github.com/rails/solid_queue]
+gem "solid_queue", "~> 1.7"
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 # Vite integration for the React frontend [https://vite-ruby.netlify.app/]
