@@ -10,6 +10,8 @@ const CUSTOM_ERROR = /pick a preset or enter/i;
 const TITLE_ERROR = /say what you want to get done/i;
 
 const beginSession = () => userEvent.click(screen.getByRole("button", { name: "Begin" }));
+const addStep = (text: string) =>
+  userEvent.type(screen.getByRole("textbox", { name: "New step" }), `${text}{Enter}`);
 
 describe("QuickStart", () => {
   it("asks for a task before beginning a session", async () => {
@@ -63,6 +65,110 @@ describe("QuickStart", () => {
     await userEvent.click(step);
 
     expect(step).toBeChecked();
+  });
+
+  it("edits a step inline when its text is clicked, without ticking it", async () => {
+    renderWithProviders(<QuickStart />);
+    await addStep("Outline");
+
+    await userEvent.click(screen.getByText("Outline"));
+
+    expect(screen.getByRole("textbox", { name: "Step text" })).toHaveFocus();
+    expect(screen.getByRole("textbox", { name: "Step text" })).toHaveValue("Outline");
+    expect(screen.getByRole("checkbox", { name: "Outline" })).not.toBeChecked();
+  });
+
+  it("removes a step that is being edited", async () => {
+    renderWithProviders(<QuickStart />);
+    await addStep("First");
+    await addStep("Second");
+
+    await userEvent.click(screen.getByText("First"));
+    await userEvent.keyboard("Draft");
+    await userEvent.click(screen.getByRole("button", { name: "Remove First" }));
+
+    const steps = within(screen.getByRole("list", { name: "Steps" })).getAllByRole("listitem");
+    expect(steps.map((step) => step.textContent)).toEqual(["Second"]);
+  });
+
+  it("edits a trimmed step on Enter without submitting the form or losing its tick", async () => {
+    renderWithProviders(<QuickStart />);
+    await addStep("Outline");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Outline" }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit Outline" }));
+    const input = screen.getByRole("textbox", { name: "Step text" });
+    expect(input).toHaveFocus();
+    await userEvent.clear(input);
+    await userEvent.type(input, "  Write the outline  {Enter}");
+
+    expect(screen.getByRole("checkbox", { name: "Write the outline" })).toBeChecked();
+    expect(screen.queryByRole("textbox", { name: "Step text" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit Write the outline" })).toHaveFocus();
+    expect(screen.queryByText(TITLE_ERROR)).not.toBeInTheDocument();
+  });
+
+  it("saves an edit when focus leaves the input", async () => {
+    renderWithProviders(<QuickStart />);
+    await addStep("Outline");
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit Outline" }));
+    await userEvent.keyboard("Draft");
+    await userEvent.click(screen.getByRole("textbox", { name: "Task" }));
+
+    expect(screen.getByRole("checkbox", { name: "Draft" })).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Task" })).toHaveFocus();
+  });
+
+  it("discards an edit on Escape", async () => {
+    renderWithProviders(<QuickStart />);
+    await addStep("Outline");
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit Outline" }));
+    await userEvent.keyboard("Draft{Escape}");
+
+    expect(screen.getByRole("checkbox", { name: "Outline" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Edit Outline" })).toHaveFocus();
+  });
+
+  it("keeps the old text when an edit is left blank", async () => {
+    renderWithProviders(<QuickStart />);
+    await addStep("Outline");
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit Outline" }));
+    await userEvent.clear(screen.getByRole("textbox", { name: "Step text" }));
+    await userEvent.keyboard("   {Enter}");
+
+    expect(screen.getByRole("checkbox", { name: "Outline" })).toBeVisible();
+  });
+
+  it("removes a step and leaves the others intact", async () => {
+    renderWithProviders(<QuickStart />);
+    await addStep("First");
+    await addStep("Second");
+    await addStep("Third");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Third" }));
+
+    await userEvent.click(screen.getByRole("button", { name: "Remove Second" }));
+
+    expect(screen.queryByRole("checkbox", { name: "Second" })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "First" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Third" })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Add step" })).toHaveFocus();
+  });
+
+  it("keeps an edit when other steps are added and removed", async () => {
+    renderWithProviders(<QuickStart />);
+    await addStep("First");
+    await addStep("Second");
+
+    await userEvent.click(screen.getByRole("button", { name: "Edit Second" }));
+    await userEvent.keyboard("Edited{Enter}");
+    await addStep("Third");
+    await userEvent.click(screen.getByRole("button", { name: "Remove First" }));
+
+    const steps = within(screen.getByRole("list", { name: "Steps" })).getAllByRole("listitem");
+    expect(steps.map((step) => step.textContent)).toEqual(["Edited", "Third"]);
   });
 
   it("selects one timer at a time, starting from the first preset", async () => {

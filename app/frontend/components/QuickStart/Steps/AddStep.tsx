@@ -1,13 +1,16 @@
-import { type KeyboardEvent, useState } from "react";
+import { type KeyboardEvent, type Ref, useState } from "react";
 
 import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-type AddStepProps = { onAdd: (text: string) => void };
+type AddStepProps = {
+  buttonRef: Ref<HTMLButtonElement>;
+  onAdd: (text: string) => void;
+};
 
-const AddStep = ({ onAdd }: AddStepProps) => {
+const AddStep = ({ buttonRef, onAdd }: AddStepProps) => {
   const [draft, setDraft] = useState("");
 
   const handleAdd = () => {
@@ -37,6 +40,7 @@ const AddStep = ({ onAdd }: AddStepProps) => {
         onKeyDown={handleKeyDown}
       />
       <Button
+        ref={buttonRef}
         aria-label="Add step"
         className="bg-muted"
         size="icon"

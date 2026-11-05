@@ -66,3 +66,56 @@ test("reorder steps with the keyboard", async ({ page }) => {
 
   await expect(steps).toHaveText(["Second", "First"]);
 });
+
+test("edit a step, and keep the new text through a reorder", async ({ page }) => {
+  await signUp(page);
+  await addSteps(page, ["First", "Second", "Third"]);
+  const steps = page.getByRole("list", { name: "Steps" }).getByRole("listitem");
+
+  await page.getByRole("button", { name: "Edit First" }).click();
+  await page.getByRole("textbox", { name: "Step text" }).fill("Edited");
+  await page.keyboard.press("Enter");
+  await expect(steps).toHaveText(["Edited", "Second", "Third"]);
+
+  await dragOnto(page, page.getByRole("button", { name: "Reorder Edited" }), steps.nth(2));
+
+  await expect(steps).toHaveText(["Second", "Third", "Edited"]);
+});
+
+test("announce a step's edited text when reordering with the keyboard", async ({ page }) => {
+  await signUp(page);
+  await addSteps(page, ["First"]);
+
+  await page.getByRole("button", { name: "Edit First" }).click();
+  await page.getByRole("textbox", { name: "Step text" }).fill("Edited");
+  await page.keyboard.press("Enter");
+
+  await page.getByRole("button", { name: "Reorder Edited" }).focus();
+  await page.keyboard.press("Space");
+  await expect(page.getByRole("status")).toHaveText("Picked up Edited.");
+});
+
+test("cancel a step edit with Escape", async ({ page }) => {
+  await signUp(page);
+  await addSteps(page, ["First"]);
+
+  await page.getByRole("button", { name: "Edit First" }).click();
+  await page.getByRole("textbox", { name: "Step text" }).fill("Edited");
+  await page.keyboard.press("Escape");
+
+  await expect(page.getByRole("list", { name: "Steps" }).getByRole("listitem")).toHaveText(["First"]);
+  await expect(page.getByRole("button", { name: "Edit First" })).toBeFocused();
+});
+
+test("remove a step, and keep the ticks on the rest", async ({ page }) => {
+  await signUp(page);
+  await addSteps(page, ["First", "Second", "Third"]);
+  const steps = page.getByRole("list", { name: "Steps" }).getByRole("listitem");
+
+  await page.getByRole("checkbox", { name: "Third" }).check();
+  await page.getByRole("button", { name: "Remove First" }).click();
+
+  await expect(steps).toHaveText(["Second", "Third"]);
+  await expect(page.getByRole("checkbox", { name: "Third" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Second" })).not.toBeChecked();
+});

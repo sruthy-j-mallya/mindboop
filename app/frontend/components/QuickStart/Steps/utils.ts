@@ -1,18 +1,17 @@
-import type { Announcements, UniqueIdentifier } from "@dnd-kit/core";
+import type { Active, Announcements, Over } from "@dnd-kit/core";
+
+// Each Step passes its text as sortable data, since field array rows don't pick up edits.
+const textOf = ({ data }: Active | Over): string => data.current?.text;
 
 // dnd-kit announces raw ids by default, which are meaningless UUIDs for field array rows.
-export const getAnnouncements = (fields: { id: string; text: string }[]): Announcements => {
-  const textOf = (id: UniqueIdentifier) => fields.find((field) => field.id === id)?.text;
+export const STEP_ANNOUNCEMENTS: Announcements = {
+  onDragStart: ({ active }) => `Picked up ${textOf(active)}.`,
+  onDragOver: ({ active, over }) => {
+    if (!over || active.id === over.id) return undefined;
 
-  return {
-    onDragStart: ({ active }) => `Picked up ${textOf(active.id)}.`,
-    onDragOver: ({ active, over }) => {
-      if (!over || active.id === over.id) return undefined;
-
-      return `${textOf(active.id)} moved over ${textOf(over.id)}.`;
-    },
-    onDragEnd: ({ active, over }) =>
-      over ? `${textOf(active.id)} dropped over ${textOf(over.id)}.` : `${textOf(active.id)} dropped.`,
-    onDragCancel: ({ active }) => `Cancelled. ${textOf(active.id)} went back to where it was.`,
-  };
+    return `${textOf(active)} moved over ${textOf(over)}.`;
+  },
+  onDragEnd: ({ active, over }) =>
+    over ? `${textOf(active)} dropped over ${textOf(over)}.` : `${textOf(active)} dropped.`,
+  onDragCancel: ({ active }) => `Cancelled. ${textOf(active)} went back to where it was.`,
 };

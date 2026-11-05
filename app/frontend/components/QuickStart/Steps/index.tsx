@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 import {
   closestCenter,
   DndContext,
@@ -14,12 +16,13 @@ import { type Control, useFieldArray } from "react-hook-form";
 import type { QuickStartFormValues } from "../constants";
 import AddStep from "./AddStep";
 import Step from "./Step";
-import { getAnnouncements } from "./utils";
+import { STEP_ANNOUNCEMENTS } from "./utils";
 
 type StepsProps = { control: Control<QuickStartFormValues> };
 
 const Steps = ({ control }: StepsProps) => {
-  const { fields, append, move } = useFieldArray({ control, name: "steps" });
+  const { fields, append, move, remove } = useFieldArray({ control, name: "steps" });
+  const addButtonRef = useRef<HTMLButtonElement>(null);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -35,10 +38,16 @@ const Steps = ({ control }: StepsProps) => {
   // Focus stays on the add input so several steps can be typed in a row.
   const handleAdd = (text: string) => append({ text, isDone: false }, { shouldFocus: false });
 
+  // The focused button goes away with its row, and the add button is the one control that always remains.
+  const handleRemove = (index: number) => {
+    addButtonRef.current?.focus();
+    remove(index);
+  };
+
   return (
     <>
       <DndContext
-        accessibility={{ announcements: getAnnouncements(fields) }}
+        accessibility={{ announcements: STEP_ANNOUNCEMENTS }}
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}
         sensors={sensors}
@@ -46,13 +55,13 @@ const Steps = ({ control }: StepsProps) => {
       >
         <SortableContext items={fields} strategy={verticalListSortingStrategy}>
           <ul aria-label="Steps" className="flex flex-col gap-1 empty:hidden">
-            {fields.map(({ id, text }, index) => (
-              <Step key={id} control={control} id={id} index={index} text={text} />
+            {fields.map(({ id }, index) => (
+              <Step key={id} control={control} id={id} index={index} onRemove={handleRemove} />
             ))}
           </ul>
         </SortableContext>
       </DndContext>
-      <AddStep onAdd={handleAdd} />
+      <AddStep buttonRef={addButtonRef} onAdd={handleAdd} />
     </>
   );
 };
