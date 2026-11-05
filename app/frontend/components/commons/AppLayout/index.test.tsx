@@ -7,11 +7,9 @@ import AppLayout from "@/components/commons/AppLayout";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
 
-import { SIDEBAR_COOKIE_NAME } from "./constants";
-
 describe("AppLayout", () => {
   beforeEach(() => {
-    document.cookie = `${SIDEBAR_COOKIE_NAME}=; path=/; max-age=0`;
+    localStorage.clear();
   });
 
   it("offers Quick start as the only sidebar option and settings in the footer", () => {
