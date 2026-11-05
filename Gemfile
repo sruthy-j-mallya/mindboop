@@ -15,7 +15,7 @@ gem "puma", ">= 5.0"
 # Authorization policies [https://github.com/varvet/pundit]
 gem "pundit", "~> 2.5"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.4"
+gem "rails", "~> 8.1.4", ">= 8.1.4.1"
 # Production mail through Resend's HTTP API [https://resend.com/docs/send-with-rails]
 gem "resend", "~> 1.0"
 # Database-backed Active Job backend [https://github.com/rails/solid_queue]
