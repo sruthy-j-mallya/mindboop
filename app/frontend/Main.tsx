@@ -9,6 +9,7 @@ import QuickStart from "@/components/QuickStart";
 import ResetPassword from "@/components/ResetPassword";
 import Settings from "@/components/Settings";
 import Signup from "@/components/Signup";
+import Timer from "@/components/Timer";
 import routes from "@/routes";
 
 const Main = () => (
@@ -16,6 +17,7 @@ const Main = () => (
     <Route element={<PrivateRoute />}>
       <Route element={<AppLayout />}>
         <Route element={<QuickStart />} path={routes.root} />
+        <Route element={<Timer />} path={routes.timer} />
         <Route element={<Settings />} path={routes.settings} />
       </Route>
     </Route>

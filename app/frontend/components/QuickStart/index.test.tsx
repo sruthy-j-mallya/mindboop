@@ -1,9 +1,17 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { Route, Routes } from "react-router";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "@/apis/axios";
+import tasksApi, { type Task } from "@/apis/tasks";
+import timeLogsApi, { type TimeLog } from "@/apis/time_logs";
 import QuickStart from "@/components/QuickStart";
+import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
+
+const TASK = { id: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23", estimatedMinutes: 10 } as Task;
+const TIME_LOG = { id: "5b7c9e14-2a3d-4f60-8e1b-6c4d2f0a9b37", taskId: TASK.id } as TimeLog;
 
 const CUSTOM_LABEL = /set your own/i;
 const CUSTOM_ERROR = /pick a preset or enter/i;
@@ -13,7 +21,92 @@ const beginSession = () => userEvent.click(screen.getByRole("button", { name: "B
 const addStep = (text: string) =>
   userEvent.type(screen.getByRole("textbox", { name: "New step" }), `${text}{Enter}`);
 
+const renderWithTimerRoute = () =>
+  renderWithProviders(
+    <Routes>
+      <Route element={<QuickStart />} path={routes.root} />
+      <Route element={<p>Timer page</p>} path={routes.timer} />
+    </Routes>,
+  );
+
 describe("QuickStart", () => {
+  beforeEach(() => {
+    vi.spyOn(tasksApi, "create").mockResolvedValue({ task: TASK });
+    vi.spyOn(timeLogsApi, "create").mockResolvedValue({ timeLog: TIME_LOG });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it("creates the task, then a running time log, then opens the timer", async () => {
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "  Draft submitted  ");
+    await addStep("Outline");
+    await addStep("Introduction");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Introduction" }));
+    await userEvent.click(screen.getByRole("button", { name: "10 min" }));
+    await beginSession();
+
+    expect(await screen.findByText("Timer page")).toBeVisible();
+    expect(tasksApi.create).toHaveBeenCalledWith(
+      {
+        title: "Draft submitted",
+        estimatedMinutes: 10,
+        checklistItemsAttributes: [
+          { title: "Outline", isCompleted: false },
+          { title: "Introduction", isCompleted: true },
+        ],
+      },
+      expect.anything(),
+    );
+    const [[timeLog]] = vi.mocked(timeLogsApi.create).mock.calls;
+    expect(timeLog).toEqual({
+      taskId: TASK.id,
+      mode: "timer",
+      timerPreset: 10,
+      isRunning: true,
+      startedAt: expect.any(String),
+      currentRunStartedAt: timeLog.startedAt,
+    });
+  });
+
+  it("uses custom minutes as the estimate", async () => {
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), "25");
+    await beginSession();
+
+    await screen.findByText("Timer page");
+    expect(tasksApi.create).toHaveBeenCalledWith(
+      expect.objectContaining({ estimatedMinutes: 25 }),
+      expect.anything(),
+    );
+  });
+
+  it("stays on the form and creates no time log when the task can't be created", async () => {
+    vi.mocked(tasksApi.create).mockRejectedValue(new ApiError(422, "Title can't be blank"));
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    await beginSession();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Title can't be blank");
+    expect(timeLogsApi.create).not.toHaveBeenCalled();
+    expect(screen.queryByText("Timer page")).not.toBeInTheDocument();
+  });
+
+  it("removes the new task and stays on the form when the time log can't be created", async () => {
+    vi.mocked(timeLogsApi.create).mockRejectedValue(new ApiError(422, "Mode is not included in the list"));
+    const destroy = vi
+      .spyOn(tasksApi, "destroy")
+      .mockResolvedValue({} as Awaited<ReturnType<typeof tasksApi.destroy>>);
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    await beginSession();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Mode is not included in the list");
+    await waitFor(() => expect(destroy).toHaveBeenCalledWith(TASK.id, expect.anything()));
+    expect(screen.queryByText("Timer page")).not.toBeInTheDocument();
+  });
+
   it("asks for a task before beginning a session", async () => {
     renderWithProviders(<QuickStart />);
     await beginSession();

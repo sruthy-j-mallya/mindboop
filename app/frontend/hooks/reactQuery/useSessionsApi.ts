@@ -30,6 +30,10 @@ export const useLogout = () => {
 
   return useMutation({
     mutationFn: sessionsApi.destroy,
-    onSuccess: () => queryClient.setQueryData(QUERY_KEYS.SESSION, null),
+    onSuccess: () => {
+      queryClient.setQueryData(QUERY_KEYS.SESSION, null);
+      // The next person to sign in on this tab shouldn't see this user's session, even briefly.
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT });
+    },
   });
 };

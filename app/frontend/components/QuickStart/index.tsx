@@ -1,16 +1,25 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Timer } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useCreateTask, useDeleteTask } from "@/hooks/reactQuery/useTasksApi";
+import { useCreateTimeLog } from "@/hooks/reactQuery/useTimeLogsApi";
+import routes from "@/routes";
 
 import { INITIAL_FORM_VALUES, QUICK_START_VALIDATION_SCHEMA, type QuickStartFormValues } from "./constants";
 import Estimate from "./Estimate";
 import Steps from "./Steps";
+import { buildTaskPayload, buildTimeLogPayload } from "./utils";
 
 const QuickStart = () => {
+  const navigate = useNavigate();
+  const { mutate: createTask, isPending: isCreatingTask, error: taskError } = useCreateTask();
+  const { mutate: createTimeLog, isPending: isCreatingTimeLog, error: timeLogError } = useCreateTimeLog();
+  const { mutate: deleteTask } = useDeleteTask();
   const {
     control,
     register,
@@ -21,8 +30,17 @@ const QuickStart = () => {
     resolver: zodResolver(QUICK_START_VALIDATION_SCHEMA),
   });
 
-  // Sessions don't exist yet, so a valid submit has nothing to start.
-  const handleBeginSession = () => undefined;
+  const handleBeginSession = (values: QuickStartFormValues) =>
+    createTask(buildTaskPayload(values), {
+      onSuccess: ({ task }) =>
+        createTimeLog(buildTimeLogPayload(task), {
+          onSuccess: () => navigate(routes.timer),
+          // Trying again creates a new task, so this one mustn't stay behind as a duplicate.
+          onError: () => deleteTask(task.id),
+        }),
+    });
+
+  const errorMessage = (taskError ?? timeLogError)?.message;
 
   return (
     <form
@@ -59,7 +77,16 @@ const QuickStart = () => {
       </Card>
       <div className="flex flex-col gap-4">
         <Estimate control={control} />
-        <Button className="h-12 w-full text-base" type="submit">
+        {errorMessage && (
+          <p className="text-sm text-destructive" role="alert">
+            {errorMessage}
+          </p>
+        )}
+        <Button
+          className="h-12 w-full text-base"
+          disabled={isCreatingTask || isCreatingTimeLog}
+          type="submit"
+        >
           <Timer />
           Begin
         </Button>

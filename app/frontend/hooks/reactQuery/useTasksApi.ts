@@ -25,7 +25,10 @@ export const useCreateTask = () => {
 
   return useMutation({
     mutationFn: tasksApi.create,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS }),
+    onSuccess: ({ task }) => {
+      queryClient.setQueryData(QUERY_KEYS.TASKS.DETAIL(task.id), task);
+      return queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS });
+    },
   });
 };
 
@@ -52,6 +55,7 @@ export const useDeleteTask = () => {
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
       ]);
     },
   });

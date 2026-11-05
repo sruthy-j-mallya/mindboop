@@ -12,5 +12,6 @@ export const QUERY_KEYS = {
     LISTS: ["timeLogs", "list"],
     LIST: (params: TimeLogListParams) => ["timeLogs", "list", params],
     DETAIL: (id: string) => ["timeLogs", "detail", id],
+    CURRENT: ["timeLogs", "current"],
   },
 } as const;

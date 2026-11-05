@@ -6,6 +6,7 @@ Rails.application.routes.draw do
     resources :passwords, param: :token, only: %i[ create update ]
     resources :tasks, only: %i[ index show create update destroy ]
     resources :time_logs, only: %i[ index show create update destroy ]
+    resource :current_time_log, only: :show
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

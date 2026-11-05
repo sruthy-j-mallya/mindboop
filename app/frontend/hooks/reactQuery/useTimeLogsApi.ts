@@ -29,7 +29,11 @@ export const useCreateTimeLog = () => {
 
   return useMutation({
     mutationFn: timeLogsApi.create,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
+    onSuccess: ({ timeLog }) => {
+      // Seeded so the Timer page doesn't flash the previous session while it refetches.
+      queryClient.setQueryData(QUERY_KEYS.TIME_LOGS.CURRENT, timeLog);
+      return queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS });
+    },
   });
 };
 
@@ -40,7 +44,10 @@ export const useUpdateTimeLog = () => {
     mutationFn: timeLogsApi.update,
     onSuccess: ({ timeLog }) => {
       queryClient.setQueryData(QUERY_KEYS.TIME_LOGS.DETAIL(timeLog.id), timeLog);
-      return queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS });
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
+      ]);
     },
   });
 };
@@ -52,7 +59,10 @@ export const useDeleteTimeLog = () => {
     mutationFn: timeLogsApi.destroy,
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.TIME_LOGS.DETAIL(id) });
-      return queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS });
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
+      ]);
     },
   });
 };

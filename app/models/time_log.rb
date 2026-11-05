@@ -3,6 +3,7 @@ class TimeLog < ApplicationRecord
 
   # Deleting a task keeps its time logs in the database, but hides them along with the task.
   scope :active, -> { kept.joins(:task).merge(Task.kept) }
+  scope :in_progress, -> { where(completed_at: nil) }
 
   enum :mode, { timer: "timer", stopwatch: "stopwatch" }, validate: true
 
