@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_05_154402) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_154403) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -200,6 +200,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_154402) do
     t.index ["user_id"], name: "index_tasks_on_user_id"
   end
 
+  create_table "time_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "task_id", null: false
+    t.string "mode", null: false
+    t.integer "timer_preset"
+    t.integer "accumulated_elapsed_seconds", default: 0, null: false
+    t.integer "pause_count", default: 0, null: false
+    t.boolean "is_running", default: false, null: false
+    t.datetime "current_run_started_at"
+    t.datetime "started_at", null: false
+    t.datetime "completed_at"
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["discarded_at"], name: "index_time_logs_on_discarded_at"
+    t.index ["task_id"], name: "index_time_logs_on_task_id"
+  end
+
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email_address", null: false
     t.string "password_digest", null: false
@@ -219,4 +236,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_154402) do
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "tasks", "users"
+  add_foreign_key "time_logs", "tasks"
 end

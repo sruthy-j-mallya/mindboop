@@ -37,6 +37,11 @@ Every error response has one shape:
 | POST   | `/api/tasks`               | Task fields (`title` required)               | 201 `{ task }`              |
 | PATCH  | `/api/tasks/:id`           | Task fields                                  | 200 `{ task }`              |
 | DELETE | `/api/tasks/:id`           | –                                            | 204, soft delete            |
+| GET    | `/api/time_logs`           | `page`, `task_id` query params (optional)    | 200 `{ time_logs, … }`      |
+| GET    | `/api/time_logs/:id`       | –                                            | 200 `{ time_log }`          |
+| POST   | `/api/time_logs`           | `task_id`, Time log fields                   | 201 `{ time_log }`          |
+| PATCH  | `/api/time_logs/:id`       | Time log fields                              | 200 `{ time_log }`          |
+| DELETE | `/api/time_logs/:id`       | –                                            | 204, soft delete            |
 
 `user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`). All ids are UUIDs.
 
@@ -57,6 +62,32 @@ first (`app/views/api/tasks/_task.json.jbuilder`).
 `POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
 creates the items with the task. If any item is invalid, the request gets a 422 and nothing is saved. Checklist items
 can't be changed after that for now: `PATCH /api/tasks/:id` ignores them.
+
+## Time logs
+
+A time log belongs to a task, and through it to the task's owner. `GET /api/time_logs` lists only the signed-in user's
+undeleted time logs, oldest first, and `task_id` narrows them to one task. Another user's time log gets a 403. A deleted
+or unknown time log gets a 404, and so does a time log whose task was deleted.
+
+The list returns 20 time logs per page, as `{ time_logs, time_logs_count, page, total_pages }`, with the same page handling
+as tasks.
+
+The writable fields are:
+
+| Field                         | Notes                                      |
+| ----------------------------- | ------------------------------------------ |
+| `mode`                        | Required, `timer` or `stopwatch`           |
+| `started_at`                  | Required, datetime                         |
+| `timer_preset`                | Optional, positive whole number of minutes |
+| `accumulated_elapsed_seconds` | Defaults to 0, can't be negative           |
+| `pause_count`                 | Defaults to 0, can't be negative           |
+| `is_running`                  | Defaults to `false`                        |
+| `current_run_started_at`      | Optional, datetime                         |
+| `completed_at`                | Optional, datetime                         |
+
+`time_log` also includes `id`, `task_id`, `created_at` and `updated_at` (`app/views/api/time_logs/_time_log.json.jbuilder`).
+
+`POST /api/time_logs` requires a `task_id`. A missing, unknown or deleted task gets a 404, and another user's task gets a 403. A time log can't move to another task: `PATCH /api/time_logs/:id` ignores `task_id`.
 
 ## Sign-up
 

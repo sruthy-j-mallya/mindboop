@@ -106,5 +106,6 @@ describe("useTasksApi", () => {
 
     expect(queryClient.getQueryData(QUERY_KEYS.TASKS.DETAIL(TASK.id))).toBeUndefined();
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: QUERY_KEYS.TASKS.LISTS });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS });
   });
 });
