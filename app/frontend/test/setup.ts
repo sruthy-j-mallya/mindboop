@@ -11,4 +11,14 @@ vi.stubGlobal("matchMedia", (query: string) => ({
   removeEventListener: vi.fn(),
 }));
 
+// jsdom has no ResizeObserver; the Radix checkbox needs it to size its hidden input.
+vi.stubGlobal(
+  "ResizeObserver",
+  class {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+  },
+);
+
 afterEach(() => cleanup());

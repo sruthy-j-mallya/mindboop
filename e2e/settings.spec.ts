@@ -10,7 +10,7 @@ test("navigate from the sidebar and keep the chosen theme across reloads", async
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Sign up" }).click();
-  await expect(page.getByText(`Signed in as ${email}`)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 
   await page.getByRole("link", { name: "Settings" }).click();
   await expect(page).toHaveURL(/\/settings$/);
@@ -26,5 +26,5 @@ test("navigate from the sidebar and keep the chosen theme across reloads", async
   await expect(page.getByRole("switch", { name: "Dark mode" })).toBeChecked();
 
   await page.getByRole("link", { name: "Quick start" }).click();
-  await expect(page.getByText(`Signed in as ${email}`)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 });

@@ -20,7 +20,7 @@ test("confirm email, sign up, sign out and sign back in", async ({ page }) => {
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Sign up" }).click();
 
-  await expect(page.getByText(`Signed in as ${email}`)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login$/);
@@ -29,5 +29,5 @@ test("confirm email, sign up, sign out and sign back in", async ({ page }) => {
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.getByText(`Signed in as ${email}`)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 });

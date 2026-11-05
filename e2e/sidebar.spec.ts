@@ -10,7 +10,7 @@ test("keep the sidebar state across reloads", async ({ page }) => {
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Sign up" }).click();
-  await expect(page.getByText(`Signed in as ${email}`)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 
   const sidebar = page.locator('[data-slot="sidebar"]');
   const toggle = page.getByRole("button", { name: "Toggle Sidebar" });

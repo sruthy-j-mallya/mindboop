@@ -1,0 +1,68 @@
+import { expect, type Locator, type Page, test } from "@playwright/test";
+
+import { signupTokenFor } from "./helpers";
+
+const signUp = async (page: Page) => {
+  const email = `e2e-${crypto.randomUUID()}@example.com`;
+  const password = "password123";
+
+  await page.goto(`/signup/${signupTokenFor(email)}`);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByLabel("Confirm password").fill(password);
+  await page.getByRole("button", { name: "Sign up" }).click();
+  await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
+};
+
+const addSteps = async (page: Page, steps: string[]) => {
+  const input = page.getByRole("textbox", { name: "New step" });
+
+  for (const step of steps) {
+    await input.fill(step);
+    await input.press("Enter");
+  }
+};
+
+const dragOnto = async (page: Page, handle: Locator, target: Locator) => {
+  const from = await handle.boundingBox();
+  const to = await target.boundingBox();
+  if (!from || !to) throw new Error("Step is not on screen");
+
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2 + 4, { steps: 10 });
+  await page.mouse.up();
+};
+
+test("reorder steps by dragging, and keep their ticks", async ({ page }) => {
+  await signUp(page);
+  await addSteps(page, ["First", "Second", "Third"]);
+  const steps = page.getByRole("list", { name: "Steps" }).getByRole("listitem");
+  await expect(steps).toHaveText(["First", "Second", "Third"]);
+
+  await page.getByRole("checkbox", { name: "First" }).check();
+
+  await dragOnto(page, page.getByRole("button", { name: "Reorder First" }), steps.nth(2));
+
+  await expect(steps).toHaveText(["Second", "Third", "First"]);
+  await expect(page.getByRole("checkbox", { name: "First" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Second" })).not.toBeChecked();
+});
+
+test("reorder steps with the keyboard", async ({ page }) => {
+  await signUp(page);
+  await addSteps(page, ["First", "Second"]);
+  const steps = page.getByRole("list", { name: "Steps" }).getByRole("listitem");
+  const announcement = page.getByRole("status");
+
+  await page.getByRole("button", { name: "Reorder Second" }).focus();
+  await page.keyboard.press("Space");
+  await expect(announcement).toHaveText("Picked up Second.");
+  // dnd-kit starts listening for keys a tick after the pick up, so an early press can be missed.
+  await expect(async () => {
+    await page.keyboard.press("ArrowUp");
+    await expect(announcement).toHaveText("Second moved over First.", { timeout: 200 });
+  }).toPass();
+  await page.keyboard.press("Space");
+
+  await expect(steps).toHaveText(["Second", "First"]);
+});
