@@ -61,7 +61,7 @@ const QuickStart = () => {
         <Estimate control={control} />
         <Button className="h-12 w-full text-base" type="submit">
           <Timer />
-          Begin session
+          Begin
         </Button>
       </div>
     </form>

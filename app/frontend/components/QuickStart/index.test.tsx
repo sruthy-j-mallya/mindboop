@@ -9,7 +9,7 @@ const CUSTOM_LABEL = /set your own/i;
 const CUSTOM_ERROR = /pick a preset or enter/i;
 const TITLE_ERROR = /say what you want to get done/i;
 
-const beginSession = () => userEvent.click(screen.getByRole("button", { name: "Begin session" }));
+const beginSession = () => userEvent.click(screen.getByRole("button", { name: "Begin" }));
 
 describe("QuickStart", () => {
   it("asks for a task before beginning a session", async () => {
