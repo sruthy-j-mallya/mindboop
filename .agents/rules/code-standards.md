@@ -222,6 +222,9 @@ RuboCop's `Layout/ClassStructure` enforces this order:
 10. public methods
 11. private methods
 
+- App tables use UUID primary keys (generators default to them). Foreign keys need `type: :uuid`. Solid Queue's
+  tables stay on `bigint`.
+- Soft delete with Discard (`include Discard::Model`), and query those models through `kept`.
 - Freeze mutable constants (`KINDS = %w[ a b ].freeze`).
 - Use `delegate … prefix: true` instead of wrapper methods.
 - Callbacks call private, well-named methods (`after_update :notify_x, if: :y_changed?`).

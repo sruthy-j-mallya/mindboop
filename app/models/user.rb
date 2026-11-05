@@ -7,6 +7,7 @@ class User < ApplicationRecord
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
   has_many :sessions, dependent: :destroy
+  has_many :tasks, dependent: :destroy
 
   validates :email_address, presence: true, uniqueness: true, format: { with: EMAIL_ADDRESS_FORMAT }
   validates :password, length: { minimum: 8 }, allow_nil: true

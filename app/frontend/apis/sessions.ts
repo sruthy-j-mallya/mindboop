@@ -1,6 +1,6 @@
 import http from "@/apis/axios";
 
-export type User = { id: number; emailAddress: string };
+export type User = { id: string; emailAddress: string };
 
 export type UserResponse = { user: User };
 

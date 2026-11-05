@@ -4,6 +4,7 @@ Rails.application.routes.draw do
     resources :email_confirmations, only: :create
     resource :registration, only: :create
     resources :passwords, param: :token, only: %i[ create update ]
+    resources :tasks, only: %i[ index show create update destroy ]
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

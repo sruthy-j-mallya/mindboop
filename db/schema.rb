@@ -10,16 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_122726) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_154402) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "sessions", force: :cascade do |t|
-    t.bigint "user_id", null: false
+  create_table "checklist_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "task_id", null: false
+    t.string "title", null: false
+    t.boolean "is_completed", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id"], name: "index_checklist_items_on_task_id"
+  end
+
+  create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "ip_address"
     t.string "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
@@ -173,7 +182,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_122726) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
-  create_table "users", force: :cascade do |t|
+  create_table "tasks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "title", null: false
+    t.text "description"
+    t.integer "estimated_minutes"
+    t.boolean "is_duration", default: false, null: false
+    t.boolean "is_all_day", default: false, null: false
+    t.boolean "is_completed", default: false, null: false
+    t.datetime "starts_at"
+    t.datetime "ends_at"
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["discarded_at"], name: "index_tasks_on_discarded_at"
+    t.index ["is_completed"], name: "index_tasks_on_is_completed"
+    t.index ["user_id"], name: "index_tasks_on_user_id"
+  end
+
+  create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email_address", null: false
     t.string "password_digest", null: false
     t.datetime "created_at", null: false
@@ -181,6 +208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_122726) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "checklist_items", "tasks"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -190,4 +218,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_122726) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "tasks", "users"
 end

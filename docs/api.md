@@ -32,8 +32,31 @@ Every error response has one shape:
 | POST   | `/api/registration`        | `token`, `password`, `password_confirmation` | 201 `{ user }`, sets cookie |
 | POST   | `/api/passwords`           | `email_address`                              | 202 `{ message }`           |
 | PATCH  | `/api/passwords/:token`    | `password`, `password_confirmation`          | 204, signs out everywhere   |
+| GET    | `/api/tasks`               | `page` query param (optional)                | 200 `{ tasks, … }`          |
+| GET    | `/api/tasks/:id`           | –                                            | 200 `{ task }`              |
+| POST   | `/api/tasks`               | Task fields (`title` required)               | 201 `{ task }`              |
+| PATCH  | `/api/tasks/:id`           | Task fields                                  | 200 `{ task }`              |
+| DELETE | `/api/tasks/:id`           | –                                            | 204, soft delete            |
 
-`user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`).
+`user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`). All ids are UUIDs.
+
+## Tasks
+
+Tasks belong to the signed-in user. `GET /api/tasks` lists only their undeleted tasks, oldest first. Another user's task
+gets a 403. A deleted or unknown task gets a 404.
+
+The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
+pages. A missing or invalid `page` returns the first page, and a page past the end returns an empty `tasks`.
+
+The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
+`starts_at` and `ends_at`.
+
+`task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, oldest
+first (`app/views/api/tasks/_task.json.jbuilder`).
+
+`POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
+creates the items with the task. If any item is invalid, the request gets a 422 and nothing is saved. Checklist items
+can't be changed after that for now: `PATCH /api/tasks/:id` ignores them.
 
 ## Sign-up
 
