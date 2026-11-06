@@ -42,6 +42,26 @@ test("begin a session, and keep it counting down through a reload", async ({ pag
   expect((await page.getByRole("timer").textContent())! <= timeBeforeReload!).toBe(true);
 });
 
+test("finish a session early and move on to the next one", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("timer")).toBeVisible();
+
+  await page.getByRole("button", { name: "Done" }).click();
+
+  const dialog = page.getByRole("dialog", { name: /Finished early!/ });
+  await expect(dialog.getByText("+1 early-finish boost")).toBeVisible();
+
+  await dialog.getByRole("link", { name: "Move on to next" }).click();
+  await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
+
+  await page.getByRole("link", { name: "Timer" }).click();
+  await expect(page.getByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+});
+
 test("reach the timer from the sidebar with nothing in progress", async ({ page }) => {
   await signUp(page);
 

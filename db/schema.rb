@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_05_154403) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_154404) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "achievements", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "kind", null: false
+    t.integer "count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "kind"], name: "index_achievements_on_user_id_and_kind", unique: true
+  end
 
   create_table "checklist_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "task_id", null: false
@@ -225,6 +234,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_154403) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "achievements", "users"
   add_foreign_key "checklist_items", "tasks"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade

@@ -23,26 +23,27 @@ Every error response has one shape:
 
 ## Endpoints
 
-| Method | Path                       | Body                                         | Success                      |
-| ------ | -------------------------- | -------------------------------------------- | ---------------------------- |
-| GET    | `/api/session`             | –                                            | 200 `{ user }`               |
-| POST   | `/api/session`             | `email_address`, `password`                  | 201 `{ user }`, sets cookie  |
-| DELETE | `/api/session`             | –                                            | 204                          |
-| POST   | `/api/email_confirmations` | `email_address`                              | 202 `{ message }`            |
-| POST   | `/api/registration`        | `token`, `password`, `password_confirmation` | 201 `{ user }`, sets cookie  |
-| POST   | `/api/passwords`           | `email_address`                              | 202 `{ message }`            |
-| PATCH  | `/api/passwords/:token`    | `password`, `password_confirmation`          | 204, signs out everywhere    |
-| GET    | `/api/tasks`               | `page` query param (optional)                | 200 `{ tasks, … }`           |
-| GET    | `/api/tasks/:id`           | –                                            | 200 `{ task }`               |
-| POST   | `/api/tasks`               | Task fields (`title` required)               | 201 `{ task }`               |
-| PATCH  | `/api/tasks/:id`           | Task fields                                  | 200 `{ task }`               |
-| DELETE | `/api/tasks/:id`           | –                                            | 204, soft delete             |
-| GET    | `/api/time_logs`           | `page`, `task_id` query params (optional)    | 200 `{ time_logs, … }`       |
-| GET    | `/api/time_logs/:id`       | –                                            | 200 `{ time_log }`           |
-| POST   | `/api/time_logs`           | `task_id`, Time log fields                   | 201 `{ time_log }`           |
-| PATCH  | `/api/time_logs/:id`       | Time log fields                              | 200 `{ time_log }`           |
-| DELETE | `/api/time_logs/:id`       | –                                            | 204, soft delete             |
-| GET    | `/api/current_time_log`    | –                                            | 200 `{ time_log }` or `null` |
+| Method | Path                                     | Body                                         | Success                      |
+| ------ | ---------------------------------------- | -------------------------------------------- | ---------------------------- |
+| GET    | `/api/session`                           | –                                            | 200 `{ user }`               |
+| POST   | `/api/session`                           | `email_address`, `password`                  | 201 `{ user }`, sets cookie  |
+| DELETE | `/api/session`                           | –                                            | 204                          |
+| POST   | `/api/email_confirmations`               | `email_address`                              | 202 `{ message }`            |
+| POST   | `/api/registration`                      | `token`, `password`, `password_confirmation` | 201 `{ user }`, sets cookie  |
+| POST   | `/api/passwords`                         | `email_address`                              | 202 `{ message }`            |
+| PATCH  | `/api/passwords/:token`                  | `password`, `password_confirmation`          | 204, signs out everywhere    |
+| GET    | `/api/tasks`                             | `page` query param (optional)                | 200 `{ tasks, … }`           |
+| GET    | `/api/tasks/:id`                         | –                                            | 200 `{ task }`               |
+| POST   | `/api/tasks`                             | Task fields (`title` required)               | 201 `{ task }`               |
+| PATCH  | `/api/tasks/:id`                         | Task fields                                  | 200 `{ task }`               |
+| DELETE | `/api/tasks/:id`                         | –                                            | 204, soft delete             |
+| GET    | `/api/time_logs`                         | `page`, `task_id` query params (optional)    | 200 `{ time_logs, … }`       |
+| GET    | `/api/time_logs/:id`                     | –                                            | 200 `{ time_log }`           |
+| POST   | `/api/time_logs`                         | `task_id`, Time log fields                   | 201 `{ time_log }`           |
+| PATCH  | `/api/time_logs/:id`                     | Time log fields                              | 200 `{ time_log }`           |
+| DELETE | `/api/time_logs/:id`                     | –                                            | 204, soft delete             |
+| POST   | `/api/time_logs/:time_log_id/completion` | –                                            | 201 `{ time_log }`           |
+| GET    | `/api/current_time_log`                  | –                                            | 200 `{ time_log }` or `null` |
 
 `user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`). All ids are UUIDs.
 
@@ -86,7 +87,19 @@ The writable fields are:
 | `current_run_started_at`      | Optional, datetime                         |
 | `completed_at`                | Optional, datetime                         |
 
-`time_log` also includes `id`, `task_id`, `created_at` and `updated_at` (`app/views/api/time_logs/_time_log.json.jbuilder`).
+`time_log` also includes `id`, `task_id`, `is_finished_early`, `created_at` and `updated_at`
+(`app/views/api/time_logs/_time_log.json.jbuilder`).
+
+`POST /api/time_logs/:time_log_id/completion` ends a session, in one transaction:
+
+- The time log stops: its elapsed time moves into `accumulated_elapsed_seconds`, `is_running` becomes `false`,
+  `current_run_started_at` is cleared and `completed_at` is set.
+- Its task gets `is_completed: true`.
+- If the log is `is_finished_early`, the user's `early_finish` achievement count goes up by 1. A log is finished early
+  when it's a `timer` with a `timer_preset` and less time elapsed than the preset. A stopwatch never is.
+
+Completing a log that's already completed changes nothing and returns it again. Another user's time log gets a 403, and
+a deleted or unknown one gets a 404. `PATCH /api/time_logs/:id` with `completed_at` doesn't touch the task or achievements.
 
 `GET /api/current_time_log` returns the signed-in user's most recently started time log that isn't completed or deleted.
 With no such log, it returns 200 with `{ "time_log": null }`.

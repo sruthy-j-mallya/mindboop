@@ -1,7 +1,10 @@
-import { act, screen } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
+import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import tasksApi from "@/apis/tasks";
+import timeLogCompletionsApi from "@/apis/time_log_completions";
 import type { Task, TimeLog } from "@/apis/types";
 import Timer from "@/components/Timer";
 import routes from "@/routes";
@@ -20,6 +23,7 @@ const TIME_LOG: TimeLog = {
   currentRunStartedAt: STARTED_AT,
   startedAt: STARTED_AT,
   completedAt: null,
+  isFinishedEarly: false,
   createdAt: STARTED_AT,
   updatedAt: STARTED_AT,
 };
@@ -108,5 +112,67 @@ describe("Timer", () => {
 
     expect(await screen.findByRole("link", { name: "Start a session" })).toHaveAttribute("href", routes.root);
     expect(screen.queryByRole("timer")).not.toBeInTheDocument();
+  });
+
+  describe("when the session is done", () => {
+    const clickDone = async () => userEvent.click(await screen.findByRole("button", { name: "Done" }));
+
+    const mockCompletion = (isFinishedEarly: boolean) =>
+      vi.spyOn(timeLogCompletionsApi, "create").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({
+          timeLog: { ...TIME_LOG, isRunning: false, completedAt: STARTED_AT, isFinishedEarly },
+        });
+      });
+
+    it("completes the time log and celebrates finishing early", async () => {
+      const create = mockCompletion(true);
+      renderTimer(TIME_LOG);
+
+      await clickDone();
+
+      const dialog = await screen.findByRole("dialog", { name: /Finished early!/ });
+      expect(create).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
+      expect(within(dialog).getByText("+1 early-finish boost")).toBeVisible();
+      expect(within(dialog).getByRole("button", { name: /Add a progress screenshot/ })).toBeVisible();
+      expect(within(dialog).getByRole("link", { name: "Move on to next" })).toHaveAttribute(
+        "href",
+        routes.root,
+      );
+    });
+
+    it("leaves out the boost when the session didn't finish early", async () => {
+      mockCompletion(false);
+      renderTimer(TIME_LOG);
+
+      await clickDone();
+
+      const dialog = await screen.findByRole("dialog", { name: /Finished!/ });
+      expect(within(dialog).queryByText("+1 early-finish boost")).not.toBeInTheDocument();
+      expect(within(dialog).getByRole("link", { name: "Move on to next" })).toBeVisible();
+    });
+
+    it("shows that nothing is on the clock after closing the dialog", async () => {
+      mockCompletion(true);
+      renderTimer(TIME_LOG);
+
+      await clickDone();
+      await userEvent.click(await screen.findByRole("button", { name: "Close" }));
+
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(await screen.findByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+    });
+
+    it("keeps the session and shows the error when completing fails", async () => {
+      vi.spyOn(timeLogCompletionsApi, "create").mockRejectedValue(new ApiError(500, "Something went wrong"));
+      renderTimer(TIME_LOG);
+
+      await clickDone();
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
+      expect(screen.getByRole("timer")).toBeVisible();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
   });
 });

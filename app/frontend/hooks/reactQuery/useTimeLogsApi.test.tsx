@@ -24,6 +24,7 @@ const TIME_LOG: TimeLog = {
   currentRunStartedAt: "2026-11-05T10:00:00.000Z",
   startedAt: "2026-11-05T10:00:00.000Z",
   completedAt: null,
+  isFinishedEarly: false,
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
 };

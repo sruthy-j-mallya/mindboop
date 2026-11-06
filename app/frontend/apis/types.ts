@@ -62,6 +62,7 @@ export type TimeLog = {
   currentRunStartedAt: string | null;
   startedAt: string;
   completedAt: string | null;
+  isFinishedEarly: boolean;
   createdAt: string;
   updatedAt: string;
 };

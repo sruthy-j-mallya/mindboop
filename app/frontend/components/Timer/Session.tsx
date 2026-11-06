@@ -10,10 +10,17 @@ import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
 import Countdown from "./Countdown";
 
-type SessionProps = { timeLog: TimeLog };
+type SessionProps = {
+  timeLog: TimeLog;
+  isCompleting: boolean;
+  completionError?: string;
+  onDone: (timeLogId: string) => void;
+};
 
-const Session = ({ timeLog }: SessionProps) => {
+const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProps) => {
   const { data: task, isPending, error } = useTask(timeLog.taskId);
+
+  const handleDone = () => onDone(timeLog.id);
 
   if (isPending) return null;
 
@@ -55,6 +62,11 @@ const Session = ({ timeLog }: SessionProps) => {
           </ul>
         )}
         <Separator />
+        {completionError && (
+          <p className="text-sm text-destructive" role="alert">
+            {completionError}
+          </p>
+        )}
         <div className="flex flex-wrap justify-end gap-2">
           <Button size="lg" type="button" variant="outline">
             <Plus />
@@ -68,7 +80,14 @@ const Session = ({ timeLog }: SessionProps) => {
             <LogOut />
             Bail
           </Button>
-          <Button className="bg-muted text-primary" size="lg" type="button" variant="ghost">
+          <Button
+            className="bg-muted text-primary"
+            disabled={isCompleting}
+            size="lg"
+            type="button"
+            variant="ghost"
+            onClick={handleDone}
+          >
             <PartyPopper />
             Done
           </Button>
