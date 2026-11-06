@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_140543) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,6 +21,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_140543) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id", "kind"], name: "index_achievements_on_user_id_and_kind", unique: true
+  end
+
+  create_table "breaks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "time_log_id", null: false
+    t.string "intention", null: false
+    t.integer "duration_minutes", null: false
+    t.datetime "ends_at", null: false
+    t.datetime "ended_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["time_log_id"], name: "index_breaks_on_time_log_id"
+    t.index ["time_log_id"], name: "index_breaks_on_time_log_id_when_open", unique: true, where: "(ended_at IS NULL)"
   end
 
   create_table "checklist_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -236,6 +248,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_140543) do
   end
 
   add_foreign_key "achievements", "users"
+  add_foreign_key "breaks", "time_logs"
   add_foreign_key "checklist_items", "tasks"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade

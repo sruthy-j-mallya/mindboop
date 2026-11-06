@@ -4,7 +4,7 @@ module Api
 
     def index
       # id breaks created_at ties, so a time log can't repeat or go missing across pages.
-      @pagy, @time_logs = pagy(filter_by_task(policy_scope(TimeLog).active).order(:created_at, :id))
+      @pagy, @time_logs = pagy(filter_by_task(policy_scope(TimeLog).active).preload(:current_break).order(:created_at, :id))
     end
 
     def show

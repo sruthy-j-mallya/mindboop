@@ -5,6 +5,7 @@ import { Outlet } from "react-router";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 import AppSidebar from "./AppSidebar";
+import BreakAlarm from "./BreakAlarm";
 import { isSidebarOpen, saveSidebarOpen } from "./utils";
 
 const AppLayout = () => {
@@ -22,6 +23,7 @@ const AppLayout = () => {
         <header className="flex items-center p-2">
           <SidebarTrigger />
         </header>
+        <BreakAlarm />
         <Outlet />
       </SidebarInset>
     </SidebarProvider>

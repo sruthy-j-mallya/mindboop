@@ -1,13 +1,24 @@
 import type { TimeLog } from "@/apis/types";
 import useCurrentTime from "@/hooks/useCurrentTime";
+import { getBreakRemainingSeconds } from "@/utils";
 
 import { formatRemainingTime, getTimerState } from "./utils";
 
 type CountdownProps = { timeLog: TimeLog };
 
 const Countdown = ({ timeLog }: CountdownProps) => {
-  const currentTime = useCurrentTime(timeLog.isRunning);
+  const { isRunning, currentBreak } = timeLog;
+  const currentTime = useCurrentTime(isRunning || !!currentBreak);
   const { remainingSeconds, progress } = getTimerState(timeLog, currentTime);
+  const breakRemainingSeconds = currentBreak && getBreakRemainingSeconds(currentBreak.endsAt, currentTime);
+
+  const getCaption = () => {
+    if (breakRemainingSeconds === null) return "remaining";
+
+    return breakRemainingSeconds > 0
+      ? `back in ${formatRemainingTime(breakRemainingSeconds)}`
+      : "break's over";
+  };
 
   return (
     <div className="relative mx-auto aspect-square w-full max-w-xs">
@@ -29,7 +40,7 @@ const Countdown = ({ timeLog }: CountdownProps) => {
         <p className="text-6xl font-medium tabular-nums" role="timer">
           {formatRemainingTime(remainingSeconds)}
         </p>
-        <p className="text-muted-foreground">remaining</p>
+        <p className="text-muted-foreground">{getCaption()}</p>
       </div>
     </div>
   );

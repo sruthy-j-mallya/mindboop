@@ -1,6 +1,9 @@
+import { useState } from "react";
+
 import { LogOut, PartyPopper, Pause, Plus } from "lucide-react";
 
 import type { TimeLog } from "@/apis/types";
+import BreakBanner from "@/components/commons/BreakBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
 import Countdown from "./Countdown";
+import PauseDialog from "./PauseDialog";
 
 type SessionProps = {
   timeLog: TimeLog;
@@ -19,8 +23,13 @@ type SessionProps = {
 
 const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProps) => {
   const { data: task, isPending, error } = useTask(timeLog.taskId);
+  const [showPauseDialog, setShowPauseDialog] = useState(false);
+  const { currentBreak } = timeLog;
+  const isOnBreak = !!currentBreak;
 
   const handleDone = () => onDone(timeLog.id);
+  const handlePause = () => setShowPauseDialog(true);
+  const handlePauseDialogClose = () => setShowPauseDialog(false);
 
   if (isPending) return null;
 
@@ -36,10 +45,13 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
     <Card>
       <CardContent className="flex flex-col gap-8">
         <header className="grid gap-1">
-          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">Focusing on</p>
+          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            {isOnBreak ? "Paused" : "Focusing on"}
+          </p>
           <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
         </header>
         <Countdown timeLog={timeLog} />
+        {currentBreak && <BreakBanner currentBreak={currentBreak} timeLogId={timeLog.id} />}
         {task.checklistItems.length > 0 && (
           // Checklist items can't be changed through the API yet, so these only show the saved state.
           <ul aria-label="Steps" className="flex flex-col gap-4">
@@ -68,11 +80,11 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
           </p>
         )}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button size="lg" type="button" variant="outline">
+          <Button disabled={isOnBreak} size="lg" type="button" variant="outline">
             <Plus />
             Extend
           </Button>
-          <Button size="lg" type="button" variant="outline">
+          <Button disabled={isOnBreak} size="lg" type="button" variant="outline" onClick={handlePause}>
             <Pause />
             Pause
           </Button>
@@ -93,6 +105,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
           </Button>
         </div>
       </CardContent>
+      {showPauseDialog && <PauseDialog timeLogId={timeLog.id} onClose={handlePauseDialogClose} />}
     </Card>
   );
 };

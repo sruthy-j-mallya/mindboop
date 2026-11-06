@@ -43,6 +43,8 @@ Every error response has one shape:
 | PATCH  | `/api/time_logs/:id`                     | Time log fields                              | 200 `{ time_log }`           |
 | DELETE | `/api/time_logs/:id`                     | –                                            | 204, soft delete             |
 | POST   | `/api/time_logs/:time_log_id/completion` | –                                            | 201 `{ time_log }`           |
+| POST   | `/api/time_logs/:time_log_id/break`      | `intention`, `duration_minutes`              | 201 `{ time_log }`           |
+| PATCH  | `/api/time_logs/:time_log_id/break`      | –                                            | 200 `{ time_log }`           |
 | GET    | `/api/current_time_log`                  | –                                            | 200 `{ time_log }` or `null` |
 
 `user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`). All ids are UUIDs.
@@ -87,7 +89,8 @@ The writable fields are:
 | `current_run_started_at`      | Optional, datetime                         |
 | `completed_at`                | Optional, datetime                         |
 
-`time_log` also includes `id`, `task_id`, `is_finished_early`, `created_at` and `updated_at`
+`time_log` also includes `id`, `task_id`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
+`{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise
 (`app/views/api/time_logs/_time_log.json.jbuilder`).
 
 `POST /api/time_logs/:time_log_id/completion` ends a session, in one transaction:
@@ -100,6 +103,19 @@ The writable fields are:
 
 Completing a log that's already completed changes nothing and returns it again. Another user's time log gets a 403, and
 a deleted or unknown one gets a 404. `PATCH /api/time_logs/:id` with `completed_at` doesn't touch the task or achievements.
+
+`POST /api/time_logs/:time_log_id/break` pauses a session, in one transaction:
+
+- A break is created with `intention` (required, up to 100 characters) and `duration_minutes` (1–15), and `ends_at` is set
+  from the duration. Invalid values get a 422, and so does a completed time log.
+- The time log stops: its elapsed time moves into `accumulated_elapsed_seconds`, `is_running` becomes `false`,
+  `current_run_started_at` is cleared and `pause_count` goes up by 1.
+
+`PATCH /api/time_logs/:time_log_id/break` ends the break: `ended_at` is set, `is_running` becomes `true` and
+`current_run_started_at` restarts. The time log stays paused after `ends_at` until this is called.
+
+Pausing during a break, or ending a break when none is open, changes nothing and returns the time log. Completing a time
+log also ends its break. Another user's time log gets a 403, and a deleted or unknown one gets a 404.
 
 `GET /api/current_time_log` returns the signed-in user's most recently started time log that isn't completed or deleted.
 With no such log, it returns 200 with `{ "time_log": null }`.

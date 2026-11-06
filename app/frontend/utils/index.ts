@@ -22,5 +22,9 @@ export const keysToCamelCase = <T>(value: unknown) => transformKeys(value, toCam
 
 export const keysToSnakeCase = <T>(value: unknown) => transformKeys(value, toSnakeCase) as T;
 
+// Rounds up, so a break doesn't read as over during its last second.
+export const getBreakRemainingSeconds = (endsAt: string, currentTime: number) =>
+  Math.max(Math.ceil((Date.parse(endsAt) - currentTime) / 1000), 0);
+
 // shadcn generates `import { cn } from "@/utils"` (see components.json); re-export the package so it resolves.
 export { cn } from "cn";

@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import currentTimeLogsApi from "@/apis/current_time_logs";
 import sessionsApi from "@/apis/sessions";
 import AppLayout from "@/components/commons/AppLayout";
 import routes from "@/routes";
@@ -10,6 +11,7 @@ import { renderWithProviders } from "@/test/utils";
 describe("AppLayout", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
   });
 
   it("offers Quick start and Timer in the sidebar and settings in the footer", () => {

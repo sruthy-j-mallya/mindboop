@@ -51,6 +51,8 @@ export type UpdateTaskPayload = Partial<TaskFields> & Pick<Task, "id">;
 
 export type TimeLogMode = "timer" | "stopwatch";
 
+export type Break = { id: string; intention: string; durationMinutes: number; endsAt: string };
+
 export type TimeLog = {
   id: string;
   taskId: string;
@@ -63,6 +65,7 @@ export type TimeLog = {
   startedAt: string;
   completedAt: string | null;
   isFinishedEarly: boolean;
+  currentBreak: Break | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -94,5 +97,7 @@ type TimeLogFields = Pick<TimeLog, "mode" | "startedAt"> &
 export type CreateTimeLogPayload = TimeLogFields & Pick<TimeLog, "taskId">;
 
 export type UpdateTimeLogPayload = Partial<TimeLogFields> & Pick<TimeLog, "id">;
+
+export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & { timeLogId: string };
 
 export type CurrentTimeLogResponse = { timeLog: TimeLog | null };

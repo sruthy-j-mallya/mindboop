@@ -62,6 +62,107 @@ test("finish a session early and move on to the next one", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
 });
 
+test.describe("pausing", () => {
+  const beginSession = async (page: Page) => {
+    await signUp(page);
+    await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+    await page.getByRole("button", { name: "10 min" }).click();
+    await page.getByRole("button", { name: "Begin" }).click();
+    await expect(page.getByRole("timer")).toBeVisible();
+  };
+
+  const takeBreak = async (page: Page) => {
+    await page.getByRole("button", { name: "Pause" }).click();
+    await page.getByRole("button", { name: "Delivery · 5m" }).click();
+    await page.getByRole("button", { name: "Pause & set reminder" }).click();
+    await expect(page.getByText("Stepped away — Delivery")).toBeVisible();
+  };
+
+  test("holds the timer through a reload, then resumes", async ({ page }) => {
+    await beginSession(page);
+    await takeBreak(page);
+
+    const pausedTime = await page.getByRole("timer").textContent();
+    await expect(page.getByText(/^back in 0[45]:[0-5]\d$/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pause" })).toBeDisabled();
+
+    await page.reload();
+
+    await expect(page.getByText("Stepped away — Delivery")).toBeVisible();
+    await expect(page.getByRole("timer")).toHaveText(pausedTime!);
+
+    await page.getByRole("button", { name: "I'm back" }).click();
+
+    await expect(page.getByText("Focusing on")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pause" })).toBeEnabled();
+    await expect(page.getByRole("timer")).not.toHaveText(pausedTime!);
+  });
+
+  test("rejects a break over the limit", async ({ page }) => {
+    await beginSession(page);
+
+    await page.getByRole("button", { name: "Pause" }).click();
+    await page.getByRole("button", { name: "Delivery · 5m" }).click();
+    await page.getByLabel("Back in").fill("16");
+    await page.getByRole("button", { name: "Pause & set reminder" }).click();
+
+    await expect(page.getByText("Enter 1–15 whole minutes")).toBeVisible();
+    await expect(page.getByRole("dialog")).toBeVisible();
+  });
+
+  test("rings on any page for a minute, then goes quiet with a notification", async ({ page }) => {
+    await page.clock.install();
+    await page.addInitScript(() => {
+      const alarm = { soundsStarted: 0, soundsStopped: 0, notifications: [] as string[], closed: 0 };
+      Object.assign(window, { alarm });
+
+      const { start, stop } = AudioBufferSourceNode.prototype;
+      AudioBufferSourceNode.prototype.start = function (...args) {
+        alarm.soundsStarted += 1;
+        start.apply(this, args);
+      };
+      AudioBufferSourceNode.prototype.stop = function (...args) {
+        alarm.soundsStopped += 1;
+        stop.apply(this, args);
+      };
+
+      window.Notification = class {
+        static readonly permission = "granted";
+        constructor(title: string) {
+          alarm.notifications.push(title);
+        }
+        close() {
+          alarm.closed += 1;
+        }
+      } as unknown as typeof Notification;
+    });
+    const getAlarm = () =>
+      page.evaluate(() => (window as unknown as { alarm: Record<string, unknown> }).alarm);
+
+    await beginSession(page);
+    await takeBreak(page);
+    await page.getByRole("link", { name: "Quick start" }).click();
+    await expect(page.getByRole("button", { name: "I'm back" })).toBeHidden();
+    expect(await getAlarm()).toMatchObject({ soundsStarted: 0 });
+
+    await page.clock.fastForward("05:01");
+
+    await expect(page.getByText("Break's over — Delivery")).toBeVisible();
+    await expect.poll(getAlarm).toMatchObject({ soundsStarted: 1, soundsStopped: 0, notifications: [] });
+
+    await page.clock.fastForward("01:00");
+
+    await expect
+      .poll(getAlarm)
+      .toMatchObject({ soundsStarted: 1, soundsStopped: 1, notifications: ["Break's over"], closed: 0 });
+
+    await page.getByRole("button", { name: "I'm back" }).click();
+
+    await expect(page.getByRole("button", { name: "I'm back" })).toBeHidden();
+    await expect.poll(getAlarm).toMatchObject({ closed: 1 });
+  });
+});
+
 test("reach the timer from the sidebar with nothing in progress", async ({ page }) => {
   await signUp(page);
 

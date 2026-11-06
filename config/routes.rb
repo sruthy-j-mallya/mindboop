@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     resources :tasks, only: %i[ index show create update destroy ]
     resources :time_logs, only: %i[ index show create update destroy ] do
       resource :completion, only: :create, controller: "time_log_completions"
+      resource :break, only: %i[ create update ]
     end
     resource :current_time_log, only: :show
   end
