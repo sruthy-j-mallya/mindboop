@@ -13,7 +13,7 @@ app/frontend/
 ├── Main.tsx             # Top-level <Routes>
 ├── routes.ts            # Every client path, as one nested object
 ├── entrypoints/         # Vite entrypoints
-├── apis/                # axios.ts + one file per Rails resource (HTTP only)
+├── apis/                # axios.ts, types.ts + one file per Rails resource (HTTP only)
 ├── hooks/
 │   ├── reactQuery/      # use<Resource>Api.ts: TanStack Query hooks, one file per apis/ file
 │   └── useXyz.ts        # Reusable non-query hooks
@@ -75,8 +75,8 @@ app/frontend/
 - Use the standard verb names `fetchList`, `show`, `create`, `update`, `destroy`. Each is a one-liner that
   returns `data`. A function with several arguments takes a single object (`update = ({ id, ...payload })`),
   so it can be passed straight to `useMutation`.
-- Default-export one object named after the resource (`export default notesApi;`). Export the payload and
-  response types next to the functions.
+- Default-export one object named after the resource (`export default notesApi;`). Declare and export the
+  payload and response types in `apis/types.ts` and import them with `import type { … } from "@/apis/types"`.
 - Only HTTP code lives here: no React and no state.
 
 ### Server state (`hooks/reactQuery/use<Resource>Api.ts`)
