@@ -1,6 +1,6 @@
 import { LogOut, PartyPopper, Pause, Plus } from "lucide-react";
 
-import type { TimeLog } from "@/apis/time_logs";
+import type { TimeLog } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";

@@ -1,4 +1,4 @@
-import type { TimeLog } from "@/apis/time_logs";
+import type { TimeLog } from "@/apis/types";
 import useCurrentTime from "@/hooks/useCurrentTime";
 
 import { formatRemainingTime, getTimerState } from "./utils";

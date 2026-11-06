@@ -1,10 +1,5 @@
 import http from "@/apis/axios";
-
-export type User = { id: string; emailAddress: string };
-
-export type UserResponse = { user: User };
-
-export type LoginPayload = { emailAddress: string; password: string };
+import type { LoginPayload, UserResponse } from "@/apis/types";
 
 const SESSION_URL = "/session";
 

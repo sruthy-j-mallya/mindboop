@@ -1,4 +1,4 @@
-import type { TimeLog } from "@/apis/time_logs";
+import type { TimeLog } from "@/apis/types";
 
 const SECONDS_PER_MINUTE = 60;
 

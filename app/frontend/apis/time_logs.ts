@@ -1,49 +1,11 @@
 import http from "@/apis/axios";
-
-export type TimeLogMode = "timer" | "stopwatch";
-
-export type TimeLog = {
-  id: string;
-  taskId: string;
-  mode: TimeLogMode;
-  timerPreset: number | null;
-  accumulatedElapsedSeconds: number;
-  pauseCount: number;
-  isRunning: boolean;
-  currentRunStartedAt: string | null;
-  startedAt: string;
-  completedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type TimeLogListParams = { page?: number; taskId?: string };
-
-export type TimeLogListResponse = {
-  timeLogs: TimeLog[];
-  timeLogsCount: number;
-  page: number;
-  totalPages: number;
-};
-
-export type TimeLogResponse = { timeLog: TimeLog };
-
-type TimeLogFields = Pick<TimeLog, "mode" | "startedAt"> &
-  Partial<
-    Pick<
-      TimeLog,
-      | "timerPreset"
-      | "accumulatedElapsedSeconds"
-      | "pauseCount"
-      | "isRunning"
-      | "currentRunStartedAt"
-      | "completedAt"
-    >
-  >;
-
-export type CreateTimeLogPayload = TimeLogFields & Pick<TimeLog, "taskId">;
-
-export type UpdateTimeLogPayload = Partial<TimeLogFields> & Pick<TimeLog, "id">;
+import type {
+  CreateTimeLogPayload,
+  TimeLogListParams,
+  TimeLogListResponse,
+  TimeLogResponse,
+  UpdateTimeLogPayload,
+} from "@/apis/types";
 
 const TIME_LOGS_URL = "/time_logs";
 

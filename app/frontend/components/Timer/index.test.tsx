@@ -1,8 +1,8 @@
 import { act, screen } from "@testing-library/react";
 
 import currentTimeLogsApi from "@/apis/current_time_logs";
-import tasksApi, { type Task } from "@/apis/tasks";
-import type { TimeLog } from "@/apis/time_logs";
+import tasksApi from "@/apis/tasks";
+import type { Task, TimeLog } from "@/apis/types";
 import Timer from "@/components/Timer";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";

@@ -4,8 +4,9 @@ import { Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
-import tasksApi, { type Task } from "@/apis/tasks";
-import timeLogsApi, { type TimeLog } from "@/apis/time_logs";
+import tasksApi from "@/apis/tasks";
+import timeLogsApi from "@/apis/time_logs";
+import type { Task, TimeLog } from "@/apis/types";
 import QuickStart from "@/components/QuickStart";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";

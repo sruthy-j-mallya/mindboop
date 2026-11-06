@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 
 import { ApiError } from "@/apis/axios";
-import sessionsApi, { type User } from "@/apis/sessions";
+import sessionsApi from "@/apis/sessions";
+import type { User } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 
 const fetchCurrentUser = async () => {

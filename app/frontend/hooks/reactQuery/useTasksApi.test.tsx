@@ -2,7 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-import tasksApi, { type Task } from "@/apis/tasks";
+import tasksApi from "@/apis/tasks";
+import type { Task } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 import {
   useCreateTask,

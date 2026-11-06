@@ -1,41 +1,11 @@
 import http from "@/apis/axios";
-
-export type ChecklistItem = { id: string; title: string; isCompleted: boolean };
-
-export type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  estimatedMinutes: number | null;
-  isDuration: boolean;
-  isAllDay: boolean;
-  isCompleted: boolean;
-  startsAt: string | null;
-  endsAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  checklistItems: ChecklistItem[];
-};
-
-export type TaskListParams = { page?: number };
-
-export type TaskListResponse = { tasks: Task[]; tasksCount: number; page: number; totalPages: number };
-
-export type TaskResponse = { task: Task };
-
-type TaskFields = Pick<Task, "title"> &
-  Partial<
-    Pick<
-      Task,
-      "description" | "estimatedMinutes" | "isDuration" | "isAllDay" | "isCompleted" | "startsAt" | "endsAt"
-    >
-  >;
-
-export type ChecklistItemPayload = Pick<ChecklistItem, "title"> & Partial<Pick<ChecklistItem, "isCompleted">>;
-
-export type CreateTaskPayload = TaskFields & { checklistItemsAttributes?: ChecklistItemPayload[] };
-
-export type UpdateTaskPayload = Partial<TaskFields> & Pick<Task, "id">;
+import type {
+  CreateTaskPayload,
+  TaskListParams,
+  TaskListResponse,
+  TaskResponse,
+  UpdateTaskPayload,
+} from "@/apis/types";
 
 const TASKS_URL = "/tasks";
 

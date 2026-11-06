@@ -1,5 +1,4 @@
-import type { TaskListParams } from "@/apis/tasks";
-import type { TimeLogListParams } from "@/apis/time_logs";
+import type { TaskListParams, TimeLogListParams } from "@/apis/types";
 
 export const QUERY_KEYS = {
   SESSION: ["session"],

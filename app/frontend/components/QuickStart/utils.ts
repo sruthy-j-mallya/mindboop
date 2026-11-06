@@ -1,5 +1,4 @@
-import type { CreateTaskPayload, Task } from "@/apis/tasks";
-import type { CreateTimeLogPayload } from "@/apis/time_logs";
+import type { CreateTaskPayload, CreateTimeLogPayload, Task } from "@/apis/types";
 
 import type { QuickStartFormValues } from "./constants";
 

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 
-import tasksApi, { type Task, type TaskListParams, type TaskListResponse } from "@/apis/tasks";
+import tasksApi from "@/apis/tasks";
+import type { Task, TaskListParams, TaskListResponse } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 
 export const useTasks = (

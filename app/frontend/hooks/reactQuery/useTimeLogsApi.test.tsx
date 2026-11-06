@@ -2,7 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-import timeLogsApi, { type TimeLog } from "@/apis/time_logs";
+import timeLogsApi from "@/apis/time_logs";
+import type { TimeLog } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 import {
   useCreateTimeLog,
