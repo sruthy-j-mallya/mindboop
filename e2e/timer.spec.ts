@@ -198,6 +198,53 @@ test("extend a session up to the limit, and keep the extra time through a reload
   await expect(page.getByRole("button", { name: "Extend" })).toBeDisabled();
 });
 
+test("bail out of a session, leaving breadcrumbs", async ({ page }) => {
+  await page.clock.install();
+  await signUp(page);
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("timer")).toBeVisible();
+  await page.clock.fastForward("02:00");
+
+  await page.getByRole("button", { name: "Bail" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Leave breadcrumbs" });
+  await expect(dialog.getByRole("button", { name: "Save & exit" })).toBeDisabled();
+  await dialog.getByLabel("Very next step").fill("Finish paragraph 2");
+  await dialog.getByRole("button", { name: "Save & exit" }).click();
+
+  await expect(page.getByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+  await expect(dialog).toBeHidden();
+
+  await page.reload();
+
+  await expect(page.getByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+});
+
+test("bail out in the first two minutes, discarding the timer", async ({ page }) => {
+  await signUp(page);
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("timer")).toBeVisible();
+
+  const dialog = page.getByRole("dialog", { name: "Discard this timer?" });
+  await page.getByRole("button", { name: "Bail" }).click();
+  await dialog.getByRole("button", { name: "Keep going" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("timer")).toBeVisible();
+
+  await page.getByRole("button", { name: "Bail" }).click();
+  await dialog.getByRole("button", { name: "Discard timer" }).click();
+
+  await expect(page.getByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+
+  await page.reload();
+
+  await expect(page.getByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+});
+
 test("reach the timer from the sidebar with nothing in progress", async ({ page }) => {
   await signUp(page);
 

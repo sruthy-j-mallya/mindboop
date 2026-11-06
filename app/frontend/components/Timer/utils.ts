@@ -1,5 +1,7 @@
 import type { TimeLog } from "@/apis/types";
 
+import { DISCARD_BELOW_MINUTES } from "./constants";
+
 const SECONDS_PER_MINUTE = 60;
 
 const pad = (value: number) => String(value).padStart(2, "0");
@@ -15,6 +17,9 @@ const getElapsedSeconds = (
 
   return accumulatedElapsedSeconds + Math.max(currentRunSeconds, 0);
 };
+
+export const isTooShortToKeep = (timeLog: TimeLog, currentTime: number) =>
+  getElapsedSeconds(timeLog, currentTime) < DISCARD_BELOW_MINUTES * SECONDS_PER_MINUTE;
 
 export const getTimerState = (timeLog: TimeLog, currentTime: number) => {
   const totalSeconds = ((timeLog.timerPreset ?? 0) + timeLog.bufferMinutes) * SECONDS_PER_MINUTE;

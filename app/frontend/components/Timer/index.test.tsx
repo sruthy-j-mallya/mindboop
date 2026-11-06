@@ -1,12 +1,15 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { AxiosResponse } from "axios";
 
 import { ApiError } from "@/apis/axios";
 import breaksApi from "@/apis/breaks";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import tasksApi from "@/apis/tasks";
+import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import timeLogCompletionsApi from "@/apis/time_log_completions";
 import timeLogExtensionsApi from "@/apis/time_log_extensions";
+import timeLogsApi from "@/apis/time_logs";
 import type { Task, TimeLog } from "@/apis/types";
 import Timer from "@/components/Timer";
 import routes from "@/routes";
@@ -31,6 +34,9 @@ const TIME_LOG: TimeLog = {
   createdAt: STARTED_AT,
   updatedAt: STARTED_AT,
 };
+
+// With the 37 seconds of the current run set up in beforeEach.
+const TIME_LOG_AT_TWO_MINUTES: TimeLog = { ...TIME_LOG, accumulatedElapsedSeconds: 83 };
 
 const TASK: Task = {
   id: TIME_LOG.taskId,
@@ -310,6 +316,163 @@ describe("Timer", () => {
       renderTimer({ ...TIME_LOG, bufferMinutes: 5, accumulatedElapsedSeconds: 60 });
 
       expect(await screen.findByRole("timer")).toHaveTextContent("28:23");
+    });
+  });
+
+  describe("when bailing out before two minutes", () => {
+    const openDialog = async () => {
+      await userEvent.click(await screen.findByRole("button", { name: "Bail" }));
+
+      return screen.findByRole("dialog", { name: "Discard this timer?" });
+    };
+
+    it("discards the timer on confirming", async () => {
+      const destroy = vi.spyOn(timeLogsApi, "destroy").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({} as AxiosResponse);
+      });
+      const bailOut = vi.spyOn(timeLogBailOutsApi, "create");
+      renderTimer(TIME_LOG);
+
+      const dialog = await openDialog();
+      await userEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
+
+      expect(await screen.findByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(destroy).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
+      expect(bailOut).not.toHaveBeenCalled();
+    });
+
+    it("warns one second before the limit", async () => {
+      renderTimer({ ...TIME_LOG_AT_TWO_MINUTES, accumulatedElapsedSeconds: 82 });
+
+      expect(await openDialog()).toBeVisible();
+    });
+
+    it("counts only the time spent focusing", async () => {
+      renderTimer({
+        ...TIME_LOG,
+        isRunning: false,
+        currentRunStartedAt: null,
+        accumulatedElapsedSeconds: 119,
+      });
+
+      expect(await openDialog()).toBeVisible();
+    });
+
+    it("keeps the session going when the warning is declined", async () => {
+      const destroy = vi.spyOn(timeLogsApi, "destroy");
+      renderTimer(TIME_LOG);
+
+      const dialog = await openDialog();
+      await userEvent.click(within(dialog).getByRole("button", { name: "Keep going" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(screen.getByRole("timer")).toBeVisible();
+      expect(destroy).not.toHaveBeenCalled();
+    });
+
+    it("keeps the dialog open and shows the error when discarding fails", async () => {
+      vi.spyOn(timeLogsApi, "destroy").mockRejectedValue(new ApiError(500, "Something went wrong"));
+      renderTimer(TIME_LOG);
+
+      const dialog = await openDialog();
+      await userEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
+
+      expect(await within(dialog).findByRole("alert")).toHaveTextContent("Something went wrong");
+    });
+  });
+
+  describe("when bailing out after two minutes", () => {
+    const openDialog = async () => {
+      await userEvent.click(await screen.findByRole("button", { name: "Bail" }));
+
+      return screen.findByRole("dialog", { name: "Leave breadcrumbs" });
+    };
+
+    const fillIn = async (dialog: HTMLElement) => {
+      await userEvent.type(within(dialog).getByLabelText("What got done"), "Wrote the intro");
+      await userEvent.type(within(dialog).getByLabelText("Very next step"), "Finish paragraph 2");
+    };
+
+    it("saves the breadcrumbs and ends the session", async () => {
+      const create = vi.spyOn(timeLogBailOutsApi, "create").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({ timeLog: { ...TIME_LOG, isRunning: false, completedAt: STARTED_AT } });
+      });
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
+
+      const dialog = await openDialog();
+      await fillIn(dialog);
+      await userEvent.click(within(dialog).getByRole("button", { name: "Save & exit" }));
+
+      expect(await screen.findByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(create).toHaveBeenCalledWith(
+        {
+          timeLogId: TIME_LOG.id,
+          completedDescription: "Wrote the intro",
+          restartDescription: "Finish paragraph 2",
+        },
+        expect.anything(),
+      );
+    });
+
+    it("keeps saving disabled until the next step is filled in", async () => {
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
+
+      const dialog = await openDialog();
+      const saveButton = within(dialog).getByRole("button", { name: "Save & exit" });
+      expect(saveButton).toBeDisabled();
+
+      await userEvent.type(within(dialog).getByLabelText("Very next step"), "   ");
+      expect(saveButton).toBeDisabled();
+
+      await userEvent.type(within(dialog).getByLabelText("Very next step"), "Finish paragraph 2");
+      await waitFor(() => expect(saveButton).toBeEnabled());
+    });
+
+    it("saves without saying what got done", async () => {
+      const create = vi
+        .spyOn(timeLogBailOutsApi, "create")
+        .mockResolvedValue({ timeLog: { ...TIME_LOG, isRunning: false, completedAt: STARTED_AT } });
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
+
+      const dialog = await openDialog();
+      await userEvent.type(within(dialog).getByLabelText("Very next step"), "Finish paragraph 2");
+      await userEvent.click(within(dialog).getByRole("button", { name: "Save & exit" }));
+
+      await waitFor(() =>
+        expect(create).toHaveBeenCalledWith(
+          { timeLogId: TIME_LOG.id, completedDescription: "", restartDescription: "Finish paragraph 2" },
+          expect.anything(),
+        ),
+      );
+    });
+
+    it("keeps the session going when the dialog is dismissed", async () => {
+      const create = vi.spyOn(timeLogBailOutsApi, "create");
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
+
+      await openDialog();
+      await userEvent.click(screen.getByRole("button", { name: "Close" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(screen.getByRole("timer")).toBeVisible();
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it("keeps the dialog open and shows the error when saving fails", async () => {
+      vi.spyOn(timeLogBailOutsApi, "create").mockRejectedValue(new ApiError(422, "Something went wrong"));
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
+
+      const dialog = await openDialog();
+      await fillIn(dialog);
+      await userEvent.click(within(dialog).getByRole("button", { name: "Save & exit" }));
+
+      expect(await within(dialog).findByRole("alert")).toHaveTextContent("Something went wrong");
     });
   });
 

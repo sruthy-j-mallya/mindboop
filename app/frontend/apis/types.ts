@@ -103,4 +103,10 @@ export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & 
 
 export type ExtendTimeLogPayload = { timeLogId: string; minutes: number };
 
+export type CreateBailOutPayload = {
+  timeLogId: string;
+  completedDescription: string;
+  restartDescription: string;
+};
+
 export type CurrentTimeLogResponse = { timeLog: TimeLog | null };

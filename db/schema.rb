@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,6 +21,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_180000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id", "kind"], name: "index_achievements_on_user_id_and_kind", unique: true
+  end
+
+  create_table "breadcrumbs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "task_id", null: false
+    t.text "completed_description"
+    t.text "restart_description", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id"], name: "index_breadcrumbs_on_task_id"
   end
 
   create_table "breaks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -236,6 +245,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_180000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "buffer_minutes", default: 0, null: false
+    t.boolean "is_bailed_out", default: false, null: false
     t.index ["discarded_at"], name: "index_time_logs_on_discarded_at"
     t.index ["task_id"], name: "index_time_logs_on_task_id"
   end
@@ -249,6 +259,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_180000) do
   end
 
   add_foreign_key "achievements", "users"
+  add_foreign_key "breadcrumbs", "tasks"
   add_foreign_key "breaks", "time_logs"
   add_foreign_key "checklist_items", "tasks"
   add_foreign_key "sessions", "users"

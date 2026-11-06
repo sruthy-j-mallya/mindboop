@@ -19,7 +19,7 @@ class TimeLog < ApplicationRecord
   validates :started_at, presence: true
   validates :timer_preset, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :accumulated_elapsed_seconds, :pause_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :is_running, inclusion: { in: [ true, false ] }
+  validates :is_running, :is_bailed_out, inclusion: { in: [ true, false ] }
   validates :buffer_minutes,
     numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_BUFFER_MINUTES }
   validates :extension_minutes, numericality: { only_integer: true, greater_than: 0 }, on: :extend
@@ -34,6 +34,11 @@ class TimeLog < ApplicationRecord
       completed_at: now
     )
     end_current_break(now)
+  end
+
+  def bail_out!
+    self.is_bailed_out = true
+    complete!
   end
 
   def pause!(break_attributes)
@@ -78,9 +83,9 @@ class TimeLog < ApplicationRecord
   end
 
   # Only a timer has a target to beat, so a stopwatch never finishes early. The target is the original plan, so
-  # finishing inside the buffer doesn't count.
+  # finishing inside the buffer doesn't count. Bailing out ends the session without finishing it.
   def finished_early?
-    completed_at? && timer? && timer_preset? && accumulated_elapsed_seconds < timer_preset.minutes.to_i
+    completed_at? && !is_bailed_out? && timer? && timer_preset? && accumulated_elapsed_seconds < timer_preset.minutes.to_i
   end
 
   private

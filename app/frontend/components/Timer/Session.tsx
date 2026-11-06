@@ -11,10 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
+import BailDialog from "./BailDialog";
 import Countdown from "./Countdown";
+import DiscardDialog from "./DiscardDialog";
 import ExtendDialog from "./ExtendDialog";
 import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
+import { isTooShortToKeep } from "./utils";
 
 type SessionProps = {
   timeLog: TimeLog;
@@ -27,10 +30,17 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   const { data: task, isPending, error } = useTask(timeLog.taskId);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [showExtendDialog, setShowExtendDialog] = useState(false);
+  const [showBailDialog, setShowBailDialog] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const { currentBreak } = timeLog;
   const isOnBreak = !!currentBreak;
   const extensionMinutesLeft = MAX_EXTENSION_MINUTES - timeLog.bufferMinutes;
 
+  // Decided on the click, so the open dialog doesn't change when the elapsed time crosses the limit.
+  const handleBail = () =>
+    isTooShortToKeep(timeLog, Date.now()) ? setShowDiscardDialog(true) : setShowBailDialog(true);
+  const handleBailDialogClose = () => setShowBailDialog(false);
+  const handleDiscardDialogClose = () => setShowDiscardDialog(false);
   const handleDone = () => onDone(timeLog.id);
   const handleExtend = () => setShowExtendDialog(true);
   const handleExtendDialogClose = () => setShowExtendDialog(false);
@@ -100,7 +110,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
             <Pause />
             Pause
           </Button>
-          <Button size="lg" type="button" variant="outline">
+          <Button size="lg" type="button" variant="outline" onClick={handleBail}>
             <LogOut />
             Bail
           </Button>
@@ -125,6 +135,8 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
         />
       )}
       {showPauseDialog && <PauseDialog timeLogId={timeLog.id} onClose={handlePauseDialogClose} />}
+      {showBailDialog && <BailDialog timeLogId={timeLog.id} onClose={handleBailDialogClose} />}
+      {showDiscardDialog && <DiscardDialog timeLogId={timeLog.id} onClose={handleDiscardDialogClose} />}
     </Card>
   );
 };
