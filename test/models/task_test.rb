@@ -37,11 +37,11 @@ class TaskTest < ActiveSupport::TestCase
     assert @task.reload.discarded?
   end
 
-  def test_that_checklist_items_are_ordered_by_creation_time
-    later = create(:checklist_item, task: @task, created_at: 1.hour.from_now)
-    earlier = create(:checklist_item, task: @task, created_at: 1.hour.ago)
+  def test_that_checklist_items_are_ordered_by_position_not_creation_time
+    second = create(:checklist_item, task: @task, position: 1, created_at: 1.hour.ago)
+    first = create(:checklist_item, task: @task, position: 0, created_at: 1.hour.from_now)
 
-    assert_equal [ earlier, later ], @task.checklist_items.to_a
+    assert_equal [ first, second ], @task.checklist_items.to_a
   end
 
   def test_that_destroying_a_user_destroys_their_tasks_and_checklist_items

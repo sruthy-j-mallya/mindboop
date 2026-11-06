@@ -153,7 +153,21 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     items = response.parsed_body.dig("task", "checklist_items")
     assert_equal [ first_title, second_title ], items.pluck("title")
     assert_equal [ false, true ], items.pluck("is_completed")
-    assert_equal [ first_title, second_title ], Task.find(response.parsed_body.dig("task", "id")).checklist_items.map(&:title)
+    saved_items = Task.find(response.parsed_body.dig("task", "id")).checklist_items
+    assert_equal [ first_title, second_title ], saved_items.map(&:title)
+    assert_equal [ 0, 1 ], saved_items.map(&:position)
+  end
+
+  def test_that_create_ignores_a_client_supplied_position
+    sign_in @user
+
+    post api_tasks_url, params: {
+      title: Faker::Lorem.sentence,
+      checklist_items_attributes: [ { title: Faker::Lorem.sentence, position: 7 } ]
+    }, as: :json
+
+    assert_response :created
+    assert_equal 0, Task.find(response.parsed_body.dig("task", "id")).checklist_items.sole.position
   end
 
   def test_that_create_saves_nothing_when_a_checklist_item_is_invalid

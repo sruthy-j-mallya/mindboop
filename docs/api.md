@@ -58,12 +58,12 @@ pages. A missing or invalid `page` returns the first page, and a page past the e
 The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
 `starts_at` and `ends_at`.
 
-`task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, oldest
-first (`app/views/api/tasks/_task.json.jbuilder`).
+`task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, in
+position order (`app/views/api/tasks/_task.json.jbuilder`).
 
 `POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
-creates the items with the task. If any item is invalid, the request gets a 422 and nothing is saved. Checklist items
-can't be changed after that for now: `PATCH /api/tasks/:id` ignores them.
+creates the items with the task, positioned in array order. If any item is invalid, the request gets a 422 and nothing
+is saved. Checklist items can't be changed after that for now: `PATCH /api/tasks/:id` ignores them.
 
 ## Time logs
 

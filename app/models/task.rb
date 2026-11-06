@@ -2,7 +2,7 @@ class Task < ApplicationRecord
   include Discard::Model
 
   belongs_to :user
-  has_many :checklist_items, -> { order(:created_at) }, dependent: :destroy, inverse_of: :task
+  has_many :checklist_items, -> { order(:position) }, dependent: :destroy, inverse_of: :task
   has_many :time_logs, dependent: :destroy
   accepts_nested_attributes_for :checklist_items
 

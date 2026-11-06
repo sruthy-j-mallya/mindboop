@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_05_154404) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_140543) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,7 +29,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_154404) do
     t.boolean "is_completed", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["task_id"], name: "index_checklist_items_on_task_id"
+    t.integer "position", null: false
+    t.index ["task_id", "position"], name: "index_checklist_items_on_task_id_and_position"
   end
 
   create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
