@@ -17,7 +17,7 @@ const getElapsedSeconds = (
 };
 
 export const getTimerState = (timeLog: TimeLog, currentTime: number) => {
-  const totalSeconds = (timeLog.timerPreset ?? 0) * SECONDS_PER_MINUTE;
+  const totalSeconds = ((timeLog.timerPreset ?? 0) + timeLog.bufferMinutes) * SECONDS_PER_MINUTE;
   const elapsedSeconds = Math.min(getElapsedSeconds(timeLog, currentTime), totalSeconds);
 
   return {

@@ -22,6 +22,7 @@ const timeLogWithBreak = (endsAt: number): TimeLog => ({
   taskId: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23",
   mode: "timer",
   timerPreset: 25,
+  bufferMinutes: 0,
   accumulatedElapsedSeconds: 60,
   pauseCount: 1,
   isRunning: false,

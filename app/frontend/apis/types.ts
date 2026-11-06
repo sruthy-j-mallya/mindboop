@@ -58,6 +58,7 @@ export type TimeLog = {
   taskId: string;
   mode: TimeLogMode;
   timerPreset: number | null;
+  bufferMinutes: number;
   accumulatedElapsedSeconds: number;
   pauseCount: number;
   isRunning: boolean;
@@ -99,5 +100,7 @@ export type CreateTimeLogPayload = TimeLogFields & Pick<TimeLog, "taskId">;
 export type UpdateTimeLogPayload = Partial<TimeLogFields> & Pick<TimeLog, "id">;
 
 export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & { timeLogId: string };
+
+export type ExtendTimeLogPayload = { timeLogId: string; minutes: number };
 
 export type CurrentTimeLogResponse = { timeLog: TimeLog | null };

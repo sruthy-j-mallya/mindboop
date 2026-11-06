@@ -18,6 +18,7 @@ const TIME_LOG: TimeLog = {
   taskId: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23",
   mode: "timer",
   timerPreset: 15,
+  bufferMinutes: 0,
   accumulatedElapsedSeconds: 0,
   pauseCount: 0,
   isRunning: true,

@@ -43,6 +43,7 @@ Every error response has one shape:
 | PATCH  | `/api/time_logs/:id`                     | Time log fields                              | 200 `{ time_log }`           |
 | DELETE | `/api/time_logs/:id`                     | –                                            | 204, soft delete             |
 | POST   | `/api/time_logs/:time_log_id/completion` | –                                            | 201 `{ time_log }`           |
+| POST   | `/api/time_logs/:time_log_id/extension`  | `minutes`                                    | 201 `{ time_log }`           |
 | POST   | `/api/time_logs/:time_log_id/break`      | `intention`, `duration_minutes`              | 201 `{ time_log }`           |
 | PATCH  | `/api/time_logs/:time_log_id/break`      | –                                            | 200 `{ time_log }`           |
 | GET    | `/api/current_time_log`                  | –                                            | 200 `{ time_log }` or `null` |
@@ -89,7 +90,7 @@ The writable fields are:
 | `current_run_started_at`      | Optional, datetime                         |
 | `completed_at`                | Optional, datetime                         |
 
-`time_log` also includes `id`, `task_id`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
+`time_log` also includes `id`, `task_id`, `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
 `{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise
 (`app/views/api/time_logs/_time_log.json.jbuilder`).
 
@@ -103,6 +104,17 @@ The writable fields are:
 
 Completing a log that's already completed changes nothing and returns it again. Another user's time log gets a 403, and
 a deleted or unknown one gets a 404. `PATCH /api/time_logs/:id` with `completed_at` doesn't touch the task or achievements.
+
+`POST /api/time_logs/:time_log_id/extension` adds `minutes` (a positive whole number) to a timer's `buffer_minutes`, which
+starts at 0. A session runs for `timer_preset` + `buffer_minutes`:
+
+- The buffer can reach 60 minutes per session. Going past that gets a 422, and so does a completed time log or a stopwatch.
+- `accumulated_elapsed_seconds` is capped at the old total, and a running log's `current_run_started_at` restarts, so a
+  timer that ran past zero gets all the added minutes.
+- `is_finished_early` still compares against `timer_preset` alone, so finishing inside the buffer isn't finishing early.
+
+Another user's time log gets a 403, and a deleted or unknown one gets a 404. `PATCH /api/time_logs/:id` ignores
+`buffer_minutes`.
 
 `POST /api/time_logs/:time_log_id/break` pauses a session, in one transaction:
 

@@ -6,6 +6,7 @@ import breaksApi from "@/apis/breaks";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import tasksApi from "@/apis/tasks";
 import timeLogCompletionsApi from "@/apis/time_log_completions";
+import timeLogExtensionsApi from "@/apis/time_log_extensions";
 import type { Task, TimeLog } from "@/apis/types";
 import Timer from "@/components/Timer";
 import routes from "@/routes";
@@ -18,6 +19,7 @@ const TIME_LOG: TimeLog = {
   taskId: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23",
   mode: "timer",
   timerPreset: 25,
+  bufferMinutes: 0,
   accumulatedElapsedSeconds: 0,
   pauseCount: 0,
   isRunning: true,
@@ -239,6 +241,75 @@ describe("Timer", () => {
 
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
       expect(screen.getByText("Paused")).toBeVisible();
+    });
+  });
+
+  describe("when extending", () => {
+    const openDialog = async () => {
+      await userEvent.click(await screen.findByRole("button", { name: "Extend" }));
+
+      return screen.findByRole("dialog", { name: "Extend carefully" });
+    };
+
+    it("adds the chosen minutes to the countdown", async () => {
+      const create = vi
+        .spyOn(timeLogExtensionsApi, "create")
+        .mockResolvedValue({ timeLog: { ...TIME_LOG, bufferMinutes: 10 } });
+      renderTimer(TIME_LOG);
+
+      const dialog = await openDialog();
+      expect(within(dialog).getByText("60 min")).toBeVisible();
+      await userEvent.click(within(dialog).getByRole("button", { name: "+10" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(create).toHaveBeenCalledWith({ timeLogId: TIME_LOG.id, minutes: 10 }, expect.anything());
+      expect(screen.getByRole("timer")).toHaveTextContent("34:23");
+    });
+
+    it.each(["+5", "+10", "+15", "+20", "+30", "+60"])("offers %s on a new session", async (name) => {
+      renderTimer(TIME_LOG);
+
+      expect(within(await openDialog()).getByRole("button", { name })).toBeEnabled();
+    });
+
+    it("limits the options after an earlier extension", async () => {
+      const create = vi.spyOn(timeLogExtensionsApi, "create");
+      renderTimer({ ...TIME_LOG, bufferMinutes: 50 });
+
+      const dialog = await openDialog();
+
+      expect(within(dialog).getByText("10 min")).toBeVisible();
+      ["+5", "+10"].forEach((name) => {
+        expect(within(dialog).getByRole("button", { name })).toBeEnabled();
+      });
+      ["+15", "+20", "+30", "+60"].forEach((name) => {
+        expect(within(dialog).getByRole("button", { name })).toBeDisabled();
+      });
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it("can't be opened once the limit is used", async () => {
+      renderTimer({ ...TIME_LOG, bufferMinutes: 60 });
+
+      expect(await screen.findByRole("button", { name: "Extend" })).toBeDisabled();
+    });
+
+    it("keeps the dialog open and shows the error when extending fails", async () => {
+      vi.spyOn(timeLogExtensionsApi, "create").mockRejectedValue(
+        new ApiError(422, "This session is already finished."),
+      );
+      renderTimer(TIME_LOG);
+
+      const dialog = await openDialog();
+      await userEvent.click(within(dialog).getByRole("button", { name: "+5" }));
+
+      expect(await within(dialog).findByRole("alert")).toHaveTextContent("This session is already finished.");
+    });
+
+    it("counts the buffer in the time left", async () => {
+      renderTimer({ ...TIME_LOG, bufferMinutes: 5, accumulatedElapsedSeconds: 60 });
+
+      expect(await screen.findByRole("timer")).toHaveTextContent("28:23");
     });
   });
 

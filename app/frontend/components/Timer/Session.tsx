@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
 import Countdown from "./Countdown";
+import ExtendDialog from "./ExtendDialog";
+import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
 
 type SessionProps = {
@@ -24,10 +26,14 @@ type SessionProps = {
 const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProps) => {
   const { data: task, isPending, error } = useTask(timeLog.taskId);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
+  const [showExtendDialog, setShowExtendDialog] = useState(false);
   const { currentBreak } = timeLog;
   const isOnBreak = !!currentBreak;
+  const extensionMinutesLeft = MAX_EXTENSION_MINUTES - timeLog.bufferMinutes;
 
   const handleDone = () => onDone(timeLog.id);
+  const handleExtend = () => setShowExtendDialog(true);
+  const handleExtendDialogClose = () => setShowExtendDialog(false);
   const handlePause = () => setShowPauseDialog(true);
   const handlePauseDialogClose = () => setShowPauseDialog(false);
 
@@ -80,7 +86,13 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
           </p>
         )}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button disabled={isOnBreak} size="lg" type="button" variant="outline">
+          <Button
+            disabled={isOnBreak || extensionMinutesLeft <= 0}
+            size="lg"
+            type="button"
+            variant="outline"
+            onClick={handleExtend}
+          >
             <Plus />
             Extend
           </Button>
@@ -105,6 +117,13 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
           </Button>
         </div>
       </CardContent>
+      {showExtendDialog && (
+        <ExtendDialog
+          minutesLeft={extensionMinutesLeft}
+          timeLogId={timeLog.id}
+          onClose={handleExtendDialogClose}
+        />
+      )}
       {showPauseDialog && <PauseDialog timeLogId={timeLog.id} onClose={handlePauseDialogClose} />}
     </Card>
   );

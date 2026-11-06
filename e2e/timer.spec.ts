@@ -163,6 +163,41 @@ test.describe("pausing", () => {
   });
 });
 
+test("extend a session up to the limit, and keep the extra time through a reload", async ({ page }) => {
+  await signUp(page);
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("timer")).toHaveText(/^09:[0-5]\d$/);
+
+  const dialog = page.getByRole("dialog", { name: "Extend carefully" });
+  await page.getByRole("button", { name: "Extend" }).click();
+  await expect(dialog.getByText("60 min")).toBeVisible();
+  await dialog.getByRole("button", { name: "+15" }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("timer")).toHaveText(/^24:[0-5]\d$/);
+
+  await page.reload();
+
+  await expect(page.getByRole("timer")).toHaveText(/^24:[0-5]\d$/);
+
+  await page.getByRole("button", { name: "Extend" }).click();
+  await expect(dialog.getByText("45 min")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "+60" })).toBeDisabled();
+  await dialog.getByRole("button", { name: "+30" }).click();
+
+  await expect(page.getByRole("timer")).toHaveText(/^54:[0-5]\d$/);
+
+  await page.getByRole("button", { name: "Extend" }).click();
+  await expect(dialog.getByText("15 min")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "+20" })).toBeDisabled();
+  await dialog.getByRole("button", { name: "+15" }).click();
+
+  await expect(page.getByRole("timer")).toHaveText(/^69:[0-5]\d$/);
+  await expect(page.getByRole("button", { name: "Extend" })).toBeDisabled();
+});
+
 test("reach the timer from the sidebar with nothing in progress", async ({ page }) => {
   await signUp(page);
 
