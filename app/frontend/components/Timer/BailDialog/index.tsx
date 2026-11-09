@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useBailOutTimeLog } from "@/hooks/reactQuery/useTimeLogBailOutsApi";
@@ -57,10 +56,12 @@ const BailDialog = ({ timeLogId, onClose }: BailDialogProps) => {
             <Label className={LABEL_CLASS_NAME} htmlFor="restartDescription">
               Very next step
             </Label>
-            <Input
+            <Textarea
               aria-invalid={!!errors.restartDescription}
+              className="min-h-16 bg-input-background"
               id="restartDescription"
               placeholder="e.g. Open doc, finish paragraph 2"
+              rows={2}
               {...register("restartDescription")}
             />
             {errors.restartDescription && (
