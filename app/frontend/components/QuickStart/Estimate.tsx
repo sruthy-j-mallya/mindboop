@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { CUSTOM_TIMER_MAX, CUSTOM_TIMER_MIN, type QuickStartFormValues, TIMER_PRESETS } from "./constants";
+import { getCustomMinutesHint } from "./utils";
 
 type EstimateProps = { control: Control<QuickStartFormValues> };
 
@@ -56,6 +57,7 @@ const Estimate = ({ control }: EstimateProps) => {
         <FormField
           {...customMinutes}
           error={error?.message}
+          hint={getCustomMinutesHint(customMinutes.value)}
           label={`Or set your own (${CUSTOM_TIMER_MIN}–${CUSTOM_TIMER_MAX} min)`}
           max={CUSTOM_TIMER_MAX}
           min={CUSTOM_TIMER_MIN}

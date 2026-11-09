@@ -298,7 +298,7 @@ describe("QuickStart", () => {
     expect(screen.getByRole("button", { name: "5 min" })).toHaveAttribute("aria-pressed", "false");
   });
 
-  it.each(["19", "61", "25.5"])("rejects %s custom minutes", async (minutes) => {
+  it.each(["19", "241", "25.5"])("rejects %s custom minutes", async (minutes) => {
     renderWithProviders(<QuickStart />);
     await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), minutes);
     await beginSession();
@@ -306,13 +306,33 @@ describe("QuickStart", () => {
     expect(await screen.findByText(CUSTOM_ERROR)).toBeVisible();
   });
 
-  it.each(["20", "60"])("accepts %s custom minutes", async (minutes) => {
+  it.each(["20", "240"])("accepts %s custom minutes", async (minutes) => {
     renderWithProviders(<QuickStart />);
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
     await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), minutes);
     await beginSession();
 
     expect(screen.queryByText(CUSTOM_ERROR)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["60", "That's 1 h"],
+    ["90", "That's 1 h 30 min"],
+    ["240", "That's 4 h"],
+  ])("shows %s custom minutes in hours", async (minutes, hint) => {
+    renderWithProviders(<QuickStart />);
+    const custom = screen.getByRole("spinbutton", { name: CUSTOM_LABEL });
+
+    await userEvent.type(custom, minutes);
+
+    expect(custom).toHaveAccessibleDescription(hint);
+  });
+
+  it.each(["45", "241", "90.5"])("shows no hours hint for %s custom minutes", async (minutes) => {
+    renderWithProviders(<QuickStart />);
+    await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), minutes);
+
+    expect(screen.queryByText(/^That's/)).not.toBeInTheDocument();
   });
 
   it("clears a custom minutes error when a preset is picked", async () => {

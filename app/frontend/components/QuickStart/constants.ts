@@ -2,9 +2,9 @@ import { z } from "zod";
 
 export const TIMER_PRESETS = [5, 10, 15];
 export const CUSTOM_TIMER_MIN = 20;
-export const CUSTOM_TIMER_MAX = 60;
+export const CUSTOM_TIMER_MAX = 240; // 4 hours
 
-const isValidCustomMinutes = (customMinutes: string) => {
+export const isValidCustomMinutes = (customMinutes: string) => {
   const minutes = Number(customMinutes);
 
   return Number.isInteger(minutes) && minutes >= CUSTOM_TIMER_MIN && minutes <= CUSTOM_TIMER_MAX;
