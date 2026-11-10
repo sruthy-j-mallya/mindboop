@@ -3,7 +3,7 @@ module Api
     before_action :set_time_log, only: :destroy
 
     def create
-      @time_log = Task.kept.find(params[:task_id]).time_logs.new(time_log_params)
+      @time_log = Task.kept.find(params[:task_id]).time_logs.new(time_log_params.merge(start_attributes))
       authorize @time_log
       @time_log.save!
       render :show, status: :created
@@ -22,10 +22,13 @@ module Api
 
       # task_id is read separately in create to find the task.
       def time_log_params
-        params.permit(
-          :mode, :timer_preset, :accumulated_elapsed_seconds, :is_running, :current_run_started_at,
-          :started_at, :completed_at
-        )
+        params.permit(:mode, :timer_preset)
+      end
+
+      # A new time log always starts running now, so the client doesn't send its timing fields.
+      def start_attributes
+        now = Time.current
+        { is_running: true, started_at: now, current_run_started_at: now }
       end
   end
 end

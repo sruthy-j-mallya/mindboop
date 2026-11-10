@@ -7,17 +7,14 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     @time_log = create(:time_log, task: @task)
     @other_task = create(:task)
     @other_time_log = create(:time_log, task: @other_task)
-    @started_at = 1.hour.ago.change(usec: 0)
   end
 
-  def test_that_user_can_create_a_time_log
+  def test_that_user_can_create_a_running_time_log
+    freeze_time
     sign_in @user
 
     assert_difference "@task.time_logs.count", 1 do
-      post api_time_logs_path, params: {
-        task_id: @task.id, mode: "timer", timer_preset: 15, is_running: true,
-        started_at: @started_at, current_run_started_at: @started_at
-      }, as: :json
+      post api_time_logs_path, params: { task_id: @task.id, mode: "timer", timer_preset: 15 }, as: :json
     end
 
     assert_response :created
@@ -26,15 +23,36 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "timer", time_log["mode"]
     assert_equal 15, time_log["timer_preset"]
     assert_equal true, time_log["is_running"]
-    assert_equal @started_at, Time.zone.parse(time_log["started_at"])
-    assert_equal @started_at, Time.zone.parse(time_log["current_run_started_at"])
+    assert_equal 0, time_log["accumulated_elapsed_seconds"]
+    assert_equal Time.current, Time.zone.parse(time_log["started_at"])
+    assert_equal Time.current, Time.zone.parse(time_log["current_run_started_at"])
+    assert_nil time_log["completed_at"]
+  end
+
+  def test_that_create_ignores_timing_fields_from_the_client
+    freeze_time
+    sign_in @user
+    sent_at = 1.hour.ago
+
+    post api_time_logs_path, params: {
+      task_id: @task.id, mode: "timer", is_running: false, accumulated_elapsed_seconds: 600,
+      started_at: sent_at, current_run_started_at: sent_at, completed_at: sent_at
+    }, as: :json
+
+    assert_response :created
+    time_log = TimeLog.find(response.parsed_body["time_log"]["id"])
+    assert time_log.is_running?
+    assert_equal 0, time_log.accumulated_elapsed_seconds
+    assert_equal Time.current, time_log.started_at
+    assert_equal Time.current, time_log.current_run_started_at
+    assert_nil time_log.completed_at
   end
 
   def test_that_create_rejects_an_invalid_time_log
     sign_in @user
 
     assert_no_difference "TimeLog.count" do
-      post api_time_logs_path, params: { task_id: @task.id, mode: "countdown", started_at: @started_at }, as: :json
+      post api_time_logs_path, params: { task_id: @task.id, mode: "countdown" }, as: :json
     end
 
     assert_response :unprocessable_content
@@ -43,7 +61,7 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
 
   def test_that_create_returns_401_when_signed_out
     assert_no_difference "TimeLog.count" do
-      post api_time_logs_path, params: { task_id: @task.id, mode: "timer", started_at: @started_at }, as: :json
+      post api_time_logs_path, params: { task_id: @task.id, mode: "timer" }, as: :json
     end
 
     assert_response :unauthorized
@@ -53,7 +71,7 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
 
     assert_no_difference "TimeLog.count" do
-      post api_time_logs_path, params: { task_id: @other_task.id, mode: "timer", started_at: @started_at }, as: :json
+      post api_time_logs_path, params: { task_id: @other_task.id, mode: "timer" }, as: :json
     end
 
     assert_response :forbidden
@@ -64,7 +82,7 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
 
     assert_no_difference "TimeLog.count" do
-      post api_time_logs_path, params: { task_id: @task.id, mode: "timer", started_at: @started_at }, as: :json
+      post api_time_logs_path, params: { task_id: @task.id, mode: "timer" }, as: :json
     end
 
     assert_response :not_found
@@ -74,7 +92,7 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
 
     assert_no_difference "TimeLog.count" do
-      post api_time_logs_path, params: { mode: "timer", started_at: @started_at }, as: :json
+      post api_time_logs_path, params: { mode: "timer" }, as: :json
     end
 
     assert_response :not_found

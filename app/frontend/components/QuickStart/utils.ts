@@ -13,18 +13,11 @@ export const buildTaskPayload = ({
   checklistItemsAttributes: steps.map(({ text, isDone }) => ({ title: text, isCompleted: isDone })),
 });
 
-export const buildTimeLogPayload = ({ id, estimatedMinutes }: Task): CreateTimeLogPayload => {
-  const startedAt = new Date().toISOString();
-
-  return {
-    taskId: id,
-    mode: "timer",
-    timerPreset: estimatedMinutes,
-    isRunning: true,
-    startedAt,
-    currentRunStartedAt: startedAt,
-  };
-};
+export const buildTimeLogPayload = ({ id, estimatedMinutes }: Task): CreateTimeLogPayload => ({
+  taskId: id,
+  mode: "timer",
+  timerPreset: estimatedMinutes,
+});
 
 const MINUTES_PER_HOUR = 60;
 

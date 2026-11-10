@@ -60,14 +60,7 @@ describe("QuickStart", () => {
       expect.anything(),
     );
     const [[timeLog]] = vi.mocked(timeLogsApi.create).mock.calls;
-    expect(timeLog).toEqual({
-      taskId: TASK.id,
-      mode: "timer",
-      timerPreset: 10,
-      isRunning: true,
-      startedAt: expect.any(String),
-      currentRunStartedAt: timeLog.startedAt,
-    });
+    expect(timeLog).toEqual({ taskId: TASK.id, mode: "timer", timerPreset: 10 });
   });
 
   it("uses custom minutes as the estimate", async () => {

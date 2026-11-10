@@ -72,13 +72,7 @@ export type TimeLog = {
 
 export type TimeLogResponse = { timeLog: TimeLog };
 
-export type CreateTimeLogPayload = Pick<TimeLog, "taskId" | "mode" | "startedAt"> &
-  Partial<
-    Pick<
-      TimeLog,
-      "timerPreset" | "accumulatedElapsedSeconds" | "isRunning" | "currentRunStartedAt" | "completedAt"
-    >
-  >;
+export type CreateTimeLogPayload = Pick<TimeLog, "taskId" | "mode"> & Partial<Pick<TimeLog, "timerPreset">>;
 
 export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & { timeLogId: string };
 

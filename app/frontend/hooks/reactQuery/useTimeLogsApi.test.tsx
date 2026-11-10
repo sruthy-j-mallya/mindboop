@@ -42,11 +42,7 @@ describe("useTimeLogsApi", () => {
     const { queryClient, wrapper } = setup();
 
     const { result } = renderHook(() => useCreateTimeLog(), { wrapper });
-    await result.current.mutateAsync({
-      taskId: TIME_LOG.taskId,
-      mode: TIME_LOG.mode,
-      startedAt: TIME_LOG.startedAt,
-    });
+    await result.current.mutateAsync({ taskId: TIME_LOG.taskId, mode: TIME_LOG.mode });
 
     expect(queryClient.getQueryData(QUERY_KEYS.TIME_LOGS.CURRENT)).toEqual(TIME_LOG);
   });

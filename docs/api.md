@@ -73,15 +73,14 @@ unknown time log gets a 404, and so does a time log whose task was deleted.
 
 `POST /api/time_logs` accepts these fields:
 
-| Field                         | Notes                                      |
-| ----------------------------- | ------------------------------------------ |
-| `mode`                        | Required, `timer` or `stopwatch`           |
-| `started_at`                  | Required, datetime                         |
-| `timer_preset`                | Optional, positive whole number of minutes |
-| `accumulated_elapsed_seconds` | Defaults to 0, can't be negative           |
-| `is_running`                  | Defaults to `false`                        |
-| `current_run_started_at`      | Optional, datetime                         |
-| `completed_at`                | Optional, datetime                         |
+| Field          | Notes                                      |
+| -------------- | ------------------------------------------ |
+| `mode`         | Required, `timer` or `stopwatch`           |
+| `timer_preset` | Optional, positive whole number of minutes |
+
+A new time log starts running at once: the server sets `started_at` and `current_run_started_at` to the current time,
+`is_running` to `true`, `accumulated_elapsed_seconds` to 0 and `completed_at` to `null`. Any of these sent by the client
+are ignored.
 
 `time_log` also includes `id`, `task_id`, `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
 `{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise
