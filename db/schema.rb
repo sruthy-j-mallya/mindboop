@@ -48,6 +48,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
     t.uuid "task_id", null: false
     t.string "title", null: false
     t.boolean "is_completed", default: false, null: false
+    t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "position", null: false
@@ -260,7 +261,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
   add_foreign_key "achievements", "users"
   add_foreign_key "breadcrumbs", "tasks"
   add_foreign_key "breaks", "time_logs"
-  add_foreign_key "checklist_items", "tasks"
+  add_foreign_key "checklist_items", "tasks", on_delete: :cascade
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

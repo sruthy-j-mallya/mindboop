@@ -44,11 +44,21 @@ class TaskTest < ActiveSupport::TestCase
     assert_equal [ first, second ], @task.checklist_items.to_a
   end
 
+  def test_that_checklist_items_leave_out_discarded_ones
+    kept = create(:checklist_item, task: @task)
+    create(:checklist_item, task: @task).discard!
+
+    assert_equal [ kept ], @task.reload.checklist_items.to_a
+  end
+
   def test_that_destroying_a_user_destroys_their_tasks_and_checklist_items
     create(:checklist_item, task: @task)
+    create(:checklist_item, task: @task).discard!
 
-    assert_difference [ "Task.count", "ChecklistItem.count" ], -1 do
-      @task.user.destroy!
+    assert_difference "Task.count", -1 do
+      assert_difference "ChecklistItem.count", -2 do
+        @task.user.destroy!
+      end
     end
   end
 end

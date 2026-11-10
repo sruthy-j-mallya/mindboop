@@ -66,6 +66,17 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.parsed_body["page"]
   end
 
+  def test_that_show_leaves_out_discarded_checklist_items
+    item = create(:checklist_item, task: @task)
+    create(:checklist_item, task: @task).discard!
+    sign_in @user
+
+    get api_task_path(@task)
+
+    assert_response :ok
+    assert_equal [ item.id ], response.parsed_body.dig("task", "checklist_items").pluck("id")
+  end
+
   def test_that_index_loads_checklist_items_with_each_task
     item = create(:checklist_item, task: @task)
     sign_in @user

@@ -60,7 +60,8 @@ The writable task fields are `title`, `description`, `estimated_minutes`, `is_du
 `starts_at` and `ends_at`.
 
 `task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, in
-position order (`app/views/api/tasks/_task.json.jbuilder`).
+position order (`app/views/api/tasks/_task.json.jbuilder`). Checklist items are soft-deleted (Discard), and discarded
+items are left out.
 
 `POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
 creates the items with the task, positioned in array order. If any item is invalid, the request gets a 422 and nothing

@@ -31,4 +31,20 @@ class ChecklistItemTest < ActiveSupport::TestCase
 
     assert_equal 6, create(:checklist_item, task:).position
   end
+
+  def test_that_discarding_keeps_the_item
+    item = create(:checklist_item)
+
+    item.discard!
+
+    assert item.reload.discarded?
+    assert_not_includes ChecklistItem.kept, item
+  end
+
+  def test_that_a_new_item_goes_after_a_discarded_one
+    task = create(:task)
+    create(:checklist_item, task:).discard!
+
+    assert_equal 1, create(:checklist_item, task:).position
+  end
 end

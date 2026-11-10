@@ -2,7 +2,8 @@ class Task < ApplicationRecord
   include Discard::Model
 
   belongs_to :user
-  has_many :checklist_items, -> { order(:position) }, dependent: :destroy, inverse_of: :task
+  # Discarded items stay hidden. The database deletes them with their task (on_delete: :cascade).
+  has_many :checklist_items, -> { kept.order(:position) }, inverse_of: :task
   has_many :time_logs, dependent: :destroy
   has_many :breadcrumbs, dependent: :destroy
   accepts_nested_attributes_for :checklist_items
