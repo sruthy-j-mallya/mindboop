@@ -52,10 +52,9 @@ export const useDeleteTask = () => {
     mutationFn: tasksApi.destroy,
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.TASKS.DETAIL(id) });
-      // A deleted task's time logs disappear from the lists along with it.
+      // A deleted task's time log can't stay the current one.
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS }),
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
       ]);
     },

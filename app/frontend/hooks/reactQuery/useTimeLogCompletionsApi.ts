@@ -11,7 +11,6 @@ export const useCompleteTimeLog = () => {
     onSuccess: ({ timeLog }) => {
       // Completing a time log also marks its task as done.
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.DETAIL(timeLog.taskId) }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS }),

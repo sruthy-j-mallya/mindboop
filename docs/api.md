@@ -37,9 +37,7 @@ Every error response has one shape:
 | POST   | `/api/tasks`                             | Task fields (`title` required)                            | 201 `{ task }`               |
 | PATCH  | `/api/tasks/:id`                         | Task fields                                               | 200 `{ task }`               |
 | DELETE | `/api/tasks/:id`                         | –                                                         | 204, soft delete             |
-| GET    | `/api/time_logs`                         | `page`, `task_id` query params (optional)                 | 200 `{ time_logs, … }`       |
 | POST   | `/api/time_logs`                         | `task_id`, Time log fields                                | 201 `{ time_log }`           |
-| PATCH  | `/api/time_logs/:id`                     | Time log fields                                           | 200 `{ time_log }`           |
 | DELETE | `/api/time_logs/:id`                     | –                                                         | 204, soft delete             |
 | POST   | `/api/time_logs/:time_log_id/completion` | –                                                         | 201 `{ time_log }`           |
 | POST   | `/api/time_logs/:time_log_id/extension`  | `minutes`                                                 | 201 `{ time_log }`           |
@@ -70,14 +68,10 @@ is saved. Checklist items can't be changed after that for now: `PATCH /api/tasks
 
 ## Time logs
 
-A time log belongs to a task, and through it to the task's owner. `GET /api/time_logs` lists only the signed-in user's
-undeleted time logs, oldest first, and `task_id` narrows them to one task. Another user's time log gets a 403. A deleted
-or unknown time log gets a 404, and so does a time log whose task was deleted.
+A time log belongs to a task, and through it to the task's owner. Another user's time log gets a 403. A deleted or
+unknown time log gets a 404, and so does a time log whose task was deleted.
 
-The list returns 20 time logs per page, as `{ time_logs, time_logs_count, page, total_pages }`, with the same page handling
-as tasks.
-
-The writable fields are:
+`POST /api/time_logs` accepts these fields:
 
 | Field                         | Notes                                      |
 | ----------------------------- | ------------------------------------------ |
@@ -102,7 +96,7 @@ The writable fields are:
   when it's a `timer` with a `timer_preset` and less time elapsed than the preset. A stopwatch never is.
 
 Completing a log that's already completed changes nothing and returns it again. Another user's time log gets a 403, and
-a deleted or unknown one gets a 404. `PATCH /api/time_logs/:id` with `completed_at` doesn't touch the task or achievements.
+a deleted or unknown one gets a 404.
 
 `POST /api/time_logs/:time_log_id/extension` adds `minutes` (a positive whole number) to a timer's `buffer_minutes`, which
 starts at 0. A session runs for `timer_preset` + `buffer_minutes`:
@@ -112,7 +106,7 @@ starts at 0. A session runs for `timer_preset` + `buffer_minutes`:
   timer that ran past zero gets all the added minutes.
 - `is_finished_early` still compares against `timer_preset` alone, so finishing inside the buffer isn't finishing early.
 
-Another user's time log gets a 403, and a deleted or unknown one gets a 404. `PATCH /api/time_logs/:id` ignores
+Another user's time log gets a 403, and a deleted or unknown one gets a 404. `POST /api/time_logs` ignores
 `buffer_minutes`.
 
 `POST /api/time_logs/:time_log_id/bail_out` ends a session without finishing it, in one transaction:
@@ -141,7 +135,7 @@ log also ends its break. Another user's time log gets a 403, and a deleted or un
 `GET /api/current_time_log` returns the signed-in user's most recently started time log that isn't completed or deleted.
 With no such log, it returns 200 with `{ "time_log": null }`.
 
-`POST /api/time_logs` requires a `task_id`. A missing, unknown or deleted task gets a 404, and another user's task gets a 403. A time log can't move to another task: `PATCH /api/time_logs/:id` ignores `task_id`.
+`POST /api/time_logs` requires a `task_id`. A missing, unknown or deleted task gets a 404, and another user's task gets a 403.
 
 ## Sign-up
 

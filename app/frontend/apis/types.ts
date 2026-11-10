@@ -70,28 +70,15 @@ export type TimeLog = {
   updatedAt: string;
 };
 
-export type TimeLogListParams = { page?: number; taskId?: string };
-
-export type TimeLogListResponse = {
-  timeLogs: TimeLog[];
-  timeLogsCount: number;
-  page: number;
-  totalPages: number;
-};
-
 export type TimeLogResponse = { timeLog: TimeLog };
 
-type TimeLogFields = Pick<TimeLog, "mode" | "startedAt"> &
+export type CreateTimeLogPayload = Pick<TimeLog, "taskId" | "mode" | "startedAt"> &
   Partial<
     Pick<
       TimeLog,
       "timerPreset" | "accumulatedElapsedSeconds" | "isRunning" | "currentRunStartedAt" | "completedAt"
     >
   >;
-
-export type CreateTimeLogPayload = TimeLogFields & Pick<TimeLog, "taskId">;
-
-export type UpdateTimeLogPayload = Partial<TimeLogFields> & Pick<TimeLog, "id">;
 
 export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & { timeLogId: string };
 

@@ -5,7 +5,7 @@ Rails.application.routes.draw do
     resource :registration, only: :create
     resources :passwords, param: :token, only: %i[ create update ]
     resources :tasks, only: %i[ index show create update destroy ]
-    resources :time_logs, only: %i[ index create update destroy ] do
+    resources :time_logs, only: %i[ create destroy ] do
       resource :completion, only: :create, controller: "time_log_completions"
       resource :extension, only: :create, controller: "time_log_extensions"
       resource :bail_out, only: :create, controller: "time_log_bail_outs"

@@ -15,10 +15,7 @@ const queryClient = new QueryClient({
 });
 
 // For mutations of the session in progress, which return the time log with its new state.
-export const updateTimeLogCaches = (client: QueryClient, { timeLog }: TimeLogResponse) => {
+export const updateTimeLogCaches = (client: QueryClient, { timeLog }: TimeLogResponse) =>
   client.setQueryData(QUERY_KEYS.TIME_LOGS.CURRENT, timeLog);
-
-  return client.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS });
-};
 
 export default queryClient;

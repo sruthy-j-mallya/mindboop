@@ -1,4 +1,4 @@
-import type { TaskListParams, TimeLogListParams } from "@/apis/types";
+import type { TaskListParams } from "@/apis/types";
 
 export const QUERY_KEYS = {
   SESSION: ["session"],
@@ -8,8 +8,6 @@ export const QUERY_KEYS = {
     DETAIL: (id: string) => ["tasks", "detail", id],
   },
   TIME_LOGS: {
-    LISTS: ["timeLogs", "list"],
-    LIST: (params: TimeLogListParams) => ["timeLogs", "list", params],
     CURRENT: ["timeLogs", "current"],
   },
 } as const;

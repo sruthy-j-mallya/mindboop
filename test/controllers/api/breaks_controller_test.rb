@@ -119,13 +119,13 @@ class Api::BreaksControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @time_log.breaks.sole.ended_at
   end
 
-  def test_that_the_list_includes_the_current_break
+  def test_that_the_current_time_log_includes_the_current_break
     sign_in @user
     post api_time_log_break_path(@time_log), params: @params
 
-    get api_time_logs_path
+    get api_current_time_log_path
 
-    assert_equal "Delivery", response.parsed_body["time_logs"].sole["current_break"]["intention"]
+    assert_equal "Delivery", response.parsed_body["time_log"]["current_break"]["intention"]
   end
 
   def test_that_create_and_update_return_401_when_signed_out
