@@ -60,7 +60,6 @@ export type TimeLog = {
   timerPreset: number | null;
   bufferMinutes: number;
   accumulatedElapsedSeconds: number;
-  pauseCount: number;
   isRunning: boolean;
   currentRunStartedAt: string | null;
   startedAt: string;
@@ -86,12 +85,7 @@ type TimeLogFields = Pick<TimeLog, "mode" | "startedAt"> &
   Partial<
     Pick<
       TimeLog,
-      | "timerPreset"
-      | "accumulatedElapsedSeconds"
-      | "pauseCount"
-      | "isRunning"
-      | "currentRunStartedAt"
-      | "completedAt"
+      "timerPreset" | "accumulatedElapsedSeconds" | "isRunning" | "currentRunStartedAt" | "completedAt"
     >
   >;
 

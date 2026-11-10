@@ -29,7 +29,6 @@ class Api::BreaksControllerTest < ActionDispatch::IntegrationTest
       time_log = response.parsed_body["time_log"]
       assert_equal false, time_log["is_running"]
       assert_nil time_log["current_run_started_at"]
-      assert_equal 1, time_log["pause_count"]
       assert_equal 90, time_log["accumulated_elapsed_seconds"]
       assert_equal "Delivery", time_log["current_break"]["intention"]
       assert_equal 5, time_log["current_break"]["duration_minutes"]
@@ -47,7 +46,6 @@ class Api::BreaksControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
     assert_equal "Duration minutes must be less than or equal to 15", response.parsed_body["error"]
     assert @time_log.reload.is_running
-    assert_equal 0, @time_log.pause_count
   end
 
   def test_that_a_completed_time_log_cannot_be_paused
@@ -70,7 +68,7 @@ class Api::BreaksControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     assert_equal "Delivery", response.parsed_body["time_log"]["current_break"]["intention"]
-    assert_equal 1, @time_log.reload.pause_count
+    assert_equal 1, @time_log.breaks.count
   end
 
   def test_that_the_current_time_log_includes_the_break

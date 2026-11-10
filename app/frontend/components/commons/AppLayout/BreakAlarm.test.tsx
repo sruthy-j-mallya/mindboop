@@ -24,7 +24,6 @@ const timeLogWithBreak = (endsAt: number): TimeLog => ({
   timerPreset: 25,
   bufferMinutes: 0,
   accumulatedElapsedSeconds: 60,
-  pauseCount: 1,
   isRunning: false,
   currentRunStartedAt: null,
   startedAt: new Date(NOW).toISOString(),

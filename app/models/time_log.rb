@@ -18,7 +18,7 @@ class TimeLog < ApplicationRecord
 
   validates :started_at, presence: true
   validates :timer_preset, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
-  validates :accumulated_elapsed_seconds, :pause_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :accumulated_elapsed_seconds, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :is_running, :is_bailed_out, inclusion: { in: [ true, false ] }
   validates :buffer_minutes,
     numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_BUFFER_MINUTES }
@@ -50,8 +50,7 @@ class TimeLog < ApplicationRecord
       update!(
         accumulated_elapsed_seconds: elapsed_seconds_at(Time.current),
         is_running: false,
-        current_run_started_at: nil,
-        pause_count: pause_count + 1
+        current_run_started_at: nil
       )
       reset_current_break
     end

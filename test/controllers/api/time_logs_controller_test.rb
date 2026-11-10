@@ -199,20 +199,20 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
 
     patch api_time_log_path(@time_log), params: {
-      accumulated_elapsed_seconds: 90, pause_count: 2, is_running: false, completed_at:
+      accumulated_elapsed_seconds: 90, is_running: false, completed_at:
     }, as: :json
 
     assert_response :ok
     assert_equal 90, response.parsed_body.dig("time_log", "accumulated_elapsed_seconds")
     @time_log.reload
-    assert_equal 2, @time_log.pause_count
+    assert_not @time_log.is_running
     assert_equal completed_at, @time_log.completed_at
   end
 
   def test_that_update_cannot_move_the_time_log_to_another_task
     sign_in @user
 
-    patch api_time_log_path(@time_log), params: { task_id: @other_task.id, pause_count: 1 }, as: :json
+    patch api_time_log_path(@time_log), params: { task_id: @other_task.id, accumulated_elapsed_seconds: 1 }, as: :json
 
     assert_response :ok
     assert_equal @task.id, @time_log.reload.task_id
@@ -221,26 +221,26 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
   def test_that_update_rejects_invalid_values
     sign_in @user
 
-    patch api_time_log_path(@time_log), params: { pause_count: -1 }, as: :json
+    patch api_time_log_path(@time_log), params: { accumulated_elapsed_seconds: -1 }, as: :json
 
     assert_response :unprocessable_content
     assert response.parsed_body["error"].present?
   end
 
   def test_that_update_returns_401_when_signed_out
-    patch api_time_log_path(@time_log), params: { pause_count: 1 }, as: :json
+    patch api_time_log_path(@time_log), params: { accumulated_elapsed_seconds: 1 }, as: :json
 
     assert_response :unauthorized
-    assert_equal 0, @time_log.reload.pause_count
+    assert_equal 0, @time_log.reload.accumulated_elapsed_seconds
   end
 
   def test_that_update_returns_403_for_another_users_time_log
     sign_in @user
 
-    patch api_time_log_path(@other_time_log), params: { pause_count: 1 }, as: :json
+    patch api_time_log_path(@other_time_log), params: { accumulated_elapsed_seconds: 1 }, as: :json
 
     assert_response :forbidden
-    assert_equal 0, @other_time_log.reload.pause_count
+    assert_equal 0, @other_time_log.reload.accumulated_elapsed_seconds
   end
 
   def test_that_destroy_soft_deletes_the_time_log

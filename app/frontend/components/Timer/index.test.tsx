@@ -24,7 +24,6 @@ const TIME_LOG: TimeLog = {
   timerPreset: 25,
   bufferMinutes: 0,
   accumulatedElapsedSeconds: 0,
-  pauseCount: 0,
   isRunning: true,
   currentRunStartedAt: STARTED_AT,
   startedAt: STARTED_AT,
@@ -131,7 +130,6 @@ describe("Timer", () => {
       isRunning: false,
       currentRunStartedAt: null,
       accumulatedElapsedSeconds: 37,
-      pauseCount: 1,
       currentBreak: {
         id: "c3f8a7b2-5e6d-4a81-9b0c-3e4f5a6b7c8d",
         intention: "Delivery",

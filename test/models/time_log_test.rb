@@ -26,11 +26,9 @@ class TimeLogTest < ActiveSupport::TestCase
     assert build(:time_log, timer_preset: nil).valid?
   end
 
-  def test_that_counters_default_to_zero_and_cannot_be_negative
+  def test_that_accumulated_elapsed_seconds_defaults_to_zero_and_cannot_be_negative
     assert_equal 0, @time_log.accumulated_elapsed_seconds
-    assert_equal 0, @time_log.pause_count
     assert_not build(:time_log, accumulated_elapsed_seconds: -1).valid?
-    assert_not build(:time_log, pause_count: -1).valid?
   end
 
   def test_that_is_running_defaults_to_false_and_cannot_be_null

@@ -42,7 +42,7 @@ module Api
       # task_id is left out on purpose: it's only read on create, so a log can't move to another task.
       def time_log_params
         params.permit(
-          :mode, :timer_preset, :accumulated_elapsed_seconds, :pause_count, :is_running, :current_run_started_at,
+          :mode, :timer_preset, :accumulated_elapsed_seconds, :is_running, :current_run_started_at,
           :started_at, :completed_at
         )
       end

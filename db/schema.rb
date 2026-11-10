@@ -236,7 +236,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
     t.string "mode", null: false
     t.integer "timer_preset"
     t.integer "accumulated_elapsed_seconds", default: 0, null: false
-    t.integer "pause_count", default: 0, null: false
     t.boolean "is_running", default: false, null: false
     t.datetime "current_run_started_at"
     t.datetime "started_at", null: false

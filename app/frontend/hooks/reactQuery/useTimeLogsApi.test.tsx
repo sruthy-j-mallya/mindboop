@@ -20,7 +20,6 @@ const TIME_LOG: TimeLog = {
   timerPreset: 15,
   bufferMinutes: 0,
   accumulatedElapsedSeconds: 0,
-  pauseCount: 0,
   isRunning: true,
   currentRunStartedAt: "2026-11-05T10:00:00.000Z",
   startedAt: "2026-11-05T10:00:00.000Z",
@@ -85,12 +84,12 @@ describe("useTimeLogsApi", () => {
   });
 
   it("updates the cached time log and invalidates the list after an update", async () => {
-    const updated = { ...TIME_LOG, isRunning: false, pauseCount: 1 };
+    const updated = { ...TIME_LOG, isRunning: false };
     vi.spyOn(timeLogsApi, "update").mockResolvedValue({ timeLog: updated });
     const { queryClient, wrapper, invalidateQueries } = setup();
 
     const { result } = renderHook(() => useUpdateTimeLog(), { wrapper });
-    await result.current.mutateAsync({ id: TIME_LOG.id, isRunning: false, pauseCount: 1 });
+    await result.current.mutateAsync({ id: TIME_LOG.id, isRunning: false });
 
     expect(queryClient.getQueryData(QUERY_KEYS.TIME_LOGS.DETAIL(TIME_LOG.id))).toEqual(updated);
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS });

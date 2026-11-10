@@ -5,7 +5,6 @@ class CreateTimeLogs < ActiveRecord::Migration[8.1]
       t.string :mode, null: false
       t.integer :timer_preset
       t.integer :accumulated_elapsed_seconds, null: false, default: 0
-      t.integer :pause_count, null: false, default: 0
       t.boolean :is_running, null: false, default: false
       t.datetime :current_run_started_at
       t.datetime :started_at, null: false

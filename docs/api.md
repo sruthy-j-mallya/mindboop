@@ -86,7 +86,6 @@ The writable fields are:
 | `started_at`                  | Required, datetime                         |
 | `timer_preset`                | Optional, positive whole number of minutes |
 | `accumulated_elapsed_seconds` | Defaults to 0, can't be negative           |
-| `pause_count`                 | Defaults to 0, can't be negative           |
 | `is_running`                  | Defaults to `false`                        |
 | `current_run_started_at`      | Optional, datetime                         |
 | `completed_at`                | Optional, datetime                         |
@@ -132,7 +131,7 @@ and a deleted or unknown one gets a 404.
 - A break is created with `intention` (required, up to 100 characters) and `duration_minutes` (1–15), and `ends_at` is set
   from the duration. Invalid values get a 422, and so does a completed time log.
 - The time log stops: its elapsed time moves into `accumulated_elapsed_seconds`, `is_running` becomes `false`,
-  `current_run_started_at` is cleared and `pause_count` goes up by 1.
+  `current_run_started_at` is cleared.
 
 `PATCH /api/time_logs/:time_log_id/break` ends the break: `ended_at` is set, `is_running` becomes `true` and
 `current_run_started_at` restarts. The time log stays paused after `ends_at` until this is called.
