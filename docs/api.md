@@ -38,7 +38,6 @@ Every error response has one shape:
 | PATCH  | `/api/tasks/:id`                         | Task fields                                               | 200 `{ task }`               |
 | DELETE | `/api/tasks/:id`                         | –                                                         | 204, soft delete             |
 | GET    | `/api/time_logs`                         | `page`, `task_id` query params (optional)                 | 200 `{ time_logs, … }`       |
-| GET    | `/api/time_logs/:id`                     | –                                                         | 200 `{ time_log }`           |
 | POST   | `/api/time_logs`                         | `task_id`, Time log fields                                | 201 `{ time_log }`           |
 | PATCH  | `/api/time_logs/:id`                     | Time log fields                                           | 200 `{ time_log }`           |
 | DELETE | `/api/time_logs/:id`                     | –                                                         | 204, soft delete             |

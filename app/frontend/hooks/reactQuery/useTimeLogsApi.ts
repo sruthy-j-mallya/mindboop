@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 
 import timeLogsApi from "@/apis/time_logs";
-import type { TimeLog, TimeLogListParams, TimeLogListResponse } from "@/apis/types";
+import type { TimeLogListParams, TimeLogListResponse } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 
 export const useTimeLogs = (
@@ -11,13 +11,6 @@ export const useTimeLogs = (
   useQuery({
     queryKey: QUERY_KEYS.TIME_LOGS.LIST(params),
     queryFn: () => timeLogsApi.fetchList(params),
-    ...options,
-  });
-
-export const useTimeLog = (id: string, options?: Omit<UseQueryOptions<TimeLog>, "queryKey" | "queryFn">) =>
-  useQuery({
-    queryKey: QUERY_KEYS.TIME_LOGS.DETAIL(id),
-    queryFn: async () => (await timeLogsApi.show(id)).timeLog,
     ...options,
   });
 
@@ -39,13 +32,11 @@ export const useUpdateTimeLog = () => {
 
   return useMutation({
     mutationFn: timeLogsApi.update,
-    onSuccess: ({ timeLog }) => {
-      queryClient.setQueryData(QUERY_KEYS.TIME_LOGS.DETAIL(timeLog.id), timeLog);
-      return Promise.all([
+    onSuccess: () =>
+      Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
-      ]);
-    },
+      ]),
   });
 };
 
@@ -54,12 +45,10 @@ export const useDeleteTimeLog = () => {
 
   return useMutation({
     mutationFn: timeLogsApi.destroy,
-    onSuccess: (_, id) => {
-      queryClient.removeQueries({ queryKey: QUERY_KEYS.TIME_LOGS.DETAIL(id) });
-      return Promise.all([
+    onSuccess: () =>
+      Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
-      ]);
-    },
+      ]),
   });
 };

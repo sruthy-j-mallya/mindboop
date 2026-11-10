@@ -14,8 +14,6 @@ const timeLogURL = (id: string) => `${TIME_LOGS_URL}/${encodeURIComponent(id)}`;
 const fetchList = (params: TimeLogListParams = {}) =>
   http.get<TimeLogListResponse>(TIME_LOGS_URL, { params }).then(({ data }) => data);
 
-const show = (id: string) => http.get<TimeLogResponse>(timeLogURL(id)).then(({ data }) => data);
-
 const create = (payload: CreateTimeLogPayload) =>
   http.post<TimeLogResponse>(TIME_LOGS_URL, payload).then(({ data }) => data);
 
@@ -24,6 +22,6 @@ const update = ({ id, ...payload }: UpdateTimeLogPayload) =>
 
 const destroy = (id: string) => http.delete(timeLogURL(id));
 
-const timeLogsApi = { fetchList, show, create, update, destroy };
+const timeLogsApi = { fetchList, create, update, destroy };
 
 export default timeLogsApi;

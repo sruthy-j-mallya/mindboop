@@ -69,61 +69,6 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, response.parsed_body["page"]
   end
 
-  def test_that_show_returns_the_time_log
-    sign_in @user
-
-    get api_time_log_path(@time_log)
-
-    assert_response :ok
-    time_log = response.parsed_body["time_log"]
-    assert_equal @task.id, time_log["task_id"]
-    assert_equal "stopwatch", time_log["mode"]
-    assert_equal false, time_log["is_running"]
-    assert_not time_log.key?("discarded_at")
-  end
-
-  def test_that_show_returns_401_when_signed_out
-    get api_time_log_path(@time_log)
-
-    assert_response :unauthorized
-  end
-
-  def test_that_show_returns_403_for_another_users_time_log
-    sign_in @user
-
-    get api_time_log_path(@other_time_log)
-
-    assert_response :forbidden
-    assert response.parsed_body["error"].present?
-  end
-
-  def test_that_show_returns_404_for_a_deleted_time_log
-    @time_log.discard!
-    sign_in @user
-
-    get api_time_log_path(@time_log)
-
-    assert_response :not_found
-    assert response.parsed_body["error"].present?
-  end
-
-  def test_that_show_returns_404_when_the_task_is_deleted
-    @task.discard!
-    sign_in @user
-
-    get api_time_log_path(@time_log)
-
-    assert_response :not_found
-  end
-
-  def test_that_show_returns_404_for_a_malformed_id
-    sign_in @user
-
-    get api_time_log_path("not-a-uuid")
-
-    assert_response :not_found
-  end
-
   def test_that_user_can_create_a_time_log
     sign_in @user
 
@@ -241,6 +186,33 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :forbidden
     assert_equal 0, @other_time_log.reload.accumulated_elapsed_seconds
+  end
+
+  def test_that_update_returns_404_for_a_deleted_time_log
+    @time_log.discard!
+    sign_in @user
+
+    patch api_time_log_path(@time_log), params: { accumulated_elapsed_seconds: 1 }, as: :json
+
+    assert_response :not_found
+    assert response.parsed_body["error"].present?
+  end
+
+  def test_that_update_returns_404_when_the_task_is_deleted
+    @task.discard!
+    sign_in @user
+
+    patch api_time_log_path(@time_log), params: { accumulated_elapsed_seconds: 1 }, as: :json
+
+    assert_response :not_found
+  end
+
+  def test_that_update_returns_404_for_a_malformed_id
+    sign_in @user
+
+    patch api_time_log_path("not-a-uuid"), params: { accumulated_elapsed_seconds: 1 }, as: :json
+
+    assert_response :not_found
   end
 
   def test_that_destroy_soft_deletes_the_time_log

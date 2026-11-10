@@ -8,7 +8,6 @@ import { QUERY_KEYS } from "@/constants/query";
 import {
   useCreateTimeLog,
   useDeleteTimeLog,
-  useTimeLog,
   useTimeLogs,
   useUpdateTimeLog,
 } from "@/hooks/reactQuery/useTimeLogsApi";
@@ -73,37 +72,25 @@ describe("useTimeLogsApi", () => {
     ).toBe(true);
   });
 
-  it("unwraps a single time log", async () => {
-    const show = vi.spyOn(timeLogsApi, "show").mockResolvedValue({ timeLog: TIME_LOG });
-    const { wrapper } = setup();
-
-    const { result } = renderHook(() => useTimeLog(TIME_LOG.id), { wrapper });
-
-    await waitFor(() => expect(result.current.data).toEqual(TIME_LOG));
-    expect(show).toHaveBeenCalledWith(TIME_LOG.id);
-  });
-
-  it("updates the cached time log and invalidates the list after an update", async () => {
-    const updated = { ...TIME_LOG, isRunning: false };
-    vi.spyOn(timeLogsApi, "update").mockResolvedValue({ timeLog: updated });
-    const { queryClient, wrapper, invalidateQueries } = setup();
+  it("invalidates the lists and the current time log after an update", async () => {
+    vi.spyOn(timeLogsApi, "update").mockResolvedValue({ timeLog: { ...TIME_LOG, isRunning: false } });
+    const { wrapper, invalidateQueries } = setup();
 
     const { result } = renderHook(() => useUpdateTimeLog(), { wrapper });
     await result.current.mutateAsync({ id: TIME_LOG.id, isRunning: false });
 
-    expect(queryClient.getQueryData(QUERY_KEYS.TIME_LOGS.DETAIL(TIME_LOG.id))).toEqual(updated);
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT });
   });
 
-  it("drops the cached time log and invalidates the list after a delete", async () => {
+  it("invalidates the lists and the current time log after a delete", async () => {
     vi.spyOn(timeLogsApi, "destroy").mockResolvedValue({} as Awaited<ReturnType<typeof timeLogsApi.destroy>>);
-    const { queryClient, wrapper, invalidateQueries } = setup();
-    queryClient.setQueryData(QUERY_KEYS.TIME_LOGS.DETAIL(TIME_LOG.id), TIME_LOG);
+    const { wrapper, invalidateQueries } = setup();
 
     const { result } = renderHook(() => useDeleteTimeLog(), { wrapper });
     await result.current.mutateAsync(TIME_LOG.id);
 
-    expect(queryClient.getQueryData(QUERY_KEYS.TIME_LOGS.DETAIL(TIME_LOG.id))).toBeUndefined();
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT });
   });
 });

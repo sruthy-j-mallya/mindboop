@@ -8,13 +8,10 @@ export const useBailOutTimeLog = () => {
 
   return useMutation({
     mutationFn: timeLogBailOutsApi.create,
-    onSuccess: ({ timeLog }) => {
-      queryClient.setQueryData(QUERY_KEYS.TIME_LOGS.DETAIL(timeLog.id), timeLog);
-
-      return Promise.all([
+    onSuccess: () =>
+      Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.LISTS }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
-      ]);
-    },
+      ]),
   });
 };

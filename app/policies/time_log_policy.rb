@@ -3,10 +3,6 @@ class TimeLogPolicy < ApplicationPolicy
     true
   end
 
-  def show?
-    owner?
-  end
-
   def create?
     owner?
   end
