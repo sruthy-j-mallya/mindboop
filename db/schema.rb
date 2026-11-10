@@ -48,10 +48,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
     t.uuid "task_id", null: false
     t.string "title", null: false
     t.boolean "is_completed", default: false, null: false
+    t.integer "position", null: false
     t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "position", null: false
     t.index ["task_id", "position"], name: "index_checklist_items_on_task_id_and_position"
   end
 
