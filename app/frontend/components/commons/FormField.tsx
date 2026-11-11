@@ -3,6 +3,8 @@ import type { ComponentProps } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import PasswordInput from "./PasswordInput";
+
 type FormFieldProps = ComponentProps<typeof Input> & {
   label: string;
   name: string;
@@ -14,11 +16,12 @@ const FormField = ({ label, name, error, hint, ...inputProps }: FormFieldProps) 
   const errorId = `${name}-error`;
   const hintId = `${name}-hint`;
   const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(" ");
+  const FieldInput = inputProps.type === "password" ? PasswordInput : Input;
 
   return (
     <div className="grid gap-2">
       <Label htmlFor={name}>{label}</Label>
-      <Input
+      <FieldInput
         aria-describedby={describedBy || undefined}
         aria-invalid={!!error}
         id={name}

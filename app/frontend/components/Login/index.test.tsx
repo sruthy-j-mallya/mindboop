@@ -45,4 +45,12 @@ describe("Login", () => {
     expect(screen.getByText("Enter your password")).toBeInTheDocument();
     expect(create).not.toHaveBeenCalled();
   });
+
+  it("lets the user reveal the password they typed", async () => {
+    renderLogin();
+    await userEvent.type(screen.getByLabelText("Password"), "my-password");
+    await userEvent.click(screen.getByRole("button", { name: "Show password" }));
+
+    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "text");
+  });
 });
