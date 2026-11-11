@@ -54,8 +54,22 @@ jobs:
         run: bin/rails db:prepare
       - name: Rails tests
         run: bin/rails test
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
+      # System deps come from Ubuntu's apt mirrors, which occasionally fail to resolve on
+      # runners. The runner image already ships Chrome's libraries, so don't block on this.
+      - name: Install Playwright system dependencies
+        run: pnpm exec playwright install-deps chromium
+        continue-on-error: true
+        timeout-minutes: 5
       - name: Playwright
         run: pnpm e2e
       - uses: actions/upload-artifact@v4

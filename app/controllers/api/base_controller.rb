@@ -1,5 +1,6 @@
 module Api
   class BaseController < ApplicationController
+    include Pagy::Method
     include Pundit::Authorization
 
     # Conditions instead of only/except: Rails raises when a listed action doesn't exist on the controller.
@@ -8,6 +9,10 @@ module Api
 
     rescue_from ActiveRecord::RecordInvalid do |error|
       render json: { error: error.record.errors.full_messages.to_sentence }, status: :unprocessable_content
+    end
+
+    rescue_from ActiveRecord::RecordNotFound do
+      render json: { error: "Record not found." }, status: :not_found
     end
 
     rescue_from Pundit::NotAuthorizedError do

@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 
 import { ApiError } from "@/apis/axios";
-import sessionsApi, { type User } from "@/apis/sessions";
+import sessionsApi from "@/apis/sessions";
+import type { User } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 
 const fetchCurrentUser = async () => {
@@ -30,6 +31,10 @@ export const useLogout = () => {
 
   return useMutation({
     mutationFn: sessionsApi.destroy,
-    onSuccess: () => queryClient.setQueryData(QUERY_KEYS.SESSION, null),
+    onSuccess: () => {
+      queryClient.setQueryData(QUERY_KEYS.SESSION, null);
+      // The next person to sign in on this tab shouldn't see this user's session, even briefly.
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT });
+    },
   });
 };

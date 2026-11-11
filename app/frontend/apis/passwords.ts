@@ -1,8 +1,5 @@
 import http from "@/apis/axios";
-
-export type RequestResetPayload = { emailAddress: string };
-
-export type ResetPasswordPayload = { token: string; password: string; passwordConfirmation: string };
+import type { RequestResetPayload, ResetPasswordPayload } from "@/apis/types";
 
 const create = (payload: RequestResetPayload) =>
   http.post<{ message: string }>("/passwords", payload).then(({ data }) => data);

@@ -4,10 +4,14 @@ source "https://rubygems.org"
 gem "bcrypt", "~> 3.1.7"
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
+# Soft deletion [https://github.com/jhawthorn/discard]
+gem "discard", "~> 2.0"
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 # JSON views for the API [https://github.com/rails/jbuilder]
 gem "jbuilder", "~> 2.15"
+# Pagination [https://github.com/ddnexus/pagy]
+gem "pagy", "~> 43.8"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]

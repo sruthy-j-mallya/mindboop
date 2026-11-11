@@ -3,21 +3,33 @@ import type { ComponentProps } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type FormFieldProps = ComponentProps<typeof Input> & { label: string; name: string; error?: string };
+type FormFieldProps = ComponentProps<typeof Input> & {
+  label: string;
+  name: string;
+  error?: string;
+  hint?: string;
+};
 
-const FormField = ({ label, name, error, ...inputProps }: FormFieldProps) => {
+const FormField = ({ label, name, error, hint, ...inputProps }: FormFieldProps) => {
   const errorId = `${name}-error`;
+  const hintId = `${name}-hint`;
+  const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(" ");
 
   return (
     <div className="grid gap-2">
       <Label htmlFor={name}>{label}</Label>
       <Input
-        aria-describedby={error ? errorId : undefined}
+        aria-describedby={describedBy || undefined}
         aria-invalid={!!error}
         id={name}
         name={name}
         {...inputProps}
       />
+      {hint && (
+        <p id={hintId} className="text-sm text-muted-foreground">
+          {hint}
+        </p>
+      )}
       {error && (
         <p id={errorId} className="text-sm text-destructive">
           {error}

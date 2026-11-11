@@ -13,7 +13,7 @@ app/frontend/
 ├── Main.tsx             # Top-level <Routes>
 ├── routes.ts            # Every client path, as one nested object
 ├── entrypoints/         # Vite entrypoints
-├── apis/                # axios.ts + one file per Rails resource (HTTP only)
+├── apis/                # axios.ts, types.ts + one file per Rails resource (HTTP only)
 ├── hooks/
 │   ├── reactQuery/      # use<Resource>Api.ts: TanStack Query hooks, one file per apis/ file
 │   └── useXyz.ts        # Reusable non-query hooks
@@ -29,10 +29,25 @@ app/frontend/
 ```
 
 - A feature or sub-feature is a folder with an `index.tsx` entry. Its children live next to it:
-  `Notes/index.tsx`, `Notes/constants.ts`, `Notes/utils.ts`, `Notes/Pane/New.tsx`, `Notes/Pane/Edit.tsx`,
-  `Notes/Pane/NoteForm.tsx`. Nest folders by UI hierarchy.
-- Constants go in a co-located `constants.ts` and helpers in a co-located `utils.ts`. Promote them to
-  `constants/` or `utils/`, and a component to `components/commons/`, only when a second feature needs them.
+  `Notes/index.tsx`, `Notes/constants.ts`, `Notes/utils.ts`, `Notes/types.ts`, `Notes/Pane/New.tsx`,
+  `Notes/Pane/Edit.tsx`, `Notes/Pane/NoteForm.tsx`. Nest folders by UI hierarchy.
+- Split code by kind into co-located files: constants in `constants.ts`, helpers in `utils.ts`, types in
+  `types.ts`. Any folder at any level (a feature, a sub-feature, `hooks/`, `apis/`, `components/commons/`)
+  can have its own. Put each file in the nearest folder that covers every place that uses its contents.
+  Promote them to `constants/` or `utils/`, and a component to `components/commons/`, only when a second
+  feature needs them.
+
+### Types
+
+- Declare types in a `types.ts` next to the code that uses them, the same way constants go in `constants.ts`
+  and helpers in `utils.ts`. `types.ts` is not limited to `apis/`.
+- A single small type used only in one file (such as a component's `<Component>Props`) may stay in that file.
+  Once a component, hook, `utils.ts` or `constants.ts` file declares more than one or two types, or a type is
+  shared by several files, move them to the nearest `types.ts`.
+- Export each type by name and import it with `import type { … } from "./types"` (or `@/…/types` from outside
+  the feature).
+- Types inferred from a value stay beside that value (`type NoteFormValues = z.infer<…>` next to its schema
+  in `constants.ts`).
 
 ### Imports
 
@@ -51,7 +66,8 @@ app/frontend/
   export default NoteCard;
   ```
   The exception is `components/ui`, which keeps the named exports shadcn generates.
-- Type props with a `<Component>Props` type next to the component.
+- Type props with a `<Component>Props` type next to the component, or in the folder's `types.ts` once the file
+  declares several types (see Types).
 - Name handlers inside a component `handleX` (`handleSubmit`, `handleLogout`). Name callback props `onX`.
   Don't write inline arrow handlers longer than a call.
 - Return early for loading and guard states: `if (isPending) return null;`. Call all hooks before the first
@@ -75,8 +91,9 @@ app/frontend/
 - Use the standard verb names `fetchList`, `show`, `create`, `update`, `destroy`. Each is a one-liner that
   returns `data`. A function with several arguments takes a single object (`update = ({ id, ...payload })`),
   so it can be passed straight to `useMutation`.
-- Default-export one object named after the resource (`export default notesApi;`). Export the payload and
-  response types next to the functions.
+- Default-export one object named after the resource (`export default notesApi;`). Declare and export the
+  payload and response types in `apis/types.ts` (this folder's `types.ts`, see Types) and import them with
+  `import type { … } from "@/apis/types"`.
 - Only HTTP code lives here: no React and no state.
 
 ### Server state (`hooks/reactQuery/use<Resource>Api.ts`)
@@ -222,6 +239,9 @@ RuboCop's `Layout/ClassStructure` enforces this order:
 10. public methods
 11. private methods
 
+- App tables use UUID primary keys (generators default to them). Foreign keys need `type: :uuid`. Solid Queue's
+  tables stay on `bigint`.
+- Soft delete with Discard (`include Discard::Model`), and query those models through `kept`.
 - Freeze mutable constants (`KINDS = %w[ a b ].freeze`).
 - Use `delegate … prefix: true` instead of wrapper methods.
 - Callbacks call private, well-named methods (`after_update :notify_x, if: :y_changed?`).

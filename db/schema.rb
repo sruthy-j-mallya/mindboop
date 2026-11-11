@@ -10,16 +10,57 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_122726) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "sessions", force: :cascade do |t|
-    t.bigint "user_id", null: false
+  create_table "achievements", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "kind", null: false
+    t.integer "count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "kind"], name: "index_achievements_on_user_id_and_kind", unique: true
+  end
+
+  create_table "breadcrumbs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "task_id", null: false
+    t.text "completed_description"
+    t.text "restart_description", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id"], name: "index_breadcrumbs_on_task_id"
+  end
+
+  create_table "breaks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "time_log_id", null: false
+    t.string "intention", null: false
+    t.integer "duration_minutes", null: false
+    t.datetime "ends_at", null: false
+    t.datetime "ended_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["time_log_id"], name: "index_breaks_on_time_log_id"
+    t.index ["time_log_id"], name: "index_breaks_on_time_log_id_when_open", unique: true, where: "(ended_at IS NULL)"
+  end
+
+  create_table "checklist_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "task_id", null: false
+    t.string "title", null: false
+    t.boolean "is_completed", default: false, null: false
+    t.integer "position", null: false
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id", "position"], name: "index_checklist_items_on_task_id_and_position"
+  end
+
+  create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "ip_address"
     t.string "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
@@ -173,7 +214,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_122726) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
-  create_table "users", force: :cascade do |t|
+  create_table "tasks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "title", null: false
+    t.text "description"
+    t.integer "estimated_minutes"
+    t.boolean "is_duration", default: false, null: false
+    t.boolean "is_all_day", default: false, null: false
+    t.boolean "is_completed", default: false, null: false
+    t.datetime "starts_at"
+    t.datetime "ends_at"
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["discarded_at"], name: "index_tasks_on_discarded_at"
+    t.index ["is_completed"], name: "index_tasks_on_is_completed"
+    t.index ["user_id"], name: "index_tasks_on_user_id"
+  end
+
+  create_table "time_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "task_id", null: false
+    t.string "mode", null: false
+    t.integer "timer_preset"
+    t.integer "accumulated_elapsed_seconds", default: 0, null: false
+    t.boolean "is_running", default: false, null: false
+    t.datetime "current_run_started_at"
+    t.datetime "started_at", null: false
+    t.datetime "completed_at"
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "buffer_minutes", default: 0, null: false
+    t.boolean "is_bailed_out", default: false, null: false
+    t.index ["discarded_at"], name: "index_time_logs_on_discarded_at"
+    t.index ["task_id"], name: "index_time_logs_on_task_id"
+  end
+
+  create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email_address", null: false
     t.string "password_digest", null: false
     t.datetime "created_at", null: false
@@ -181,6 +258,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_122726) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "achievements", "users"
+  add_foreign_key "breadcrumbs", "tasks"
+  add_foreign_key "breaks", "time_logs"
+  add_foreign_key "checklist_items", "tasks", on_delete: :cascade
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -190,4 +271,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_122726) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "tasks", "users"
+  add_foreign_key "time_logs", "tasks"
 end

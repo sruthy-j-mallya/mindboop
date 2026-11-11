@@ -22,9 +22,9 @@ describe("CompleteSignup", () => {
   afterEach(() => vi.restoreAllMocks());
 
   it("sends the token from the link with the chosen password", async () => {
-    const create = vi
-      .spyOn(registrationsApi, "create")
-      .mockResolvedValue({ user: { id: 1, emailAddress: "someone@example.com" } });
+    const create = vi.spyOn(registrationsApi, "create").mockResolvedValue({
+      user: { id: "1c292d93-1998-4212-b336-8bacbb8f4c39", emailAddress: "someone@example.com" },
+    });
     renderAt("/signup/abc123");
 
     await userEvent.type(screen.getByLabelText("Password"), "password123");

@@ -23,17 +23,133 @@ Every error response has one shape:
 
 ## Endpoints
 
-| Method | Path                       | Body                                         | Success                     |
-| ------ | -------------------------- | -------------------------------------------- | --------------------------- |
-| GET    | `/api/session`             | –                                            | 200 `{ user }`              |
-| POST   | `/api/session`             | `email_address`, `password`                  | 201 `{ user }`, sets cookie |
-| DELETE | `/api/session`             | –                                            | 204                         |
-| POST   | `/api/email_confirmations` | `email_address`                              | 202 `{ message }`           |
-| POST   | `/api/registration`        | `token`, `password`, `password_confirmation` | 201 `{ user }`, sets cookie |
-| POST   | `/api/passwords`           | `email_address`                              | 202 `{ message }`           |
-| PATCH  | `/api/passwords/:token`    | `password`, `password_confirmation`          | 204, signs out everywhere   |
+| Method | Path                                     | Body                                                      | Success                      |
+| ------ | ---------------------------------------- | --------------------------------------------------------- | ---------------------------- |
+| GET    | `/api/session`                           | –                                                         | 200 `{ user }`               |
+| POST   | `/api/session`                           | `email_address`, `password`                               | 201 `{ user }`, sets cookie  |
+| DELETE | `/api/session`                           | –                                                         | 204                          |
+| POST   | `/api/email_confirmations`               | `email_address`                                           | 202 `{ message }`            |
+| POST   | `/api/registration`                      | `token`, `password`, `password_confirmation`              | 201 `{ user }`, sets cookie  |
+| POST   | `/api/passwords`                         | `email_address`                                           | 202 `{ message }`            |
+| PATCH  | `/api/passwords/:token`                  | `password`, `password_confirmation`                       | 204, signs out everywhere    |
+| GET    | `/api/tasks`                             | `page` query param (optional)                             | 200 `{ tasks, … }`           |
+| GET    | `/api/tasks/:id`                         | –                                                         | 200 `{ task }`               |
+| POST   | `/api/tasks`                             | Task fields (`title` required)                            | 201 `{ task }`               |
+| PATCH  | `/api/tasks/:id`                         | Task fields                                               | 200 `{ task }`               |
+| DELETE | `/api/tasks/:id`                         | –                                                         | 204, soft delete             |
+| POST   | `/api/quick_starts`                      | Task fields, `estimated_minutes` required                 | 201 `{ task, time_log }`     |
+| POST   | `/api/time_logs`                         | `task_id`, Time log fields                                | 201 `{ time_log }`           |
+| DELETE | `/api/time_logs/:id`                     | –                                                         | 204, soft delete             |
+| POST   | `/api/time_logs/:time_log_id/completion` | –                                                         | 201 `{ time_log }`           |
+| POST   | `/api/time_logs/:time_log_id/extension`  | `minutes`                                                 | 201 `{ time_log }`           |
+| POST   | `/api/time_logs/:time_log_id/bail_out`   | `restart_description`, `completed_description` (optional) | 201 `{ time_log }`           |
+| POST   | `/api/time_logs/:time_log_id/break`      | `intention`, `duration_minutes`                           | 201 `{ time_log }`           |
+| PATCH  | `/api/time_logs/:time_log_id/break`      | –                                                         | 200 `{ time_log }`           |
+| GET    | `/api/current_time_log`                  | –                                                         | 200 `{ time_log }` or `null` |
 
-`user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`).
+`user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`). All ids are UUIDs.
+
+## Tasks
+
+Tasks belong to the signed-in user. `GET /api/tasks` lists only their undeleted tasks, oldest first. Another user's task
+gets a 403. A deleted or unknown task gets a 404.
+
+The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
+pages. A missing or invalid `page` returns the first page, and a page past the end returns an empty `tasks`.
+
+The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
+`starts_at` and `ends_at`.
+
+`task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, in
+position order (`app/views/api/tasks/_task.json.jbuilder`). Checklist items are soft-deleted (Discard), and discarded
+items are left out.
+
+`POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
+creates the items with the task, positioned in array order. If any item is invalid, the request gets a 422 and nothing
+is saved. Checklist items can't be changed after that for now: `PATCH /api/tasks/:id` ignores them.
+
+## Quick starts
+
+`POST /api/quick_starts` creates a task and starts a timer on it, in one transaction. It's what Begin on the Quick Start
+page calls. `POST /api/tasks` and `POST /api/time_logs` still do each step on its own.
+
+- It accepts `title`, `description`, `estimated_minutes` and `checklist_items_attributes`, with the same rules as
+  `POST /api/tasks`, except that `estimated_minutes` is required. Other task fields are ignored.
+- The time log is a running `timer` whose `timer_preset` is the task's `estimated_minutes`. It starts the same way as one
+  from `POST /api/time_logs`, and time log fields sent by the client are ignored.
+- If the task, a checklist item or the time log is invalid, the request gets a 422 and nothing is saved.
+
+It returns `{ task, time_log }`, in the same shapes as the task and time log endpoints.
+
+## Time logs
+
+A time log belongs to a task, and through it to the task's owner. Another user's time log gets a 403. A deleted or
+unknown time log gets a 404, and so does a time log whose task was deleted.
+
+`POST /api/time_logs` accepts these fields:
+
+| Field          | Notes                                      |
+| -------------- | ------------------------------------------ |
+| `mode`         | Required, `timer` or `stopwatch`           |
+| `timer_preset` | Optional, positive whole number of minutes |
+
+A new time log starts running at once: the server sets `started_at` and `current_run_started_at` to the current time,
+`is_running` to `true`, `accumulated_elapsed_seconds` to 0 and `completed_at` to `null`. Any of these sent by the client
+are ignored.
+
+`time_log` also includes `id`, `task_id`, `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
+`{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise
+(`app/views/api/time_logs/_time_log.json.jbuilder`).
+
+`POST /api/time_logs/:time_log_id/completion` ends a session, in one transaction:
+
+- The time log stops: its elapsed time moves into `accumulated_elapsed_seconds`, `is_running` becomes `false`,
+  `current_run_started_at` is cleared and `completed_at` is set.
+- Its task gets `is_completed: true`.
+- If the log is `is_finished_early`, the user's `early_finish` achievement count goes up by 1. A log is finished early
+  when it's a `timer` with a `timer_preset` and less time elapsed than the preset. A stopwatch never is.
+
+Completing a log that's already completed changes nothing and returns it again. Another user's time log gets a 403, and
+a deleted or unknown one gets a 404.
+
+`POST /api/time_logs/:time_log_id/extension` adds `minutes` (a positive whole number) to a timer's `buffer_minutes`, which
+starts at 0. A session runs for `timer_preset` + `buffer_minutes`:
+
+- The buffer can reach 60 minutes per session. Going past that gets a 422, and so does a completed time log or a stopwatch.
+- `accumulated_elapsed_seconds` is capped at the old total, and a running log's `current_run_started_at` restarts, so a
+  timer that ran past zero gets all the added minutes.
+- `is_finished_early` still compares against `timer_preset` alone, so finishing inside the buffer isn't finishing early.
+
+Another user's time log gets a 403, and a deleted or unknown one gets a 404. `POST /api/time_logs` ignores
+`buffer_minutes`.
+
+`POST /api/time_logs/:time_log_id/bail_out` ends a session without finishing it, in one transaction:
+
+- A breadcrumb is saved on the time log's task, with `restart_description` (required) and `completed_description` (optional, blank
+  is saved as `null`), each up to 1000 characters. Invalid values get a 422 and the session keeps going.
+- The time log stops the same way as on completion, including `completed_at`, and any open break ends.
+- The task stays open, no achievement is awarded, and `is_finished_early` stays `false`.
+
+Bailing out of a time log that has already ended changes nothing and returns it again. Another user's time log gets a 403,
+and a deleted or unknown one gets a 404.
+
+`POST /api/time_logs/:time_log_id/break` pauses a session, in one transaction:
+
+- A break is created with `intention` (required, up to 100 characters) and `duration_minutes` (1–15), and `ends_at` is set
+  from the duration. Invalid values get a 422, and so does a completed time log.
+- The time log stops: its elapsed time moves into `accumulated_elapsed_seconds`, `is_running` becomes `false`,
+  `current_run_started_at` is cleared.
+
+`PATCH /api/time_logs/:time_log_id/break` ends the break: `ended_at` is set, `is_running` becomes `true` and
+`current_run_started_at` restarts. The time log stays paused after `ends_at` until this is called.
+
+Pausing during a break, or ending a break when none is open, changes nothing and returns the time log. Completing a time
+log also ends its break. Another user's time log gets a 403, and a deleted or unknown one gets a 404.
+
+`GET /api/current_time_log` returns the signed-in user's most recently started time log that isn't completed or deleted.
+With no such log, it returns 200 with `{ "time_log": null }`.
+
+`POST /api/time_logs` requires a `task_id`. A missing, unknown or deleted task gets a 404, and another user's task gets a 403.
 
 ## Sign-up
 

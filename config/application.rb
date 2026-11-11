@@ -41,5 +41,8 @@ module Mindboop
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # New tables get UUID primary keys.
+    config.generators { |g| g.orm :active_record, primary_key_type: :uuid }
   end
 end
