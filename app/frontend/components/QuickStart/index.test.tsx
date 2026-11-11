@@ -63,7 +63,7 @@ describe("QuickStart", () => {
     renderWithTimerRoute();
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
     // jsdom can't type into the editor reliably (Playwright covers typing), so paste and format the text instead.
-    await userEvent.click(screen.getByRole("textbox", { name: "Description" }));
+    await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
     await userEvent.paste("Cite sources");
     await userEvent.keyboard("{Control>}a{/Control}");
     await userEvent.click(screen.getByRole("button", { name: "Bold" }));

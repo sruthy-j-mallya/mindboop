@@ -4,16 +4,8 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { cn } from "cn";
 
 import Toolbar from "./Toolbar";
+import type { RichTextEditorProps } from "./types";
 import { getExtensions } from "./utils";
-
-type RichTextEditorProps = {
-  defaultValue: string;
-  onChange: (markdown: string) => void;
-  label: string;
-  placeholder?: string;
-  isInvalid?: boolean;
-  describedBy?: string;
-};
 
 // Uncontrolled: defaultValue seeds the editor once, and every edit reports the document back as Markdown.
 const RichTextEditor = ({

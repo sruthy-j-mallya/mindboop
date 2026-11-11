@@ -23,3 +23,12 @@ export type FormatItem = {
 };
 
 export type FormatStates = Record<FormatName, boolean> & { link: boolean };
+
+export type RichTextEditorProps = {
+  defaultValue: string;
+  onChange: (markdown: string) => void;
+  label: string;
+  placeholder?: string;
+  isInvalid?: boolean;
+  describedBy?: string;
+};

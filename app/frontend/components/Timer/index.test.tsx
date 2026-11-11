@@ -84,7 +84,8 @@ describe("Timer", () => {
     renderTimer(TIME_LOG, { ...TASK, description: "Start with the **intro**\n\n- Cite sources" });
 
     const description = await screen.findByRole("region", { name: "Description" });
-    expect(within(description).getByText("intro").tagName).toBe("STRONG");
+    // The viewer loads lazily, so wait for its content.
+    expect((await within(description).findByText("intro")).tagName).toBe("STRONG");
     expect(within(description).getByRole("listitem")).toHaveTextContent("Cite sources");
   });
 

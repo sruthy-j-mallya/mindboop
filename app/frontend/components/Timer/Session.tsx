@@ -4,7 +4,7 @@ import { LogOut, PartyPopper, Pause, Plus } from "lucide-react";
 
 import type { TimeLog } from "@/apis/types";
 import BreakBanner from "@/components/commons/BreakBanner";
-import RichTextViewer from "@/components/commons/RichText/Viewer";
+import RichTextViewer from "@/components/commons/RichText/LazyViewer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";

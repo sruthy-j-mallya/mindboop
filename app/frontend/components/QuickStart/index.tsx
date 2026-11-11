@@ -3,7 +3,7 @@ import { Timer } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 
-import RichTextEditor from "@/components/commons/RichText/Editor";
+import RichTextEditor from "@/components/commons/RichText/LazyEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
