@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
+import Ambience from "./Ambience";
 import BailDialog from "./BailDialog";
 import Countdown from "./Countdown";
 import DiscardDialog from "./DiscardDialog";
@@ -60,11 +61,14 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   return (
     <Card>
       <CardContent className="flex flex-col gap-8">
-        <header className="grid gap-1">
-          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            {isOnBreak ? "Paused" : "Focusing on"}
-          </p>
-          <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
+        <header className="flex items-start justify-between gap-4">
+          <div className="grid gap-1">
+            <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              {isOnBreak ? "Paused" : "Focusing on"}
+            </p>
+            <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
+          </div>
+          <Ambience timeLog={timeLog} />
         </header>
         <Countdown timeLog={timeLog} />
         {currentBreak && <BreakBanner currentBreak={currentBreak} timeLogId={timeLog.id} />}
