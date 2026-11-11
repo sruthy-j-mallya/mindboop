@@ -60,6 +60,10 @@ pages. A missing or invalid `page` returns the first page, and a page past the e
 The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
 `starts_at` and `ends_at`.
 
+`description` is Markdown, as written in the rich-text editor, up to 10,000 characters (longer gets a 422). It's stripped,
+and a blank description is saved as `null`. The API stores it as given; the client renders it through the editor's schema,
+which leaves out anything the editor can't write, such as raw HTML.
+
 `task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, in
 position order (`app/views/api/tasks/_task.json.jbuilder`). Checklist items are soft-deleted (Discard), and discarded
 items are left out.

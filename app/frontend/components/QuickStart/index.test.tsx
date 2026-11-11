@@ -59,6 +59,32 @@ describe("QuickStart", () => {
     );
   });
 
+  it("sends the description as Markdown", async () => {
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    // jsdom can't type into the editor reliably (Playwright covers typing), so paste and format the text instead.
+    await userEvent.click(screen.getByRole("textbox", { name: "Description" }));
+    await userEvent.paste("Cite sources");
+    await userEvent.keyboard("{Control>}a{/Control}");
+    await userEvent.click(screen.getByRole("button", { name: "Bold" }));
+    await beginSession();
+
+    await screen.findByText("Timer page");
+    expect(quickStartsApi.create).toHaveBeenCalledWith(
+      expect.objectContaining({ description: "**Cite sources**" }),
+      expect.anything(),
+    );
+  });
+
+  it("leaves out an empty description", async () => {
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    await beginSession();
+
+    await screen.findByText("Timer page");
+    expect(vi.mocked(quickStartsApi.create).mock.lastCall?.[0]).not.toHaveProperty("description");
+  });
+
   it("uses custom minutes as the estimate", async () => {
     renderWithTimerRoute();
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");

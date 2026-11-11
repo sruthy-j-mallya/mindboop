@@ -4,11 +4,13 @@ import { isValidCustomMinutes, type QuickStartFormValues } from "./constants";
 
 export const buildQuickStartPayload = ({
   title,
+  description,
   steps,
   presetMinutes,
   customMinutes,
 }: QuickStartFormValues): CreateQuickStartPayload => ({
   title,
+  ...(description && { description }),
   estimatedMinutes: presetMinutes ?? Number(customMinutes),
   checklistItemsAttributes: steps.map(({ text, isDone }) => ({ title: text, isCompleted: isDone })),
 });

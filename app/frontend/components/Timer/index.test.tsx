@@ -80,6 +80,21 @@ describe("Timer", () => {
     expect(screen.getByRole("checkbox", { name: "Cuba economics" })).toBeChecked();
   });
 
+  it("shows the task's description as formatted text", async () => {
+    renderTimer(TIME_LOG, { ...TASK, description: "Start with the **intro**\n\n- Cite sources" });
+
+    const description = await screen.findByRole("region", { name: "Description" });
+    expect(within(description).getByText("intro").tagName).toBe("STRONG");
+    expect(within(description).getByRole("listitem")).toHaveTextContent("Cite sources");
+  });
+
+  it("leaves out the description when the task has none", async () => {
+    renderTimer(TIME_LOG);
+
+    await screen.findByRole("heading", { name: "Draft permission" });
+    expect(screen.queryByRole("region", { name: "Description" })).not.toBeInTheDocument();
+  });
+
   it("counts down from the time log's start time", async () => {
     renderTimer(TIME_LOG);
 

@@ -1,8 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Timer } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 
+import RichTextEditor from "@/components/commons/RichText/Editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,27 @@ const QuickStart = () => {
             {errors.title && (
               <p id="title-error" className="text-sm text-destructive">
                 {errors.title.message}
+              </p>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Controller
+              control={control}
+              name="description"
+              render={({ field: { value, onChange } }) => (
+                <RichTextEditor
+                  defaultValue={value}
+                  describedBy={errors.description ? "description-error" : undefined}
+                  isInvalid={!!errors.description}
+                  label="Description"
+                  placeholder="Add notes, links or context. Markdown works too."
+                  onChange={onChange}
+                />
+              )}
+            />
+            {errors.description && (
+              <p id="description-error" className="text-sm text-destructive">
+                {errors.description.message}
               </p>
             )}
           </div>

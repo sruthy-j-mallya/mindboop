@@ -4,6 +4,7 @@ import { LogOut, PartyPopper, Pause, Plus } from "lucide-react";
 
 import type { TimeLog } from "@/apis/types";
 import BreakBanner from "@/components/commons/BreakBanner";
+import RichTextViewer from "@/components/commons/RichText/Viewer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -68,6 +69,11 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
         </header>
         <Countdown timeLog={timeLog} />
         {currentBreak && <BreakBanner currentBreak={currentBreak} timeLogId={timeLog.id} />}
+        {task.description && (
+          <section aria-label="Description">
+            <RichTextViewer markdown={task.description} />
+          </section>
+        )}
         {task.checklistItems.length > 0 && (
           // Checklist items can't be changed through the API yet, so these only show the saved state.
           <ul aria-label="Steps" className="flex flex-col gap-4">

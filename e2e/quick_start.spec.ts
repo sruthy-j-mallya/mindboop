@@ -119,3 +119,32 @@ test("remove a step, and keep the ticks on the rest", async ({ page }) => {
   await expect(page.getByRole("checkbox", { name: "Third" })).toBeChecked();
   await expect(page.getByRole("checkbox", { name: "Second" })).not.toBeChecked();
 });
+
+test("write a formatted description and see it on the timer", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  const description = page.getByRole("textbox", { name: "Description" });
+  await description.click();
+  // Markdown shortcuts format as you type.
+  await page.keyboard.type("## Plan");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("- Cite **sources** ");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Read the brief");
+  // The toolbar link button wraps the selected word.
+  await description.getByText("Read the brief").dblclick({ position: { x: 2, y: 5 } });
+  await page.getByRole("button", { name: "Link" }).click();
+  await page.getByRole("textbox", { name: "Link address" }).fill("example.com");
+  await page.getByRole("button", { name: "Apply" }).click();
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+
+  await expect(page).toHaveURL("/timer");
+  const shown = page.getByRole("region", { name: "Description" });
+  await expect(shown.getByRole("heading", { name: "Plan" })).toBeVisible();
+  await expect(shown.getByRole("listitem")).toHaveText(["Cite sources", "Read the brief"]);
+  await expect(shown.locator("strong")).toHaveText("sources");
+  await expect(shown.getByRole("link")).toHaveCount(1);
+  await expect(shown.getByRole("link", { name: "Read" })).toHaveAttribute("href", "https://example.com");
+});
