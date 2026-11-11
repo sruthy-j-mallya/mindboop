@@ -25,6 +25,12 @@ class TimeLog < ApplicationRecord
   validates :extension_minutes, numericality: { only_integer: true, greater_than: 0 }, on: :extend
   validate :session_can_be_extended, on: :extend
 
+  # A new time log always starts running now, so its timing fields never come from the client.
+  def start
+    now = Time.current
+    assign_attributes(is_running: true, started_at: now, current_run_started_at: now)
+  end
+
   def complete!
     now = Time.current
     update!(

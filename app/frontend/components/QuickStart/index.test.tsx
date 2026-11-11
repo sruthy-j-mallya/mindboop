@@ -1,11 +1,10 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
-import tasksApi from "@/apis/tasks";
-import timeLogsApi from "@/apis/time_logs";
+import quickStartsApi from "@/apis/quick_starts";
 import type { Task, TimeLog } from "@/apis/types";
 import QuickStart from "@/components/QuickStart";
 import routes from "@/routes";
@@ -32,13 +31,12 @@ const renderWithTimerRoute = () =>
 
 describe("QuickStart", () => {
   beforeEach(() => {
-    vi.spyOn(tasksApi, "create").mockResolvedValue({ task: TASK });
-    vi.spyOn(timeLogsApi, "create").mockResolvedValue({ timeLog: TIME_LOG });
+    vi.spyOn(quickStartsApi, "create").mockResolvedValue({ task: TASK, timeLog: TIME_LOG });
   });
 
   afterEach(() => vi.restoreAllMocks());
 
-  it("creates the task, then a running time log, then opens the timer", async () => {
+  it("starts the task's timer in one request, then opens the timer", async () => {
     renderWithTimerRoute();
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "  Draft submitted  ");
     await addStep("Outline");
@@ -48,7 +46,7 @@ describe("QuickStart", () => {
     await beginSession();
 
     expect(await screen.findByText("Timer page")).toBeVisible();
-    expect(tasksApi.create).toHaveBeenCalledWith(
+    expect(quickStartsApi.create).toHaveBeenCalledWith(
       {
         title: "Draft submitted",
         estimatedMinutes: 10,
@@ -59,8 +57,6 @@ describe("QuickStart", () => {
       },
       expect.anything(),
     );
-    const [[timeLog]] = vi.mocked(timeLogsApi.create).mock.calls;
-    expect(timeLog).toEqual({ taskId: TASK.id, mode: "timer", timerPreset: 10 });
   });
 
   it("uses custom minutes as the estimate", async () => {
@@ -70,34 +66,19 @@ describe("QuickStart", () => {
     await beginSession();
 
     await screen.findByText("Timer page");
-    expect(tasksApi.create).toHaveBeenCalledWith(
+    expect(quickStartsApi.create).toHaveBeenCalledWith(
       expect.objectContaining({ estimatedMinutes: 25 }),
       expect.anything(),
     );
   });
 
-  it("stays on the form and creates no time log when the task can't be created", async () => {
-    vi.mocked(tasksApi.create).mockRejectedValue(new ApiError(422, "Title can't be blank"));
+  it("shows the server's error and stays on the form when the session can't start", async () => {
+    vi.mocked(quickStartsApi.create).mockRejectedValue(new ApiError(422, "Title can't be blank"));
     renderWithTimerRoute();
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
     await beginSession();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Title can't be blank");
-    expect(timeLogsApi.create).not.toHaveBeenCalled();
-    expect(screen.queryByText("Timer page")).not.toBeInTheDocument();
-  });
-
-  it("removes the new task and stays on the form when the time log can't be created", async () => {
-    vi.mocked(timeLogsApi.create).mockRejectedValue(new ApiError(422, "Mode is not included in the list"));
-    const destroy = vi
-      .spyOn(tasksApi, "destroy")
-      .mockResolvedValue({} as Awaited<ReturnType<typeof tasksApi.destroy>>);
-    renderWithTimerRoute();
-    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
-    await beginSession();
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("Mode is not included in the list");
-    await waitFor(() => expect(destroy).toHaveBeenCalledWith(TASK.id, expect.anything()));
     expect(screen.queryByText("Timer page")).not.toBeInTheDocument();
   });
 

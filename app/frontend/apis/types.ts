@@ -74,6 +74,11 @@ export type TimeLogResponse = { timeLog: TimeLog };
 
 export type CreateTimeLogPayload = Pick<TimeLog, "taskId" | "mode"> & Partial<Pick<TimeLog, "timerPreset">>;
 
+export type CreateQuickStartPayload = Pick<CreateTaskPayload, "title" | "checklistItemsAttributes"> &
+  Partial<Pick<Task, "description">> & { estimatedMinutes: number };
+
+export type QuickStartResponse = TaskResponse & TimeLogResponse;
+
 export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & { timeLogId: string };
 
 export type ExtendTimeLogPayload = { timeLogId: string; minutes: number };

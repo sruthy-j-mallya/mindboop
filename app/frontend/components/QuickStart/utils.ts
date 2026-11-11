@@ -1,22 +1,16 @@
-import type { CreateTaskPayload, CreateTimeLogPayload, Task } from "@/apis/types";
+import type { CreateQuickStartPayload } from "@/apis/types";
 
 import { isValidCustomMinutes, type QuickStartFormValues } from "./constants";
 
-export const buildTaskPayload = ({
+export const buildQuickStartPayload = ({
   title,
   steps,
   presetMinutes,
   customMinutes,
-}: QuickStartFormValues): CreateTaskPayload => ({
+}: QuickStartFormValues): CreateQuickStartPayload => ({
   title,
   estimatedMinutes: presetMinutes ?? Number(customMinutes),
   checklistItemsAttributes: steps.map(({ text, isDone }) => ({ title: text, isCompleted: isDone })),
-});
-
-export const buildTimeLogPayload = ({ id, estimatedMinutes }: Task): CreateTimeLogPayload => ({
-  taskId: id,
-  mode: "timer",
-  timerPreset: estimatedMinutes,
 });
 
 const MINUTES_PER_HOUR = 60;

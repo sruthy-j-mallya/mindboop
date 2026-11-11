@@ -37,6 +37,7 @@ Every error response has one shape:
 | POST   | `/api/tasks`                             | Task fields (`title` required)                            | 201 `{ task }`               |
 | PATCH  | `/api/tasks/:id`                         | Task fields                                               | 200 `{ task }`               |
 | DELETE | `/api/tasks/:id`                         | –                                                         | 204, soft delete             |
+| POST   | `/api/quick_starts`                      | Task fields, `estimated_minutes` required                 | 201 `{ task, time_log }`     |
 | POST   | `/api/time_logs`                         | `task_id`, Time log fields                                | 201 `{ time_log }`           |
 | DELETE | `/api/time_logs/:id`                     | –                                                         | 204, soft delete             |
 | POST   | `/api/time_logs/:time_log_id/completion` | –                                                         | 201 `{ time_log }`           |
@@ -66,6 +67,19 @@ items are left out.
 `POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
 creates the items with the task, positioned in array order. If any item is invalid, the request gets a 422 and nothing
 is saved. Checklist items can't be changed after that for now: `PATCH /api/tasks/:id` ignores them.
+
+## Quick starts
+
+`POST /api/quick_starts` creates a task and starts a timer on it, in one transaction. It's what Begin on the Quick Start
+page calls. `POST /api/tasks` and `POST /api/time_logs` still do each step on its own.
+
+- It accepts `title`, `description`, `estimated_minutes` and `checklist_items_attributes`, with the same rules as
+  `POST /api/tasks`, except that `estimated_minutes` is required. Other task fields are ignored.
+- The time log is a running `timer` whose `timer_preset` is the task's `estimated_minutes`. It starts the same way as one
+  from `POST /api/time_logs`, and time log fields sent by the client are ignored.
+- If the task, a checklist item or the time log is invalid, the request gets a 422 and nothing is saved.
+
+It returns `{ task, time_log }`, in the same shapes as the task and time log endpoints.
 
 ## Time logs
 
