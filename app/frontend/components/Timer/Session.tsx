@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { cn } from "cn";
 import { LogOut, PartyPopper, Pause, Plus } from "lucide-react";
 
 import type { TimeLog } from "@/apis/types";
@@ -9,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
 import BailDialog from "./BailDialog";
@@ -58,80 +58,90 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
     );
   }
 
+  const hasChecklist = task.checklistItems.length > 0;
+  const hasDetails = !!task.description || hasChecklist;
+
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-8">
-        <header className="grid gap-1">
-          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            {isOnBreak ? "Paused" : "Focusing on"}
-          </p>
-          <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
-        </header>
-        <Countdown timeLog={timeLog} />
-        {currentBreak && <BreakBanner currentBreak={currentBreak} timeLogId={timeLog.id} />}
-        {task.description && (
-          <section aria-label="Description">
-            <RichTextViewer markdown={task.description} />
-          </section>
-        )}
-        {task.checklistItems.length > 0 && (
-          // Checklist items can't be changed through the API yet, so these only show the saved state.
-          <ul aria-label="Steps" className="flex flex-col gap-4">
-            {task.checklistItems.map(({ id, title, isCompleted }) => (
-              <li key={id} className="flex items-center gap-3">
-                <Checkbox
-                  disabled
-                  checked={isCompleted}
-                  className="size-6 border-2 border-primary/40 disabled:opacity-100"
-                  id={id}
-                />
-                <Label
-                  className="text-base font-normal wrap-anywhere peer-disabled:cursor-default peer-disabled:opacity-100"
-                  htmlFor={id}
-                >
-                  {title}
-                </Label>
-              </li>
-            ))}
-          </ul>
-        )}
-        <Separator />
-        {completionError && (
-          <p className="text-sm text-destructive" role="alert">
-            {completionError}
-          </p>
-        )}
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            disabled={isOnBreak || extensionMinutesLeft <= 0}
-            size="lg"
-            type="button"
-            variant="outline"
-            onClick={handleExtend}
-          >
-            <Plus />
-            Extend
-          </Button>
-          <Button disabled={isOnBreak} size="lg" type="button" variant="outline" onClick={handlePause}>
-            <Pause />
-            Pause
-          </Button>
-          <Button size="lg" type="button" variant="outline" onClick={handleBail}>
-            <LogOut />
-            Bail
-          </Button>
-          <Button
-            className="bg-muted text-primary"
-            disabled={isCompleting}
-            size="lg"
-            type="button"
-            variant="ghost"
-            onClick={handleDone}
-          >
-            <PartyPopper />
-            Done
-          </Button>
+    <Card className={cn("mx-auto w-full", hasDetails ? "max-w-2xl lg:max-w-5xl" : "max-w-2xl")}>
+      <CardContent className={cn("grid gap-8", hasDetails && "lg:grid-cols-2 lg:gap-12")}>
+        {/* The timer and its actions stay together (and pinned on wide screens), so a long description never
+            pushes the buttons out of view. */}
+        <div className={cn("flex flex-col gap-6", hasDetails && "lg:sticky lg:top-4 lg:self-start")}>
+          <header className="grid gap-1">
+            <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              {isOnBreak ? "Paused" : "Focusing on"}
+            </p>
+            <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
+          </header>
+          <Countdown timeLog={timeLog} />
+          {currentBreak && <BreakBanner currentBreak={currentBreak} timeLogId={timeLog.id} />}
+          {completionError && (
+            <p className="text-sm text-destructive" role="alert">
+              {completionError}
+            </p>
+          )}
+          <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-4", hasDetails && "lg:grid-cols-2")}>
+            <Button
+              disabled={isOnBreak || extensionMinutesLeft <= 0}
+              size="lg"
+              type="button"
+              variant="outline"
+              onClick={handleExtend}
+            >
+              <Plus />
+              Extend
+            </Button>
+            <Button disabled={isOnBreak} size="lg" type="button" variant="outline" onClick={handlePause}>
+              <Pause />
+              Pause
+            </Button>
+            <Button size="lg" type="button" variant="outline" onClick={handleBail}>
+              <LogOut />
+              Bail
+            </Button>
+            <Button
+              className="bg-muted text-primary"
+              disabled={isCompleting}
+              size="lg"
+              type="button"
+              variant="ghost"
+              onClick={handleDone}
+            >
+              <PartyPopper />
+              Done
+            </Button>
+          </div>
         </div>
+        {hasDetails && (
+          <div className="flex flex-col gap-8 border-t pt-8 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-12">
+            {task.description && (
+              <section aria-label="Description">
+                <RichTextViewer markdown={task.description} />
+              </section>
+            )}
+            {hasChecklist && (
+              // Checklist items can't be changed through the API yet, so these only show the saved state.
+              <ul aria-label="Steps" className="flex flex-col gap-4">
+                {task.checklistItems.map(({ id, title, isCompleted }) => (
+                  <li key={id} className="flex items-center gap-3">
+                    <Checkbox
+                      disabled
+                      checked={isCompleted}
+                      className="size-6 border-2 border-primary/40 disabled:opacity-100"
+                      id={id}
+                    />
+                    <Label
+                      className="text-base font-normal wrap-anywhere peer-disabled:cursor-default peer-disabled:opacity-100"
+                      htmlFor={id}
+                    >
+                      {title}
+                    </Label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </CardContent>
       {showExtendDialog && (
         <ExtendDialog
