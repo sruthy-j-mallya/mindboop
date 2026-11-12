@@ -254,3 +254,53 @@ test("reach the timer from the sidebar with nothing in progress", async ({ page 
   await page.getByRole("link", { name: "Start a session" }).click();
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 });
+
+test("edit the steps and the description mid-session, and keep them through a reload", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  const quickStartStep = page.getByRole("textbox", { name: "New step" });
+  for (const step of ["First", "Second"]) {
+    await quickStartStep.fill(step);
+    await quickStartStep.press("Enter");
+  }
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("timer")).toBeVisible();
+
+  const steps = page.getByRole("list", { name: "Steps" }).getByRole("listitem");
+  await page.getByRole("checkbox", { name: "First" }).click();
+  await expect(page.getByRole("checkbox", { name: "First" })).toBeChecked();
+  const newStep = page.getByRole("textbox", { name: "New step" });
+  await newStep.fill("Third");
+  await newStep.press("Enter");
+  await expect(steps).toHaveText(["First", "Second", "Third"]);
+  await page.getByRole("button", { name: "Edit Second" }).click();
+  await page.getByRole("textbox", { name: "Step text" }).fill("Middle");
+  await page.getByRole("textbox", { name: "Step text" }).press("Enter");
+  const announcement = page.getByRole("status");
+  await page.getByRole("button", { name: "Reorder Third" }).focus();
+  await page.keyboard.press("Space");
+  await expect(announcement).toHaveText("Picked up Third.");
+  // dnd-kit starts listening for keys a tick after the pick up, so an early press can be missed.
+  await expect(async () => {
+    await page.keyboard.press("ArrowUp");
+    await expect(announcement).toHaveText("Third moved over Middle.", { timeout: 200 });
+  }).toPass();
+  await page.keyboard.press("ArrowUp");
+  await expect(announcement).toHaveText("Third moved over First.");
+  await page.keyboard.press("Space");
+  await expect(steps).toHaveText(["Third", "First", "Middle"]);
+
+  await page.getByRole("button", { name: "Add a description" }).click();
+  const editor = page.getByRole("textbox", { name: "Description" });
+  await editor.pressSequentially("Cite **sources** ");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("region", { name: "Description" }).locator("strong")).toHaveText("sources");
+
+  await page.reload();
+
+  await expect(steps).toHaveText(["Third", "First", "Middle"]);
+  await expect(page.getByRole("checkbox", { name: "First" })).toBeChecked();
+  await expect(page.getByRole("region", { name: "Description" }).locator("strong")).toHaveText("sources");
+});

@@ -25,6 +25,7 @@ const QuickStart = () => {
     control,
     register,
     handleSubmit,
+    setValue,
     subscribe,
     formState: { errors },
   } = useForm<QuickStartFormValues>({
@@ -80,7 +81,7 @@ const QuickStart = () => {
               </p>
             )}
           </div>
-          <Steps control={control} />
+          <Steps control={control} setValue={setValue} />
           <div className="grid gap-2">
             <Controller
               control={control}

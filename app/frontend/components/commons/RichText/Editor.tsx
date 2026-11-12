@@ -16,6 +16,7 @@ const RichTextEditor = ({
   placeholder,
   isInvalid = false,
   describedBy,
+  isAutoFocused = false,
 }: RichTextEditorProps) => {
   const [showLinkPopover, setShowLinkPopover] = useState(false);
   const extensions = useMemo(() => getExtensions(placeholder), [placeholder]);
@@ -45,6 +46,7 @@ const RichTextEditor = ({
     extensions,
     editorProps,
     content: defaultValue,
+    autofocus: isAutoFocused ? "end" : false,
     contentType: "markdown",
     shouldRerenderOnTransaction: false,
     onUpdate: ({ editor: updatedEditor }) =>

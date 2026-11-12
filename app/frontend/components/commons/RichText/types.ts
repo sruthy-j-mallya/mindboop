@@ -31,4 +31,6 @@ export type RichTextEditorProps = {
   placeholder?: string;
   isInvalid?: boolean;
   describedBy?: string;
+  // Puts the cursor at the end of the text once the editor loads.
+  isAutoFocused?: boolean;
 };
