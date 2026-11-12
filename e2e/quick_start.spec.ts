@@ -148,3 +148,26 @@ test("write a formatted description and see it on the timer", async ({ page }) =
   await expect(shown.getByRole("link")).toHaveCount(1);
   await expect(shown.getByRole("link", { name: "Read" })).toHaveAttribute("href", "https://example.com");
 });
+
+test("paste Markdown into the description and see it formatted", async ({ page }) => {
+  await signUp(page);
+
+  const description = page.getByRole("textbox", { name: "Description" });
+  await description.click();
+  // Code editors put the raw text in the HTML flavour too; the Markdown should still win.
+  await description.evaluate((element) => {
+    const markdown = "## Plan\n\n1. Cite **sources**\n2. Read [the brief](https://example.com)";
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", markdown);
+    clipboardData.setData("text/html", `<div style="white-space: pre">${markdown}</div>`);
+    element.dispatchEvent(new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }));
+  });
+
+  await expect(description.getByRole("heading", { level: 2, name: "Plan" })).toBeVisible();
+  await expect(description.getByRole("listitem")).toHaveText(["Cite sources", "Read the brief"]);
+  await expect(description.locator("strong")).toHaveText("sources");
+  await expect(description.getByRole("link", { name: "the brief" })).toHaveAttribute(
+    "href",
+    "https://example.com",
+  );
+});

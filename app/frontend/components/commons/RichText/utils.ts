@@ -2,6 +2,8 @@ import { Placeholder } from "@tiptap/extensions";
 import { Markdown } from "@tiptap/markdown";
 import StarterKit from "@tiptap/starter-kit";
 
+import MarkdownPaste from "./MarkdownPaste";
+
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
 const HAS_SCHEME = /^[a-z][a-z\d+.-]*:/i;
 
@@ -51,5 +53,6 @@ export const getExtensions = (placeholder?: string) => [
     },
   }),
   Markdown,
+  MarkdownPaste,
   ...(placeholder ? [Placeholder.configure({ placeholder })] : []),
 ];
