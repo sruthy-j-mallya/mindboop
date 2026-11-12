@@ -25,6 +25,22 @@ describe("RichTextViewer", () => {
     expect(screen.getByRole("link", { name: "this" })).toHaveAttribute("href", "https://www.mindboop.com");
   });
 
+  it("highlights a fenced code block in the language its info string names", () => {
+    const { container } = render(<RichTextViewer markdown={"```ts\nconst answer: number = 42;\n```"} />);
+
+    expect(container.querySelector("pre code")).toHaveClass("language-ts");
+    expect(screen.getByText("const")).toHaveClass("hljs-keyword");
+    expect(screen.getByText("42")).toHaveClass("hljs-number");
+  });
+
+  it("guesses the language of a fenced code block without an info string", () => {
+    const { container } = render(
+      <RichTextViewer markdown={'```\ndef greet(name):\n    return f"hi {name}"\n```'} />,
+    );
+
+    expect(container.querySelector("pre .hljs-keyword")).toHaveTextContent("def");
+  });
+
   it("does not render raw HTML from the stored Markdown", () => {
     const { container } = render(
       <RichTextViewer markdown={'Hi <img src="x" onerror="alert(1)"><script>alert(1)</script>'} />,

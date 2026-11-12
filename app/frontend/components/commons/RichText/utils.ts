@@ -1,8 +1,10 @@
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Link from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extensions";
 import { Markdown } from "@tiptap/markdown";
 import { type Editor, getMarkRange, posToDOMRect } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { common, createLowlight } from "lowlight";
 
 import type { LinkFormValues } from "./constants";
 import MarkdownPaste from "./MarkdownPaste";
@@ -97,6 +99,10 @@ const NormalizedLink = Link.extend({
   },
 });
 
+// highlight.js's common languages (~35). A fenced block's info string (```ts) picks the grammar; a block with no
+// language, or one outside this set, is guessed with highlightAuto.
+const lowlight = createLowlight(common);
+
 // The editor and the read-only viewer share one schema, so whatever can be written can be shown, and anything
 // else in the stored Markdown (raw HTML, images, tables) is dropped instead of rendered.
 export const getExtensions = (placeholder?: string) => [
@@ -105,7 +111,9 @@ export const getExtensions = (placeholder?: string) => [
     horizontalRule: false,
     underline: false,
     link: false,
+    codeBlock: false,
   }),
+  CodeBlockLowlight.configure({ lowlight }),
   NormalizedLink.configure({
     autolink: true,
     // Typing or pasting [text](url) turns into a link.
