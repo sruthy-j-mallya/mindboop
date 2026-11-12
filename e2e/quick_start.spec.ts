@@ -172,6 +172,46 @@ test("paste Markdown into the description and see it formatted", async ({ page }
   );
 });
 
+test("open, edit and copy a description link from its hover menu", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await signUp(page);
+
+  const description = page.getByRole("textbox", { name: "Description" });
+  await description.click();
+  await page.keyboard.type("See [the brief](www.example.com) ");
+  const link = description.getByRole("link", { name: "the brief" });
+  await expect(link).toHaveAttribute("href", "https://www.example.com");
+
+  // A click opens the link rather than placing the caret in it.
+  const popupPromise = context.waitForEvent("page");
+  await link.click();
+  const popup = await popupPromise;
+  await expect(popup).toHaveURL(/www\.example\.com/);
+  await popup.close();
+
+  await link.hover();
+  await page.getByRole("button", { name: "Copy link" }).click();
+  await expect(page.getByRole("button", { name: "Link copied" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://www.example.com/");
+
+  await link.hover();
+  await page.getByRole("button", { name: "Edit link" }).click();
+  await expect(page.getByRole("textbox", { name: "Link text" })).toHaveValue("the brief");
+  // The popover opens just under the link, not under the toolbar.
+  const linkBox = await link.boundingBox();
+  const fieldBox = await page.getByRole("textbox", { name: "Link text" }).boundingBox();
+  expect(fieldBox!.y - (linkBox!.y + linkBox!.height)).toBeGreaterThan(0);
+  expect(fieldBox!.y - (linkBox!.y + linkBox!.height)).toBeLessThan(60);
+  await page.getByRole("textbox", { name: "Link text" }).fill("the plan");
+  await page.getByRole("textbox", { name: "Link address" }).fill("example.com/plan");
+  await page.getByRole("button", { name: "Apply" }).click();
+
+  await expect(description.getByRole("link", { name: "the plan" })).toHaveAttribute(
+    "href",
+    "https://example.com/plan",
+  );
+});
+
 test("keep an unstarted task through a reload, and start fresh after beginning it", async ({ page }) => {
   await signUp(page);
 

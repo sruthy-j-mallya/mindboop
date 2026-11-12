@@ -129,7 +129,12 @@
       @apply border-l-2 border-border pl-3 text-muted-foreground;
     }
     a {
-      @apply font-medium text-primary underline underline-offset-2;
+      @apply cursor-pointer font-medium text-primary underline underline-offset-2;
+    }
+    /* Links are natively draggable, so a click that drifts a few pixels drags the link instead of placing the
+       caret inside it. */
+    &[contenteditable="true"] a {
+      -webkit-user-drag: none;
     }
     :not(pre) > code {
       @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];

@@ -3,9 +3,10 @@ import { useMemo, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { cn } from "cn";
 
+import LinkHoverMenu from "./LinkHoverMenu";
 import Toolbar from "./Toolbar";
 import type { RichTextEditorProps } from "./types";
-import { getExtensions } from "./utils";
+import { getExtensions, openLinkOnClick } from "./utils";
 
 // Uncontrolled: defaultValue seeds the editor once, and every edit reports the document back as Markdown.
 const RichTextEditor = ({
@@ -35,6 +36,7 @@ const RichTextEditor = ({
         setShowLinkPopover(true);
         return true;
       },
+      handleDOMEvents: { click: openLinkOnClick },
     }),
     [label, isInvalid, describedBy],
   );
@@ -49,6 +51,14 @@ const RichTextEditor = ({
       onChange(updatedEditor.isEmpty ? "" : updatedEditor.getMarkdown().trimEnd()),
   });
 
+  // Selects the hovered link, so the popover's form edits that one, then opens it. No focus() here: Tiptap focuses
+  // a frame later, which would pull focus out of the just-opened popover and close it.
+  const handleEditLink = (link: HTMLAnchorElement) => {
+    const from = editor.view.posAtDOM(link, 0);
+    editor.commands.setTextSelection({ from, to: from + (link.textContent?.length ?? 0) });
+    setShowLinkPopover(true);
+  };
+
   return (
     <div
       className={cn(
@@ -58,6 +68,7 @@ const RichTextEditor = ({
     >
       <Toolbar editor={editor} showLinkPopover={showLinkPopover} onLinkPopoverChange={setShowLinkPopover} />
       <EditorContent editor={editor} />
+      <LinkHoverMenu editor={editor} onEdit={handleEditLink} />
     </div>
   );
 };

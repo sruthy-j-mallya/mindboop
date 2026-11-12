@@ -29,8 +29,11 @@ const Toolbar = ({ editor, showLinkPopover, onLinkPopoverChange }: ToolbarProps)
     }),
   });
 
-  // Keeps the editor focused, with its selection intact, when a button is clicked.
-  const handleMouseDown = (event: MouseEvent<HTMLDivElement>) => event.preventDefault();
+  // Keeps the editor focused, with its selection intact, when a button is clicked. React also bubbles mousedowns
+  // from the portalled link popover through here, and those must still be able to focus its fields.
+  const handleMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.currentTarget.contains(event.target as Node)) event.preventDefault();
+  };
 
   return (
     <TooltipProvider>

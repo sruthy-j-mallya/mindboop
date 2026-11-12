@@ -17,6 +17,9 @@ import { isAllowedLinkUrl, normalizeLinkUrl } from "./utils";
 
 export const LINK_SHORTCUT = ["Mod", "K"];
 
+export const LINK_MENU_HIDE_DELAY = 200; // ms, long enough to move the pointer from a link onto its menu
+export const COPIED_FEEDBACK_DURATION = 1500; // ms
+
 // Grouped so the toolbar can draw a separator between inline marks, headings and blocks.
 export const FORMAT_GROUPS: FormatItem[][] = [
   [
@@ -110,6 +113,8 @@ export const FORMAT_GROUPS: FormatItem[][] = [
 export const FORMAT_ITEMS = FORMAT_GROUPS.flat();
 
 export const LINK_VALIDATION_SCHEMA = z.object({
+  // Optional: left blank, the link shows its address. Prefilled with the selected or linked text.
+  text: z.string(),
   url: z
     .string()
     .trim()

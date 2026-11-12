@@ -73,6 +73,100 @@ describe("RichTextEditor", () => {
     await waitFor(() => expect(lastMarkdown(onChange)).toBe("[Ship it](https://example.com)"));
   });
 
+  it("prefills the text and address of the selected link", async () => {
+    const { textbox } = renderEditor("[the brief](https://example.com/brief)");
+
+    await userEvent.click(textbox);
+    await userEvent.keyboard("{Control>}a{/Control}");
+    await userEvent.click(screen.getByRole("button", { name: "Link" }));
+
+    expect(screen.getByRole("textbox", { name: "Link text" })).toHaveValue("the brief");
+    expect(screen.getByRole("textbox", { name: "Link address" })).toHaveValue("https://example.com/brief");
+    expect(screen.getByRole("textbox", { name: "Link address" })).toHaveFocus();
+  });
+
+  it("edits a link's text and address together", async () => {
+    const { onChange, textbox } = renderEditor("[the brief](https://example.com/brief)");
+
+    await userEvent.click(textbox);
+    await userEvent.keyboard("{Control>}a{/Control}");
+    await userEvent.click(screen.getByRole("button", { name: "Link" }));
+    await userEvent.clear(screen.getByRole("textbox", { name: "Link text" }));
+    await userEvent.type(screen.getByRole("textbox", { name: "Link text" }), "the plan");
+    await userEvent.clear(screen.getByRole("textbox", { name: "Link address" }));
+    await userEvent.type(screen.getByRole("textbox", { name: "Link address" }), "example.com/plan{Enter}");
+
+    await waitFor(() => expect(lastMarkdown(onChange)).toBe("[the plan](https://example.com/plan)"));
+  });
+
+  it("inserts a link with its own text when nothing is selected", async () => {
+    const { onChange, textbox } = renderEditor();
+
+    await userEvent.click(textbox);
+    await userEvent.click(screen.getByRole("button", { name: "Link" }));
+    await userEvent.type(screen.getByRole("textbox", { name: "Link text" }), "docs");
+    await userEvent.type(screen.getByRole("textbox", { name: "Link address" }), "example.com/docs{Enter}");
+
+    await waitFor(() => expect(lastMarkdown(onChange)).toBe("[docs](https://example.com/docs)"));
+  });
+
+  it("turns pasted [text](url) syntax into a link, even without https://", async () => {
+    const { textbox } = renderEditor();
+
+    paste(textbox, new Map([["text/plain", "[this](www.mindboop.com)"]]));
+
+    expect(within(textbox).getByRole("link", { name: "this" })).toHaveAttribute(
+      "href",
+      "https://www.mindboop.com",
+    );
+  });
+
+  it("opens a link in a new tab when it's clicked", () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    const { textbox } = renderEditor("See [this](www.mindboop.com)");
+    const link = within(textbox).getByRole("link", { name: "this" });
+
+    fireEvent.click(link, { shiftKey: true });
+    expect(open).not.toHaveBeenCalled();
+
+    fireEvent.click(link);
+    expect(open).toHaveBeenCalledWith("https://www.mindboop.com/", "_blank", "noopener,noreferrer");
+    open.mockRestore();
+  });
+
+  it("copies a link's address from its hover menu", async () => {
+    const user = userEvent.setup();
+    const { textbox } = renderEditor("See [this](https://example.com/brief)");
+
+    await user.hover(within(textbox).getByRole("link", { name: "this" }));
+    await user.click(await screen.findByRole("button", { name: "Copy link" }));
+
+    expect(await navigator.clipboard.readText()).toBe("https://example.com/brief");
+    expect(screen.getByRole("button", { name: "Link copied" })).toBeVisible();
+  });
+
+  it("edits a link's text and address from its hover menu", async () => {
+    const user = userEvent.setup();
+    const { onChange, textbox } = renderEditor("See [this](https://example.com/brief) today");
+
+    await user.hover(within(textbox).getByRole("link", { name: "this" }));
+    await user.click(await screen.findByRole("button", { name: "Edit link" }));
+
+    const text = screen.getByRole("textbox", { name: "Link text" });
+    const address = screen.getByRole("textbox", { name: "Link address" });
+    expect(text).toHaveValue("this");
+    expect(address).toHaveValue("https://example.com/brief");
+
+    await user.clear(text);
+    await user.type(text, "the plan");
+    await user.clear(address);
+    await user.type(address, "example.com/plan{Enter}");
+
+    await waitFor(() =>
+      expect(lastMarkdown(onChange)).toBe("See [the plan](https://example.com/plan) today"),
+    );
+  });
+
   it("rejects a link that isn't a web or email address", async () => {
     const { onChange, textbox } = renderEditor("Ship it");
 

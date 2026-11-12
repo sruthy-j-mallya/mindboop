@@ -19,6 +19,12 @@ describe("RichTextViewer", () => {
     );
   });
 
+  it("links addresses written without https://", () => {
+    render(<RichTextViewer markdown="Go to [this](www.mindboop.com)" />);
+
+    expect(screen.getByRole("link", { name: "this" })).toHaveAttribute("href", "https://www.mindboop.com");
+  });
+
   it("does not render raw HTML from the stored Markdown", () => {
     const { container } = render(
       <RichTextViewer markdown={'Hi <img src="x" onerror="alert(1)"><script>alert(1)</script>'} />,

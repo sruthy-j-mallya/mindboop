@@ -10,8 +10,8 @@ const MARKDOWN_INLINE = [
   /__[^_\n]+__/,
   /~~[^~\n]+~~/,
   /`[^`\n]+`/,
-  // The "](http" seam of a [text](url) link; matching the whole link would backtrack on unclosed brackets.
-  /\]\((?:https?:|mailto:)/,
+  // The "](http" (or "](www.") seam of a [text](url) link; matching the whole link would backtrack on unclosed brackets.
+  /\]\((?:https?:|mailto:|www\.)/,
 ];
 
 export const looksLikeMarkdown = (text: string) =>
