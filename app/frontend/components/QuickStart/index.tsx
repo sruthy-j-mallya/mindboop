@@ -80,6 +80,7 @@ const QuickStart = () => {
               </p>
             )}
           </div>
+          <Steps control={control} />
           <div className="grid gap-2">
             <Controller
               control={control}
@@ -101,7 +102,6 @@ const QuickStart = () => {
               </p>
             )}
           </div>
-          <Steps control={control} />
         </CardContent>
       </Card>
       <div className="flex flex-col gap-4">
