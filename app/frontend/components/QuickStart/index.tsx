@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Timer } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
@@ -10,26 +12,43 @@ import { Input } from "@/components/ui/input";
 import { useCreateQuickStart } from "@/hooks/reactQuery/useQuickStartsApi";
 import routes from "@/routes";
 
-import { INITIAL_FORM_VALUES, QUICK_START_VALIDATION_SCHEMA, type QuickStartFormValues } from "./constants";
+import { QUICK_START_VALIDATION_SCHEMA, type QuickStartFormValues } from "./constants";
 import Estimate from "./Estimate";
 import Steps from "./Steps";
-import { buildQuickStartPayload } from "./utils";
+import { buildQuickStartPayload, clearDraft, getInitialFormValues, saveDraft } from "./utils";
 
 const QuickStart = () => {
   const navigate = useNavigate();
   const { mutate: createQuickStart, isPending, error } = useCreateQuickStart();
+  const [defaultValues] = useState(getInitialFormValues);
   const {
     control,
     register,
     handleSubmit,
+    subscribe,
     formState: { errors },
   } = useForm<QuickStartFormValues>({
-    defaultValues: INITIAL_FORM_VALUES,
+    defaultValues,
     resolver: zodResolver(QUICK_START_VALIDATION_SCHEMA),
   });
 
+  // Saved on every change so a reload or a trip to another page doesn't lose what was written.
+  useEffect(
+    () =>
+      subscribe({
+        formState: { values: true },
+        callback: ({ values: { title, description, steps } }) => saveDraft({ title, description, steps }),
+      }),
+    [subscribe],
+  );
+
+  const handleSessionStarted = () => {
+    clearDraft();
+    navigate(routes.timer);
+  };
+
   const handleBeginSession = (values: QuickStartFormValues) =>
-    createQuickStart(buildQuickStartPayload(values), { onSuccess: () => navigate(routes.timer) });
+    createQuickStart(buildQuickStartPayload(values), { onSuccess: handleSessionStarted });
 
   return (
     <form

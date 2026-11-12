@@ -171,3 +171,26 @@ test("paste Markdown into the description and see it formatted", async ({ page }
     "https://example.com",
   );
 });
+
+test("keep an unstarted task through a reload, and start fresh after beginning it", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("textbox", { name: "Description" }).click();
+  await page.keyboard.type("Cite **sources** ");
+  await addSteps(page, ["Outline"]);
+  await page.getByRole("checkbox", { name: "Outline" }).check();
+  await page.reload();
+
+  await expect(page.getByRole("textbox", { name: "Task" })).toHaveValue("Draft permission");
+  const description = page.getByRole("textbox", { name: "Description" });
+  await expect(description.locator("strong")).toHaveText("sources");
+  await expect(page.getByRole("checkbox", { name: "Outline" })).toBeChecked();
+
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page).toHaveURL("/timer");
+  await page.goto("/");
+
+  await expect(page.getByRole("textbox", { name: "Task" })).toHaveValue("");
+  await expect(page.getByRole("checkbox")).toHaveCount(0);
+});

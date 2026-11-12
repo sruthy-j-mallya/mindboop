@@ -40,3 +40,14 @@ export const INITIAL_FORM_VALUES: QuickStartFormValues = {
   presetMinutes: TIMER_PRESETS[0],
   customMinutes: "",
 };
+
+export const DRAFT_STORAGE_KEY = "quick_start_draft";
+
+// Only what the user wrote is kept across reloads; the estimate is quick to pick again.
+export const DRAFT_SCHEMA = z.object({
+  title: z.string(),
+  description: z.string(),
+  steps: z.array(z.object({ text: z.string(), isDone: z.boolean() })),
+});
+
+export type QuickStartDraft = z.infer<typeof DRAFT_SCHEMA>;
