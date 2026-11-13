@@ -5,6 +5,7 @@ import { cn } from "cn";
 
 import FormattingToggle from "./FormattingToggle";
 import LinkHoverMenu from "./LinkHoverMenu";
+import LinkPopover from "./LinkPopover";
 import Toolbar from "./Toolbar";
 import type { RichTextEditorProps } from "./types";
 import { getExtensions, openLinkOnClick } from "./utils";
@@ -22,11 +23,6 @@ const RichTextEditor = ({
   // The format buttons stay out of the way until asked for; Markdown syntax and shortcuts work without them.
   const [showToolbar, setShowToolbar] = useState(false);
   const [showLinkPopover, setShowLinkPopover] = useState(false);
-  // The link popover lives in the toolbar, so opening it (Mod-K, or Edit in a link's hover menu) shows the toolbar.
-  const openLinkPopover = () => {
-    setShowToolbar(true);
-    setShowLinkPopover(true);
-  };
   const extensions = useMemo(() => getExtensions(placeholder), [placeholder]);
   const editorProps = useMemo(
     () => ({
@@ -43,7 +39,6 @@ const RichTextEditor = ({
         if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return false;
 
         event.preventDefault();
-        setShowToolbar(true);
         setShowLinkPopover(true);
         return true;
       },
@@ -68,13 +63,10 @@ const RichTextEditor = ({
   const handleEditLink = (link: HTMLAnchorElement) => {
     const from = editor.view.posAtDOM(link, 0);
     editor.commands.setTextSelection({ from, to: from + (link.textContent?.length ?? 0) });
-    openLinkPopover();
+    setShowLinkPopover(true);
   };
 
-  const handleToolbarToggle = (isShown: boolean) => {
-    setShowToolbar(isShown);
-    if (!isShown) setShowLinkPopover(false);
-  };
+  const handleLinkClick = () => setShowLinkPopover(true);
 
   return (
     <div
@@ -85,12 +77,11 @@ const RichTextEditor = ({
     >
       <EditorContent editor={editor} />
       {/* Below the text, with the toggle at the end of its row. */}
-      {showToolbar && (
-        <Toolbar editor={editor} showLinkPopover={showLinkPopover} onLinkPopoverChange={setShowLinkPopover} />
-      )}
+      {showToolbar && <Toolbar editor={editor} onLinkClick={handleLinkClick} />}
       {/* After the content, so it stacks above ProseMirror (which is position: relative) and tabs after the text. */}
-      <FormattingToggle isPressed={showToolbar} onPressedChange={handleToolbarToggle} />
+      <FormattingToggle isPressed={showToolbar} onPressedChange={setShowToolbar} />
       <LinkHoverMenu editor={editor} onEdit={handleEditLink} />
+      <LinkPopover editor={editor} isOpen={showLinkPopover} onOpenChange={setShowLinkPopover} />
     </div>
   );
 };

@@ -7,16 +7,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { FORMAT_GROUPS, FORMAT_ITEMS } from "./constants";
 import FormatButton from "./FormatButton";
-import LinkPopover from "./LinkPopover";
+import LinkButton from "./LinkButton";
 import type { FormatStates } from "./types";
 
 type ToolbarProps = {
   editor: Editor;
-  showLinkPopover: boolean;
-  onLinkPopoverChange: (isOpen: boolean) => void;
+  onLinkClick: () => void;
 };
 
-const Toolbar = ({ editor, showLinkPopover, onLinkPopoverChange }: ToolbarProps) => {
+const Toolbar = ({ editor, onLinkClick }: ToolbarProps) => {
   // Only re-renders the toolbar when a button's pressed state actually changes, not on every keystroke.
   const formatStates = useEditorState({
     editor,
@@ -53,12 +52,7 @@ const Toolbar = ({ editor, showLinkPopover, onLinkPopoverChange }: ToolbarProps)
           </Fragment>
         ))}
         <Separator className="mx-1 h-5!" orientation="vertical" />
-        <LinkPopover
-          editor={editor}
-          isActive={formatStates.link}
-          isOpen={showLinkPopover}
-          onOpenChange={onLinkPopoverChange}
-        />
+        <LinkButton isActive={formatStates.link} onClick={onLinkClick} />
       </div>
     </TooltipProvider>
   );

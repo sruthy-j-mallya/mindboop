@@ -207,6 +207,8 @@ describe("RichTextEditor", () => {
 
     const text = screen.getByRole("textbox", { name: "Link text" });
     const address = screen.getByRole("textbox", { name: "Link address" });
+    // The link form opens on its own; the format buttons stay hidden.
+    expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
     expect(text).toHaveValue("this");
     expect(address).toHaveValue("https://example.com/brief");
 
@@ -257,14 +259,14 @@ describe("RichTextEditor", () => {
     await waitFor(() => expect(lastMarkdown(onChange)).toBe(markdown));
   });
 
-  it("shows the format buttons with the link form on Mod-K", async () => {
+  it("opens the link form on Mod-K without showing the format buttons", async () => {
     const { textbox } = renderEditor("Ship it");
 
     await userEvent.click(textbox);
     await userEvent.keyboard("{Control>}k{/Control}");
 
-    expect(screen.getByRole("toolbar", { name: "Formatting" })).toBeVisible();
     expect(await screen.findByRole("textbox", { name: "Link address" })).toBeVisible();
+    expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
   });
 
   it("keeps pasted Markdown literal inside a code block", async () => {
