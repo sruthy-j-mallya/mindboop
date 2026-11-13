@@ -9,6 +9,19 @@ class TaskTest < ActiveSupport::TestCase
     assert_not build(:task, title: "").valid?
   end
 
+  def test_that_a_blank_description_is_saved_as_nil
+    assert_nil build(:task, description: "  \n ").description
+  end
+
+  def test_that_description_is_stripped
+    assert_equal "**Focus**", build(:task, description: "  **Focus**\n").description
+  end
+
+  def test_that_description_cannot_exceed_the_maximum_length
+    assert build(:task, description: "a" * Task::MAX_DESCRIPTION_LENGTH).valid?
+    assert_not build(:task, description: "a" * (Task::MAX_DESCRIPTION_LENGTH + 1)).valid?
+  end
+
   def test_that_estimated_minutes_must_be_a_positive_integer
     assert_not build(:task, estimated_minutes: 0).valid?
     assert_not build(:task, estimated_minutes: 1.5).valid?

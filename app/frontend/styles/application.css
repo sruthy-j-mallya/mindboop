@@ -97,3 +97,115 @@
     line-height: 1.6;
   }
 }
+
+/* Task descriptions, in the rich-text editor and its read-only viewer (components/commons/RichText). */
+@layer components {
+  .rich-text {
+    @apply text-sm wrap-anywhere text-foreground;
+
+    > * + * {
+      @apply mt-3;
+    }
+    h2 {
+      @apply mt-5 text-lg;
+    }
+    h3 {
+      @apply mt-4 text-base;
+    }
+    ul {
+      @apply list-disc pl-6;
+    }
+    ol {
+      @apply list-decimal pl-6;
+    }
+    li + li,
+    li > * + * {
+      @apply mt-1;
+    }
+    li::marker {
+      @apply text-muted-foreground;
+    }
+    hr {
+      @apply my-5 border-border;
+    }
+    /* The editor's selection ring on a clicked rule. */
+    hr.ProseMirror-selectednode {
+      @apply border-ring;
+    }
+    mark {
+      @apply rounded-sm bg-(--highlight) px-0.5 text-inherit;
+    }
+    blockquote {
+      @apply border-l-2 border-border pl-3 text-muted-foreground;
+    }
+    a {
+      @apply cursor-pointer font-medium text-primary underline underline-offset-2;
+    }
+    /* Links are natively draggable, so a click that drifts a few pixels drags the link instead of placing the
+       caret inside it. */
+    &[contenteditable="true"] a {
+      -webkit-user-drag: none;
+    }
+    :not(pre) > code {
+      @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
+    }
+    pre {
+      @apply overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs;
+    }
+    /* Code block syntax colours: lowlight tags tokens with highlight.js classes (tokens.css has the palette). */
+    pre {
+      .hljs-comment,
+      .hljs-quote {
+        @apply text-(--syntax-comment) italic;
+      }
+      .hljs-keyword,
+      .hljs-selector-tag,
+      .hljs-meta,
+      .hljs-doctag {
+        @apply text-(--syntax-keyword);
+      }
+      .hljs-string,
+      .hljs-regexp,
+      .hljs-addition,
+      .hljs-template-tag,
+      .hljs-template-variable {
+        @apply text-(--syntax-string);
+      }
+      .hljs-number,
+      .hljs-literal,
+      .hljs-symbol,
+      .hljs-bullet {
+        @apply text-(--syntax-number);
+      }
+      .hljs-title,
+      .hljs-section,
+      .hljs-name,
+      .hljs-selector-id,
+      .hljs-selector-class {
+        @apply text-(--syntax-title);
+      }
+      .hljs-type,
+      .hljs-built_in,
+      .hljs-class {
+        @apply text-(--syntax-type);
+      }
+      .hljs-attr,
+      .hljs-attribute,
+      .hljs-variable,
+      .hljs-property,
+      .hljs-deletion {
+        @apply text-(--syntax-attr);
+      }
+      .hljs-emphasis {
+        @apply italic;
+      }
+      .hljs-strong {
+        @apply font-bold;
+      }
+    }
+    p.is-editor-empty:first-child::before {
+      @apply pointer-events-none float-left h-0 text-muted-foreground;
+      content: attr(data-placeholder);
+    }
+  }
+}

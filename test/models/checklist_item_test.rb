@@ -47,4 +47,33 @@ class ChecklistItemTest < ActiveSupport::TestCase
 
     assert_equal 1, create(:checklist_item, task:).position
   end
+
+  def test_that_move_to_reorders_the_kept_items_and_keeps_their_positions
+    task = create(:task)
+    first, second, third = create_list(:checklist_item, 3, task:)
+    discarded = create(:checklist_item, task:)
+    discarded.discard!
+
+    third.move_to!(0)
+
+    assert_equal [ third, first, second ], task.checklist_items.reload.to_a
+    assert_equal [ 0, 1, 2 ], task.checklist_items.map(&:position)
+    assert_equal 3, discarded.reload.position
+  end
+
+  def test_that_move_to_clamps_an_index_past_the_end
+    task = create(:task)
+    first, second = create_list(:checklist_item, 2, task:)
+
+    first.move_to!(10)
+
+    assert_equal [ second, first ], task.checklist_items.reload.to_a
+  end
+
+  def test_that_move_to_rejects_an_invalid_index
+    item = create(:checklist_item)
+
+    error = assert_raises(ActiveRecord::RecordInvalid) { item.move_to!("first") }
+    assert_equal "Position must be a whole number of 0 or more", error.record.errors.full_messages.to_sentence
+  end
 end

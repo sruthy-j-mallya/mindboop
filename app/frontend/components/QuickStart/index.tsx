@@ -1,34 +1,55 @@
+import { useEffect, useState } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Timer } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 
+import RichTextEditor from "@/components/commons/RichText/LazyEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useCreateQuickStart } from "@/hooks/reactQuery/useQuickStartsApi";
 import routes from "@/routes";
 
-import { INITIAL_FORM_VALUES, QUICK_START_VALIDATION_SCHEMA, type QuickStartFormValues } from "./constants";
+import { QUICK_START_VALIDATION_SCHEMA, type QuickStartFormValues } from "./constants";
 import Estimate from "./Estimate";
 import Steps from "./Steps";
-import { buildQuickStartPayload } from "./utils";
+import { buildQuickStartPayload, clearDraft, getInitialFormValues, saveDraft } from "./utils";
 
 const QuickStart = () => {
   const navigate = useNavigate();
   const { mutate: createQuickStart, isPending, error } = useCreateQuickStart();
+  const [defaultValues] = useState(getInitialFormValues);
   const {
     control,
     register,
     handleSubmit,
+    setValue,
+    subscribe,
     formState: { errors },
   } = useForm<QuickStartFormValues>({
-    defaultValues: INITIAL_FORM_VALUES,
+    defaultValues,
     resolver: zodResolver(QUICK_START_VALIDATION_SCHEMA),
   });
 
+  // Saved on every change so a reload or a trip to another page doesn't lose what was written.
+  useEffect(
+    () =>
+      subscribe({
+        formState: { values: true },
+        callback: ({ values: { title, description, steps } }) => saveDraft({ title, description, steps }),
+      }),
+    [subscribe],
+  );
+
+  const handleSessionStarted = () => {
+    clearDraft();
+    navigate(routes.timer);
+  };
+
   const handleBeginSession = (values: QuickStartFormValues) =>
-    createQuickStart(buildQuickStartPayload(values), { onSuccess: () => navigate(routes.timer) });
+    createQuickStart(buildQuickStartPayload(values), { onSuccess: handleSessionStarted });
 
   return (
     <form
@@ -60,7 +81,28 @@ const QuickStart = () => {
               </p>
             )}
           </div>
-          <Steps control={control} />
+          <Steps control={control} setValue={setValue} />
+          <div className="grid gap-2">
+            <Controller
+              control={control}
+              name="description"
+              render={({ field: { value, onChange } }) => (
+                <RichTextEditor
+                  defaultValue={value}
+                  describedBy={errors.description ? "description-error" : undefined}
+                  isInvalid={!!errors.description}
+                  label="Description"
+                  placeholder="Add notes, links or context. Markdown works too."
+                  onChange={onChange}
+                />
+              )}
+            />
+            {errors.description && (
+              <p id="description-error" className="text-sm text-destructive">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
       <div className="flex flex-col gap-4">

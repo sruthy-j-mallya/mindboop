@@ -119,3 +119,118 @@ test("remove a step, and keep the ticks on the rest", async ({ page }) => {
   await expect(page.getByRole("checkbox", { name: "Third" })).toBeChecked();
   await expect(page.getByRole("checkbox", { name: "Second" })).not.toBeChecked();
 });
+
+test("write a formatted description and see it on the timer", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  const description = page.getByRole("textbox", { name: "Description" });
+  await description.click();
+  // Markdown shortcuts format as you type.
+  await page.keyboard.type("## Plan");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("- Cite **sources** ");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Read the brief");
+  // The toolbar link button wraps the selected word.
+  await description.getByText("Read the brief").dblclick({ position: { x: 2, y: 5 } });
+  await page.getByRole("button", { name: "Link" }).click();
+  await page.getByRole("textbox", { name: "Link address" }).fill("example.com");
+  await page.getByRole("button", { name: "Apply" }).click();
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+
+  await expect(page).toHaveURL("/timer");
+  const shown = page.getByRole("region", { name: "Description" });
+  await expect(shown.getByRole("heading", { name: "Plan" })).toBeVisible();
+  await expect(shown.getByRole("listitem")).toHaveText(["Cite sources", "Read the brief"]);
+  await expect(shown.locator("strong")).toHaveText("sources");
+  await expect(shown.getByRole("link")).toHaveCount(1);
+  await expect(shown.getByRole("link", { name: "Read" })).toHaveAttribute("href", "https://example.com");
+});
+
+test("paste Markdown into the description and see it formatted", async ({ page }) => {
+  await signUp(page);
+
+  const description = page.getByRole("textbox", { name: "Description" });
+  await description.click();
+  // Code editors put the raw text in the HTML flavour too; the Markdown should still win.
+  await description.evaluate((element) => {
+    const markdown = "## Plan\n\n1. Cite **sources**\n2. Read [the brief](https://example.com)";
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", markdown);
+    clipboardData.setData("text/html", `<div style="white-space: pre">${markdown}</div>`);
+    element.dispatchEvent(new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }));
+  });
+
+  await expect(description.getByRole("heading", { level: 2, name: "Plan" })).toBeVisible();
+  await expect(description.getByRole("listitem")).toHaveText(["Cite sources", "Read the brief"]);
+  await expect(description.locator("strong")).toHaveText("sources");
+  await expect(description.getByRole("link", { name: "the brief" })).toHaveAttribute(
+    "href",
+    "https://example.com",
+  );
+});
+
+test("open, edit and copy a description link from its hover menu", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await signUp(page);
+
+  const description = page.getByRole("textbox", { name: "Description" });
+  await description.click();
+  await page.keyboard.type("See [the brief](www.example.com) ");
+  const link = description.getByRole("link", { name: "the brief" });
+  await expect(link).toHaveAttribute("href", "https://www.example.com");
+
+  // A click opens the link rather than placing the caret in it.
+  const popupPromise = context.waitForEvent("page");
+  await link.click();
+  const popup = await popupPromise;
+  await expect(popup).toHaveURL(/www\.example\.com/);
+  await popup.close();
+
+  await link.hover();
+  await page.getByRole("button", { name: "Copy link" }).click();
+  await expect(page.getByRole("button", { name: "Link copied" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://www.example.com/");
+
+  await link.hover();
+  await page.getByRole("button", { name: "Edit link" }).click();
+  await expect(page.getByRole("textbox", { name: "Link text" })).toHaveValue("the brief");
+  // The popover opens just under the link, not under the toolbar.
+  const linkBox = await link.boundingBox();
+  const fieldBox = await page.getByRole("textbox", { name: "Link text" }).boundingBox();
+  expect(fieldBox!.y - (linkBox!.y + linkBox!.height)).toBeGreaterThan(0);
+  expect(fieldBox!.y - (linkBox!.y + linkBox!.height)).toBeLessThan(60);
+  await page.getByRole("textbox", { name: "Link text" }).fill("the plan");
+  await page.getByRole("textbox", { name: "Link address" }).fill("example.com/plan");
+  await page.getByRole("button", { name: "Apply" }).click();
+
+  await expect(description.getByRole("link", { name: "the plan" })).toHaveAttribute(
+    "href",
+    "https://example.com/plan",
+  );
+});
+
+test("keep an unstarted task through a reload, and start fresh after beginning it", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("textbox", { name: "Description" }).click();
+  await page.keyboard.type("Cite **sources** ");
+  await addSteps(page, ["Outline"]);
+  await page.getByRole("checkbox", { name: "Outline" }).check();
+  await page.reload();
+
+  await expect(page.getByRole("textbox", { name: "Task" })).toHaveValue("Draft permission");
+  const description = page.getByRole("textbox", { name: "Description" });
+  await expect(description.locator("strong")).toHaveText("sources");
+  await expect(page.getByRole("checkbox", { name: "Outline" })).toBeChecked();
+
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page).toHaveURL("/timer");
+  await page.goto("/");
+
+  await expect(page.getByRole("textbox", { name: "Task" })).toHaveValue("");
+  await expect(page.getByRole("checkbox")).toHaveCount(0);
+});
