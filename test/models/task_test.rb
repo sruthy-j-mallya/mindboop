@@ -25,6 +25,8 @@ class TaskTest < ActiveSupport::TestCase
   def test_that_estimated_minutes_must_be_a_positive_integer
     assert_not build(:task, estimated_minutes: 0).valid?
     assert_not build(:task, estimated_minutes: 1.5).valid?
+    assert_not build(:task, estimated_minutes: Task::MAX_ESTIMATED_MINUTES + 1).valid?
+    assert build(:task, estimated_minutes: Task::MAX_ESTIMATED_MINUTES).valid?
     assert build(:task, estimated_minutes: nil).valid?
   end
 

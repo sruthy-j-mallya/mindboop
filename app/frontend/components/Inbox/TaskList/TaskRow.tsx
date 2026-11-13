@@ -4,6 +4,7 @@ import { generatePath, Link } from "react-router";
 import type { Task } from "@/apis/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import routes from "@/routes";
+import { formatMinutes } from "@/utils";
 
 import ScheduleLabel from "../ScheduleLabel";
 import useCompleteTask from "../useCompleteTask";
@@ -11,7 +12,7 @@ import useCompleteTask from "../useCompleteTask";
 type TaskRowProps = { task: Task };
 
 const TaskRow = ({ task }: TaskRowProps) => {
-  const { id, title, checklistItems } = task;
+  const { id, title, checklistItems, estimatedMinutes } = task;
   const { completeTask, isCompleting, isSelected, error } = useCompleteTask(id);
   const doneStepsCount = checklistItems.filter(({ isCompleted }) => isCompleted).length;
 
@@ -41,6 +42,9 @@ const TaskRow = ({ task }: TaskRowProps) => {
               <span className="text-muted-foreground">
                 {doneStepsCount}/{checklistItems.length} steps
               </span>
+            )}
+            {estimatedMinutes && (
+              <span className="text-muted-foreground">{formatMinutes(estimatedMinutes)}</span>
             )}
             <ScheduleLabel schedule={task} />
           </span>

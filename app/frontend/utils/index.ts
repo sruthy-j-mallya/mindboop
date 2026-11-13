@@ -1,3 +1,5 @@
+import { MINUTES_PER_HOUR } from "@/constants";
+
 type KeyTransform = (key: string) => string;
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
@@ -25,6 +27,16 @@ export const keysToSnakeCase = <T>(value: unknown) => transformKeys(value, toSna
 // Rounds up, so a break doesn't read as over during its last second.
 export const getBreakRemainingSeconds = (endsAt: string, currentTime: number) =>
   Math.max(Math.ceil((Date.parse(endsAt) - currentTime) / 1000), 0);
+
+// "45 min", "2 h", "1 h 30 min".
+export const formatMinutes = (minutes: number) => {
+  const hours = Math.floor(minutes / MINUTES_PER_HOUR);
+  const rest = minutes % MINUTES_PER_HOUR;
+
+  if (hours === 0) return `${rest} min`;
+
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+};
 
 // shadcn generates `import { cn } from "@/utils"` (see components.json); re-export the package so it resolves.
 export { cn } from "cn";

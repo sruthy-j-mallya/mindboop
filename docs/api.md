@@ -66,6 +66,9 @@ lists every task.
 The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
 `starts_at` and `ends_at`.
 
+`estimated_minutes` is a whole number from 1 to 1,440 (24 hours), or `null` for no estimate; send `null` to clear it.
+Anything else gets a 422.
+
 A task's schedule is either a date or a duration. A date has only `starts_at` (`is_duration: false`, `ends_at: null`).
 A duration has both, with `is_duration: true` and `ends_at` no earlier than `starts_at`. `is_all_day` marks a schedule
 with days but no times; the client then sends the start of each day in the user's time zone. Any other combination gets a

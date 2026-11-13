@@ -312,6 +312,30 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert response.parsed_body["error"].present?
   end
 
+  def test_that_user_can_set_and_clear_their_tasks_estimate
+    sign_in @user
+
+    patch api_task_path(@task), params: { estimated_minutes: 45 }, as: :json
+
+    assert_response :ok
+    assert_equal 45, response.parsed_body.dig("task", "estimated_minutes")
+
+    patch api_task_path(@task), params: { estimated_minutes: nil }, as: :json
+
+    assert_response :ok
+    assert_nil response.parsed_body.dig("task", "estimated_minutes")
+    assert_nil @task.reload.estimated_minutes
+  end
+
+  def test_that_update_rejects_an_estimate_over_a_day
+    sign_in @user
+
+    patch api_task_path(@task), params: { estimated_minutes: Task::MAX_ESTIMATED_MINUTES + 1 }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Estimated minutes must be less than or equal to 1440", response.parsed_body["error"]
+  end
+
   def test_that_user_can_schedule_their_task_for_a_duration
     sign_in @user
     starts_at = 1.day.from_now.change(usec: 0)

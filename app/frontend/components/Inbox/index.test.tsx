@@ -267,4 +267,72 @@ describe("Inbox", () => {
       ),
     );
   });
+
+  it("shows each task's estimate in the list", async () => {
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(
+      listOf([buildTask({ title: "Plan the week", estimatedMinutes: 90 })]),
+    );
+
+    renderInbox();
+
+    expect(await screen.findByRole("link", { name: /Plan the week/ })).toHaveTextContent("1 h 30 min");
+  });
+
+  it("sets an estimate from a preset", async () => {
+    const task = buildTask({ title: "Plan the week" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Estimate" }));
+    await userEvent.click(screen.getByRole("button", { name: "45 min" }));
+    expect(screen.getByLabelText("Minutes")).toHaveValue(45);
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({ id: task.id, estimatedMinutes: 45 }, expect.anything()),
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("sets a custom estimate and refuses an invalid one", async () => {
+    const task = buildTask({ title: "Plan the week", estimatedMinutes: 30 });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "30 min" }));
+    const input = screen.getByLabelText("Minutes");
+    expect(input).toHaveValue(30);
+
+    await userEvent.clear(input);
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByText("Enter 1–1440 whole minutes")).toBeInTheDocument();
+    expect(update).not.toHaveBeenCalled();
+
+    await userEvent.type(input, "100");
+    expect(screen.getByText("That's 1 h 40 min")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({ id: task.id, estimatedMinutes: 100 }, expect.anything()),
+    );
+  });
+
+  it("clears a task's estimate", async () => {
+    const task = buildTask({ title: "Plan the week", estimatedMinutes: 120 });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "2 h" }));
+    await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({ id: task.id, estimatedMinutes: null }, expect.anything()),
+    );
+  });
 });
