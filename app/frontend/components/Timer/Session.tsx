@@ -64,8 +64,9 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   }
 
   return (
-    <Card className="mx-auto w-full max-w-2xl lg:max-w-5xl">
-      <CardContent className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+    <Card className="mx-auto w-full max-w-2xl flex-1 lg:max-w-5xl">
+      {/* The card fills the page, and the steps-and-description column takes the height left under the timer. */}
+      <CardContent className="grid flex-1 grid-rows-[auto_1fr] gap-8 lg:grid-cols-2 lg:grid-rows-[1fr] lg:gap-12">
         {/* The timer and its actions stay together (and pinned on wide screens), so a long description never
             pushes the buttons out of view. */}
         <div className="flex flex-col gap-6 lg:sticky lg:top-4 lg:self-start">

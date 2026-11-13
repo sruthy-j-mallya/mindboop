@@ -17,12 +17,15 @@ const Details = ({ task }: DetailsProps) => {
   const handleAddStep = () => setStepDraft((draft) => draft ?? NEW_STEP_DRAFT);
 
   return (
-    <article className="flex flex-col gap-8">
-      <header className="flex items-start justify-between gap-4">
-        <h2 className="text-xl font-semibold wrap-anywhere">{task.title}</h2>
-        {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
-      </header>
-      <TaskSteps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
+    <article className="flex flex-1 flex-col gap-8">
+      {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
+      <div className="flex flex-col gap-2">
+        <header className="flex items-start justify-between gap-4">
+          <h2 className="text-xl font-semibold wrap-anywhere">{task.title}</h2>
+          {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
+        </header>
+        <TaskSteps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
+      </div>
       <TaskDescription task={task} />
     </article>
   );

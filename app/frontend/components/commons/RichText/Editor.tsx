@@ -71,11 +71,12 @@ const RichTextEditor = ({
   return (
     <div
       className={cn(
-        "relative rounded-md border border-input bg-input-background shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
+        "relative flex flex-1 flex-col rounded-md border border-input bg-input-background shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
         isInvalid && "border-destructive ring-destructive/20",
       )}
     >
-      <EditorContent editor={editor} />
+      {/* Grows with the box, which fills its flex parent, so the whole empty area below the text takes a click. */}
+      <EditorContent className="flex flex-1 flex-col [&>.ProseMirror]:flex-1" editor={editor} />
       {/* Below the text, with the toggle at the end of its row. */}
       {showToolbar && <Toolbar editor={editor} onLinkClick={handleLinkClick} />}
       {/* After the content, so it stacks above ProseMirror (which is position: relative) and tabs after the text. */}

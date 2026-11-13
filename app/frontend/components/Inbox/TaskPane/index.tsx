@@ -12,7 +12,7 @@ const TaskPane = () => {
   const { data: task, isPending, error } = useTask(taskId);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 flex-col gap-4">
       {/* On narrow screens the pane replaces the list, so this leads back to it. */}
       <Button asChild className="self-start lg:hidden" size="sm" variant="ghost">
         <Link to={routes.inbox.index}>

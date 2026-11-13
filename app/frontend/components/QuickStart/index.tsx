@@ -61,7 +61,7 @@ const QuickStart = () => {
   return (
     <form
       noValidate
-      className="mx-auto grid w-full max-w-5xl gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start"
+      className="mx-auto grid w-full max-w-5xl flex-1 grid-rows-[auto_1fr_auto] gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]"
       onSubmit={handleSubmit(handleBeginSession)}
     >
       <header className="grid gap-2 lg:col-span-2">
@@ -70,8 +70,9 @@ const QuickStart = () => {
         </p>
         <h1 className="sr-only">What do you want to get done?</h1>
       </header>
+      {/* The card stretches to the bottom of the page, and the description takes the room left in it. */}
       <Card>
-        <CardContent className="flex flex-col gap-4">
+        <CardContent className="flex flex-1 flex-col gap-4">
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -92,7 +93,7 @@ const QuickStart = () => {
             )}
           </div>
           <Steps control={control} draft={stepDraft} setValue={setValue} onDraftChange={setStepDraft} />
-          <div className="grid gap-2">
+          <div className="flex flex-1 flex-col gap-2">
             <Controller
               control={control}
               name="description"
@@ -115,7 +116,7 @@ const QuickStart = () => {
           </div>
         </CardContent>
       </Card>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 lg:self-start">
         <Estimate control={control} />
         {error && (
           <p className="text-sm text-destructive" role="alert">
