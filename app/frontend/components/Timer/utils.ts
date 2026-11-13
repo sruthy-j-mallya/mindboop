@@ -36,3 +36,8 @@ export const formatRemainingTime = (remainingSeconds: number) => {
 
   return `${pad(minutes)}:${pad(remainingSeconds % SECONDS_PER_MINUTE)}`;
 };
+
+// A stopwatch has no end, so it keeps ticking for as long as it runs.
+export const isTicking = (timeLog: TimeLog, currentTime: number) =>
+  timeLog.isRunning &&
+  (timeLog.mode === "stopwatch" || getTimerState(timeLog, currentTime).remainingSeconds > 0);

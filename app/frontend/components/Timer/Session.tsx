@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
+import Ambience from "./Ambience";
 import BailDialog from "./BailDialog";
 import Countdown from "./Countdown";
 import Description from "./Description";
@@ -62,11 +63,14 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
         {/* The timer and its actions stay together (and pinned on wide screens), so a long description never
             pushes the buttons out of view. */}
         <div className="flex flex-col gap-6 lg:sticky lg:top-4 lg:self-start">
-          <header className="grid gap-1">
-            <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              {isOnBreak ? "Paused" : "Focusing on"}
-            </p>
-            <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
+          <header className="flex items-start justify-between gap-4">
+            <div className="grid gap-1">
+              <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                {isOnBreak ? "Paused" : "Focusing on"}
+              </p>
+              <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
+            </div>
+            <Ambience timeLog={timeLog} />
           </header>
           <Countdown timeLog={timeLog} />
           {currentBreak && <BreakBanner currentBreak={currentBreak} timeLogId={timeLog.id} />}
