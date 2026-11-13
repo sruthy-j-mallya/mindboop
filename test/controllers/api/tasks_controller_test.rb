@@ -312,6 +312,41 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert response.parsed_body["error"].present?
   end
 
+  def test_that_user_can_schedule_their_task_for_a_duration
+    sign_in @user
+    starts_at = 1.day.from_now.change(usec: 0)
+    ends_at = starts_at + 90.minutes
+
+    patch api_task_path(@task), params: { is_duration: true, is_all_day: false, starts_at:, ends_at: }, as: :json
+
+    assert_response :ok
+    @task.reload
+    assert @task.is_duration
+    assert_equal [ starts_at, ends_at ], [ @task.starts_at, @task.ends_at ]
+  end
+
+  def test_that_user_can_clear_their_tasks_schedule
+    starts_at = 1.day.from_now
+    @task.update!(is_duration: true, starts_at:, ends_at: starts_at + 1.hour)
+    sign_in @user
+
+    patch api_task_path(@task), params: { is_duration: false, is_all_day: false, starts_at: nil, ends_at: nil }, as: :json
+
+    assert_response :ok
+    assert_nil @task.reload.starts_at
+    assert_nil @task.ends_at
+  end
+
+  def test_that_update_rejects_a_duration_that_ends_before_it_starts
+    sign_in @user
+    starts_at = 1.day.from_now
+
+    patch api_task_path(@task), params: { is_duration: true, starts_at:, ends_at: starts_at - 1.hour }, as: :json
+
+    assert_response :unprocessable_content
+    assert_match "Ends at", response.parsed_body["error"]
+  end
+
   def test_that_update_returns_401_when_signed_out
     patch api_task_path(@task), params: { title: @title }, as: :json
 

@@ -1,5 +1,6 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { addDays, format, set, startOfDay } from "date-fns";
 import { generatePath, Route, Routes } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -172,5 +173,98 @@ describe("Inbox", () => {
     );
     expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Pay rent" })).not.toBeInTheDocument();
+  });
+
+  it("shows each task's date in the list", async () => {
+    const startsAt = startOfDay(addDays(new Date(), 1)).toISOString();
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(
+      listOf([buildTask({ title: "Water the plants", isAllDay: true, startsAt })]),
+    );
+
+    renderInbox();
+
+    expect(await screen.findByRole("link", { name: /Water the plants/ })).toHaveTextContent("Tomorrow");
+  });
+
+  it("sets a date from the pane's due date picker", async () => {
+    const task = buildTask({ title: "Renew the passport" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Due date" }));
+    const tomorrow = addDays(new Date(), 1);
+    await userEvent.click(
+      screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
+    );
+    fireEvent.change(screen.getByLabelText("Time"), { target: { value: "17:30" } });
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+    const startsAt = set(tomorrow, { hours: 17, minutes: 30, seconds: 0, milliseconds: 0 });
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        { id: task.id, isDuration: false, isAllDay: false, startsAt: startsAt.toISOString(), endsAt: null },
+        expect.anything(),
+      ),
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("sets a duration and refuses one that ends before it starts", async () => {
+    const startsAt = set(new Date(), { hours: 9, minutes: 0, seconds: 0, milliseconds: 0 });
+    const task = buildTask({ title: "Team offsite", startsAt: startsAt.toISOString() });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: /Today 9:00am/ }));
+    await userEvent.click(screen.getByRole("tab", { name: "Duration" }));
+    expect(screen.getByLabelText("End time")).toHaveValue("10:00");
+
+    fireEvent.change(screen.getByLabelText("End time"), { target: { value: "08:00" } });
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("The end can't be before the start");
+    expect(update).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("End time"), { target: { value: "11:30" } });
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+    const endsAt = set(startsAt, { hours: 11, minutes: 30 });
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        {
+          id: task.id,
+          isDuration: true,
+          isAllDay: false,
+          startsAt: startsAt.toISOString(),
+          endsAt: endsAt.toISOString(),
+        },
+        expect.anything(),
+      ),
+    );
+  });
+
+  it("clears a task's schedule", async () => {
+    const task = buildTask({
+      title: "Dentist",
+      isAllDay: true,
+      startsAt: startOfDay(new Date()).toISOString(),
+    });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Today" }));
+    await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        { id: task.id, isDuration: false, isAllDay: false, startsAt: null, endsAt: null },
+        expect.anything(),
+      ),
+    );
   });
 });

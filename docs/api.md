@@ -66,6 +66,12 @@ lists every task.
 The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
 `starts_at` and `ends_at`.
 
+A task's schedule is either a date or a duration. A date has only `starts_at` (`is_duration: false`, `ends_at: null`).
+A duration has both, with `is_duration: true` and `ends_at` no earlier than `starts_at`. `is_all_day` marks a schedule
+with days but no times; the client then sends the start of each day in the user's time zone. Any other combination gets a
+422 (for example an `ends_at` without `is_duration`, or a duration that ends before it starts). Send `starts_at: null`,
+`ends_at: null` and `is_duration: false` to clear the schedule.
+
 `description` is Markdown, as written in the rich-text editor, up to 10,000 characters (longer gets a 422). It's stripped,
 and a blank description is saved as `null`. The API stores it as given; the client renders it through the editor's schema,
 which leaves out anything the editor can't write, such as raw HTML.

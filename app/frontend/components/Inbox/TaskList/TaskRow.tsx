@@ -5,11 +5,13 @@ import type { Task } from "@/apis/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import routes from "@/routes";
 
+import ScheduleLabel from "../ScheduleLabel";
 import useCompleteTask from "../useCompleteTask";
 
 type TaskRowProps = { task: Task };
 
-const TaskRow = ({ task: { id, title, checklistItems } }: TaskRowProps) => {
+const TaskRow = ({ task }: TaskRowProps) => {
+  const { id, title, checklistItems } = task;
   const { completeTask, isCompleting, isSelected, error } = useCompleteTask(id);
   const doneStepsCount = checklistItems.filter(({ isCompleted }) => isCompleted).length;
 
@@ -34,11 +36,14 @@ const TaskRow = ({ task: { id, title, checklistItems } }: TaskRowProps) => {
           to={generatePath(routes.inbox.show, { taskId: id })}
         >
           <span className="min-w-0 wrap-anywhere">{title}</span>
-          {checklistItems.length > 0 && (
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {doneStepsCount}/{checklistItems.length} steps
-            </span>
-          )}
+          <span className="flex shrink-0 items-center gap-3 text-xs">
+            {checklistItems.length > 0 && (
+              <span className="text-muted-foreground">
+                {doneStepsCount}/{checklistItems.length} steps
+              </span>
+            )}
+            <ScheduleLabel schedule={task} />
+          </span>
         </Link>
       </div>
       {error && (

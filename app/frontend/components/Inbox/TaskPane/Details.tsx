@@ -7,8 +7,10 @@ import type { Draft } from "@/components/commons/Steps/types";
 import TaskDescription from "@/components/commons/TaskDescription";
 import TaskSteps from "@/components/commons/TaskSteps";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 import useCompleteTask from "../useCompleteTask";
+import SchedulePicker from "./SchedulePicker";
 
 type DetailsProps = { task: Task };
 
@@ -24,16 +26,21 @@ const Details = ({ task }: DetailsProps) => {
     <article className="flex flex-1 flex-col gap-8">
       {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
       <div className="flex flex-col gap-2">
-        {/* The complete checkbox sits in the top-left corner, above the title; the add-step button in the top right. */}
+        {/* The complete checkbox and the due date sit in the top-left corner, above the title; the add-step button in
+            the top right. */}
         <header className="flex flex-col gap-3">
-          <div className="flex min-h-8 items-center justify-between gap-4">
-            <Checkbox
-              aria-label="Mark as complete"
-              checked={isCompleting}
-              className="size-5 border-muted-foreground/50"
-              disabled={isCompleting}
-              onCheckedChange={completeTask}
-            />
+          <div className="flex min-h-8 items-start justify-between gap-4">
+            <div className="flex min-h-8 items-start gap-3">
+              <Checkbox
+                aria-label="Mark as complete"
+                checked={isCompleting}
+                className="mt-1.5 size-5 border-muted-foreground/50"
+                disabled={isCompleting}
+                onCheckedChange={completeTask}
+              />
+              <Separator className="mt-2 data-[orientation=vertical]:h-4" orientation="vertical" />
+              <SchedulePicker task={task} />
+            </div>
             {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
           </div>
           <h2 className="text-xl font-semibold wrap-anywhere">{task.title}</h2>
