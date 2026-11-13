@@ -14,7 +14,7 @@ module Api
         start_new_session_for @user
         render :show, status: :created
       else
-        render json: { error: "Try another email address or password." }, status: :unauthorized
+        render json: { error: "Invalid email address or password." }, status: :unauthorized
       end
     end
 

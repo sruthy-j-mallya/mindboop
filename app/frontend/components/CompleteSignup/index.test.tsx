@@ -49,4 +49,13 @@ describe("CompleteSignup", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Sign-up link is invalid or has expired.");
   });
+
+  it("toggles each password field on its own", async () => {
+    renderAt("/signup/abc123");
+    const [showPassword] = screen.getAllByRole("button", { name: "Show password" });
+    await userEvent.click(showPassword);
+
+    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "text");
+    expect(screen.getByLabelText("Confirm password")).toHaveAttribute("type", "password");
+  });
 });

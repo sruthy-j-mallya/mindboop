@@ -19,7 +19,7 @@ describe("Login", () => {
 
   it("shows the server error when sign in fails", async () => {
     vi.spyOn(sessionsApi, "create").mockRejectedValue(
-      new ApiError(401, "Try another email address or password."),
+      new ApiError(401, "Invalid email address or password."),
     );
     renderLogin();
 
@@ -27,7 +27,7 @@ describe("Login", () => {
     await userEvent.type(screen.getByLabelText("Password"), "wrong-password");
     await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Try another email address or password.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Invalid email address or password.");
     expect(sessionsApi.create).toHaveBeenCalledWith(
       { emailAddress: "someone@example.com", password: "wrong-password" },
       expect.anything(),
@@ -44,5 +44,13 @@ describe("Login", () => {
     expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
     expect(screen.getByText("Enter your password")).toBeInTheDocument();
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it("lets the user reveal the password they typed", async () => {
+    renderLogin();
+    await userEvent.type(screen.getByLabelText("Password"), "my-password");
+    await userEvent.click(screen.getByRole("button", { name: "Show password" }));
+
+    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "text");
   });
 });
