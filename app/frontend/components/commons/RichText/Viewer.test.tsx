@@ -19,6 +19,13 @@ describe("RichTextViewer", () => {
     );
   });
 
+  it("renders ==highlights== and --- rules", () => {
+    const { container } = render(<RichTextViewer markdown={"Ship ==today==\n\n---\n\nThen rest"} />);
+
+    expect(screen.getByText("today").tagName).toBe("MARK");
+    expect(container.querySelector("hr")).not.toBeNull();
+  });
+
   it("links addresses written without https://", () => {
     render(<RichTextViewer markdown="Go to [this](www.mindboop.com)" />);
 

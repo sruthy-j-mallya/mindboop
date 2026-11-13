@@ -5,13 +5,15 @@ export type FormatName =
   | "bold"
   | "italic"
   | "strike"
+  | "highlight"
   | "code"
   | "heading2"
   | "heading3"
   | "bulletList"
   | "orderedList"
   | "blockquote"
-  | "codeBlock";
+  | "codeBlock"
+  | "horizontalRule";
 
 export type FormatItem = {
   name: FormatName;

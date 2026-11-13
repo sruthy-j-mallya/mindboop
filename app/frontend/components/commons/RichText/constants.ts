@@ -3,9 +3,11 @@ import {
   Code,
   Heading2,
   Heading3,
+  Highlighter,
   Italic,
   List,
   ListOrdered,
+  Minus,
   SquareCode,
   Strikethrough,
   TextQuote,
@@ -46,6 +48,14 @@ export const FORMAT_GROUPS: FormatItem[][] = [
       shortcut: ["Mod", "Shift", "S"],
       isActive: (editor) => editor.isActive("strike"),
       toggle: (editor) => editor.chain().focus().toggleStrike().run(),
+    },
+    {
+      name: "highlight",
+      label: "Highlight",
+      icon: Highlighter,
+      shortcut: ["Mod", "Shift", "H"],
+      isActive: (editor) => editor.isActive("highlight"),
+      toggle: (editor) => editor.chain().focus().toggleHighlight().run(),
     },
     {
       name: "code",
@@ -106,6 +116,15 @@ export const FORMAT_GROUPS: FormatItem[][] = [
       shortcut: ["Mod", "Alt", "C"],
       isActive: (editor) => editor.isActive("codeBlock"),
       toggle: (editor) => editor.chain().focus().toggleCodeBlock().run(),
+    },
+    {
+      name: "horizontalRule",
+      label: "Divider",
+      icon: Minus,
+      shortcut: ["Mod", "Alt", "-"],
+      // A rule is inserted, not toggled, so its button never shows as pressed.
+      isActive: () => false,
+      toggle: (editor) => editor.chain().focus().setHorizontalRule().run(),
     },
   ],
 ];

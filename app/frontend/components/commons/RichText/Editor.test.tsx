@@ -30,6 +30,7 @@ describe("RichTextEditor", () => {
       "Bold",
       "Italic",
       "Strikethrough",
+      "Highlight",
       "Inline code",
       "Heading",
       "Subheading",
@@ -37,6 +38,7 @@ describe("RichTextEditor", () => {
       "Numbered list",
       "Quote",
       "Code block",
+      "Divider",
       "Link",
     ]) {
       expect(within(toolbar).getByRole("button", { name })).toHaveAttribute("aria-pressed", "false");
@@ -60,6 +62,33 @@ describe("RichTextEditor", () => {
 
     await waitFor(() => expect(lastMarkdown(onChange)).toBe("- Ship it"));
     expect(screen.getByRole("button", { name: "Bullet list" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("keeps ==highlights== and --- rules in the Markdown", () => {
+    const { textbox } = renderEditor("Ship ==today==\n\n---\n\nThen rest");
+
+    expect(textbox.querySelector("mark")).toHaveTextContent("today");
+    expect(textbox.querySelector("hr")).not.toBeNull();
+  });
+
+  it("highlights the selected text", async () => {
+    const { onChange, textbox } = renderEditor("Ship it");
+
+    await userEvent.click(textbox);
+    await userEvent.keyboard("{Control>}a{/Control}");
+    await userEvent.click(screen.getByRole("button", { name: "Highlight" }));
+
+    await waitFor(() => expect(lastMarkdown(onChange)).toBe("==Ship it=="));
+    expect(screen.getByRole("button", { name: "Highlight" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("inserts a divider at the cursor", async () => {
+    const { onChange, textbox } = renderEditor("Ship it");
+
+    await userEvent.click(textbox);
+    await userEvent.click(screen.getByRole("button", { name: "Divider" }));
+
+    await waitFor(() => expect(lastMarkdown(onChange)).toBe("---\n\nShip it"));
   });
 
   it("turns the selected text into a link", async () => {

@@ -1,4 +1,6 @@
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Highlight from "@tiptap/extension-highlight";
+import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import Link from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extensions";
 import { Markdown } from "@tiptap/markdown";
@@ -99,6 +101,13 @@ const NormalizedLink = Link.extend({
   },
 });
 
+// Typing --- (or ___ / ***) on an empty line already inserts a rule; this adds a shortcut to match the toolbar.
+const ShortcutHorizontalRule = HorizontalRule.extend({
+  addKeyboardShortcuts() {
+    return { "Mod-Alt--": () => this.editor.commands.setHorizontalRule() };
+  },
+});
+
 // highlight.js's common languages (~35). A fenced block's info string (```ts) picks the grammar; a block with no
 // language, or one outside this set, is guessed with highlightAuto.
 const lowlight = createLowlight(common);
@@ -113,6 +122,9 @@ export const getExtensions = (placeholder?: string) => [
     link: false,
     codeBlock: false,
   }),
+  ShortcutHorizontalRule,
+  // ==text== (typed, pasted or stored) and Mod+Shift+H; stored as ==text== in the Markdown.
+  Highlight,
   CodeBlockLowlight.configure({ lowlight }),
   NormalizedLink.configure({
     autolink: true,

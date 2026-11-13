@@ -74,6 +74,9 @@
   --syntax-title: #1f5fae;
   --syntax-type: #7a5200;
   --syntax-attr: #b0303a;
+
+  /* ==Highlighted== text in task descriptions */
+  --highlight: #ffe3a3;
 }
 
 .dark {
@@ -124,4 +127,6 @@
   --syntax-title: #8fc3ff;
   --syntax-type: #ffd484;
   --syntax-attr: #ff9e9e;
+
+  --highlight: #5c4412;
 }

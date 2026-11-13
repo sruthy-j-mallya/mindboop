@@ -125,6 +125,16 @@
     li::marker {
       @apply text-muted-foreground;
     }
+    hr {
+      @apply my-5 border-border;
+    }
+    /* The editor's selection ring on a clicked rule. */
+    hr.ProseMirror-selectednode {
+      @apply border-ring;
+    }
+    mark {
+      @apply rounded-sm bg-(--highlight) px-0.5 text-inherit;
+    }
     blockquote {
       @apply border-l-2 border-border pl-3 text-muted-foreground;
     }
