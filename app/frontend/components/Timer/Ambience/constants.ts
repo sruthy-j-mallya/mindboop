@@ -1,14 +1,4 @@
-import {
-  Activity,
-  AudioLines,
-  AudioWaveform,
-  Clock,
-  CloudRain,
-  Flame,
-  VolumeX,
-  Waves,
-  Wind,
-} from "lucide-react";
+import { Activity, AudioLines, Clock, CloudRain, Flame, Piano, VolumeX, Waves, Wind } from "lucide-react";
 
 import type { Sound } from "./types";
 
@@ -19,8 +9,8 @@ export const SOUNDS: Sound[] = [
   { id: NO_SOUND, label: "None", icon: VolumeX },
   { id: "clock", label: "Clock", icon: Clock },
   { id: "white", label: "White noise", icon: AudioLines },
-  { id: "pink", label: "Pink noise", icon: AudioWaveform },
   { id: "brown", label: "Brown noise", icon: Activity },
+  { id: "piano", label: "Piano", icon: Piano },
   { id: "rain", label: "Rain", icon: CloudRain },
   { id: "waves", label: "Waves", icon: Waves },
   { id: "wind", label: "Wind", icon: Wind },

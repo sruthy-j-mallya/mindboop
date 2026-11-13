@@ -7,6 +7,14 @@ const RAIN_DROPS_SECONDS = 13;
 const CRACKLE_SECONDS = 11;
 const CLOCK_SECONDS = 2; // A tick and a tock, one second apart.
 const CHANNELS = 2; // Independent noise per ear sounds wider and calmer than mono.
+const PIANO_SECONDS = 30;
+const PIANO_NOTE_GAP_SECONDS = 2.5;
+const PIANO_NOTE_SECONDS = 6; // Long enough for a note to ring out under the next ones.
+const PIANO_HARMONICS = 6;
+const PIANO_PHRASE_SEED = 7;
+const HALL_SECONDS = 2.5;
+// C major pentatonic from G3 to E5 (Hz): any two notes sound fine together, so the phrase never jars.
+const PIANO_SCALE = [196, 220, 261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25];
 
 type Generate = (length: number, sampleRate: number, random: () => number) => Float32Array<ArrayBuffer>;
 
@@ -173,6 +181,68 @@ const generateCrackle: Generate = (length, sampleRate, random) => {
   return normalize(data, 0.5);
 };
 
+// A soft piano note: a few slightly stretched harmonics (real strings run a little sharp up the series), the
+// upper ones dying away first, with a quick strike that settles into a long, quiet ring. The tail wraps
+// around to the start of the buffer so a note near the end carries across the loop instead of cutting off.
+const addPianoNote = (data: Float32Array, sampleRate: number, start: number, frequency: number) => {
+  const { length } = data;
+  const sampleCount = Math.min(Math.floor(PIANO_NOTE_SECONDS * sampleRate), length);
+  const attackSamples = 0.006 * sampleRate;
+
+  for (let harmonic = 1; harmonic <= PIANO_HARMONICS; harmonic += 1) {
+    const partial = frequency * harmonic * Math.sqrt(1 + 0.0004 * harmonic ** 2);
+    if (partial >= sampleRate / 2) break;
+
+    // Step the sine and both decays by multiplying instead of calling sin/exp per sample: this runs on
+    // the main thread, and the recurrences are several times faster.
+    const turnCos = Math.cos((2 * Math.PI * partial) / sampleRate);
+    const turnSin = Math.sin((2 * Math.PI * partial) / sampleRate);
+    const strikeStep = Math.exp(-1 / (0.25 * sampleRate));
+    const ringStep = Math.exp(-1 / ((3.2 / harmonic) * sampleRate));
+    const amplitude = 1 / harmonic ** 1.6;
+    let sine = 0;
+    let cosine = 1;
+    let strike = 0.65 * amplitude;
+    let ringing = 0.35 * amplitude;
+
+    for (let offset = 0; offset < sampleCount; offset += 1) {
+      data[(start + offset) % length] += Math.min(offset / attackSamples, 1) * (strike + ringing) * sine;
+      const nextSine = sine * turnCos + cosine * turnSin;
+      cosine = cosine * turnCos - sine * turnSin;
+      sine = nextSine;
+      strike *= strikeStep;
+      ringing *= ringStep;
+    }
+  }
+};
+
+// A slow, wandering phrase on a pentatonic scale, so no two notes ever clash. The phrase comes from a fixed
+// seed so both ears hear the same notes; each ear's own `random` only detunes them a hair, for width.
+const generatePiano: Generate = (length, sampleRate, random) => {
+  const data = new Float32Array(length);
+  const phrase = createRandom(PIANO_PHRASE_SEED);
+  const noteCount = Math.floor(length / sampleRate / PIANO_NOTE_GAP_SECONDS);
+  let step = Math.floor(PIANO_SCALE.length / 2);
+
+  for (let note = 0; note < noteCount; note += 1) {
+    // Small steps up or down sound like a melody; big leaps sound random.
+    step = Math.min(Math.max(step + Math.floor(phrase() * 5) - 2, 0), PIANO_SCALE.length - 1);
+    const start = Math.floor((note * PIANO_NOTE_GAP_SECONDS + phrase() * 0.4) * sampleRate);
+    const detune = 1 + (random() - 0.5) * 0.002;
+    const pitch = (scaleStep: number) => (PIANO_SCALE.at(Math.max(scaleStep, 0)) ?? 0) * detune;
+    addPianoNote(data, sampleRate, start, pitch(step));
+
+    // Now and then a soft low note underneath, an octave below a scale step.
+    if (phrase() < 0.3) addPianoNote(data, sampleRate, start, pitch(step - 2) / 2);
+  }
+
+  return normalize(data, 0.5);
+};
+
+// White noise dying away over a couple of seconds: the impulse response of a soft, roomy hall.
+const generateHall: Generate = (length, _sampleRate, random) =>
+  Float32Array.from({ length }, (_, offset) => (random() * 2 - 1) * Math.exp((-offset / length) * 6));
+
 const loop = (context: BaseAudioContext, buffer: AudioBuffer) => {
   const source = context.createBufferSource();
   source.buffer = buffer;
@@ -265,11 +335,23 @@ const buildCampfire: SoundBuilder = (context, output) => {
   return [roar, crackle];
 };
 
+const buildPiano: SoundBuilder = (context, output) => {
+  const keys = loop(context, createBuffer(context, PIANO_SECONDS, generatePiano));
+  const mellow = createFilter(context, "lowpass", 3000);
+  chain(keys, mellow, createGain(context, 0.8), output);
+
+  const hall = context.createConvolver();
+  hall.buffer = createBuffer(context, HALL_SECONDS, generateHall);
+  chain(mellow, hall, createGain(context, 0.35), output);
+
+  return [keys];
+};
+
 const SOUND_BUILDERS = new Map<SoundId, SoundBuilder>([
   ["clock", plainLoop(generateClock, CLOCK_SECONDS, 1)],
   ["white", plainLoop(generateWhite, NOISE_SECONDS, 0.35)],
-  ["pink", plainLoop(generatePink, NOISE_SECONDS, 0.6)],
   ["brown", plainLoop(generateBrown, NOISE_SECONDS, 1)],
+  ["piano", buildPiano],
   ["rain", buildRain],
   ["waves", buildWaves],
   ["wind", buildWind],

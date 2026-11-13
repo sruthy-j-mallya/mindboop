@@ -138,14 +138,14 @@ describe("Ambience", () => {
   });
 
   it("keeps playing a stopwatch with no end", () => {
-    localStorage.setItem(SOUND_STORAGE_KEY, "pink");
+    localStorage.setItem(SOUND_STORAGE_KEY, "piano");
     renderWithProviders(<Ambience timeLog={{ ...TIME_LOG, mode: "stopwatch", timerPreset: null }} />);
 
     act(() => {
       vi.advanceTimersByTime(4000);
     });
 
-    expect(playSound).toHaveBeenCalledWith(expect.anything(), expect.anything(), "pink");
+    expect(playSound).toHaveBeenCalledWith(expect.anything(), expect.anything(), "piano");
     expect(stopSound).not.toHaveBeenCalled();
   });
 
