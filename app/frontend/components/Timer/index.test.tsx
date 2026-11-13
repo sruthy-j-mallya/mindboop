@@ -90,11 +90,12 @@ describe("Timer", () => {
     expect(within(description).getByRole("listitem")).toHaveTextContent("Cite sources");
   });
 
-  it("leaves out the description when the task has none", async () => {
+  it("offers an empty description to write in when the task has none", async () => {
     renderTimer(TIME_LOG);
 
-    await screen.findByRole("heading", { name: "Draft permission" });
-    expect(screen.queryByRole("region", { name: "Description" })).not.toBeInTheDocument();
+    const description = await screen.findByRole("region", { name: "Description" });
+    expect(await within(description).findByRole("textbox", { name: "Description" })).toHaveTextContent("");
+    expect(screen.queryByRole("button", { name: "Add a description" })).not.toBeInTheDocument();
   });
 
   describe("when editing the steps", () => {
@@ -228,53 +229,78 @@ describe("Timer", () => {
   });
 
   describe("when editing the description", () => {
-    const DESCRIPTION = "Start with the **intro**";
+    const DESCRIPTION = "Start with the intro";
 
-    it("offers to add one when the task has none", async () => {
-      renderTimer(TIME_LOG);
+    // jsdom can't type into the editor reliably (Playwright covers typing), so edits go through the toolbar.
+    const makeBulletList = async () => {
+      await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
+      await userEvent.click(screen.getByRole("button", { name: "Show formatting" }));
+      await userEvent.click(screen.getByRole("button", { name: "Bullet list" }));
+    };
 
-      await userEvent.click(await screen.findByRole("button", { name: "Add a description" }));
+    it("is editable right away, with no edit or save buttons", async () => {
+      renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
-      expect(await screen.findByRole("textbox", { name: "Description" })).toBeVisible();
+      expect(await screen.findByRole("textbox", { name: "Description" })).toHaveTextContent(DESCRIPTION);
+      expect(screen.queryByRole("button", { name: "Edit description" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
     });
 
-    it("saves the description and shows it again", async () => {
+    it("saves the edit when the editor loses focus", async () => {
       const update = vi
         .spyOn(tasksApi, "update")
-        .mockResolvedValue({ task: { ...TASK, description: DESCRIPTION } });
+        .mockResolvedValue({ task: { ...TASK, description: `- ${DESCRIPTION}` } });
       renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Edit description" }));
-      await screen.findByRole("textbox", { name: "Description" });
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
+      await makeBulletList();
+      expect(update).not.toHaveBeenCalled();
+      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
 
-      expect(update).toHaveBeenCalledWith({ id: TASK.id, description: DESCRIPTION }, expect.anything());
-      expect(await screen.findByRole("region", { name: "Description" })).toBeVisible();
-      expect(screen.queryByRole("textbox", { name: "Description" })).not.toBeInTheDocument();
+      expect(update).toHaveBeenCalledOnce();
+      expect(update).toHaveBeenCalledWith(
+        { id: TASK.id, description: `- ${DESCRIPTION}` },
+        expect.anything(),
+      );
     });
 
-    it("keeps the editor open and shows the error when saving fails", async () => {
-      vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(500, "Something went wrong"));
+    it("saves the edit after a pause in typing", async () => {
+      const update = vi
+        .spyOn(tasksApi, "update")
+        .mockResolvedValue({ task: { ...TASK, description: `- ${DESCRIPTION}` } });
       renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Edit description" }));
-      await screen.findByRole("textbox", { name: "Description" });
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
+      await makeBulletList();
 
-      expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
-      expect(screen.getByRole("textbox", { name: "Description" })).toBeVisible();
+      await waitFor(() =>
+        expect(update).toHaveBeenCalledWith(
+          { id: TASK.id, description: `- ${DESCRIPTION}` },
+          expect.anything(),
+        ),
+      );
     });
 
-    it("goes back to the saved description on Cancel", async () => {
+    it("doesn't save when nothing changed", async () => {
       const update = vi.spyOn(tasksApi, "update");
       renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Edit description" }));
-      await screen.findByRole("textbox", { name: "Description" });
-      await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+      await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
+      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
 
-      expect(await screen.findByRole("region", { name: "Description" })).toBeVisible();
       expect(update).not.toHaveBeenCalled();
+    });
+
+    it("keeps the edit and shows the error when saving fails", async () => {
+      vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(500, "Something went wrong"));
+      renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
+
+      await makeBulletList();
+      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
+      expect(
+        within(screen.getByRole("textbox", { name: "Description" })).getByRole("listitem"),
+      ).toHaveTextContent(DESCRIPTION);
     });
   });
 

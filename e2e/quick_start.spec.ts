@@ -125,8 +125,9 @@ test("write a formatted description and see it on the timer", async ({ page }) =
   await page.keyboard.type("- Cite **sources** ");
   await page.keyboard.press("Enter");
   await page.keyboard.type("Read the brief");
-  // The toolbar link button wraps the selected word.
+  // The toolbar link button wraps the selected word. The toolbar stays hidden until formatting is shown.
   await description.getByText("Read the brief").dblclick({ position: { x: 2, y: 5 } });
+  await page.getByRole("button", { name: "Show formatting" }).click();
   await page.getByRole("button", { name: "Link" }).click();
   await page.getByRole("textbox", { name: "Link address" }).fill("example.com");
   await page.getByRole("button", { name: "Apply" }).click();

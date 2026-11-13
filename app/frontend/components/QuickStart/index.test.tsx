@@ -78,6 +78,7 @@ describe("QuickStart", () => {
     await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
     await userEvent.paste("Cite sources");
     await userEvent.keyboard("{Control>}a{/Control}");
+    await userEvent.click(screen.getByRole("button", { name: "Show formatting" }));
     await userEvent.click(screen.getByRole("button", { name: "Bold" }));
     await beginSession();
 

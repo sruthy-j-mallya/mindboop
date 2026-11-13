@@ -7,6 +7,7 @@ import BreakBanner from "@/components/commons/BreakBanner";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
 import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
 import type { Draft } from "@/components/commons/Steps/types";
+import TaskDescription from "@/components/commons/TaskDescription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
@@ -14,7 +15,6 @@ import { useTask } from "@/hooks/reactQuery/useTasksApi";
 import Ambience from "./Ambience";
 import BailDialog from "./BailDialog";
 import Countdown from "./Countdown";
-import Description from "./Description";
 import DiscardDialog from "./DiscardDialog";
 import ExtendDialog from "./ExtendDialog";
 import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
@@ -129,7 +129,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
             )}
             <Steps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
           </div>
-          <Description task={task} />
+          <TaskDescription key={task.id} task={task} />
         </div>
       </CardContent>
       {showExtendDialog && (

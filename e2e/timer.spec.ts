@@ -289,11 +289,18 @@ test("edit the steps and the description mid-session, and keep them through a re
   await page.keyboard.press("Space");
   await expect(steps).toHaveText(["Third", "First", "Middle"]);
 
-  await page.getByRole("button", { name: "Add a description" }).click();
+  // The description is editable in place and saves itself once typing pauses (waits for the save of the whole text).
+  const descriptionSaved = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PATCH" &&
+      /\/api\/tasks\/[^/]+$/.test(response.url()) &&
+      (response.request().postData() ?? "").includes("Cite **sources**"),
+  );
   const editor = page.getByRole("textbox", { name: "Description" });
+  await editor.click();
   await editor.pressSequentially("Cite **sources** ");
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByRole("region", { name: "Description" }).locator("strong")).toHaveText("sources");
+  await expect(editor.locator("strong")).toHaveText("sources");
+  await descriptionSaved;
 
   await page.reload();
 
