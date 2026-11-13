@@ -54,11 +54,11 @@ const Ambience = ({ timeLog }: AmbienceProps) => {
               >
                 <span
                   className={cn(
-                    "flex size-14 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-accent",
+                    "flex size-11 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-accent",
                     isSelected && "bg-primary text-primary-foreground group-hover:bg-primary",
                   )}
                 >
-                  <Icon className="size-6" />
+                  <Icon className="size-5" />
                 </span>
                 {label}
               </button>

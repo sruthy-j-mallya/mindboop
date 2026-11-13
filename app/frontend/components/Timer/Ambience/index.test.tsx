@@ -80,6 +80,9 @@ describe("Ambience", () => {
 
     expect(screen.getByRole("button", { name: "None" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "Rain" })).toHaveAttribute("aria-pressed", "false");
+    ["Bells", "Harp", "Flute", "Morning dew", "Night"].forEach((name) =>
+      expect(screen.getByRole("button", { name })).toBeVisible(),
+    );
     expect(createdContexts).toHaveLength(0);
     expect(playSound).not.toHaveBeenCalled();
   });
@@ -108,14 +111,14 @@ describe("Ambience", () => {
   });
 
   it("stays quiet while the timer is paused and plays once it resumes", () => {
-    localStorage.setItem(SOUND_STORAGE_KEY, "brown");
+    localStorage.setItem(SOUND_STORAGE_KEY, "harp");
     const { rerender } = renderWithProviders(<Ambience timeLog={PAUSED_TIME_LOG} />);
 
     expect(playSound).not.toHaveBeenCalled();
 
     rerender(<Ambience timeLog={TIME_LOG} />);
 
-    expect(playSound).toHaveBeenCalledWith(expect.anything(), expect.anything(), "brown");
+    expect(playSound).toHaveBeenCalledWith(expect.anything(), expect.anything(), "harp");
 
     rerender(<Ambience timeLog={PAUSED_TIME_LOG} />);
 

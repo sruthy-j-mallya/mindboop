@@ -1,6 +1,18 @@
 import type { LucideIcon } from "lucide-react";
 
-export type SoundId = "none" | "clock" | "white" | "brown" | "piano" | "rain" | "waves" | "wind" | "campfire";
+export type SoundId =
+  | "none"
+  | "clock"
+  | "bells"
+  | "harp"
+  | "piano"
+  | "flute"
+  | "rain"
+  | "waves"
+  | "wind"
+  | "campfire"
+  | "morning"
+  | "night";
 
 export type Sound = { id: SoundId; label: string; icon: LucideIcon };
 
