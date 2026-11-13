@@ -123,6 +123,25 @@ describe("Inbox", () => {
     expect(show).toHaveBeenCalledWith(task.id);
   });
 
+  it("completes the open task from its pane", async () => {
+    const task = buildTask({ title: "Book a dentist" });
+    vi.spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce(listOf([task]))
+      .mockResolvedValue(listOf([]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: { ...task, isCompleted: true } });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    expect(await screen.findByRole("heading", { name: "Book a dentist" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("checkbox", { name: "Mark as complete" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({ id: task.id, isCompleted: true }, expect.anything()),
+    );
+    expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Book a dentist" })).not.toBeInTheDocument();
+  });
+
   it("completes a task and closes its pane", async () => {
     const task = buildTask({ title: "Pay rent" });
     vi.spyOn(tasksApi, "fetchList")

@@ -42,6 +42,8 @@ test("add tasks to the Inbox, open one, and complete it", async ({ page }) => {
   await expect(page).toHaveURL("/inbox");
   await expect(tasks).toHaveText(["Water the plants"]);
 
-  await page.getByRole("checkbox", { name: "Complete Water the plants" }).click();
+  await page.getByRole("link", { name: "Water the plants" }).click();
+  await page.getByRole("checkbox", { name: "Mark as complete" }).click();
+  await expect(page).toHaveURL("/inbox");
   await expect(page.getByText("Your Inbox is empty")).toBeVisible();
 });
