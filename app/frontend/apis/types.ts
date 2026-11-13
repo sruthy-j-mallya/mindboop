@@ -91,9 +91,9 @@ export type CreateBailOutPayload = {
 
 export type CurrentTimeLogResponse = { timeLog: TimeLog | null };
 
-export type CreateChecklistItemPayload = Pick<ChecklistItem, "title"> & { taskId: string };
+// `position` is the index the item lands on among the task's steps; without it, a new item goes last.
+export type CreateChecklistItemPayload = Pick<ChecklistItem, "title"> & { taskId: string; position?: number };
 
-// `position` is the index to move the item to among the task's steps.
 export type UpdateChecklistItemPayload = Partial<Pick<ChecklistItem, "title" | "isCompleted">> & {
   taskId: string;
   id: string;

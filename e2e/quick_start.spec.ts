@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
-import { signupTokenFor } from "./helpers";
+import { addSteps, signupTokenFor } from "./helpers";
 
 const signUp = async (page: Page) => {
   const email = `e2e-${crypto.randomUUID()}@example.com`;
@@ -11,15 +11,6 @@ const signUp = async (page: Page) => {
   await page.getByLabel("Confirm password").fill(password);
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
-};
-
-const addSteps = async (page: Page, steps: string[]) => {
-  const input = page.getByRole("textbox", { name: "New step" });
-
-  for (const step of steps) {
-    await input.fill(step);
-    await input.press("Enter");
-  }
 };
 
 const dragOnto = async (page: Page, handle: Locator, target: Locator) => {
@@ -75,6 +66,8 @@ test("edit a step, and keep the new text through a reorder", async ({ page }) =>
   await page.getByRole("button", { name: "Edit First" }).click();
   await page.getByRole("textbox", { name: "Step text" }).fill("Edited");
   await page.keyboard.press("Enter");
+  // Enter opens a new step row below the edited one; leaving it empty discards it.
+  await page.keyboard.press("Escape");
   await expect(steps).toHaveText(["Edited", "Second", "Third"]);
 
   await dragOnto(page, page.getByRole("button", { name: "Reorder Edited" }), steps.nth(2));

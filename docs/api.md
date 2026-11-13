@@ -37,7 +37,7 @@ Every error response has one shape:
 | POST   | `/api/tasks`                              | Task fields (`title` required)                            | 201 `{ task }`               |
 | PATCH  | `/api/tasks/:id`                          | Task fields                                               | 200 `{ task }`               |
 | DELETE | `/api/tasks/:id`                          | –                                                         | 204, soft delete             |
-| POST   | `/api/tasks/:task_id/checklist_items`     | `title`, `is_completed` (optional)                        | 201 `{ task }`               |
+| POST   | `/api/tasks/:task_id/checklist_items`     | `title`, `is_completed`, `position` (optional)            | 201 `{ task }`               |
 | PATCH  | `/api/tasks/:task_id/checklist_items/:id` | `title`, `is_completed`, `position` (all optional)        | 200 `{ task }`               |
 | DELETE | `/api/tasks/:task_id/checklist_items/:id` | –                                                         | 200 `{ task }`, soft delete  |
 | POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                 | 201 `{ task, time_log }`     |
@@ -82,7 +82,8 @@ Each needs permission to update the task: another user's task gets a 403, and a 
 that's discarded or belongs to another task, gets a 404. Every response is the whole task, as `{ task }` in the same
 shape as `GET /api/tasks/:id`, since a move also changes the other items' order.
 
-- `POST` adds an item at the end. `title` is required (blank gets a 422).
+- `POST` adds an item at the end, or at `position` when it's given (the same 0-based index `PATCH` takes, with the same
+  rules). `title` is required (blank gets a 422).
 - `PATCH` changes `title` and `is_completed`, and moves the item when `position` is given: the 0-based index it should
   land on among the task's items. An index past the end moves it last, and a negative or non-integer one gets a 422 with
   nothing saved. Items keep their stored positions among themselves, so a discarded item never shares one with a kept item.

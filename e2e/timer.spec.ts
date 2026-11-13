@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { signupTokenFor } from "./helpers";
+import { addSteps, signupTokenFor } from "./helpers";
 
 const signUp = async (page: Page) => {
   const email = `e2e-${crypto.randomUUID()}@example.com`;
@@ -17,11 +17,7 @@ test("begin a session, and keep it counting down through a reload", async ({ pag
   await signUp(page);
 
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
-  const newStep = page.getByRole("textbox", { name: "New step" });
-  for (const step of ["First", "Second", "Third"]) {
-    await newStep.fill(step);
-    await newStep.press("Enter");
-  }
+  await addSteps(page, ["First", "Second", "Third"]);
   await page.getByRole("button", { name: "10 min" }).click();
   await page.getByRole("button", { name: "Begin" }).click();
 
@@ -259,11 +255,7 @@ test("edit the steps and the description mid-session, and keep them through a re
   await signUp(page);
 
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
-  const quickStartStep = page.getByRole("textbox", { name: "New step" });
-  for (const step of ["First", "Second"]) {
-    await quickStartStep.fill(step);
-    await quickStartStep.press("Enter");
-  }
+  await addSteps(page, ["First", "Second"]);
   await page.getByRole("button", { name: "10 min" }).click();
   await page.getByRole("button", { name: "Begin" }).click();
   await expect(page.getByRole("timer")).toBeVisible();
@@ -271,9 +263,14 @@ test("edit the steps and the description mid-session, and keep them through a re
   const steps = page.getByRole("list", { name: "Steps" }).getByRole("listitem");
   await page.getByRole("checkbox", { name: "First" }).click();
   await expect(page.getByRole("checkbox", { name: "First" })).toBeChecked();
-  const newStep = page.getByRole("textbox", { name: "New step" });
-  await newStep.fill("Third");
-  await newStep.press("Enter");
+  // With steps already there, the add button is gone; Enter in the last step adds the next one.
+  await expect(page.getByRole("button", { name: "Add step" })).toBeHidden();
+  await page.getByRole("button", { name: "Edit Second" }).click();
+  await page.getByRole("textbox", { name: "Step text" }).press("Enter");
+  const thirdStep = page.getByRole("textbox", { name: "New step" });
+  await thirdStep.fill("Third");
+  await thirdStep.press("Enter");
+  await thirdStep.press("Escape");
   await expect(steps).toHaveText(["First", "Second", "Third"]);
   await page.getByRole("button", { name: "Edit Second" }).click();
   await page.getByRole("textbox", { name: "Step text" }).fill("Middle");
@@ -303,4 +300,28 @@ test("edit the steps and the description mid-session, and keep them through a re
   await expect(steps).toHaveText(["Third", "First", "Middle"]);
   await expect(page.getByRole("checkbox", { name: "First" })).toBeChecked();
   await expect(page.getByRole("region", { name: "Description" }).locator("strong")).toHaveText("sources");
+
+  // Enter in a step opens a new one right below it, and each Enter after that adds the next one below.
+  let createdCount = 0;
+  const bothCreated = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().includes("/checklist_items") &&
+      (createdCount += 1) === 2,
+  );
+  await page.getByRole("button", { name: "Edit First" }).click();
+  await page.getByRole("textbox", { name: "Step text" }).press("Enter");
+  const newStep = page.getByRole("textbox", { name: "New step" });
+  await newStep.fill("Second");
+  await newStep.press("Enter");
+  await newStep.fill("Almost");
+  await newStep.press("Enter");
+  await newStep.press("Escape");
+  await expect(steps).toHaveText(["Third", "First", "Second", "Almost", "Middle"]);
+  // New steps show before the server has them, so wait for both saves before reloading.
+  await bothCreated;
+
+  await page.reload();
+
+  await expect(steps).toHaveText(["Third", "First", "Second", "Almost", "Middle"]);
 });

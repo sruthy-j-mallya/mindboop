@@ -24,6 +24,26 @@ class Api::ChecklistItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal false, items.last["is_completed"]
   end
 
+  def test_that_create_adds_the_item_at_the_given_position
+    sign_in @user
+
+    post api_task_checklist_items_path(@task), params: { title: @title, position: 1 }, as: :json
+
+    assert_response :created
+    titles = response.parsed_body["task"]["checklist_items"].pluck("title")
+    assert_equal [ @item.title, @title, @other_item.title ], titles
+  end
+
+  def test_that_create_rejects_an_invalid_position_and_saves_nothing
+    sign_in @user
+
+    assert_no_difference "ChecklistItem.count" do
+      post api_task_checklist_items_path(@task), params: { title: @title, position: -1 }, as: :json
+    end
+
+    assert_response :unprocessable_content
+  end
+
   def test_that_create_rejects_a_blank_title
     sign_in @user
 
