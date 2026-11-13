@@ -66,6 +66,25 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.parsed_body["page"]
   end
 
+  def test_that_index_can_list_only_incomplete_tasks
+    completed_task = create(:task, user: @user, is_completed: true)
+    sign_in @user
+
+    get api_tasks_path, params: { is_completed: false }
+
+    assert_response :ok
+    assert_equal [ @task.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal 1, response.parsed_body["tasks_count"]
+
+    get api_tasks_path, params: { is_completed: true }
+
+    assert_equal [ completed_task.id ], response.parsed_body["tasks"].pluck("id")
+
+    get api_tasks_path
+
+    assert_equal [ @task.id, completed_task.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
   def test_that_show_leaves_out_discarded_checklist_items
     item = create(:checklist_item, task: @task)
     create(:checklist_item, task: @task).discard!

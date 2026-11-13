@@ -8,6 +8,7 @@ import AddStepButton from "@/components/commons/Steps/AddStepButton";
 import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
 import type { Draft } from "@/components/commons/Steps/types";
 import TaskDescription from "@/components/commons/TaskDescription";
+import TaskSteps from "@/components/commons/TaskSteps";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
@@ -19,7 +20,6 @@ import DiscardDialog from "./DiscardDialog";
 import ExtendDialog from "./ExtendDialog";
 import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
-import Steps from "./Steps";
 import { isTooShortToKeep } from "./utils";
 
 type SessionProps = {
@@ -127,7 +127,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
                 <AddStepButton onClick={handleAddStep} />
               </div>
             )}
-            <Steps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
+            <TaskSteps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
           </div>
           <TaskDescription key={task.id} task={task} />
         </div>

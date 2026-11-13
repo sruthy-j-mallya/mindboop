@@ -3,6 +3,10 @@ const routes = {
   login: "/login",
   settings: "/settings",
   timer: "/timer",
+  inbox: {
+    index: "/inbox",
+    show: "/inbox/:taskId",
+  },
   signup: {
     new: "/signup",
     // Rails mailers link here through the `complete_signup` route.

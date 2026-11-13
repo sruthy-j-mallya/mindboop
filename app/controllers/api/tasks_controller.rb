@@ -4,7 +4,8 @@ module Api
 
     def index
       # id breaks created_at ties, so a task can't repeat or go missing across pages.
-      @pagy, @tasks = pagy(policy_scope(Task).kept.includes(:checklist_items).order(:created_at, :id))
+      tasks = filter_by_completion(policy_scope(Task).kept)
+      @pagy, @tasks = pagy(tasks.includes(:checklist_items).order(:created_at, :id))
     end
 
     def show
@@ -30,6 +31,13 @@ module Api
       def set_task
         @task = Task.kept.includes(:checklist_items).find(params[:id])
         authorize @task
+      end
+
+      # The Inbox asks for `is_completed=false`; leaving it out lists every task.
+      def filter_by_completion(scope)
+        return scope if params[:is_completed].blank?
+
+        scope.where(is_completed: ActiveModel::Type::Boolean.new.cast(params[:is_completed]))
       end
 
       def task_params

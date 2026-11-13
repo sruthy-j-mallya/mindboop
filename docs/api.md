@@ -32,7 +32,7 @@ Every error response has one shape:
 | POST   | `/api/registration`                       | `token`, `password`, `password_confirmation`              | 201 `{ user }`, sets cookie  |
 | POST   | `/api/passwords`                          | `email_address`                                           | 202 `{ message }`            |
 | PATCH  | `/api/passwords/:token`                   | `password`, `password_confirmation`                       | 204, signs out everywhere    |
-| GET    | `/api/tasks`                              | `page` query param (optional)                             | 200 `{ tasks, … }`           |
+| GET    | `/api/tasks`                              | `page`, `is_completed` query params (optional)            | 200 `{ tasks, … }`           |
 | GET    | `/api/tasks/:id`                          | –                                                         | 200 `{ task }`               |
 | POST   | `/api/tasks`                              | Task fields (`title` required)                            | 201 `{ task }`               |
 | PATCH  | `/api/tasks/:id`                          | Task fields                                               | 200 `{ task }`               |
@@ -59,6 +59,9 @@ gets a 403. A deleted or unknown task gets a 404.
 
 The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
 pages. A missing or invalid `page` returns the first page, and a page past the end returns an empty `tasks`.
+
+`is_completed=false` lists only incomplete tasks (the Inbox), and `is_completed=true` only completed ones. Leaving it out
+lists every task.
 
 The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
 `starts_at` and `ends_at`.
