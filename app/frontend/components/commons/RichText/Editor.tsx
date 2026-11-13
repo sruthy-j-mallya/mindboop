@@ -36,8 +36,8 @@ const RichTextEditor = ({
         "aria-label": label,
         "aria-invalid": String(isInvalid),
         ...(describedBy && { "aria-describedby": describedBy }),
-        // Bottom padding keeps the last line clear of the formatting toggle in the bottom-right corner.
-        class: "rich-text min-h-28 px-3 pt-2 pb-10 outline-none",
+        // While the toolbar is hidden, bottom padding keeps the last line clear of the toggle in the corner.
+        class: cn("rich-text min-h-28 px-3 pt-2 outline-none", showToolbar ? "pb-2" : "pb-10"),
       },
       handleKeyDown: (_view: unknown, event: KeyboardEvent) => {
         if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return false;
@@ -49,7 +49,7 @@ const RichTextEditor = ({
       },
       handleDOMEvents: { click: openLinkOnClick },
     }),
-    [label, isInvalid, describedBy],
+    [label, isInvalid, describedBy, showToolbar],
   );
 
   const editor = useEditor({
@@ -83,10 +83,11 @@ const RichTextEditor = ({
         isInvalid && "border-destructive ring-destructive/20",
       )}
     >
+      <EditorContent editor={editor} />
+      {/* Below the text, with the toggle at the end of its row. */}
       {showToolbar && (
         <Toolbar editor={editor} showLinkPopover={showLinkPopover} onLinkPopoverChange={setShowLinkPopover} />
       )}
-      <EditorContent editor={editor} />
       {/* After the content, so it stacks above ProseMirror (which is position: relative) and tabs after the text. */}
       <FormattingToggle isPressed={showToolbar} onPressedChange={handleToolbarToggle} />
       <LinkHoverMenu editor={editor} onEdit={handleEditLink} />

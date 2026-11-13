@@ -39,7 +39,8 @@ const Toolbar = ({ editor, showLinkPopover, onLinkPopoverChange }: ToolbarProps)
     <TooltipProvider>
       <div
         aria-label="Formatting"
-        className="flex flex-wrap items-center gap-0.5 border-b border-input p-1"
+        // Room on the right for the formatting toggle, which sits in the editor's bottom-right corner.
+        className="flex flex-wrap items-center gap-0.5 border-t border-input py-1 pr-10 pl-1"
         role="toolbar"
         onMouseDown={handleMouseDown}
       >
