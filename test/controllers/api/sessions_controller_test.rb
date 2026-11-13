@@ -31,7 +31,7 @@ class Api::SessionsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user, password: "#{@user.password}x"
 
     assert_response :unauthorized
-    assert response.parsed_body["error"].present?
+    assert_equal "Invalid email address or password.", response.parsed_body["error"]
   end
 
   def test_that_user_can_sign_out
