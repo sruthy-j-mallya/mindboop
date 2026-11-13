@@ -105,6 +105,19 @@ describe("Inbox", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it("hides the missing title error when the input loses focus", async () => {
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([]));
+    renderInbox();
+    const input = await screen.findByRole("textbox", { name: "New task" });
+
+    await userEvent.type(input, "{Enter}");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Say what you want to get done");
+
+    await userEvent.tab();
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("shows the picked task in the pane", async () => {
     const task = buildTask({
       title: "Plan the trip",

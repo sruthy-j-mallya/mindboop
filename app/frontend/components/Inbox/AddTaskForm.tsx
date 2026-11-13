@@ -18,12 +18,15 @@ const AddTaskForm = () => {
     reset,
     getValues,
     setValue,
+    clearErrors,
     formState: { errors },
   } = useForm<TaskFormValues>({
     defaultValues: INITIAL_FORM_VALUES,
     resolver: zodResolver(TASK_VALIDATION_SCHEMA),
   });
   const errorMessage = errors.title?.message ?? error?.message;
+
+  const handleBlur = () => clearErrors("title");
 
   const handleAddTask = ({ title }: TaskFormValues) => {
     reset(INITIAL_FORM_VALUES);
@@ -42,7 +45,7 @@ const AddTaskForm = () => {
           aria-label="New task"
           autoComplete="off"
           placeholder="Add a task to your Inbox"
-          {...register("title")}
+          {...register("title", { onBlur: handleBlur })}
         />
         <Button aria-label="Add task" size="icon" type="submit">
           <Plus />
