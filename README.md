@@ -8,7 +8,7 @@ Rails 8.1 + React 19 monorepo. Rails serves a JSON API and an SPA shell; the Rea
 - **Backend:** Rails 8.1, PostgreSQL, Rails 8 cookie-session auth (JSON endpoints under `/api`)
 - **Backend extras:** Pundit (authorization), Jbuilder (JSON views)
 - **Frontend:** React 19, TypeScript, React Router, TanStack Query, axios, React Hook Form + Zod, Tailwind CSS v4,
-  shadcn/ui
+  shadcn/ui, Tiptap (rich-text task descriptions, stored as Markdown)
 - **Tooling:** mise (Ruby/Node/pnpm), pnpm workspaces (`packages/*`), foreman, Lefthook
 - **Tests:** Minitest + FactoryBot, Vitest + Testing Library, Playwright
 - **Lint:** RuboCop (omakase), ESLint, Prettier, Brakeman, bundler-audit

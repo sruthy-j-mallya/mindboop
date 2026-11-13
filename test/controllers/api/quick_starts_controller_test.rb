@@ -50,6 +50,29 @@ class Api::QuickStartsControllerTest < ActionDispatch::IntegrationTest
     assert time_log.is_running?
   end
 
+  def test_that_create_saves_a_markdown_description
+    sign_in @user
+    description = "Start with the *intro*\n\n1. Outline\n2. Draft"
+
+    post api_quick_starts_path, params: { title: @title, estimated_minutes: 25, description: }, as: :json
+
+    assert_response :created
+    assert_equal description, response.parsed_body.dig("task", "description")
+  end
+
+  def test_that_create_rejects_a_description_that_is_too_long
+    sign_in @user
+
+    assert_no_difference [ "Task.count", "TimeLog.count" ] do
+      post api_quick_starts_path, params: {
+        title: @title, estimated_minutes: 25, description: "a" * (Task::MAX_DESCRIPTION_LENGTH + 1)
+      }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_equal "Description is too long (maximum is 10000 characters)", response.parsed_body["error"]
+  end
+
   def test_that_create_rejects_a_task_without_an_estimate
     sign_in @user
 

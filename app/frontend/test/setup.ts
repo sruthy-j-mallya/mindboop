@@ -21,4 +21,12 @@ vi.stubGlobal(
   },
 );
 
+// jsdom does no layout; ProseMirror (the rich-text editor) measures ranges and elements to place the caret.
+const emptyRectList = () => Object.assign([], { item: () => null }) as unknown as DOMRectList;
+const emptyRect = () => new DOMRect();
+Range.prototype.getClientRects = emptyRectList;
+Range.prototype.getBoundingClientRect = emptyRect;
+Element.prototype.getClientRects = emptyRectList;
+document.elementFromPoint = () => null;
+
 afterEach(() => cleanup());

@@ -65,6 +65,18 @@
   --sidebar-accent-foreground: #1f1417;
   --sidebar-border: #e5d7d3;
   --sidebar-ring: #5a2855;
+
+  /* Code syntax highlighting (lowlight / highlight.js classes), tuned for contrast on --muted */
+  --syntax-comment: #6b5a5d;
+  --syntax-keyword: #8a2c84;
+  --syntax-string: #2f7a33;
+  --syntax-number: #a14a08;
+  --syntax-title: #1f5fae;
+  --syntax-type: #7a5200;
+  --syntax-attr: #b0303a;
+
+  /* ==Highlighted== text in task descriptions */
+  --highlight: #ffe3a3;
 }
 
 .dark {
@@ -107,4 +119,14 @@
   --sidebar-accent-foreground: #c78bc2;
   --sidebar-border: #3d2b2e;
   --sidebar-ring: #9a5895;
+
+  --syntax-comment: #b5a4a7;
+  --syntax-keyword: #d9a0d4;
+  --syntax-string: #a3d69e;
+  --syntax-number: #ffb38a;
+  --syntax-title: #8fc3ff;
+  --syntax-type: #ffd484;
+  --syntax-attr: #ff9e9e;
+
+  --highlight: #5c4412;
 }

@@ -10,6 +10,8 @@ import QuickStart from "@/components/QuickStart";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
 
+import { DRAFT_STORAGE_KEY } from "./constants";
+
 const TASK = { id: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23", estimatedMinutes: 10 } as Task;
 const TIME_LOG = { id: "5b7c9e14-2a3d-4f60-8e1b-6c4d2f0a9b37", taskId: TASK.id } as TimeLog;
 
@@ -31,6 +33,7 @@ const renderWithTimerRoute = () =>
 
 describe("QuickStart", () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.spyOn(quickStartsApi, "create").mockResolvedValue({ task: TASK, timeLog: TIME_LOG });
   });
 
@@ -59,6 +62,32 @@ describe("QuickStart", () => {
     );
   });
 
+  it("sends the description as Markdown", async () => {
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    // jsdom can't type into the editor reliably (Playwright covers typing), so paste and format the text instead.
+    await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
+    await userEvent.paste("Cite sources");
+    await userEvent.keyboard("{Control>}a{/Control}");
+    await userEvent.click(screen.getByRole("button", { name: "Bold" }));
+    await beginSession();
+
+    await screen.findByText("Timer page");
+    expect(quickStartsApi.create).toHaveBeenCalledWith(
+      expect.objectContaining({ description: "**Cite sources**" }),
+      expect.anything(),
+    );
+  });
+
+  it("leaves out an empty description", async () => {
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    await beginSession();
+
+    await screen.findByText("Timer page");
+    expect(vi.mocked(quickStartsApi.create).mock.lastCall?.[0]).not.toHaveProperty("description");
+  });
+
   it("uses custom minutes as the estimate", async () => {
     renderWithTimerRoute();
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
@@ -80,6 +109,51 @@ describe("QuickStart", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Title can't be blank");
     expect(screen.queryByText("Timer page")).not.toBeInTheDocument();
+  });
+
+  it("keeps the title, description and steps across a remount", async () => {
+    const { unmount } = renderWithProviders(<QuickStart />);
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
+    await userEvent.paste("Cite sources");
+    await addStep("Outline");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Outline" }));
+    unmount();
+
+    renderWithProviders(<QuickStart />);
+
+    expect(screen.getByRole("textbox", { name: "Task" })).toHaveValue("Draft submitted");
+    expect(await screen.findByText("Cite sources")).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: "Outline" })).toBeChecked();
+  });
+
+  it("starts empty when the saved draft is malformed", () => {
+    localStorage.setItem(DRAFT_STORAGE_KEY, "{not json");
+    renderWithProviders(<QuickStart />);
+
+    expect(screen.getByRole("textbox", { name: "Task" })).toHaveValue("");
+  });
+
+  it("clears the draft once the session starts", async () => {
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+
+    expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toContain("Draft submitted");
+
+    await beginSession();
+    await screen.findByText("Timer page");
+
+    expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("keeps the draft when the session can't start", async () => {
+    vi.mocked(quickStartsApi.create).mockRejectedValue(new ApiError(422, "Title can't be blank"));
+    renderWithTimerRoute();
+    await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    await beginSession();
+    await screen.findByRole("alert");
+
+    expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toContain("Draft submitted");
   });
 
   it("asks for a task before beginning a session", async () => {

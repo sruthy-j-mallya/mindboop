@@ -5,40 +5,28 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "cn";
 import { GripVertical, Trash2 } from "lucide-react";
-import { type Control, useController } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import type { QuickStartFormValues } from "../constants";
 import EditStep from "./EditStep";
+import type { StepItem, StepsProps } from "./types";
 
-type StepProps = {
-  control: Control<QuickStartFormValues>;
-  id: string;
-  index: number;
-  onRemove: (index: number) => void;
-};
+type StepProps = StepItem & Pick<StepsProps, "onRename" | "onToggle" | "onRemove">;
 
-const Step = ({ control, id, index, onRemove }: StepProps) => {
+const Step = ({ id, text, isDone, onRename, onToggle, onRemove }: StepProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const textButtonRef = useRef<HTMLButtonElement>(null);
-  const {
-    field: { value: text, onChange: setText },
-  } = useController({ control, name: `steps.${index}.text` });
-  const {
-    field: { value: isDone, onChange: setIsDone },
-  } = useController({ control, name: `steps.${index}.isDone` });
   const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({
     id,
     data: { text },
   });
 
-  const handleCheckedChange = (checked: boolean | "indeterminate") => setIsDone(checked === true);
+  const handleCheckedChange = (checked: boolean | "indeterminate") => onToggle(id, checked === true);
 
-  // A step can't go blank, so an emptied draft leaves the old text in place.
+  // A step can't go blank, so an emptied draft leaves the old text in place. Unchanged text isn't saved again.
   const handleSave = (newText: string) => {
-    if (newText) setText(newText);
+    if (newText && newText !== text) onRename(id, newText);
     setIsEditing(false);
   };
 
@@ -94,7 +82,7 @@ const Step = ({ control, id, index, onRemove }: StepProps) => {
         size="icon-sm"
         type="button"
         variant="ghost"
-        onClick={() => onRemove(index)}
+        onClick={() => onRemove(id)}
       >
         <Trash2 />
       </Button>
