@@ -32,8 +32,7 @@ const RichTextEditor = ({
         "aria-label": label,
         "aria-invalid": String(isInvalid),
         ...(describedBy && { "aria-describedby": describedBy }),
-        // While the toolbar is hidden, bottom padding keeps the last line clear of the toggle in the corner.
-        class: cn("rich-text min-h-28 px-3 pt-2 outline-none", showToolbar ? "pb-2" : "pb-10"),
+        class: "rich-text min-h-28 px-3 py-2 outline-none",
       },
       handleKeyDown: (_view: unknown, event: KeyboardEvent) => {
         if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return false;
@@ -44,7 +43,7 @@ const RichTextEditor = ({
       },
       handleDOMEvents: { click: openLinkOnClick },
     }),
-    [label, isInvalid, describedBy, showToolbar],
+    [label, isInvalid, describedBy],
   );
 
   const editor = useEditor({
@@ -73,6 +72,9 @@ const RichTextEditor = ({
       className={cn(
         "relative rounded-md border border-input bg-input-background shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
         isInvalid && "border-destructive ring-destructive/20",
+        // While the toolbar is hidden, this reserves its row (min-h-10 in Toolbar) for the toggle in the corner, so
+        // showing or hiding the toolbar doesn't change the editor's height.
+        !showToolbar && "pb-10",
       )}
     >
       <EditorContent editor={editor} />
