@@ -264,6 +264,26 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert @task.reload.is_completed
   end
 
+  def test_that_update_saves_a_markdown_description
+    sign_in @user
+    description = "## Plan\n\n- **#{Faker::Lorem.word}**\n- [docs](https://example.com)"
+
+    patch api_task_path(@task), params: { description: }, as: :json
+
+    assert_response :ok
+    assert_equal description, response.parsed_body.dig("task", "description")
+    assert_equal description, @task.reload.description
+  end
+
+  def test_that_update_rejects_a_description_that_is_too_long
+    sign_in @user
+
+    patch api_task_path(@task), params: { description: "a" * (Task::MAX_DESCRIPTION_LENGTH + 1) }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Description is too long (maximum is 10000 characters)", response.parsed_body["error"]
+  end
+
   def test_that_update_rejects_invalid_values
     sign_in @user
 

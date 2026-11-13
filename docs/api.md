@@ -23,29 +23,32 @@ Every error response has one shape:
 
 ## Endpoints
 
-| Method | Path                                     | Body                                                      | Success                      |
-| ------ | ---------------------------------------- | --------------------------------------------------------- | ---------------------------- |
-| GET    | `/api/session`                           | –                                                         | 200 `{ user }`               |
-| POST   | `/api/session`                           | `email_address`, `password`                               | 201 `{ user }`, sets cookie  |
-| DELETE | `/api/session`                           | –                                                         | 204                          |
-| POST   | `/api/email_confirmations`               | `email_address`                                           | 202 `{ message }`            |
-| POST   | `/api/registration`                      | `token`, `password`, `password_confirmation`              | 201 `{ user }`, sets cookie  |
-| POST   | `/api/passwords`                         | `email_address`                                           | 202 `{ message }`            |
-| PATCH  | `/api/passwords/:token`                  | `password`, `password_confirmation`                       | 204, signs out everywhere    |
-| GET    | `/api/tasks`                             | `page` query param (optional)                             | 200 `{ tasks, … }`           |
-| GET    | `/api/tasks/:id`                         | –                                                         | 200 `{ task }`               |
-| POST   | `/api/tasks`                             | Task fields (`title` required)                            | 201 `{ task }`               |
-| PATCH  | `/api/tasks/:id`                         | Task fields                                               | 200 `{ task }`               |
-| DELETE | `/api/tasks/:id`                         | –                                                         | 204, soft delete             |
-| POST   | `/api/quick_starts`                      | Task fields, `estimated_minutes` required                 | 201 `{ task, time_log }`     |
-| POST   | `/api/time_logs`                         | `task_id`, Time log fields                                | 201 `{ time_log }`           |
-| DELETE | `/api/time_logs/:id`                     | –                                                         | 204, soft delete             |
-| POST   | `/api/time_logs/:time_log_id/completion` | –                                                         | 201 `{ time_log }`           |
-| POST   | `/api/time_logs/:time_log_id/extension`  | `minutes`                                                 | 201 `{ time_log }`           |
-| POST   | `/api/time_logs/:time_log_id/bail_out`   | `restart_description`, `completed_description` (optional) | 201 `{ time_log }`           |
-| POST   | `/api/time_logs/:time_log_id/break`      | `intention`, `duration_minutes`                           | 201 `{ time_log }`           |
-| PATCH  | `/api/time_logs/:time_log_id/break`      | –                                                         | 200 `{ time_log }`           |
-| GET    | `/api/current_time_log`                  | –                                                         | 200 `{ time_log }` or `null` |
+| Method | Path                                      | Body                                                      | Success                      |
+| ------ | ----------------------------------------- | --------------------------------------------------------- | ---------------------------- |
+| GET    | `/api/session`                            | –                                                         | 200 `{ user }`               |
+| POST   | `/api/session`                            | `email_address`, `password`                               | 201 `{ user }`, sets cookie  |
+| DELETE | `/api/session`                            | –                                                         | 204                          |
+| POST   | `/api/email_confirmations`                | `email_address`                                           | 202 `{ message }`            |
+| POST   | `/api/registration`                       | `token`, `password`, `password_confirmation`              | 201 `{ user }`, sets cookie  |
+| POST   | `/api/passwords`                          | `email_address`                                           | 202 `{ message }`            |
+| PATCH  | `/api/passwords/:token`                   | `password`, `password_confirmation`                       | 204, signs out everywhere    |
+| GET    | `/api/tasks`                              | `page` query param (optional)                             | 200 `{ tasks, … }`           |
+| GET    | `/api/tasks/:id`                          | –                                                         | 200 `{ task }`               |
+| POST   | `/api/tasks`                              | Task fields (`title` required)                            | 201 `{ task }`               |
+| PATCH  | `/api/tasks/:id`                          | Task fields                                               | 200 `{ task }`               |
+| DELETE | `/api/tasks/:id`                          | –                                                         | 204, soft delete             |
+| POST   | `/api/tasks/:task_id/checklist_items`     | `title`, `is_completed` (optional)                        | 201 `{ task }`               |
+| PATCH  | `/api/tasks/:task_id/checklist_items/:id` | `title`, `is_completed`, `position` (all optional)        | 200 `{ task }`               |
+| DELETE | `/api/tasks/:task_id/checklist_items/:id` | –                                                         | 200 `{ task }`, soft delete  |
+| POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                 | 201 `{ task, time_log }`     |
+| POST   | `/api/time_logs`                          | `task_id`, Time log fields                                | 201 `{ time_log }`           |
+| DELETE | `/api/time_logs/:id`                      | –                                                         | 204, soft delete             |
+| POST   | `/api/time_logs/:time_log_id/completion`  | –                                                         | 201 `{ time_log }`           |
+| POST   | `/api/time_logs/:time_log_id/extension`   | `minutes`                                                 | 201 `{ time_log }`           |
+| POST   | `/api/time_logs/:time_log_id/bail_out`    | `restart_description`, `completed_description` (optional) | 201 `{ time_log }`           |
+| POST   | `/api/time_logs/:time_log_id/break`       | `intention`, `duration_minutes`                           | 201 `{ time_log }`           |
+| PATCH  | `/api/time_logs/:time_log_id/break`       | –                                                         | 200 `{ time_log }`           |
+| GET    | `/api/current_time_log`                   | –                                                         | 200 `{ time_log }` or `null` |
 
 `user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`). All ids are UUIDs.
 
@@ -60,13 +63,30 @@ pages. A missing or invalid `page` returns the first page, and a page past the e
 The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
 `starts_at` and `ends_at`.
 
+`description` is Markdown, as written in the rich-text editor, up to 10,000 characters (longer gets a 422). It's stripped,
+and a blank description is saved as `null`. The API stores it as given; the client renders it through the editor's schema,
+which leaves out anything the editor can't write, such as raw HTML.
+
 `task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, in
 position order (`app/views/api/tasks/_task.json.jbuilder`). Checklist items are soft-deleted (Discard), and discarded
 items are left out.
 
 `POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
 creates the items with the task, positioned in array order. If any item is invalid, the request gets a 422 and nothing
-is saved. Checklist items can't be changed after that for now: `PATCH /api/tasks/:id` ignores them.
+is saved. `PATCH /api/tasks/:id` ignores them; change items one at a time through the checklist item endpoints.
+
+## Checklist items
+
+`/api/tasks/:task_id/checklist_items` adds, changes and removes a task's checklist items (the Steps on the Timer page).
+Each needs permission to update the task: another user's task gets a 403, and a deleted or unknown task, or an item
+that's discarded or belongs to another task, gets a 404. Every response is the whole task, as `{ task }` in the same
+shape as `GET /api/tasks/:id`, since a move also changes the other items' order.
+
+- `POST` adds an item at the end. `title` is required (blank gets a 422).
+- `PATCH` changes `title` and `is_completed`, and moves the item when `position` is given: the 0-based index it should
+  land on among the task's items. An index past the end moves it last, and a negative or non-integer one gets a 422 with
+  nothing saved. Items keep their stored positions among themselves, so a discarded item never shares one with a kept item.
+- `DELETE` soft-deletes the item (Discard).
 
 ## Quick starts
 

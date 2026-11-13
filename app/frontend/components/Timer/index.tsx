@@ -22,7 +22,7 @@ const Timer = () => {
   if (isPending) return null;
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-4">
+    <div className="mx-auto w-full max-w-5xl p-4">
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error.message}

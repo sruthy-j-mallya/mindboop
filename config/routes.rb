@@ -4,7 +4,9 @@ Rails.application.routes.draw do
     resources :email_confirmations, only: :create
     resource :registration, only: :create
     resources :passwords, param: :token, only: %i[ create update ]
-    resources :tasks, only: %i[ index show create update destroy ]
+    resources :tasks, only: %i[ index show create update destroy ] do
+      resources :checklist_items, only: %i[ create update destroy ]
+    end
     resources :quick_starts, only: :create
     resources :time_logs, only: %i[ create destroy ] do
       resource :completion, only: :create, controller: "time_log_completions"

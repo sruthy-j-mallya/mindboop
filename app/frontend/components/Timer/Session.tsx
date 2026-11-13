@@ -6,18 +6,17 @@ import type { TimeLog } from "@/apis/types";
 import BreakBanner from "@/components/commons/BreakBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
 import Ambience from "./Ambience";
 import BailDialog from "./BailDialog";
 import Countdown from "./Countdown";
+import Description from "./Description";
 import DiscardDialog from "./DiscardDialog";
 import ExtendDialog from "./ExtendDialog";
 import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
+import Steps from "./Steps";
 import { isTooShortToKeep } from "./utils";
 
 type SessionProps = {
@@ -59,76 +58,63 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   }
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-8">
-        <header className="flex items-start justify-between gap-4">
-          <div className="grid gap-1">
-            <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              {isOnBreak ? "Paused" : "Focusing on"}
+    <Card className="mx-auto w-full max-w-2xl lg:max-w-5xl">
+      <CardContent className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+        {/* The timer and its actions stay together (and pinned on wide screens), so a long description never
+            pushes the buttons out of view. */}
+        <div className="flex flex-col gap-6 lg:sticky lg:top-4 lg:self-start">
+          <header className="flex items-start justify-between gap-4">
+            <div className="grid gap-1">
+              <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                {isOnBreak ? "Paused" : "Focusing on"}
+              </p>
+              <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
+            </div>
+            <Ambience timeLog={timeLog} />
+          </header>
+          <Countdown timeLog={timeLog} />
+          {currentBreak && <BreakBanner currentBreak={currentBreak} timeLogId={timeLog.id} />}
+          {completionError && (
+            <p className="text-sm text-destructive" role="alert">
+              {completionError}
             </p>
-            <h1 className="text-2xl font-semibold wrap-anywhere">{task.title}</h1>
+          )}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+            <Button
+              disabled={isOnBreak || extensionMinutesLeft <= 0}
+              size="lg"
+              type="button"
+              variant="outline"
+              onClick={handleExtend}
+            >
+              <Plus />
+              Extend
+            </Button>
+            <Button disabled={isOnBreak} size="lg" type="button" variant="outline" onClick={handlePause}>
+              <Pause />
+              Pause
+            </Button>
+            <Button size="lg" type="button" variant="outline" onClick={handleBail}>
+              <LogOut />
+              Bail
+            </Button>
+            <Button
+              className="bg-muted text-primary"
+              disabled={isCompleting}
+              size="lg"
+              type="button"
+              variant="ghost"
+              onClick={handleDone}
+            >
+              <PartyPopper />
+              Done
+            </Button>
           </div>
-          <Ambience timeLog={timeLog} />
-        </header>
-        <Countdown timeLog={timeLog} />
-        {currentBreak && <BreakBanner currentBreak={currentBreak} timeLogId={timeLog.id} />}
-        {task.checklistItems.length > 0 && (
-          // Checklist items can't be changed through the API yet, so these only show the saved state.
-          <ul aria-label="Steps" className="flex flex-col gap-4">
-            {task.checklistItems.map(({ id, title, isCompleted }) => (
-              <li key={id} className="flex items-center gap-3">
-                <Checkbox
-                  disabled
-                  checked={isCompleted}
-                  className="size-6 border-2 border-primary/40 disabled:opacity-100"
-                  id={id}
-                />
-                <Label
-                  className="text-base font-normal wrap-anywhere peer-disabled:cursor-default peer-disabled:opacity-100"
-                  htmlFor={id}
-                >
-                  {title}
-                </Label>
-              </li>
-            ))}
-          </ul>
-        )}
-        <Separator />
-        {completionError && (
-          <p className="text-sm text-destructive" role="alert">
-            {completionError}
-          </p>
-        )}
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            disabled={isOnBreak || extensionMinutesLeft <= 0}
-            size="lg"
-            type="button"
-            variant="outline"
-            onClick={handleExtend}
-          >
-            <Plus />
-            Extend
-          </Button>
-          <Button disabled={isOnBreak} size="lg" type="button" variant="outline" onClick={handlePause}>
-            <Pause />
-            Pause
-          </Button>
-          <Button size="lg" type="button" variant="outline" onClick={handleBail}>
-            <LogOut />
-            Bail
-          </Button>
-          <Button
-            className="bg-muted text-primary"
-            disabled={isCompleting}
-            size="lg"
-            type="button"
-            variant="ghost"
-            onClick={handleDone}
-          >
-            <PartyPopper />
-            Done
-          </Button>
+        </div>
+        {/* Steps and the description can be changed mid-session; each change saves on its own. */}
+        <div className="flex flex-col gap-8 border-t pt-8 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-12">
+          <Steps task={task} />
+          <Description task={task} />
         </div>
       </CardContent>
       {showExtendDialog && (
