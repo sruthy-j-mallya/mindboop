@@ -5,7 +5,10 @@ module Api
     before_action :set_checklist_item, only: %i[ update destroy ]
 
     def create
-      @task.checklist_items.create!(checklist_item_params)
+      ChecklistItem.transaction do
+        checklist_item = @task.checklist_items.create!(checklist_item_params)
+        checklist_item.move_to!(params[:position]) if params.key?(:position)
+      end
       render_task status: :created
     end
 

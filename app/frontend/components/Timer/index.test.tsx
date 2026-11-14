@@ -90,11 +90,12 @@ describe("Timer", () => {
     expect(within(description).getByRole("listitem")).toHaveTextContent("Cite sources");
   });
 
-  it("leaves out the description when the task has none", async () => {
+  it("offers an empty description to write in when the task has none", async () => {
     renderTimer(TIME_LOG);
 
-    await screen.findByRole("heading", { name: "Draft permission" });
-    expect(screen.queryByRole("region", { name: "Description" })).not.toBeInTheDocument();
+    const description = await screen.findByRole("region", { name: "Description" });
+    expect(await within(description).findByRole("textbox", { name: "Description" })).toHaveTextContent("");
+    expect(screen.queryByRole("button", { name: "Add a description" })).not.toBeInTheDocument();
   });
 
   describe("when editing the steps", () => {
@@ -129,17 +130,69 @@ describe("Timer", () => {
       expect(step).not.toBeChecked();
     });
 
-    it("adds a step", async () => {
+    it("offers the add button only while the task has no steps", async () => {
+      renderTimer(TIME_LOG);
+
+      expect(await screen.findByRole("checkbox", { name: FIRST_ITEM.title })).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Add step" })).not.toBeInTheDocument();
+    });
+
+    it("adds the first step from the button beside the title", async () => {
       const newItem = { id: "0c3f7a24-5e6b-4a8d-b9cb-3e4f5a6b7c8d", title: "Conclusion", isCompleted: false };
       const create = vi
         .spyOn(checklistItemsApi, "create")
-        .mockResolvedValue({ task: { ...TASK, checklistItems: [...TASK.checklistItems, newItem] } });
-      renderTimer(TIME_LOG);
+        .mockResolvedValue({ task: { ...TASK, checklistItems: [newItem] } });
+      renderTimer(TIME_LOG, { ...TASK, checklistItems: [] });
 
-      await userEvent.type(await screen.findByRole("textbox", { name: "New step" }), "Conclusion{Enter}");
+      await userEvent.click(await screen.findByRole("button", { name: "Add step" }));
+      await userEvent.keyboard("Conclusion{Enter}");
 
       expect(create).toHaveBeenCalledWith({ taskId: TASK.id, title: "Conclusion" }, expect.anything());
       expect(await screen.findByRole("checkbox", { name: "Conclusion" })).not.toBeChecked();
+      expect(screen.getByRole("textbox", { name: "New step" })).toHaveFocus();
+      expect(screen.queryByRole("button", { name: "Add step" })).not.toBeInTheDocument();
+    });
+
+    it("shows a step added below another at once, at its place", async () => {
+      const create = vi.spyOn(checklistItemsApi, "create").mockReturnValue(new Promise(() => {}));
+      renderTimer(TIME_LOG);
+
+      await userEvent.click(await screen.findByRole("button", { name: "Edit Camera statistics" }));
+      await userEvent.keyboard("{Enter}Middle{Enter}");
+
+      expect(create).toHaveBeenCalledWith(
+        { taskId: TASK.id, title: "Middle", position: 1 },
+        expect.anything(),
+      );
+      const stepNames = () =>
+        within(screen.getByRole("list", { name: "Steps" }))
+          .getAllByRole("checkbox")
+          .map((step) => step.getAttribute("aria-label"));
+      await waitFor(() => expect(stepNames()).toEqual([FIRST_ITEM.title, "Middle", SECOND_ITEM.title]));
+      expect(screen.getByRole("textbox", { name: "New step" })).toHaveFocus();
+    });
+
+    it("opens the first step row below the add button, which stays until a step is saved", async () => {
+      renderTimer(TIME_LOG, { ...TASK, checklistItems: [] });
+
+      const addButton = await screen.findByRole("button", { name: "Add step" });
+      await userEvent.click(addButton);
+      const newStep = screen.getByRole("textbox", { name: "New step" });
+
+      expect(newStep).toHaveFocus();
+      expect(addButton.compareDocumentPosition(newStep)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(screen.getByRole("button", { name: "Add step" })).toBeVisible();
+    });
+
+    it("takes a new step back out when saving it fails", async () => {
+      vi.spyOn(checklistItemsApi, "create").mockRejectedValue(new ApiError(500, "Something went wrong"));
+      renderTimer(TIME_LOG, { ...TASK, checklistItems: [] });
+
+      await userEvent.click(await screen.findByRole("button", { name: "Add step" }));
+      await userEvent.keyboard("Conclusion{Enter}");
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
+      expect(screen.queryByRole("checkbox", { name: "Conclusion" })).not.toBeInTheDocument();
     });
 
     it("renames a step", async () => {
@@ -176,53 +229,78 @@ describe("Timer", () => {
   });
 
   describe("when editing the description", () => {
-    const DESCRIPTION = "Start with the **intro**";
+    const DESCRIPTION = "Start with the intro";
 
-    it("offers to add one when the task has none", async () => {
-      renderTimer(TIME_LOG);
+    // jsdom can't type into the editor reliably (Playwright covers typing), so edits go through the toolbar.
+    const makeBulletList = async () => {
+      await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
+      await userEvent.click(screen.getByRole("button", { name: "Show formatting" }));
+      await userEvent.click(screen.getByRole("button", { name: "Bullet list" }));
+    };
 
-      await userEvent.click(await screen.findByRole("button", { name: "Add a description" }));
+    it("is editable right away, with no edit or save buttons", async () => {
+      renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
-      expect(await screen.findByRole("textbox", { name: "Description" })).toBeVisible();
+      expect(await screen.findByRole("textbox", { name: "Description" })).toHaveTextContent(DESCRIPTION);
+      expect(screen.queryByRole("button", { name: "Edit description" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
     });
 
-    it("saves the description and shows it again", async () => {
+    it("saves the edit when the editor loses focus", async () => {
       const update = vi
         .spyOn(tasksApi, "update")
-        .mockResolvedValue({ task: { ...TASK, description: DESCRIPTION } });
+        .mockResolvedValue({ task: { ...TASK, description: `- ${DESCRIPTION}` } });
       renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Edit description" }));
-      await screen.findByRole("textbox", { name: "Description" });
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
+      await makeBulletList();
+      expect(update).not.toHaveBeenCalled();
+      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
 
-      expect(update).toHaveBeenCalledWith({ id: TASK.id, description: DESCRIPTION }, expect.anything());
-      expect(await screen.findByRole("region", { name: "Description" })).toBeVisible();
-      expect(screen.queryByRole("textbox", { name: "Description" })).not.toBeInTheDocument();
+      expect(update).toHaveBeenCalledOnce();
+      expect(update).toHaveBeenCalledWith(
+        { id: TASK.id, description: `- ${DESCRIPTION}` },
+        expect.anything(),
+      );
     });
 
-    it("keeps the editor open and shows the error when saving fails", async () => {
-      vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(500, "Something went wrong"));
+    it("saves the edit after a pause in typing", async () => {
+      const update = vi
+        .spyOn(tasksApi, "update")
+        .mockResolvedValue({ task: { ...TASK, description: `- ${DESCRIPTION}` } });
       renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Edit description" }));
-      await screen.findByRole("textbox", { name: "Description" });
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
+      await makeBulletList();
 
-      expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
-      expect(screen.getByRole("textbox", { name: "Description" })).toBeVisible();
+      await waitFor(() =>
+        expect(update).toHaveBeenCalledWith(
+          { id: TASK.id, description: `- ${DESCRIPTION}` },
+          expect.anything(),
+        ),
+      );
     });
 
-    it("goes back to the saved description on Cancel", async () => {
+    it("doesn't save when nothing changed", async () => {
       const update = vi.spyOn(tasksApi, "update");
       renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Edit description" }));
-      await screen.findByRole("textbox", { name: "Description" });
-      await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+      await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
+      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
 
-      expect(await screen.findByRole("region", { name: "Description" })).toBeVisible();
       expect(update).not.toHaveBeenCalled();
+    });
+
+    it("keeps the edit and shows the error when saving fails", async () => {
+      vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(500, "Something went wrong"));
+      renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
+
+      await makeBulletList();
+      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
+      expect(
+        within(screen.getByRole("textbox", { name: "Description" })).getByRole("listitem"),
+      ).toHaveTextContent(DESCRIPTION);
     });
   });
 

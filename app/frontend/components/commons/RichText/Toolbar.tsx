@@ -7,16 +7,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { FORMAT_GROUPS, FORMAT_ITEMS } from "./constants";
 import FormatButton from "./FormatButton";
-import LinkPopover from "./LinkPopover";
+import LinkButton from "./LinkButton";
 import type { FormatStates } from "./types";
 
 type ToolbarProps = {
   editor: Editor;
-  showLinkPopover: boolean;
-  onLinkPopoverChange: (isOpen: boolean) => void;
+  onLinkClick: () => void;
 };
 
-const Toolbar = ({ editor, showLinkPopover, onLinkPopoverChange }: ToolbarProps) => {
+const Toolbar = ({ editor, onLinkClick }: ToolbarProps) => {
   // Only re-renders the toolbar when a button's pressed state actually changes, not on every keystroke.
   const formatStates = useEditorState({
     editor,
@@ -39,7 +38,9 @@ const Toolbar = ({ editor, showLinkPopover, onLinkPopoverChange }: ToolbarProps)
     <TooltipProvider>
       <div
         aria-label="Formatting"
-        className="flex flex-wrap items-center gap-0.5 border-b border-input p-1"
+        // Room on the right for the formatting toggle, which sits in the editor's bottom-right corner. min-h-10
+        // matches the editor's pb-10 while the toolbar is hidden, so toggling it doesn't shift the layout.
+        className="flex min-h-10 flex-wrap items-center gap-0.5 border-t border-input py-0.5 pr-10 pl-1"
         role="toolbar"
         onMouseDown={handleMouseDown}
       >
@@ -52,12 +53,7 @@ const Toolbar = ({ editor, showLinkPopover, onLinkPopoverChange }: ToolbarProps)
           </Fragment>
         ))}
         <Separator className="mx-1 h-5!" orientation="vertical" />
-        <LinkPopover
-          editor={editor}
-          isActive={formatStates.link}
-          isOpen={showLinkPopover}
-          onOpenChange={onLinkPopoverChange}
-        />
+        <LinkButton isActive={formatStates.link} onClick={onLinkClick} />
       </div>
     </TooltipProvider>
   );

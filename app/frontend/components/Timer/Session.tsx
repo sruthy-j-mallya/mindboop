@@ -4,6 +4,10 @@ import { LogOut, PartyPopper, Pause, Plus } from "lucide-react";
 
 import type { TimeLog } from "@/apis/types";
 import BreakBanner from "@/components/commons/BreakBanner";
+import AddStepButton from "@/components/commons/Steps/AddStepButton";
+import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
+import type { Draft } from "@/components/commons/Steps/types";
+import TaskDescription from "@/components/commons/TaskDescription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
@@ -11,7 +15,6 @@ import { useTask } from "@/hooks/reactQuery/useTasksApi";
 import Ambience from "./Ambience";
 import BailDialog from "./BailDialog";
 import Countdown from "./Countdown";
-import Description from "./Description";
 import DiscardDialog from "./DiscardDialog";
 import ExtendDialog from "./ExtendDialog";
 import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
@@ -32,6 +35,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   const [showExtendDialog, setShowExtendDialog] = useState(false);
   const [showBailDialog, setShowBailDialog] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [stepDraft, setStepDraft] = useState<Draft | null>(null);
   const { currentBreak } = timeLog;
   const isOnBreak = !!currentBreak;
   const extensionMinutesLeft = MAX_EXTENSION_MINUTES - timeLog.bufferMinutes;
@@ -41,6 +45,8 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
     isTooShortToKeep(timeLog, Date.now()) ? setShowDiscardDialog(true) : setShowBailDialog(true);
   const handleBailDialogClose = () => setShowBailDialog(false);
   const handleDiscardDialogClose = () => setShowDiscardDialog(false);
+  // A row that's already open keeps its place rather than being replaced.
+  const handleAddStep = () => setStepDraft((draft) => draft ?? NEW_STEP_DRAFT);
   const handleDone = () => onDone(timeLog.id);
   const handleExtend = () => setShowExtendDialog(true);
   const handleExtendDialogClose = () => setShowExtendDialog(false);
@@ -113,8 +119,17 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
         </div>
         {/* Steps and the description can be changed mid-session; each change saves on its own. */}
         <div className="flex flex-col gap-8 border-t pt-8 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-12">
-          <Steps task={task} />
-          <Description task={task} />
+          {/* The add button only starts the first step, which opens right below it; after that, Enter in a step adds
+              the next one. It stays while that first row is open, so the row doesn't jump up under the cursor. */}
+          <div className="flex flex-col gap-2">
+            {task.checklistItems.length === 0 && (
+              <div className="flex justify-end">
+                <AddStepButton onClick={handleAddStep} />
+              </div>
+            )}
+            <Steps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
+          </div>
+          <TaskDescription key={task.id} task={task} />
         </div>
       </CardContent>
       {showExtendDialog && (

@@ -12,9 +12,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import EditStep from "./EditStep";
 import type { StepItem, StepsProps } from "./types";
 
-type StepProps = StepItem & Pick<StepsProps, "onRename" | "onToggle" | "onRemove">;
+type StepProps = StepItem &
+  Pick<StepsProps, "onRename" | "onToggle" | "onRemove"> & { onInsertBelow: (id: string) => void };
 
-const Step = ({ id, text, isDone, onRename, onToggle, onRemove }: StepProps) => {
+const Step = ({ id, text, isDone, onRename, onToggle, onRemove, onInsertBelow }: StepProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const textButtonRef = useRef<HTMLButtonElement>(null);
   const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({
@@ -39,16 +40,23 @@ const Step = ({ id, text, isDone, onRename, onToggle, onRemove }: StepProps) => 
   return (
     <li
       ref={setNodeRef}
+      data-step-id={id}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(
-        "flex items-center gap-2 rounded-md bg-card py-1",
+        "group flex items-center gap-2 rounded-md bg-card py-1",
         isDragging && "relative z-10 shadow-md",
       )}
     >
+      {/* A narrow handle, so the steps sit near the left edge. It shows only while the row is hovered or has focus (or
+          is being dragged), keeping its space so the row doesn't shift. Touch screens can't hover, so it always shows
+          there. */}
       <Button
         aria-label={`Reorder ${text}`}
-        className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
-        size="icon-sm"
+        className={cn(
+          "-mr-1 w-4 shrink-0 cursor-grab touch-none text-muted-foreground opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 active:cursor-grabbing pointer-coarse:opacity-100",
+          isDragging && "opacity-100",
+        )}
+        size="icon-xs"
         type="button"
         variant="ghost"
         {...attributes}
@@ -63,7 +71,12 @@ const Step = ({ id, text, isDone, onRename, onToggle, onRemove }: StepProps) => 
         onCheckedChange={handleCheckedChange}
       />
       {isEditing ? (
-        <EditStep text={text} onDismiss={handleDismiss} onSave={handleSave} />
+        <EditStep
+          text={text}
+          onContinue={() => onInsertBelow(id)}
+          onDismiss={handleDismiss}
+          onSave={handleSave}
+        />
       ) : (
         <Button
           ref={textButtonRef}

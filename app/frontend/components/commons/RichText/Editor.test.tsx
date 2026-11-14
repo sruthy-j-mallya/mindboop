@@ -19,11 +19,28 @@ const paste = (target: HTMLElement, data: Map<string, string>) => {
   fireEvent(target, event);
 };
 
+const showFormatting = () => userEvent.click(screen.getByRole("button", { name: "Show formatting" }));
+
 const lastMarkdown = (onChange: ReturnType<typeof vi.fn>) => onChange.mock.lastCall?.[0];
 
 describe("RichTextEditor", () => {
-  it("offers a labelled button for every format", () => {
+  it("hides the format buttons until formatting is shown", async () => {
     renderEditor();
+
+    expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show formatting" })).toHaveAttribute("aria-pressed", "false");
+
+    await showFormatting();
+    expect(screen.getByRole("toolbar", { name: "Formatting" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Show formatting" })).toHaveAttribute("aria-pressed", "true");
+
+    await showFormatting();
+    expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
+  });
+
+  it("offers a labelled button for every format", async () => {
+    renderEditor();
+    await showFormatting();
 
     const toolbar = screen.getByRole("toolbar", { name: "Formatting" });
     for (const name of [
@@ -58,6 +75,7 @@ describe("RichTextEditor", () => {
     const { onChange, textbox } = renderEditor("Ship it");
 
     await userEvent.click(textbox);
+    await showFormatting();
     await userEvent.click(screen.getByRole("button", { name: "Bullet list" }));
 
     await waitFor(() => expect(lastMarkdown(onChange)).toBe("- Ship it"));
@@ -75,6 +93,7 @@ describe("RichTextEditor", () => {
     const { onChange, textbox } = renderEditor("Ship it");
 
     await userEvent.click(textbox);
+    await showFormatting();
     await userEvent.keyboard("{Control>}a{/Control}");
     await userEvent.click(screen.getByRole("button", { name: "Highlight" }));
 
@@ -86,6 +105,7 @@ describe("RichTextEditor", () => {
     const { onChange, textbox } = renderEditor("Ship it");
 
     await userEvent.click(textbox);
+    await showFormatting();
     await userEvent.click(screen.getByRole("button", { name: "Divider" }));
 
     await waitFor(() => expect(lastMarkdown(onChange)).toBe("---\n\nShip it"));
@@ -95,6 +115,7 @@ describe("RichTextEditor", () => {
     const { onChange, textbox } = renderEditor("Ship it");
 
     await userEvent.click(textbox);
+    await showFormatting();
     await userEvent.keyboard("{Control>}a{/Control}");
     await userEvent.click(screen.getByRole("button", { name: "Link" }));
     await userEvent.type(screen.getByRole("textbox", { name: "Link address" }), "example.com{Enter}");
@@ -106,6 +127,7 @@ describe("RichTextEditor", () => {
     const { textbox } = renderEditor("[the brief](https://example.com/brief)");
 
     await userEvent.click(textbox);
+    await showFormatting();
     await userEvent.keyboard("{Control>}a{/Control}");
     await userEvent.click(screen.getByRole("button", { name: "Link" }));
 
@@ -118,6 +140,7 @@ describe("RichTextEditor", () => {
     const { onChange, textbox } = renderEditor("[the brief](https://example.com/brief)");
 
     await userEvent.click(textbox);
+    await showFormatting();
     await userEvent.keyboard("{Control>}a{/Control}");
     await userEvent.click(screen.getByRole("button", { name: "Link" }));
     await userEvent.clear(screen.getByRole("textbox", { name: "Link text" }));
@@ -132,6 +155,7 @@ describe("RichTextEditor", () => {
     const { onChange, textbox } = renderEditor();
 
     await userEvent.click(textbox);
+    await showFormatting();
     await userEvent.click(screen.getByRole("button", { name: "Link" }));
     await userEvent.type(screen.getByRole("textbox", { name: "Link text" }), "docs");
     await userEvent.type(screen.getByRole("textbox", { name: "Link address" }), "example.com/docs{Enter}");
@@ -183,6 +207,8 @@ describe("RichTextEditor", () => {
 
     const text = screen.getByRole("textbox", { name: "Link text" });
     const address = screen.getByRole("textbox", { name: "Link address" });
+    // The link form opens on its own; the format buttons stay hidden.
+    expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
     expect(text).toHaveValue("this");
     expect(address).toHaveValue("https://example.com/brief");
 
@@ -200,6 +226,7 @@ describe("RichTextEditor", () => {
     const { onChange, textbox } = renderEditor("Ship it");
 
     await userEvent.click(textbox);
+    await showFormatting();
     await userEvent.click(screen.getByRole("button", { name: "Link" }));
     await userEvent.type(screen.getByRole("textbox", { name: "Link address" }), "javascript:alert(1){Enter}");
 
@@ -230,6 +257,16 @@ describe("RichTextEditor", () => {
     expect(within(textbox).getByRole("heading", { level: 2, name: "Plan" })).toBeVisible();
     expect(textbox.querySelector("li strong")).toHaveTextContent("Outline");
     await waitFor(() => expect(lastMarkdown(onChange)).toBe(markdown));
+  });
+
+  it("opens the link form on Mod-K without showing the format buttons", async () => {
+    const { textbox } = renderEditor("Ship it");
+
+    await userEvent.click(textbox);
+    await userEvent.keyboard("{Control>}k{/Control}");
+
+    expect(await screen.findByRole("textbox", { name: "Link address" })).toBeVisible();
+    expect(screen.queryByRole("toolbar", { name: "Formatting" })).not.toBeInTheDocument();
   });
 
   it("keeps pasted Markdown literal inside a code block", async () => {

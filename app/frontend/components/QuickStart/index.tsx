@@ -2,10 +2,13 @@ import { useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Timer } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 
 import RichTextEditor from "@/components/commons/RichText/LazyEditor";
+import AddStepButton from "@/components/commons/Steps/AddStepButton";
+import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
+import type { Draft } from "@/components/commons/Steps/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +35,8 @@ const QuickStart = () => {
     defaultValues,
     resolver: zodResolver(QUICK_START_VALIDATION_SCHEMA),
   });
+  const steps = useWatch({ control, name: "steps" });
+  const [stepDraft, setStepDraft] = useState<Draft | null>(null);
 
   // Saved on every change so a reload or a trip to another page doesn't lose what was written.
   useEffect(
@@ -42,6 +47,8 @@ const QuickStart = () => {
       }),
     [subscribe],
   );
+
+  const handleAddStep = () => setStepDraft(NEW_STEP_DRAFT);
 
   const handleSessionStarted = () => {
     clearDraft();
@@ -66,22 +73,25 @@ const QuickStart = () => {
       <Card>
         <CardContent className="flex flex-col gap-4">
           <div className="grid gap-2">
-            <Input
-              aria-describedby={errors.title ? "title-error" : undefined}
-              aria-invalid={!!errors.title}
-              aria-label="Task"
-              autoComplete="off"
-              className="h-auto rounded-none border-0 bg-transparent px-0 text-lg font-semibold text-ellipsis shadow-none focus-visible:ring-0 md:text-xl dark:bg-transparent"
-              placeholder="What do you want to get done?"
-              {...register("title")}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                aria-describedby={errors.title ? "title-error" : undefined}
+                aria-invalid={!!errors.title}
+                aria-label="Task"
+                autoComplete="off"
+                className="h-auto rounded-none border-0 bg-transparent px-0 text-lg font-semibold text-ellipsis shadow-none focus-visible:ring-0 md:text-xl dark:bg-transparent"
+                placeholder="What do you want to get done?"
+                {...register("title")}
+              />
+              {steps.length === 0 && !stepDraft && <AddStepButton onClick={handleAddStep} />}
+            </div>
             {errors.title && (
               <p id="title-error" className="text-sm text-destructive">
                 {errors.title.message}
               </p>
             )}
           </div>
-          <Steps control={control} setValue={setValue} />
+          <Steps control={control} draft={stepDraft} setValue={setValue} onDraftChange={setStepDraft} />
           <div className="grid gap-2">
             <Controller
               control={control}

@@ -1,15 +1,16 @@
 import type { Task } from "@/apis/types";
 import CommonSteps from "@/components/commons/Steps";
+import type { StepsProps as CommonStepsProps } from "@/components/commons/Steps/types";
 import {
   useCreateChecklistItem,
   useDeleteChecklistItem,
   useUpdateChecklistItem,
 } from "@/hooks/reactQuery/useChecklistItemsApi";
 
-type StepsProps = { task: Task };
+type StepsProps = { task: Task } & Pick<CommonStepsProps, "draft" | "onDraftChange">;
 
 // Every change is saved at once, so ticking a step off mid-session needs no extra click.
-const Steps = ({ task: { id: taskId, checklistItems } }: StepsProps) => {
+const Steps = ({ task: { id: taskId, checklistItems }, draft, onDraftChange }: StepsProps) => {
   const { mutate: createChecklistItem, error: createError } = useCreateChecklistItem();
   const { mutate: updateChecklistItem, error: updateError } = useUpdateChecklistItem();
   const { mutate: deleteChecklistItem, error: deleteError } = useDeleteChecklistItem();
@@ -20,7 +21,7 @@ const Steps = ({ task: { id: taskId, checklistItems } }: StepsProps) => {
     isDone: isCompleted,
   }));
 
-  const handleAdd = (title: string) => createChecklistItem({ taskId, title });
+  const handleAdd = (title: string, position?: number) => createChecklistItem({ taskId, title, position });
   const handleRename = (id: string, title: string) => updateChecklistItem({ taskId, id, title });
   const handleToggle = (id: string, isCompleted: boolean) => updateChecklistItem({ taskId, id, isCompleted });
   const handleRemove = (id: string) => deleteChecklistItem({ taskId, id });
@@ -29,8 +30,10 @@ const Steps = ({ task: { id: taskId, checklistItems } }: StepsProps) => {
   return (
     <div className="flex flex-col gap-2">
       <CommonSteps
+        draft={draft}
         steps={steps}
         onAdd={handleAdd}
+        onDraftChange={onDraftChange}
         onMove={handleMove}
         onRemove={handleRemove}
         onRename={handleRename}

@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
@@ -7,3 +8,15 @@ export const signupTokenFor = (email: string) =>
     env: { ...process.env, RAILS_ENV: "test" },
     encoding: "utf8",
   }).trim();
+
+// Opens a new step row, types each step followed by Enter (which opens the next row), then closes the last empty row.
+export const addSteps = async (page: Page, steps: string[]) => {
+  await page.getByRole("button", { name: "Add step" }).click();
+  const input = page.getByRole("textbox", { name: "New step" });
+
+  for (const step of steps) {
+    await input.fill(step);
+    await input.press("Enter");
+  }
+  await input.press("Escape");
+};
