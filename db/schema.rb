@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_14_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -53,6 +53,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["task_id", "position"], name: "index_checklist_items_on_task_id_and_position"
+  end
+
+  create_table "parking_lot_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.uuid "task_id"
+    t.text "content", null: false
+    t.string "kind", default: "idea", null: false
+    t.string "status", default: "parked", null: false
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["discarded_at"], name: "index_parking_lot_items_on_discarded_at"
+    t.index ["status"], name: "index_parking_lot_items_on_status"
+    t.index ["task_id"], name: "index_parking_lot_items_on_task_id"
+    t.index ["user_id"], name: "index_parking_lot_items_on_user_id"
   end
 
   create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -262,6 +277,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
   add_foreign_key "breadcrumbs", "tasks"
   add_foreign_key "breaks", "time_logs"
   add_foreign_key "checklist_items", "tasks", on_delete: :cascade
+  add_foreign_key "parking_lot_items", "tasks", on_delete: :nullify
+  add_foreign_key "parking_lot_items", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

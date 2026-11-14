@@ -3,12 +3,11 @@ import { toast } from "sonner";
 
 import type { ApiError } from "@/apis/axios";
 import type { Task } from "@/apis/types";
+import UndoLabel from "@/components/commons/UndoLabel";
+import { UNDO_TOAST_DURATION } from "@/constants";
 import { useRestoreTask } from "@/hooks/reactQuery/useTaskRestorationsApi";
 import { useDeleteTask } from "@/hooks/reactQuery/useTasksApi";
 import routes from "@/routes";
-
-import { UNDO_TOAST_DURATION } from "./constants";
-import UndoLabel from "./UndoLabel";
 
 // Deletes a task from its list row or its pane, then offers to undo it in a toast. A deleted task leaves the Inbox, so
 // its pane closes with it. `isDeleting` stays true after the delete, until the refreshed list drops the task.

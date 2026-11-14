@@ -3,6 +3,7 @@ const routes = {
   login: "/login",
   settings: "/settings",
   timer: "/timer",
+  parkingLot: "/parking-lot",
   inbox: {
     index: "/inbox",
     show: "/inbox/:taskId",

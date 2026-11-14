@@ -16,6 +16,10 @@ Rails.application.routes.draw do
       resource :break, only: %i[ create update ]
     end
     resource :current_time_log, only: :show
+    resources :parking_lot_items, only: %i[ index create update destroy ] do
+      resource :conversion, only: :create, controller: "parking_lot_item_conversions"
+      resource :restoration, only: :create, controller: "parking_lot_item_restorations"
+    end
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
