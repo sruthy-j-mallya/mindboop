@@ -11,8 +11,8 @@ import { Separator } from "@/components/ui/separator";
 
 import useCompleteTask from "../useCompleteTask";
 import DeleteTaskButton from "./DeleteTaskButton";
+import DueDatePicker from "./DueDatePicker";
 import EstimatePicker from "./EstimatePicker";
-import SchedulePicker from "./SchedulePicker";
 
 type DetailsProps = { task: Task };
 
@@ -42,7 +42,7 @@ const Details = ({ task }: DetailsProps) => {
               />
               <Separator className="mt-2 data-[orientation=vertical]:h-4" orientation="vertical" />
               <div className="flex flex-wrap items-start gap-1">
-                <SchedulePicker task={task} />
+                <DueDatePicker task={task} />
                 <EstimatePicker task={task} />
               </div>
             </div>

@@ -17,29 +17,31 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
   await input.press("Enter");
   await page.getByRole("link", { name: "Renew passport" }).click();
 
-  await page.getByRole("button", { name: "Due date" }).click();
+  await page.getByRole("button", { name: "Due date", exact: true }).click();
   const tomorrow = format(addDays(new Date(), 1), "EEEE, MMMM do, yyyy");
   await page.getByRole("button", { name: tomorrow }).click();
   await page.getByRole("combobox", { name: "Time" }).click();
   await page.getByRole("option", { name: "5:30 PM" }).click();
   await page.getByRole("button", { name: "OK" }).click();
 
-  const row = page.getByRole("link", { name: /Renew passport/ });
-  await expect(row).toContainText("Tomorrow 5:30pm");
+  const rowDate = page.getByRole("button", { name: /^Due date of Renew passport:/ });
+  await expect(rowDate).toContainText("Tomorrow 5:30pm");
   await page.reload();
-  await expect(row).toContainText("Tomorrow 5:30pm");
+  await expect(rowDate).toContainText("Tomorrow 5:30pm");
 
-  await page.getByRole("button", { name: "Tomorrow 5:30pm" }).click();
+  // The list row's date opens the same picker as the pane.
+  await rowDate.click();
   await page.getByRole("tab", { name: "Duration" }).click();
   const endTime = page.getByRole("combobox", { name: "End time" });
   await expect(endTime).toHaveValue("6:30 PM");
   await endTime.fill("7pm");
   await endTime.press("Enter");
   await page.getByRole("button", { name: "OK" }).click();
-  await expect(row).toContainText("Tomorrow 5:30pm – 7:00pm");
+  await expect(rowDate).toContainText("Tomorrow 5:30pm – 7:00pm");
+  await expect(page.getByRole("dialog", { name: "Schedule" })).toBeHidden();
 
-  await page.getByRole("button", { name: "Tomorrow 5:30pm – 7:00pm" }).click();
+  await page.getByRole("button", { name: "Tomorrow 5:30pm – 7:00pm", exact: true }).click();
   await page.getByRole("button", { name: "Clear" }).click();
-  await expect(page.getByRole("button", { name: "Due date" })).toBeVisible();
-  await expect(row).toHaveText("Renew passport");
+  await expect(page.getByRole("button", { name: "Due date", exact: true })).toBeVisible();
+  await expect(rowDate).toBeHidden();
 });

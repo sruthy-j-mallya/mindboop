@@ -61,8 +61,8 @@ Every error response has one shape:
 
 ## Tasks
 
-Tasks belong to the signed-in user. `GET /api/tasks` lists only their undeleted tasks, oldest first. Another user's task
-gets a 403. A deleted or unknown task gets a 404.
+Tasks belong to the signed-in user. `GET /api/tasks` lists only their undeleted tasks, soonest `starts_at` first
+with undated tasks last; ties go to the oldest task. Another user's task gets a 403. A deleted or unknown task gets a 404.
 
 `POST /api/tasks/:task_id/restoration` brings back a deleted task (the Inbox's Undo). A task that isn't deleted gets a 404.
 

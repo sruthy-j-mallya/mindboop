@@ -20,19 +20,18 @@ test("estimate an Inbox task, change it, then clear it", async ({ page }) => {
   await page.getByLabel("Minutes").fill("45");
   await page.getByRole("button", { name: "OK" }).click();
 
-  const row = page.getByRole("link", { name: /Plan the week/ });
-  await expect(row).toContainText("45 min");
+  await expect(page.getByRole("button", { name: "45 min" })).toBeVisible();
   await page.reload();
-  await expect(row).toContainText("45 min");
 
   await page.getByRole("button", { name: "45 min" }).click();
   await page.getByLabel("Hours").fill("1");
   await page.getByLabel("Minutes").fill("40");
   await page.getByRole("button", { name: "OK" }).click();
-  await expect(row).toContainText("1 h 40 min");
+  await expect(page.getByRole("button", { name: "1 h 40 min" })).toBeVisible();
 
   await page.getByRole("button", { name: "1 h 40 min" }).click();
   await page.getByRole("button", { name: "Clear" }).click();
   await expect(page.getByRole("button", { name: "Estimate" })).toBeVisible();
-  await expect(row).toHaveText("Plan the week");
+  // The list row stays to the title (and date), never the estimate.
+  await expect(page.getByRole("link", { name: /Plan the week/ })).toHaveText("Plan the week");
 });

@@ -46,6 +46,18 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, response.parsed_body["page"]
   end
 
+  def test_that_index_orders_tasks_by_due_date_then_oldest_first
+    later = create(:task, user: @user, starts_at: 2.days.from_now)
+    sooner = create(:task, user: @user, starts_at: 1.day.from_now)
+    undated = create(:task, user: @user)
+    sign_in @user
+
+    get api_tasks_path
+
+    assert_response :ok
+    assert_equal [ sooner.id, later.id, @task.id, undated.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
   def test_that_index_returns_no_tasks_for_a_page_past_the_end
     sign_in @user
 
