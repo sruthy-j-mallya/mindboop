@@ -14,14 +14,15 @@ describe("AppLayout", () => {
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
   });
 
-  it("offers Quick start and Timer in the sidebar and settings in the footer", () => {
+  it("offers Quick start, Inbox and Timer in the sidebar and settings in the footer", () => {
     const { container } = renderWithProviders(<AppLayout />);
 
     const content = within(container.querySelector<HTMLElement>('[data-slot="sidebar-content"]')!);
     const footer = within(container.querySelector<HTMLElement>('[data-slot="sidebar-footer"]')!);
 
-    expect(content.getAllByRole("link")).toHaveLength(2);
+    expect(content.getAllByRole("link")).toHaveLength(3);
     expect(content.getByRole("link", { name: "Quick start" })).toHaveAttribute("href", routes.root);
+    expect(content.getByRole("link", { name: "Inbox" })).toHaveAttribute("href", routes.inbox.index);
     expect(content.getByRole("link", { name: "Timer" })).toHaveAttribute("href", routes.timer);
     expect(footer.getByRole("link", { name: "Settings" })).toHaveAttribute("href", routes.settings);
     expect(screen.getAllByRole("link", { name: "Settings" })).toHaveLength(1);

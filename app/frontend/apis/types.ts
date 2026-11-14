@@ -29,7 +29,9 @@ export type Task = {
   checklistItems: ChecklistItem[];
 };
 
-export type TaskListParams = { page?: number };
+export type TaskFilters = { isCompleted?: boolean };
+
+export type TaskListParams = TaskFilters & { page?: number };
 
 export type TaskListResponse = { tasks: Task[]; tasksCount: number; page: number; totalPages: number };
 

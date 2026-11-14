@@ -66,6 +66,25 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.parsed_body["page"]
   end
 
+  def test_that_index_can_list_only_incomplete_tasks
+    completed_task = create(:task, user: @user, is_completed: true)
+    sign_in @user
+
+    get api_tasks_path, params: { is_completed: false }
+
+    assert_response :ok
+    assert_equal [ @task.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal 1, response.parsed_body["tasks_count"]
+
+    get api_tasks_path, params: { is_completed: true }
+
+    assert_equal [ completed_task.id ], response.parsed_body["tasks"].pluck("id")
+
+    get api_tasks_path
+
+    assert_equal [ @task.id, completed_task.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
   def test_that_show_leaves_out_discarded_checklist_items
     item = create(:checklist_item, task: @task)
     create(:checklist_item, task: @task).discard!
@@ -291,6 +310,65 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert response.parsed_body["error"].present?
+  end
+
+  def test_that_user_can_set_and_clear_their_tasks_estimate
+    sign_in @user
+
+    patch api_task_path(@task), params: { estimated_minutes: 45 }, as: :json
+
+    assert_response :ok
+    assert_equal 45, response.parsed_body.dig("task", "estimated_minutes")
+
+    patch api_task_path(@task), params: { estimated_minutes: nil }, as: :json
+
+    assert_response :ok
+    assert_nil response.parsed_body.dig("task", "estimated_minutes")
+    assert_nil @task.reload.estimated_minutes
+  end
+
+  def test_that_update_rejects_an_estimate_over_a_day
+    sign_in @user
+
+    patch api_task_path(@task), params: { estimated_minutes: Task::MAX_ESTIMATED_MINUTES + 1 }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Estimated minutes must be less than or equal to 1440", response.parsed_body["error"]
+  end
+
+  def test_that_user_can_schedule_their_task_for_a_duration
+    sign_in @user
+    starts_at = 1.day.from_now.change(usec: 0)
+    ends_at = starts_at + 90.minutes
+
+    patch api_task_path(@task), params: { is_duration: true, is_all_day: false, starts_at:, ends_at: }, as: :json
+
+    assert_response :ok
+    @task.reload
+    assert @task.is_duration
+    assert_equal [ starts_at, ends_at ], [ @task.starts_at, @task.ends_at ]
+  end
+
+  def test_that_user_can_clear_their_tasks_schedule
+    starts_at = 1.day.from_now
+    @task.update!(is_duration: true, starts_at:, ends_at: starts_at + 1.hour)
+    sign_in @user
+
+    patch api_task_path(@task), params: { is_duration: false, is_all_day: false, starts_at: nil, ends_at: nil }, as: :json
+
+    assert_response :ok
+    assert_nil @task.reload.starts_at
+    assert_nil @task.ends_at
+  end
+
+  def test_that_update_rejects_a_duration_that_ends_before_it_starts
+    sign_in @user
+    starts_at = 1.day.from_now
+
+    patch api_task_path(@task), params: { is_duration: true, starts_at:, ends_at: starts_at - 1.hour }, as: :json
+
+    assert_response :unprocessable_content
+    assert_match "Ends at", response.parsed_body["error"]
   end
 
   def test_that_update_returns_401_when_signed_out

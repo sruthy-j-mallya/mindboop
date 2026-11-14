@@ -8,6 +8,7 @@ import { QUERY_KEYS } from "@/constants/query";
 import {
   useCreateTask,
   useDeleteTask,
+  useInfiniteTasks,
   useTask,
   useTasks,
   useUpdateTask,
@@ -50,6 +51,24 @@ describe("useTasksApi", () => {
 
     await waitFor(() => expect(result.current.data).toEqual(response));
     expect(fetchList).toHaveBeenCalledWith({ page: 2 });
+  });
+
+  it("loads the filtered list a page at a time until the last page", async () => {
+    const fetchList = vi
+      .spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce({ tasks: [TASK], tasksCount: 2, page: 1, totalPages: 2 })
+      .mockResolvedValueOnce({ tasks: [{ ...TASK, id: "second" }], tasksCount: 2, page: 2, totalPages: 2 });
+    const { wrapper } = setup();
+
+    const { result } = renderHook(() => useInfiniteTasks({ isCompleted: false }), { wrapper });
+
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true));
+    await result.current.fetchNextPage();
+
+    await waitFor(() => expect(result.current.data?.pages).toHaveLength(2));
+    expect(result.current.hasNextPage).toBe(false);
+    expect(fetchList).toHaveBeenNthCalledWith(1, { isCompleted: false, page: 1 });
+    expect(fetchList).toHaveBeenNthCalledWith(2, { isCompleted: false, page: 2 });
   });
 
   it("marks every cached page stale after a mutation", async () => {
