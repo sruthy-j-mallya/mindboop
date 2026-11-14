@@ -42,14 +42,14 @@ const ParkForm = () => {
   };
 
   return (
-    <form noValidate className="grid gap-3" onSubmit={handleSubmit(handlePark)}>
+    <form noValidate className="grid gap-2" onSubmit={handleSubmit(handlePark)}>
       {/* Native radios, hidden behind chip-styled labels, give the group arrow-key navigation for free. */}
-      <fieldset className="flex flex-wrap gap-1.5">
+      <fieldset className="flex flex-wrap gap-1">
         <legend className="sr-only">Kind</legend>
         {PARKING_LOT_ITEM_KINDS.map((kind) => (
           <label
             key={kind}
-            className="cursor-pointer rounded-full bg-muted px-3 py-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground has-checked:bg-primary has-checked:text-primary-foreground has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50"
+            className="cursor-pointer rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground has-checked:bg-primary has-checked:text-primary-foreground has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50"
           >
             <input className="sr-only" type="radio" value={kind} {...register("kind")} />
             {kind}
@@ -63,14 +63,14 @@ const ParkForm = () => {
           aria-invalid={!!errors.content}
           aria-label="Thought to park"
           autoComplete="off"
-          className="h-11 rounded-xl pr-12"
+          className="h-9 rounded-lg pr-10"
           placeholder="Park a thought…"
           {...register("content", { onBlur: handleBlur })}
         />
         <Button
           aria-label="Park"
-          className="absolute top-1/2 right-1.5 -translate-y-1/2 text-muted-foreground"
-          size="icon-sm"
+          className="absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground"
+          size="icon-xs"
           type="submit"
           variant="ghost"
         >

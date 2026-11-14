@@ -19,8 +19,8 @@ const ThoughtCard = ({ item: { content, kind, createdAt }, className, children }
   const now = useCurrentTime(false);
 
   return (
-    <div className={cn("grid gap-1 rounded-2xl px-4 py-3", KIND_CLASS_NAMES[kind], className)}>
-      <p className="wrap-anywhere whitespace-pre-wrap">{content}</p>
+    <div className={cn("grid gap-0.5 rounded-xl px-3 py-2", KIND_CLASS_NAMES[kind], className)}>
+      <p className="text-sm wrap-anywhere whitespace-pre-wrap">{content}</p>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           {kind} · <time dateTime={createdAt}>{formatParkedAt(createdAt, now)}</time>

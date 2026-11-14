@@ -38,7 +38,7 @@ const ItemList = ({ status, label, emptyMessage }: ItemListProps) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <ul aria-label={label} className="flex flex-col gap-3">
+      <ul aria-label={label} className="flex flex-col gap-2">
         {items.map((item) => (
           <ItemRow key={item.id} item={item} />
         ))}

@@ -19,27 +19,27 @@ const ItemRow = ({ item }: ItemRowProps) => {
   return (
     <li className="grid gap-1">
       <ThoughtCard className={cn(isBusy && "opacity-50")} item={item}>
-        <div className="-mr-2 flex items-center gap-1">
+        <div className="-mr-1.5 flex items-center gap-0.5">
           {status === "parked" && (
             <>
-              <Button disabled={isBusy} size="sm" type="button" variant="ghost" onClick={addAsTask}>
+              <Button disabled={isBusy} size="xs" type="button" variant="ghost" onClick={addAsTask}>
                 <ListPlus />
                 <span className="max-sm:sr-only">Add as task</span>
               </Button>
-              <Button disabled={isBusy} size="sm" type="button" variant="ghost" onClick={markAddressed}>
+              <Button disabled={isBusy} size="xs" type="button" variant="ghost" onClick={markAddressed}>
                 <Check />
                 <span className="max-sm:sr-only">Mark addressed</span>
               </Button>
             </>
           )}
           {status === "addressed" && (
-            <Button disabled={isBusy} size="sm" type="button" variant="ghost" onClick={parkAgain}>
+            <Button disabled={isBusy} size="xs" type="button" variant="ghost" onClick={parkAgain}>
               <Undo2 />
               <span className="max-sm:sr-only">Park again</span>
             </Button>
           )}
           {status === "converted" && taskId && (
-            <Button asChild size="sm" variant="ghost">
+            <Button asChild size="xs" variant="ghost">
               <Link to={generatePath(routes.inbox.show, { taskId })}>
                 <SquareArrowOutUpRight />
                 <span className="max-sm:sr-only">Open task</span>
@@ -49,7 +49,7 @@ const ItemRow = ({ item }: ItemRowProps) => {
           <Button
             className="hover:text-destructive"
             disabled={isBusy}
-            size="sm"
+            size="xs"
             type="button"
             variant="ghost"
             onClick={discard}
@@ -60,7 +60,7 @@ const ItemRow = ({ item }: ItemRowProps) => {
         </div>
       </ThoughtCard>
       {error && (
-        <p className="px-4 text-sm text-destructive" role="alert">
+        <p className="px-3 text-sm text-destructive" role="alert">
           {error.message}
         </p>
       )}

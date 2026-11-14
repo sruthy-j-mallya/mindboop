@@ -15,13 +15,15 @@ const ParkingLot = () => {
   const handleStatusChange = (value: string) => setStatus(value as ParkingLotItemStatus);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 p-4">
       <header className="grid gap-1">
         <h1 className="text-2xl font-semibold">Parking lot</h1>
-        <p className="text-muted-foreground">Park it, don&apos;t chase it. You&apos;ll get it back.</p>
+        <p className="text-sm text-muted-foreground">
+          Park it, don&apos;t chase it. You&apos;ll get it back.
+        </p>
       </header>
-      <Card>
-        <CardContent>
+      <Card className="py-4">
+        <CardContent className="px-4">
           <ParkForm />
         </CardContent>
       </Card>
