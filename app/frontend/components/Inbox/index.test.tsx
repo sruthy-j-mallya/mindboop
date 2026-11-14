@@ -63,8 +63,8 @@ describe("Inbox", () => {
 
     renderInbox();
 
-    expect(await screen.findByRole("link", { name: "First" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Second" })).toBeInTheDocument();
+    expect(await screen.findByRole("textbox", { name: "First" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Second" })).toBeInTheDocument();
     expect(fetchList).toHaveBeenCalledWith({ isCompleted: false, page: 1 });
   });
 
@@ -89,7 +89,7 @@ describe("Inbox", () => {
     await userEvent.type(input, "  Call the bank {Enter}");
 
     await waitFor(() => expect(create).toHaveBeenCalledWith({ title: "Call the bank" }, expect.anything()));
-    expect(await screen.findByRole("link", { name: "Call the bank" })).toBeInTheDocument();
+    expect(await screen.findByRole("textbox", { name: "Call the bank" })).toBeInTheDocument();
     expect(input).toHaveValue("");
   });
 
@@ -139,10 +139,10 @@ describe("Inbox", () => {
     renderInbox();
 
     expect(screen.getByText("Pick a task to see its steps and description.")).toBeInTheDocument();
-    await userEvent.click(await screen.findByRole("link", { name: /Plan the trip/ }));
+    await userEvent.click(await screen.findByRole("textbox", { name: /Plan the trip/ }));
 
     expect(await screen.findByRole("heading", { name: "Plan the trip" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Plan the trip/ })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("textbox", { name: /Plan the trip/ })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("list", { name: "Steps" })).toHaveTextContent("Book flights");
     expect(show).toHaveBeenCalledWith(task.id);
   });
@@ -222,13 +222,13 @@ describe("Inbox", () => {
     await waitFor(() => expect(destroy).toHaveBeenCalledWith(task.id, expect.anything()));
     expect(await screen.findByText("Deleted “Cancel the gym”")).toBeInTheDocument();
     await waitFor(() =>
-      expect(screen.queryByRole("link", { name: "Cancel the gym" })).not.toBeInTheDocument(),
+      expect(screen.queryByRole("textbox", { name: "Cancel the gym" })).not.toBeInTheDocument(),
     );
 
     await userEvent.click(screen.getByRole("button", { name: "Undo" }));
 
     await waitFor(() => expect(restore).toHaveBeenCalledWith(task.id, expect.anything()));
-    expect(await screen.findByRole("link", { name: "Cancel the gym" })).toBeInTheDocument();
+    expect(await screen.findByRole("textbox", { name: "Cancel the gym" })).toBeInTheDocument();
   });
 
   it("shows the error when undoing a delete fails", async () => {
@@ -256,7 +256,7 @@ describe("Inbox", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Delete Cancel the gym" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Not allowed");
-    expect(screen.getByRole("link", { name: "Cancel the gym" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Cancel the gym" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
 
@@ -289,6 +289,82 @@ describe("Inbox", () => {
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Not allowed");
     // The open dialog hides the pane from the accessibility tree.
     expect(screen.getByRole("heading", { name: "Cancel the gym", hidden: true })).toBeInTheDocument();
+  });
+
+  it("renames a task in its row", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    const renamed = { ...task, title: "Cancel the gym membership" };
+    vi.spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce(listOf([task]))
+      .mockResolvedValue(listOf([renamed]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: renamed });
+    renderInbox();
+
+    const input = await screen.findByRole("textbox", { name: "Cancel the gym" });
+    await userEvent.clear(input);
+    await userEvent.type(input, "  Cancel the gym membership {Enter}");
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        { id: task.id, title: "Cancel the gym membership" },
+        expect.anything(),
+      ),
+    );
+    expect(await screen.findByRole("textbox", { name: "Cancel the gym membership" })).toHaveValue(
+      "Cancel the gym membership",
+    );
+    expect(await screen.findByRole("heading", { name: "Cancel the gym membership" })).toBeInTheDocument();
+  });
+
+  it("opens the task when its title is focused", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("textbox", { name: "Cancel the gym" }));
+
+    expect(await screen.findByRole("heading", { name: "Cancel the gym" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Cancel the gym" })).toHaveFocus();
+  });
+
+  it("keeps the old title when renaming is cancelled, left blank or unchanged", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update");
+    renderInbox();
+
+    const input = await screen.findByRole("textbox", { name: "Cancel the gym" });
+    await userEvent.type(input, " and the pool{Escape}");
+    expect(input).toHaveValue("Cancel the gym");
+
+    await userEvent.clear(input);
+    await userEvent.keyboard("{Enter}");
+    expect(input).toHaveValue("Cancel the gym");
+
+    await userEvent.type(input, " {Backspace}");
+    await userEvent.tab();
+
+    expect(input).toHaveValue("Cancel the gym");
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("shows the error when renaming from a row fails", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(422, "Title is too long"));
+    renderInbox();
+
+    await userEvent.type(
+      await screen.findByRole("textbox", { name: "Cancel the gym" }),
+      " and the pool{Enter}",
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Title is too long");
+    expect(screen.getByRole("textbox", { name: "Cancel the gym" })).toHaveValue("Cancel the gym");
   });
 
   it("shows each task's date in the list", async () => {
@@ -418,7 +494,7 @@ describe("Inbox", () => {
 
     renderInbox();
 
-    expect(await screen.findByRole("link", { name: /Plan the week/ })).not.toHaveTextContent("1 h 30 min");
+    expect(await screen.findByRole("list", { name: "Tasks" })).not.toHaveTextContent("1 h 30 min");
   });
 
   it("sets an estimate from hours and minutes", async () => {

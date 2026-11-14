@@ -1,6 +1,6 @@
 import { cn } from "cn";
-import { CalendarDays, Trash2 } from "lucide-react";
-import { generatePath, Link } from "react-router";
+import { CalendarDays, ChevronRight, Trash2 } from "lucide-react";
+import { generatePath, Link, useNavigate } from "react-router";
 
 import type { Task } from "@/apis/types";
 import { Button } from "@/components/ui/button";
@@ -13,23 +13,47 @@ import SchedulePicker from "../SchedulePicker";
 import type { SchedulePayload } from "../SchedulePicker/types";
 import useCompleteTask from "../useCompleteTask";
 import useDeleteTaskWithUndo from "../useDeleteTaskWithUndo";
+import { NARROW_LAYOUT_QUERY } from "./constants";
+import TitleInput from "./TitleInput";
 
 type TaskRowProps = { task: Task };
 
 const TaskRow = ({ task }: TaskRowProps) => {
-  const { id, title } = task;
+  const { id } = task;
+  const navigate = useNavigate();
   const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(id);
   const { deleteTask, isDeleting, error: deleteError } = useDeleteTaskWithUndo(task);
   const { mutate: updateTask, error: scheduleError } = useUpdateTask();
-  const error = completeError ?? deleteError ?? scheduleError;
+  const {
+    mutate: renameTask,
+    variables: renameVariables,
+    isPending: isRenaming,
+    error: renameError,
+  } = useUpdateTask();
+  const error = completeError ?? deleteError ?? scheduleError ?? renameError;
+  // Shows the new title while it saves, so the old one doesn't flash back until the list refreshes.
+  const title = (isRenaming && renameVariables.title) || task.title;
 
   const handleScheduleSave = (schedule: SchedulePayload) => updateTask({ id, ...schedule });
+
+  const taskPath = generatePath(routes.inbox.show, { taskId: id });
+
+  // On wide screens, going into the title also opens the task beside the list. Narrow screens show one at a time, so
+  // there the title only edits and the chevron opens the task.
+  const handleTitleFocus = () => {
+    if (!isSelected && !window.matchMedia(NARROW_LAYOUT_QUERY).matches) navigate(taskPath);
+  };
+
+  // A task can't go untitled, so an emptied title leaves the old one in place. An unchanged one isn't saved again.
+  const handleRename = (newTitle: string) => {
+    if (newTitle && newTitle !== title) renameTask({ id, title: newTitle });
+  };
 
   return (
     <li className="grid gap-1">
       <div
         className={cn(
-          "group flex items-center gap-3 rounded-md px-3 transition-colors hover:bg-muted",
+          "group flex items-center gap-3 rounded-md px-3 transition-colors focus-within:bg-muted hover:bg-muted",
           isSelected && "bg-muted",
           isDeleting && "opacity-50",
         )}
@@ -41,14 +65,8 @@ const TaskRow = ({ task }: TaskRowProps) => {
           disabled={isCompleting || isDeleting}
           onCheckedChange={completeTask}
         />
-        <Link
-          aria-current={isSelected ? "page" : undefined}
-          className="min-w-0 flex-1 py-2 text-sm wrap-anywhere outline-none focus-visible:underline"
-          to={generatePath(routes.inbox.show, { taskId: id })}
-        >
-          {title}
-        </Link>
-        {/* Outside the link, since a button can't nest in one. Opens the same picker as the pane. */}
+        <TitleInput isSelected={isSelected} title={title} onFocus={handleTitleFocus} onSave={handleRename} />
+        {/* Opens the same picker as the pane. */}
         {task.startsAt && (
           <SchedulePicker align="end" task={task} onSave={handleScheduleSave}>
             {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
@@ -75,6 +93,16 @@ const TaskRow = ({ task }: TaskRowProps) => {
           onClick={deleteTask}
         >
           <Trash2 />
+        </Button>
+        <Button
+          asChild
+          className="-mr-2 shrink-0 text-muted-foreground lg:hidden"
+          size="icon-sm"
+          variant="ghost"
+        >
+          <Link aria-label={`Open ${title}`} to={taskPath}>
+            <ChevronRight />
+          </Link>
         </Button>
       </div>
       {error && (
