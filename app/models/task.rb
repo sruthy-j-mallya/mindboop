@@ -4,6 +4,9 @@ class Task < ApplicationRecord
   MAX_DESCRIPTION_LENGTH = 10_000
   MAX_ESTIMATED_MINUTES = 24 * 60
 
+  # Soonest due first, undated tasks last; ties go to the oldest task.
+  scope :by_due_date, -> { order(arel_table[:starts_at].asc.nulls_last, :created_at, :id) }
+
   # The description is Markdown written in the rich-text editor; an empty editor saves as nil.
   normalizes :description, with: ->(description) { description.strip.presence }
 

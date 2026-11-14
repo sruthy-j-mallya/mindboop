@@ -5,7 +5,7 @@ module Api
     def index
       # id breaks created_at ties, so a task can't repeat or go missing across pages.
       tasks = filter_by_completion(policy_scope(Task).kept)
-      @pagy, @tasks = pagy(tasks.includes(:checklist_items).order(:created_at, :id))
+      @pagy, @tasks = pagy(tasks.includes(:checklist_items).by_due_date)
     end
 
     def show

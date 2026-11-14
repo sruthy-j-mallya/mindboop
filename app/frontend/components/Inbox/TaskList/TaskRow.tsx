@@ -1,25 +1,29 @@
 import { cn } from "cn";
-import { Trash2 } from "lucide-react";
+import { CalendarDays, Trash2 } from "lucide-react";
 import { generatePath, Link } from "react-router";
 
 import type { Task } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 import routes from "@/routes";
-import { formatMinutes } from "@/utils";
 
 import ScheduleLabel from "../ScheduleLabel";
+import SchedulePicker from "../SchedulePicker";
+import type { SchedulePayload } from "../SchedulePicker/types";
 import useCompleteTask from "../useCompleteTask";
 import useDeleteTaskWithUndo from "../useDeleteTaskWithUndo";
 
 type TaskRowProps = { task: Task };
 
 const TaskRow = ({ task }: TaskRowProps) => {
-  const { id, title, checklistItems, estimatedMinutes } = task;
+  const { id, title } = task;
   const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(id);
   const { deleteTask, isDeleting, error: deleteError } = useDeleteTaskWithUndo(task);
-  const error = completeError ?? deleteError;
-  const doneStepsCount = checklistItems.filter(({ isCompleted }) => isCompleted).length;
+  const { mutate: updateTask, error: scheduleError } = useUpdateTask();
+  const error = completeError ?? deleteError ?? scheduleError;
+
+  const handleScheduleSave = (schedule: SchedulePayload) => updateTask({ id, ...schedule });
 
   return (
     <li className="grid gap-1">
@@ -39,22 +43,26 @@ const TaskRow = ({ task }: TaskRowProps) => {
         />
         <Link
           aria-current={isSelected ? "page" : undefined}
-          className="flex min-w-0 flex-1 items-center justify-between gap-2 py-2 text-sm outline-none focus-visible:underline"
+          className="min-w-0 flex-1 py-2 text-sm wrap-anywhere outline-none focus-visible:underline"
           to={generatePath(routes.inbox.show, { taskId: id })}
         >
-          <span className="min-w-0 wrap-anywhere">{title}</span>
-          <span className="flex shrink-0 items-center gap-3 text-xs">
-            {checklistItems.length > 0 && (
-              <span className="text-muted-foreground">
-                {doneStepsCount}/{checklistItems.length} steps
-              </span>
-            )}
-            {estimatedMinutes && (
-              <span className="text-muted-foreground">{formatMinutes(estimatedMinutes)}</span>
-            )}
-            <ScheduleLabel schedule={task} />
-          </span>
+          {title}
         </Link>
+        {/* Outside the link, since a button can't nest in one. Opens the same picker as the pane. */}
+        {task.startsAt && (
+          <SchedulePicker align="end" task={task} onSave={handleScheduleSave}>
+            {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
+            <Button
+              className="h-6 shrink-0 gap-1 rounded-full border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 dark:bg-background dark:hover:bg-background"
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <CalendarDays className="size-3.5 text-muted-foreground" />
+              <span className="sr-only">Due date of {title}:</span> <ScheduleLabel schedule={task} />
+            </Button>
+          </SchedulePicker>
+        )}
         {/* With a mouse, it shows on hover or focus to keep the list calm; touch screens always show it. No confirmation:
             the toast offers to undo instead. */}
         <Button

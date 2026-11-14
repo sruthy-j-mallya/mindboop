@@ -299,7 +299,30 @@ describe("Inbox", () => {
 
     renderInbox();
 
-    expect(await screen.findByRole("link", { name: /Water the plants/ })).toHaveTextContent("Tomorrow");
+    expect(
+      await screen.findByRole("button", { name: "Due date of Water the plants: Tomorrow" }),
+    ).toBeInTheDocument();
+  });
+
+  it("clears a date from the picker the list row's date opens", async () => {
+    const startsAt = startOfDay(addDays(new Date(), 1)).toISOString();
+    const task = buildTask({ title: "Water the plants", isAllDay: true, startsAt });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
+
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("button", { name: /Due date of Water the plants/ }));
+    expect(screen.getByRole("dialog", { name: "Schedule" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        { id: task.id, isDuration: false, isAllDay: false, startsAt: null, endsAt: null },
+        expect.anything(),
+      ),
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("sets a date from the pane's due date picker", async () => {
@@ -388,14 +411,14 @@ describe("Inbox", () => {
     );
   });
 
-  it("shows each task's estimate in the list", async () => {
+  it("keeps the list row to the title and date, without the estimate", async () => {
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(
       listOf([buildTask({ title: "Plan the week", estimatedMinutes: 90 })]),
     );
 
     renderInbox();
 
-    expect(await screen.findByRole("link", { name: /Plan the week/ })).toHaveTextContent("1 h 30 min");
+    expect(await screen.findByRole("link", { name: /Plan the week/ })).not.toHaveTextContent("1 h 30 min");
   });
 
   it("sets an estimate from hours and minutes", async () => {
