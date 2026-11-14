@@ -4,8 +4,6 @@ import {
   format,
   isBefore,
   isSameDay,
-  isValid,
-  parse,
   parseISO,
   set,
   setHours,
@@ -14,25 +12,19 @@ import {
 } from "date-fns";
 
 import type { Task, UpdateTaskPayload } from "@/apis/types";
+import { MINUTES_PER_HOUR } from "@/constants";
 
 import {
-  DATE_INPUT_FORMAT,
   DEFAULT_START_HOUR,
   END_BEFORE_START_ERROR,
   TIME_INPUT_FORMAT,
+  TIME_LABEL_FORMAT,
+  TIME_SLOT_MINUTES,
+  TIME_TEXT_PATTERN,
 } from "./constants";
 import type { ScheduleDraft } from "./types";
 
-export const toDateInputValue = (date: Date) => format(date, DATE_INPUT_FORMAT);
-
 export const toTimeInputValue = (date: Date) => format(date, TIME_INPUT_FORMAT);
-
-// The day picked in a date input, or null while it's cleared or half typed.
-export const parseDateInputValue = (value: string) => {
-  const day = parse(value, DATE_INPUT_FORMAT, new Date());
-
-  return isValid(day) ? day : null;
-};
 
 // Moves `date` to `day`, keeping its time of day.
 export const withDay = (date: Date, day: Date) =>
@@ -43,6 +35,50 @@ export const withTime = (date: Date, time: string) => {
   const [hours, minutes] = time.split(":").map(Number);
 
   return set(date, { hours, minutes, seconds: 0, milliseconds: 0 });
+};
+
+// "15:30" → "3:30 PM".
+export const toTimeLabel = (time: string) => format(withTime(new Date(), time), TIME_LABEL_FORMAT);
+
+// The half-hour slot a "HH:mm" time falls in (3:45 PM → the 3:30 PM slot).
+export const toTimeSlotIndex = (time: string) => {
+  const [hours, minutes] = time.split(":").map(Number);
+
+  return Math.floor((hours * MINUTES_PER_HOUR + minutes) / TIME_SLOT_MINUTES);
+};
+
+// A 12-hour hour with am/pm becomes 0–23; without one it is already on the 24-hour clock.
+const toHours = (hour: number, meridiem?: string) => {
+  if (!meridiem) return hour < 24 ? hour : null;
+  if (hour < 1 || hour > 12) return null;
+
+  return (hour % 12) + (meridiem.toLowerCase() === "p" ? 12 : 0);
+};
+
+// A typed time as "HH:mm", or null when it isn't one.
+export const parseTimeText = (text: string) => {
+  const match = TIME_TEXT_PATTERN.exec(text.trim());
+  if (!match) return null;
+
+  const [, hourText, minuteText = "0", meridiem, meridiemM] = match;
+  if (meridiemM && !meridiem) return null;
+
+  const hours = toHours(Number(hourText), meridiem);
+  const minutes = Number(minuteText);
+  if (hours === null || minutes >= MINUTES_PER_HOUR) return null;
+
+  return format(new Date(2000, 0, 1, hours, minutes), TIME_INPUT_FORMAT);
+};
+
+// Callback refs for the time picker's list. Module-level so React attaches them once, not on every render.
+export const scrollIntoViewIfNeeded = (option: HTMLElement | null) =>
+  option?.scrollIntoView?.({ block: "nearest" });
+
+export const centerSelectedOption = (list: HTMLElement | null) => {
+  const option = list?.querySelector<HTMLElement>('[aria-selected="true"], [data-active="true"]');
+  if (!list || !option) return;
+
+  list.scrollTop = option.offsetTop - (list.clientHeight - option.offsetHeight) / 2;
 };
 
 // Moves the start and the end together, so a duration keeps its length.

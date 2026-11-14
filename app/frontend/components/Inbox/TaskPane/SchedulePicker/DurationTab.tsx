@@ -13,9 +13,6 @@ type DurationTabProps = {
   onChange: (draft: ScheduleDraft) => void;
 };
 
-// The browser's zone, which every time here is in.
-const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
 // A start and an end, as days (all day) or times. Moving the start moves the end with it.
 const DurationTab = ({ draft, error, onChange }: DurationTabProps) => {
   const allDayId = useId();
@@ -53,7 +50,6 @@ const DurationTab = ({ draft, error, onChange }: DurationTabProps) => {
         </Label>
         <Switch checked={draft.isAllDay} id={allDayId} onCheckedChange={handleAllDayChange} />
       </div>
-      {hasTime && <p className="text-xs text-muted-foreground">Times are in {TIME_ZONE}</p>}
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error}

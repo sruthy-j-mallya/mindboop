@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import type { ScheduleDraft } from "./types";
-import { getDraftError, moveStart, setAllDay, setDateTime, setIsDuration } from "./utils";
+import {
+  getDraftError,
+  moveStart,
+  parseTimeText,
+  setAllDay,
+  setDateTime,
+  setIsDuration,
+  toTimeLabel,
+  toTimeSlotIndex,
+} from "./utils";
 
 const NOW = new Date(2026, 10, 12, 10, 20).getTime();
 
@@ -68,5 +77,28 @@ describe("SchedulePicker utils", () => {
 
     expect(getDraftError(draft)).toBe("The end can't be before the start");
     expect(getDraftError({ ...draft, isDuration: false })).toBeNull();
+  });
+
+  it("reads typed times on a 12- or 24-hour clock", () => {
+    expect(parseTimeText("3pm")).toBe("15:00");
+    expect(parseTimeText(" 3:30 P.M. ")).toBe("15:30");
+    expect(parseTimeText("12am")).toBe("00:00");
+    expect(parseTimeText("12:15pm")).toBe("12:15");
+    expect(parseTimeText("17:45")).toBe("17:45");
+    expect(parseTimeText("930")).toBe("09:30");
+    expect(parseTimeText("9")).toBe("09:00");
+  });
+
+  it("rejects text that isn't a time", () => {
+    ["", "lunch", "13pm", "0am", "24:00", "9:60", "9:5", "9m"].forEach((text) =>
+      expect(parseTimeText(text)).toBeNull(),
+    );
+  });
+
+  it("labels times and finds their half-hour slot", () => {
+    expect(toTimeLabel("15:30")).toBe("3:30 PM");
+    expect(toTimeSlotIndex("15:30")).toBe(31);
+    expect(toTimeSlotIndex("15:45")).toBe(31);
+    expect(toTimeSlotIndex("00:00")).toBe(0);
   });
 });

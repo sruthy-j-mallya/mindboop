@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { addDays, format, set, startOfDay } from "date-fns";
 import { generatePath, Route, Routes } from "react-router";
@@ -314,7 +314,8 @@ describe("Inbox", () => {
     await userEvent.click(
       screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
     );
-    fireEvent.change(screen.getByLabelText("Time"), { target: { value: "17:30" } });
+    await userEvent.click(screen.getByRole("combobox", { name: "Time" }));
+    await userEvent.click(screen.getByRole("option", { name: "5:30 PM" }));
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
     const startsAt = set(tomorrow, { hours: 17, minutes: 30, seconds: 0, milliseconds: 0 });
@@ -337,14 +338,17 @@ describe("Inbox", () => {
 
     await userEvent.click(await screen.findByRole("button", { name: /Today 9:00am/ }));
     await userEvent.click(screen.getByRole("tab", { name: "Duration" }));
-    expect(screen.getByLabelText("End time")).toHaveValue("10:00");
+    const endTime = screen.getByRole("combobox", { name: "End time" });
+    expect(endTime).toHaveValue("10:00 AM");
 
-    fireEvent.change(screen.getByLabelText("End time"), { target: { value: "08:00" } });
+    await userEvent.clear(endTime);
+    await userEvent.type(endTime, "8am{Enter}");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
     expect(screen.getByRole("alert")).toHaveTextContent("The end can't be before the start");
     expect(update).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText("End time"), { target: { value: "11:30" } });
+    await userEvent.clear(endTime);
+    await userEvent.type(endTime, "11:30{Enter}");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
     const endsAt = set(startsAt, { hours: 11, minutes: 30 });

@@ -1,8 +1,6 @@
-import type { ChangeEvent } from "react";
-
-import { Input } from "@/components/ui/input";
-
-import { parseDateInputValue, toDateInputValue, toTimeInputValue } from "./utils";
+import DatePicker from "./DatePicker";
+import TimePicker from "./TimePicker";
+import { toTimeInputValue } from "./utils";
 
 type MomentFieldsProps = {
   label: string;
@@ -12,35 +10,19 @@ type MomentFieldsProps = {
   onTimeChange: (time: string) => void;
 };
 
-// A labelled date input, plus a time input unless the duration is all day. Cleared or half-typed values are ignored.
+// A labelled date picker, plus a time input unless the duration is all day. A cleared time is ignored.
 const MomentFields = ({ label, value, hasTime, onDayChange, onTimeChange }: MomentFieldsProps) => {
-  const handleDayChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const day = parseDateInputValue(event.target.value);
-    if (day) onDayChange(day);
-  };
-
-  const handleTimeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.value) onTimeChange(event.target.value);
-  };
-
   return (
     <div className="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 text-sm">
       <span>{label}</span>
-      <Input
-        aria-label={`${label} date`}
+      <DatePicker
         className={hasTime ? undefined : "col-span-2"}
-        type="date"
-        value={toDateInputValue(value)}
-        onChange={handleDayChange}
+        label={`${label} date`}
+        value={value}
+        onChange={onDayChange}
       />
       {hasTime && (
-        <Input
-          aria-label={`${label} time`}
-          className="w-28"
-          type="time"
-          value={toTimeInputValue(value)}
-          onChange={handleTimeChange}
-        />
+        <TimePicker label={`${label} time`} value={toTimeInputValue(value)} onChange={onTimeChange} />
       )}
     </div>
   );

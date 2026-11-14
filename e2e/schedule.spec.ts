@@ -20,7 +20,8 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
   await page.getByRole("button", { name: "Due date" }).click();
   const tomorrow = format(addDays(new Date(), 1), "EEEE, MMMM do, yyyy");
   await page.getByRole("button", { name: tomorrow }).click();
-  await page.getByLabel("Time").fill("17:30");
+  await page.getByRole("combobox", { name: "Time" }).click();
+  await page.getByRole("option", { name: "5:30 PM" }).click();
   await page.getByRole("button", { name: "OK" }).click();
 
   const row = page.getByRole("link", { name: /Renew passport/ });
@@ -30,8 +31,10 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
 
   await page.getByRole("button", { name: "Tomorrow 5:30pm" }).click();
   await page.getByRole("tab", { name: "Duration" }).click();
-  await expect(page.getByLabel("End time")).toHaveValue("18:30");
-  await page.getByLabel("End time").fill("19:00");
+  const endTime = page.getByRole("combobox", { name: "End time" });
+  await expect(endTime).toHaveValue("6:30 PM");
+  await endTime.fill("7pm");
+  await endTime.press("Enter");
   await page.getByRole("button", { name: "OK" }).click();
   await expect(row).toContainText("Tomorrow 5:30pm – 7:00pm");
 

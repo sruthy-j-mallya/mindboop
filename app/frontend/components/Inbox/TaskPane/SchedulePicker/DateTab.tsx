@@ -1,11 +1,11 @@
-import { type ChangeEvent, useState } from "react";
+import { useState } from "react";
 
 import { Clock, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
 
+import TimePicker from "./TimePicker";
 import type { ScheduleDraft } from "./types";
 import { moveStart, setDateTime, toTimeInputValue, withDay } from "./utils";
 
@@ -21,16 +21,16 @@ const DateTab = ({ draft, onChange }: DateTabProps) => {
     setMonth(day);
   };
 
-  const handleTimeChange = (event: ChangeEvent<HTMLInputElement>) =>
-    onChange(setDateTime(draft, event.target.value));
+  const handleTimeChange = (time: string) => onChange(setDateTime(draft, time));
 
   const handleRemoveTime = () => onChange(setDateTime(draft, ""));
 
   return (
-    <div className="flex flex-col gap-3">
+    // Sized to the calendar, so the time row lines up with its first and last columns.
+    <div className="mx-auto flex w-fit flex-col gap-3">
       <Calendar
         required
-        className="mx-auto p-0 [--cell-size:--spacing(9)]"
+        className="p-0 [--cell-size:--spacing(9)]"
         mode="single"
         month={month}
         selected={draft.startsAt}
@@ -38,27 +38,27 @@ const DateTab = ({ draft, onChange }: DateTabProps) => {
         onMonthChange={setMonth}
         onSelect={handleSelectDay}
       />
-      <div className="flex items-center gap-3 text-sm">
+      <div className="flex items-center gap-2 pl-2 text-sm">
         <Clock className="size-4 text-muted-foreground" />
         <span className="flex-1">Time</span>
-        <Input
-          aria-label="Time"
-          className="w-32"
-          type="time"
+        <TimePicker
+          isClearable
+          label="Time"
+          placeholder="Add time"
           value={draft.isAllDay ? "" : toTimeInputValue(draft.startsAt)}
           onChange={handleTimeChange}
         />
-        {!draft.isAllDay && (
-          <Button
-            aria-label="Remove time"
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-            onClick={handleRemoveTime}
-          >
-            <X />
-          </Button>
-        )}
+        {/* Hidden rather than removed while there's no time, so the row keeps its width. */}
+        <Button
+          aria-label="Remove time"
+          className={draft.isAllDay ? "invisible" : undefined}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+          onClick={handleRemoveTime}
+        >
+          <X />
+        </Button>
       </div>
     </div>
   );
