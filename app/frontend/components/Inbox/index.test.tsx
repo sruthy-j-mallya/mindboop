@@ -278,7 +278,7 @@ describe("Inbox", () => {
     expect(await screen.findByRole("link", { name: /Plan the week/ })).toHaveTextContent("1 h 30 min");
   });
 
-  it("sets an estimate from a preset", async () => {
+  it("sets an estimate from hours and minutes", async () => {
     const task = buildTask({ title: "Plan the week" });
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
     vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
@@ -286,14 +286,26 @@ describe("Inbox", () => {
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
     await userEvent.click(await screen.findByRole("button", { name: "Estimate" }));
-    await userEvent.click(screen.getByRole("button", { name: "45 min" }));
-    expect(screen.getByLabelText("Minutes")).toHaveValue(45);
+    await userEvent.type(screen.getByLabelText("Hours"), "1");
+    await userEvent.type(screen.getByLabelText("Minutes"), "30");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
     await waitFor(() =>
-      expect(update).toHaveBeenCalledWith({ id: task.id, estimatedMinutes: 45 }, expect.anything()),
+      expect(update).toHaveBeenCalledWith({ id: task.id, estimatedMinutes: 90 }, expect.anything()),
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("splits an existing estimate into hours and minutes", async () => {
+    const task = buildTask({ title: "Plan the week", estimatedMinutes: 100 });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "1 h 40 min" }));
+
+    expect(screen.getByLabelText("Hours")).toHaveValue(1);
+    expect(screen.getByLabelText("Minutes")).toHaveValue(40);
   });
 
   it("sets a custom estimate and refuses an invalid one", async () => {
@@ -304,16 +316,35 @@ describe("Inbox", () => {
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
     await userEvent.click(await screen.findByRole("button", { name: "30 min" }));
-    const input = screen.getByLabelText("Minutes");
-    expect(input).toHaveValue(30);
+    const hours = screen.getByLabelText("Hours");
+    const minutes = screen.getByLabelText("Minutes");
+    expect(hours).toHaveValue(null);
+    expect(minutes).toHaveValue(30);
 
-    await userEvent.clear(input);
+    await userEvent.clear(minutes);
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
-    expect(await screen.findByText("Enter 1–1440 whole minutes")).toBeInTheDocument();
+    expect(await screen.findByText("Enter 1 min to 24 h")).toBeInTheDocument();
+
+    await userEvent.type(minutes, "75");
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByText("Enter 0–59 whole minutes")).toBeInTheDocument();
+
+    await userEvent.clear(minutes);
+    await userEvent.type(hours, "25");
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByText("Enter 0–24 whole hours")).toBeInTheDocument();
+
+    await userEvent.clear(hours);
+    await userEvent.type(hours, "24");
+    await userEvent.type(minutes, "1");
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(await screen.findByText("Enter 1 min to 24 h")).toBeInTheDocument();
     expect(update).not.toHaveBeenCalled();
 
-    await userEvent.type(input, "100");
-    expect(screen.getByText("That's 1 h 40 min")).toBeInTheDocument();
+    await userEvent.clear(hours);
+    await userEvent.type(hours, "1");
+    await userEvent.clear(minutes);
+    await userEvent.type(minutes, "40");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
     await waitFor(() =>

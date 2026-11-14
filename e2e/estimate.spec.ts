@@ -17,7 +17,7 @@ test("estimate an Inbox task, change it, then clear it", async ({ page }) => {
   await page.getByRole("link", { name: "Plan the week" }).click();
 
   await page.getByRole("button", { name: "Estimate" }).click();
-  await page.getByRole("button", { name: "45 min" }).click();
+  await page.getByLabel("Minutes").fill("45");
   await page.getByRole("button", { name: "OK" }).click();
 
   const row = page.getByRole("link", { name: /Plan the week/ });
@@ -26,7 +26,8 @@ test("estimate an Inbox task, change it, then clear it", async ({ page }) => {
   await expect(row).toContainText("45 min");
 
   await page.getByRole("button", { name: "45 min" }).click();
-  await page.getByLabel("Minutes").fill("100");
+  await page.getByLabel("Hours").fill("1");
+  await page.getByLabel("Minutes").fill("40");
   await page.getByRole("button", { name: "OK" }).click();
   await expect(row).toContainText("1 h 40 min");
 

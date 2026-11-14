@@ -1,17 +1,19 @@
 import { MINUTES_PER_HOUR } from "@/constants";
-import { formatMinutes } from "@/utils";
 
 import type { EstimateFormValues } from "./constants";
 
-export const toFormValues = (estimatedMinutes: number | null): EstimateFormValues => ({
-  minutes: estimatedMinutes === null ? "" : String(estimatedMinutes),
-});
+// Zero parts stay blank, so 30 reads as just "30" minutes and 120 as just "2" hours.
+const toField = (value: number) => (value === 0 ? "" : String(value));
 
-// Echoes an hour or more back in hours, so "90" reads as "1 h 30 min".
-export const getMinutesHint = (minutes: string) => {
-  const value = Number(minutes);
+export const toFormValues = (estimatedMinutes: number | null): EstimateFormValues => {
+  const total = estimatedMinutes ?? 0;
 
-  if (!Number.isInteger(value) || value < MINUTES_PER_HOUR) return undefined;
-
-  return `That's ${formatMinutes(value)}`;
+  return {
+    hours: toField(Math.floor(total / MINUTES_PER_HOUR)),
+    minutes: toField(total % MINUTES_PER_HOUR),
+  };
 };
+
+// A blank field counts as 0. Typed inline because the schema in constants.ts calls this.
+export const toTotalMinutes = ({ hours, minutes }: { hours: string; minutes: string }) =>
+  Number(hours.trim() || 0) * MINUTES_PER_HOUR + Number(minutes.trim() || 0);
