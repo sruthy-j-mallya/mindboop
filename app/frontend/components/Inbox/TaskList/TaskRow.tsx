@@ -1,34 +1,40 @@
 import { cn } from "cn";
+import { Trash2 } from "lucide-react";
 import { generatePath, Link } from "react-router";
 
 import type { Task } from "@/apis/types";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import routes from "@/routes";
 import { formatMinutes } from "@/utils";
 
 import ScheduleLabel from "../ScheduleLabel";
 import useCompleteTask from "../useCompleteTask";
+import useDeleteTaskWithUndo from "../useDeleteTaskWithUndo";
 
 type TaskRowProps = { task: Task };
 
 const TaskRow = ({ task }: TaskRowProps) => {
   const { id, title, checklistItems, estimatedMinutes } = task;
-  const { completeTask, isCompleting, isSelected, error } = useCompleteTask(id);
+  const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(id);
+  const { deleteTask, isDeleting, error: deleteError } = useDeleteTaskWithUndo(task);
+  const error = completeError ?? deleteError;
   const doneStepsCount = checklistItems.filter(({ isCompleted }) => isCompleted).length;
 
   return (
     <li className="grid gap-1">
       <div
         className={cn(
-          "flex items-center gap-3 rounded-md px-3 transition-colors hover:bg-muted",
+          "group flex items-center gap-3 rounded-md px-3 transition-colors hover:bg-muted",
           isSelected && "bg-muted",
+          isDeleting && "opacity-50",
         )}
       >
         <Checkbox
           aria-label={`Complete ${title}`}
           checked={isCompleting}
           className="border-muted-foreground/50"
-          disabled={isCompleting}
+          disabled={isCompleting || isDeleting}
           onCheckedChange={completeTask}
         />
         <Link
@@ -49,6 +55,19 @@ const TaskRow = ({ task }: TaskRowProps) => {
             <ScheduleLabel schedule={task} />
           </span>
         </Link>
+        {/* With a mouse, it shows on hover or focus to keep the list calm; touch screens always show it. No confirmation:
+            the toast offers to undo instead. */}
+        <Button
+          aria-label={`Delete ${title}`}
+          className="-mr-2 shrink-0 text-muted-foreground group-focus-within:opacity-100 group-hover:opacity-100 hover:text-destructive pointer-fine:opacity-0"
+          disabled={isDeleting}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+          onClick={deleteTask}
+        >
+          <Trash2 />
+        </Button>
       </div>
       {error && (
         <p className="px-3 text-sm text-destructive" role="alert">

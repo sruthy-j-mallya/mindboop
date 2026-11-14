@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Outlet } from "react-router";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 import AppSidebar from "./AppSidebar";
 import BreakAlarm from "./BreakAlarm";
@@ -26,6 +27,7 @@ const AppLayout = () => {
         <BreakAlarm />
         <Outlet />
       </SidebarInset>
+      <Toaster />
     </SidebarProvider>
   );
 };

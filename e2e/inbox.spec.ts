@@ -13,6 +13,16 @@ const signUp = async (page: Page) => {
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 };
 
+// Waits for each task to be listed before adding the next, so the saves can't race.
+const addTasks = async (page: Page, titles: string[]) => {
+  const input = page.getByRole("textbox", { name: "New task" });
+  for (const title of titles) {
+    await input.fill(title);
+    await input.press("Enter");
+    await expect(page.getByRole("link", { name: title })).toBeVisible();
+  }
+};
+
 test("add tasks to the Inbox, open one, and complete it", async ({ page }) => {
   await signUp(page);
 
@@ -46,4 +56,47 @@ test("add tasks to the Inbox, open one, and complete it", async ({ page }) => {
   await page.getByRole("checkbox", { name: "Mark as complete" }).click();
   await expect(page).toHaveURL("/inbox");
   await expect(page.getByText("Your Inbox is empty")).toBeVisible();
+});
+
+test("delete a task from its pane", async ({ page }) => {
+  await signUp(page);
+
+  await page.goto("/inbox");
+  await addTasks(page, ["Cancel the gym", "Sort the mail"]);
+
+  await page.getByRole("link", { name: "Cancel the gym" }).click();
+  await page.getByRole("button", { name: "Delete task" }).click();
+  const dialog = page.getByRole("dialog", { name: "Delete this task?" });
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("heading", { name: "Cancel the gym" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Delete task" }).click();
+  await dialog.getByRole("button", { name: "Delete task" }).click();
+  await expect(page).toHaveURL("/inbox");
+  await expect(page.getByRole("list", { name: "Tasks" }).getByRole("link")).toHaveText(["Sort the mail"]);
+
+  await page.reload();
+  await expect(page.getByRole("list", { name: "Tasks" }).getByRole("link")).toHaveText(["Sort the mail"]);
+});
+
+test("delete a task from its row and undo it", async ({ page }) => {
+  await signUp(page);
+
+  await page.goto("/inbox");
+  await addTasks(page, ["Cancel the gym", "Sort the mail"]);
+
+  const tasks = page.getByRole("list", { name: "Tasks" }).getByRole("link");
+  await expect(tasks).toHaveText(["Cancel the gym", "Sort the mail"]);
+
+  await page.getByRole("link", { name: "Cancel the gym" }).hover();
+  await page.getByRole("button", { name: "Delete Cancel the gym" }).click();
+  await expect(tasks).toHaveText(["Sort the mail"]);
+  await expect(page.getByText("Deleted “Cancel the gym”")).toBeVisible();
+
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(tasks).toHaveText(["Cancel the gym", "Sort the mail"]);
+
+  await page.reload();
+  await expect(tasks).toHaveText(["Cancel the gym", "Sort the mail"]);
 });

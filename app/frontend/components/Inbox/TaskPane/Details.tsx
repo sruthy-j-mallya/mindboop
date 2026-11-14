@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 
 import useCompleteTask from "../useCompleteTask";
+import DeleteTaskButton from "./DeleteTaskButton";
 import EstimatePicker from "./EstimatePicker";
 import SchedulePicker from "./SchedulePicker";
 
@@ -28,7 +29,7 @@ const Details = ({ task }: DetailsProps) => {
       {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
       <div className="flex flex-col gap-2">
         {/* The complete checkbox, the due date and the estimate sit in the top-left corner, above the title; the add-step
-            button in the top right. */}
+            and delete buttons in the top right. */}
         <header className="flex flex-col gap-3">
           <div className="flex min-h-8 items-start justify-between gap-4">
             <div className="flex min-h-8 items-start gap-3">
@@ -45,7 +46,10 @@ const Details = ({ task }: DetailsProps) => {
                 <EstimatePicker task={task} />
               </div>
             </div>
-            {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
+            <div className="flex shrink-0 items-center gap-1">
+              {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
+              <DeleteTaskButton task={task} />
+            </div>
           </div>
           <h2 className="text-xl font-semibold wrap-anywhere">{task.title}</h2>
           {error && (

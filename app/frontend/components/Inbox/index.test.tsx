@@ -1,15 +1,18 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { addDays, format, set, startOfDay } from "date-fns";
 import { generatePath, Route, Routes } from "react-router";
+import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
+import taskRestorationsApi from "@/apis/task_restorations";
 import tasksApi from "@/apis/tasks";
 import type { Task } from "@/apis/types";
 import Inbox from "@/components/Inbox";
 import NoTaskSelected from "@/components/Inbox/NoTaskSelected";
 import TaskPane from "@/components/Inbox/TaskPane";
+import { Toaster } from "@/components/ui/sonner";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
 
@@ -33,18 +36,25 @@ const listOf = (tasks: Task[]) => ({ tasks, tasksCount: tasks.length, page: 1, t
 
 const renderInbox = (initialPath: string = routes.inbox.index) =>
   renderWithProviders(
-    <Routes>
-      <Route element={<Inbox />} path={routes.inbox.index}>
-        <Route index element={<NoTaskSelected />} />
-        <Route element={<TaskPane />} path={routes.inbox.show} />
-      </Route>
-    </Routes>,
+    <>
+      <Routes>
+        <Route element={<Inbox />} path={routes.inbox.index}>
+          <Route index element={<NoTaskSelected />} />
+          <Route element={<TaskPane />} path={routes.inbox.show} />
+        </Route>
+      </Routes>
+      <Toaster />
+    </>,
     undefined,
     initialPath,
   );
 
 describe("Inbox", () => {
-  beforeEach(() => vi.restoreAllMocks());
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
+    toast.dismiss();
+  });
 
   it("lists only incomplete tasks", async () => {
     const fetchList = vi
@@ -173,6 +183,112 @@ describe("Inbox", () => {
     );
     expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Pay rent" })).not.toBeInTheDocument();
+  });
+
+  it("deletes the open task after confirming and closes its pane", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce(listOf([task]))
+      .mockResolvedValue(listOf([]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const destroy = vi.spyOn(tasksApi, "destroy").mockResolvedValue(undefined as never);
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    expect(await screen.findByRole("heading", { name: "Cancel the gym" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Delete task" }));
+    const dialog = await screen.findByRole("dialog", { name: "Delete this task?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
+
+    await waitFor(() => expect(destroy).toHaveBeenCalledWith(task.id, expect.anything()));
+    expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Cancel the gym" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Deleted “Cancel the gym”")).toBeInTheDocument();
+  });
+
+  it("deletes a task from its row and undoes it from the toast", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    const other = buildTask({ title: "Sort the mail" });
+    vi.spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce(listOf([task, other]))
+      .mockResolvedValueOnce(listOf([other]))
+      .mockResolvedValue(listOf([task, other]));
+    const destroy = vi.spyOn(tasksApi, "destroy").mockResolvedValue(undefined as never);
+    const restore = vi.spyOn(taskRestorationsApi, "create").mockResolvedValue({ task });
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Delete Cancel the gym" }));
+
+    await waitFor(() => expect(destroy).toHaveBeenCalledWith(task.id, expect.anything()));
+    expect(await screen.findByText("Deleted “Cancel the gym”")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole("link", { name: "Cancel the gym" })).not.toBeInTheDocument(),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+
+    await waitFor(() => expect(restore).toHaveBeenCalledWith(task.id, expect.anything()));
+    expect(await screen.findByRole("link", { name: "Cancel the gym" })).toBeInTheDocument();
+  });
+
+  it("shows the error when undoing a delete fails", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce(listOf([task]))
+      .mockResolvedValue(listOf([]));
+    vi.spyOn(tasksApi, "destroy").mockResolvedValue(undefined as never);
+    vi.spyOn(taskRestorationsApi, "create").mockRejectedValue(new ApiError(404, "Record not found."));
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Delete Cancel the gym" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Undo" }));
+
+    expect(await screen.findByText("Record not found.")).toBeInTheDocument();
+    expect(screen.getByText("Your Inbox is empty")).toBeInTheDocument();
+  });
+
+  it("shows the error when deleting from a row fails", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "destroy").mockRejectedValue(new ApiError(403, "Not allowed"));
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Delete Cancel the gym" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Not allowed");
+    expect(screen.getByRole("link", { name: "Cancel the gym" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the task when deleting is cancelled", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const destroy = vi.spyOn(tasksApi, "destroy");
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Delete task" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cancel the gym" })).toBeInTheDocument();
+    expect(destroy).not.toHaveBeenCalled();
+  });
+
+  it("shows the error when deleting fails", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    vi.spyOn(tasksApi, "destroy").mockRejectedValue(new ApiError(403, "Not allowed"));
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Delete task" }));
+    const dialog = await screen.findByRole("dialog", { name: "Delete this task?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Not allowed");
+    // The open dialog hides the pane from the accessibility tree.
+    expect(screen.getByRole("heading", { name: "Cancel the gym", hidden: true })).toBeInTheDocument();
   });
 
   it("shows each task's date in the list", async () => {

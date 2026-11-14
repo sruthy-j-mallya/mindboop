@@ -6,6 +6,7 @@ Rails.application.routes.draw do
     resources :passwords, param: :token, only: %i[ create update ]
     resources :tasks, only: %i[ index show create update destroy ] do
       resources :checklist_items, only: %i[ create update destroy ]
+      resource :restoration, only: :create, controller: "task_restorations"
     end
     resources :quick_starts, only: :create
     resources :time_logs, only: %i[ create destroy ] do
