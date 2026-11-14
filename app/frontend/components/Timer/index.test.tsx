@@ -6,12 +6,13 @@ import { ApiError } from "@/apis/axios";
 import breaksApi from "@/apis/breaks";
 import checklistItemsApi from "@/apis/checklist_items";
 import currentTimeLogsApi from "@/apis/current_time_logs";
+import parkingLotItemsApi from "@/apis/parking_lot_items";
 import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import timeLogCompletionsApi from "@/apis/time_log_completions";
 import timeLogExtensionsApi from "@/apis/time_log_extensions";
 import timeLogsApi from "@/apis/time_logs";
-import type { Task, TimeLog } from "@/apis/types";
+import type { ParkingLotItem, Task, TimeLog } from "@/apis/types";
 import Timer from "@/components/Timer";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
@@ -56,8 +57,27 @@ const TASK: Task = {
   ],
 };
 
-const renderTimer = (timeLog: TimeLog | null, task = TASK) => {
+const parkingLotListOf = (parkingLotItems: ParkingLotItem[]) => ({
+  parkingLotItems,
+  parkingLotItemsCount: parkingLotItems.length,
+  page: 1,
+  totalPages: 1,
+});
+
+const buildParkingLotItem = (overrides: Partial<ParkingLotItem> = {}): ParkingLotItem => ({
+  id: crypto.randomUUID(),
+  content: "Call the bank",
+  kind: "idea",
+  status: "parked",
+  taskId: null,
+  createdAt: STARTED_AT,
+  updatedAt: STARTED_AT,
+  ...overrides,
+});
+
+const renderTimer = (timeLog: TimeLog | null, task = TASK, parkingLotItems: ParkingLotItem[] = []) => {
   vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog });
+  vi.spyOn(parkingLotItemsApi, "fetchList").mockResolvedValue(parkingLotListOf(parkingLotItems));
   vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
   renderWithProviders(<Timer />);
 };
@@ -757,6 +777,68 @@ describe("Timer", () => {
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
       expect(screen.getByRole("timer")).toBeVisible();
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("parking lot", () => {
+    it("lists the thoughts parked during this session, oldest first", async () => {
+      const newer = buildParkingLotItem({ content: "Is the shop open on Sunday?", kind: "question" });
+      const older = buildParkingLotItem({ content: "Clean my scooter", kind: "task" });
+      renderTimer(TIME_LOG, TASK, [newer, older]);
+
+      const parkingLot = await screen.findByRole("region", { name: "Parking lot" });
+      const thoughts = await within(parkingLot).findAllByRole("listitem");
+      expect(thoughts.map((thought) => thought.textContent)).toEqual([
+        expect.stringContaining("Clean my scooter"),
+        expect.stringContaining("Is the shop open on Sunday?"),
+      ]);
+      expect(thoughts[0]).toHaveTextContent(/task · \d{2}:\d{2}/);
+      expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({
+        status: "parked",
+        since: TIME_LOG.startedAt,
+      });
+    });
+
+    it("invites a stray thought while the lot is empty", async () => {
+      renderTimer(TIME_LOG);
+
+      expect(await screen.findByText("Stray thought? Type it below.")).toBeVisible();
+    });
+
+    it("parks a thought with the picked kind and clears the input", async () => {
+      const create = vi.spyOn(parkingLotItemsApi, "create").mockResolvedValue({
+        parkingLotItem: buildParkingLotItem({ content: "Book a dentist", kind: "task" }),
+      });
+      renderTimer(TIME_LOG);
+
+      const parkingLot = await screen.findByRole("region", { name: "Parking lot" });
+      await userEvent.click(within(parkingLot).getByRole("radio", { name: "task" }));
+      const input = within(parkingLot).getByRole("textbox", { name: "Thought to park" });
+      await userEvent.type(input, "Book a dentist{Enter}");
+
+      expect(create).toHaveBeenCalledWith({ content: "Book a dentist", kind: "task" }, expect.anything());
+      expect(input).toHaveValue("");
+      expect(within(parkingLot).getByRole("radio", { name: "task" })).toBeChecked();
+    });
+
+    it("asks for a thought instead of parking an empty one", async () => {
+      const create = vi.spyOn(parkingLotItemsApi, "create");
+      renderTimer(TIME_LOG);
+
+      const parkingLot = await screen.findByRole("region", { name: "Parking lot" });
+      await userEvent.type(within(parkingLot).getByRole("textbox", { name: "Thought to park" }), "  {Enter}");
+
+      expect(await within(parkingLot).findByRole("alert")).toHaveTextContent(
+        "Type the thought you want to park",
+      );
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it("is not shown without a session", async () => {
+      renderTimer(null);
+
+      expect(await screen.findByRole("heading", { name: "Nothing on the clock" })).toBeVisible();
+      expect(screen.queryByRole("region", { name: "Parking lot" })).not.toBeInTheDocument();
     });
   });
 });

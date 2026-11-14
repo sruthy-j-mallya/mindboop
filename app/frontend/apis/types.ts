@@ -103,3 +103,37 @@ export type UpdateChecklistItemPayload = Partial<Pick<ChecklistItem, "title" | "
 };
 
 export type DeleteChecklistItemPayload = { taskId: string; id: string };
+
+export type ParkingLotItemKind = "idea" | "question" | "task";
+
+// Parked until dealt with: addressed by hand, or converted into an Inbox task (then `taskId` is set).
+export type ParkingLotItemStatus = "parked" | "addressed" | "converted";
+
+export type ParkingLotItem = {
+  id: string;
+  content: string;
+  kind: ParkingLotItemKind;
+  status: ParkingLotItemStatus;
+  taskId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// `since` (an ISO time) lists only what was parked from then on.
+export type ParkingLotItemFilters = { status?: ParkingLotItemStatus; since?: string };
+
+export type ParkingLotItemListParams = ParkingLotItemFilters & { page?: number };
+
+export type ParkingLotItemListResponse = {
+  parkingLotItems: ParkingLotItem[];
+  parkingLotItemsCount: number;
+  page: number;
+  totalPages: number;
+};
+
+export type ParkingLotItemResponse = { parkingLotItem: ParkingLotItem };
+
+export type CreateParkingLotItemPayload = Pick<ParkingLotItem, "content" | "kind">;
+
+export type UpdateParkingLotItemPayload = Pick<ParkingLotItem, "id"> &
+  Partial<Pick<ParkingLotItem, "content" | "kind" | "status">>;
