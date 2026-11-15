@@ -9,6 +9,7 @@ import { ApiError } from "@/apis/axios";
 import taskRestorationsApi from "@/apis/task_restorations";
 import tasksApi from "@/apis/tasks";
 import type { Task } from "@/apis/types";
+import userPreferencesApi from "@/apis/user_preferences";
 import Inbox from "@/components/Inbox";
 import NoTaskSelected from "@/components/Inbox/NoTaskSelected";
 import TaskPane from "@/components/Inbox/TaskPane";
@@ -56,6 +57,9 @@ describe("Inbox", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
+    vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
+      userPreference: { theme: "system", completionSound: "bell", breakAlarmSound: "classic" },
+    });
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
   });
@@ -187,7 +191,7 @@ describe("Inbox", () => {
     );
     expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Pay rent" })).not.toBeInTheDocument();
-    expect(playCompletionSound).toHaveBeenCalledOnce();
+    expect(playCompletionSound).toHaveBeenCalledExactlyOnceWith("bell");
   });
 
   it("deletes the open task after confirming and closes its pane", async () => {

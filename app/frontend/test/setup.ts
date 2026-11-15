@@ -24,6 +24,9 @@ vi.stubGlobal(
 // jsdom has no pointer capture; Sonner captures the pointer on any press inside a toast, for swipe-to-dismiss.
 Element.prototype.setPointerCapture = vi.fn();
 Element.prototype.releasePointerCapture = vi.fn();
+// The Radix select also checks for pointer capture, and scrolls the chosen option into view as it opens.
+Element.prototype.hasPointerCapture = vi.fn(() => false);
+Element.prototype.scrollIntoView = vi.fn();
 
 // jsdom does no layout; ProseMirror (the rich-text editor) measures ranges and elements to place the caret.
 const emptyRectList = () => Object.assign([], { item: () => null }) as unknown as DOMRectList;

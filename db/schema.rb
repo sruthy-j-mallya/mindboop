@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_15_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -250,6 +250,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
     t.index ["task_id"], name: "index_time_logs_on_task_id"
   end
 
+  create_table "user_preferences", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "theme", default: "system", null: false
+    t.string "completion_sound", default: "rising", null: false
+    t.string "break_alarm_sound", default: "classic", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_user_preferences_on_user_id", unique: true
+  end
+
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email_address", null: false
     t.string "password_digest", null: false
@@ -273,4 +283,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "tasks", "users"
   add_foreign_key "time_logs", "tasks"
+  add_foreign_key "user_preferences", "users"
 end

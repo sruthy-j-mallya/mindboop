@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import { useCompleteTimeLog } from "@/hooks/reactQuery/useTimeLogCompletionsApi";
+import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import routes from "@/routes";
 import { unlockAudio } from "@/utils/audioContext";
 import { playCompletionSound } from "@/utils/completionSound";
@@ -12,6 +13,7 @@ import Session from "./Session";
 
 const Timer = () => {
   const { data: timeLog, isPending, error } = useCurrentTimeLog();
+  const { data: preference } = useUserPreference();
   // Lives here and not in Session, which unmounts as soon as the completed log stops being the current one.
   const {
     mutate: completeTimeLog,
@@ -24,7 +26,7 @@ const Timer = () => {
   // Unlocked in the click, so the chime can play once the save lands and the finished dialog opens.
   const handleDone = (timeLogId: string) => {
     unlockAudio();
-    completeTimeLog(timeLogId, { onSuccess: playCompletionSound });
+    completeTimeLog(timeLogId, { onSuccess: () => playCompletionSound(preference?.completionSound) });
   };
 
   if (isPending) return null;

@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { readStorage, writeStorage } from "@/utils/storage";
+
 import {
   DEFAULT_VOLUME,
   MAX_VOLUME,
@@ -9,22 +11,6 @@ import {
   VOLUME_STORAGE_KEY,
 } from "./constants";
 import type { SoundId } from "./types";
-
-const readStorage = (key: string) => {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const writeStorage = (key: string, value: string) => {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // Storage can be blocked; the choice still holds until the next reload.
-  }
-};
 
 const readSoundId = (): SoundId =>
   SOUNDS.find(({ id }) => id === readStorage(SOUND_STORAGE_KEY))?.id ?? NO_SOUND;

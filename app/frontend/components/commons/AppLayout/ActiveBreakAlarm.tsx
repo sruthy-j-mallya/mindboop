@@ -4,6 +4,7 @@ import { useLocation } from "react-router";
 
 import type { Break } from "@/apis/types";
 import BreakBanner from "@/components/commons/BreakBanner";
+import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import routes from "@/routes";
 import { startAlarmSound } from "@/utils/alarmSound";
 import { unlockAudio } from "@/utils/audioContext";
@@ -17,6 +18,9 @@ type ActiveBreakAlarmProps = { currentBreak: Break; timeLogId: string };
 const ActiveBreakAlarm = ({ currentBreak, timeLogId }: ActiveBreakAlarmProps) => {
   const { id, intention, endsAt } = currentBreak;
   const { pathname } = useLocation();
+  // Waits for the user's choice of alarm, but rings the default if it can't be loaded.
+  const { data: preference, isPending: isPreferencePending } = useUserPreference();
+  const alarmSound = preference?.breakAlarmSound;
   const [currentTime, setCurrentTime] = useState(Date.now);
   const phase = getAlarmPhase(endsAt, currentTime);
   const [wasQuietOnMount] = useState(phase === ALARM_PHASES.QUIET);
@@ -58,10 +62,10 @@ const ActiveBreakAlarm = ({ currentBreak, timeLogId }: ActiveBreakAlarmProps) =>
   }, []);
 
   useEffect(() => {
-    if (!isRinging) return undefined;
+    if (!isRinging || isPreferencePending) return undefined;
 
-    return startAlarmSound();
-  }, [isRinging]);
+    return startAlarmSound(alarmSound);
+  }, [isRinging, isPreferencePending, alarmSound]);
 
   useEffect(() => {
     if (!isQuiet || wasQuietOnMount) return undefined;

@@ -1,6 +1,7 @@
 import { useMatch, useNavigate } from "react-router";
 
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
+import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import routes from "@/routes";
 import { playCompletionSound } from "@/utils/completionSound";
 
@@ -10,6 +11,7 @@ import { playCompletionSound } from "@/utils/completionSound";
 const useCompleteTask = (id: string) => {
   const navigate = useNavigate();
   const isSelected = useMatch(routes.inbox.show)?.params.taskId === id;
+  const { data: preference } = useUserPreference();
   const { mutate: updateTask, isPending, isSuccess, error } = useUpdateTask();
 
   const handleCompleted = () => {
@@ -17,7 +19,7 @@ const useCompleteTask = (id: string) => {
   };
 
   const completeTask = () => {
-    playCompletionSound();
+    playCompletionSound(preference?.completionSound);
     updateTask({ id, isCompleted: true }, { onSuccess: handleCompleted });
   };
 

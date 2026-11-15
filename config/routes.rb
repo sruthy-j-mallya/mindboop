@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       resource :break, only: %i[ create update ]
     end
     resource :current_time_log, only: :show
+    resource :user_preference, only: %i[ show update ]
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

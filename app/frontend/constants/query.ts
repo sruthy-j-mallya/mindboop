@@ -12,4 +12,5 @@ export const QUERY_KEYS = {
   TIME_LOGS: {
     CURRENT: ["timeLogs", "current"],
   },
+  USER_PREFERENCE: ["userPreference"],
 } as const;

@@ -12,6 +12,7 @@ import timeLogCompletionsApi from "@/apis/time_log_completions";
 import timeLogExtensionsApi from "@/apis/time_log_extensions";
 import timeLogsApi from "@/apis/time_logs";
 import type { Task, TimeLog } from "@/apis/types";
+import userPreferencesApi from "@/apis/user_preferences";
 import Timer from "@/components/Timer";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
@@ -62,6 +63,9 @@ const TASK: Task = {
 const renderTimer = (timeLog: TimeLog | null, task = TASK) => {
   vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog });
   vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+  vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
+    userPreference: { theme: "system", completionSound: "glass", breakAlarmSound: "classic" },
+  });
   renderWithProviders(<Timer />);
 };
 
@@ -722,7 +726,7 @@ describe("Timer", () => {
 
       const dialog = await screen.findByRole("dialog", { name: /Finished early!/ });
       expect(create).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
-      expect(playCompletionSound).toHaveBeenCalledOnce();
+      expect(playCompletionSound).toHaveBeenCalledExactlyOnceWith("glass");
       expect(within(dialog).getByText("+1 early-finish boost")).toBeVisible();
       expect(within(dialog).getByRole("button", { name: /Add a progress screenshot/ })).toBeVisible();
       expect(within(dialog).getByRole("link", { name: "Move on to next" })).toHaveAttribute(
