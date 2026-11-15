@@ -40,8 +40,9 @@
   border-color: var(--border);
 }
 
+/* Only hour lines: hide the quarter-hour lines between slots. */
 .calendar .rbc-day-slot .rbc-time-slot {
-  border-top-color: color-mix(in oklab, var(--border) 45%, transparent);
+  border-top-color: transparent;
 }
 
 .calendar .rbc-label {
@@ -77,19 +78,13 @@
   background: var(--brand-coral-dark);
 }
 
-/* Past time: shaded, and striped beyond the 24 hours time can be logged for. */
+/* Past time: shaded. Beyond the 24 hours time can be logged for, slots refuse selection. */
 .calendar .calendar-slot-past {
   background: var(--muted);
 }
 
 .calendar .calendar-slot-locked {
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--muted),
-    var(--muted) 6px,
-    color-mix(in oklab, var(--border) 40%, var(--muted)) 6px,
-    color-mix(in oklab, var(--border) 40%, var(--muted)) 7px
-  );
+  background: var(--muted);
   cursor: not-allowed;
 }
 
