@@ -5,7 +5,8 @@ import { useLocation } from "react-router";
 import type { Break } from "@/apis/types";
 import BreakBanner from "@/components/commons/BreakBanner";
 import routes from "@/routes";
-import { startAlarmSound, unlockAlarmSound } from "@/utils/alarmSound";
+import { startAlarmSound } from "@/utils/alarmSound";
+import { unlockAudio } from "@/utils/audioContext";
 import { showNotification } from "@/utils/notifications";
 
 import { ALARM_PHASES } from "./constants";
@@ -47,12 +48,12 @@ const ActiveBreakAlarm = ({ currentBreak, timeLogId }: ActiveBreakAlarmProps) =>
 
   // A reload loses the permission to play sound until the next gesture.
   useEffect(() => {
-    window.addEventListener("pointerdown", unlockAlarmSound);
-    window.addEventListener("keydown", unlockAlarmSound);
+    window.addEventListener("pointerdown", unlockAudio);
+    window.addEventListener("keydown", unlockAudio);
 
     return () => {
-      window.removeEventListener("pointerdown", unlockAlarmSound);
-      window.removeEventListener("keydown", unlockAlarmSound);
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
     };
   }, []);
 

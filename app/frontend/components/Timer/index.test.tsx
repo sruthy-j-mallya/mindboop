@@ -15,6 +15,9 @@ import type { Task, TimeLog } from "@/apis/types";
 import Timer from "@/components/Timer";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
+import { playCompletionSound } from "@/utils/completionSound";
+
+vi.mock("@/utils/completionSound");
 
 const STARTED_AT = "2026-11-05T10:00:00.000Z";
 
@@ -71,6 +74,7 @@ describe("Timer", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it("shows the task and its steps", async () => {
@@ -718,6 +722,7 @@ describe("Timer", () => {
 
       const dialog = await screen.findByRole("dialog", { name: /Finished early!/ });
       expect(create).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
+      expect(playCompletionSound).toHaveBeenCalledOnce();
       expect(within(dialog).getByText("+1 early-finish boost")).toBeVisible();
       expect(within(dialog).getByRole("button", { name: /Add a progress screenshot/ })).toBeVisible();
       expect(within(dialog).getByRole("link", { name: "Move on to next" })).toHaveAttribute(
@@ -757,6 +762,7 @@ describe("Timer", () => {
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
       expect(screen.getByRole("timer")).toBeVisible();
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(playCompletionSound).not.toHaveBeenCalled();
     });
   });
 });

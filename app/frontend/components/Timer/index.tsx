@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import { useCompleteTimeLog } from "@/hooks/reactQuery/useTimeLogCompletionsApi";
 import routes from "@/routes";
+import { unlockAudio } from "@/utils/audioContext";
+import { playCompletionSound } from "@/utils/completionSound";
 
 import FinishedDialog from "./FinishedDialog";
 import Session from "./Session";
@@ -18,6 +20,12 @@ const Timer = () => {
     error: completionError,
     reset: resetCompletion,
   } = useCompleteTimeLog();
+
+  // Unlocked in the click, so the chime can play once the save lands and the finished dialog opens.
+  const handleDone = (timeLogId: string) => {
+    unlockAudio();
+    completeTimeLog(timeLogId, { onSuccess: playCompletionSound });
+  };
 
   if (isPending) return null;
 
@@ -34,7 +42,7 @@ const Timer = () => {
           completionError={completionError?.message}
           isCompleting={isCompleting}
           timeLog={timeLog}
-          onDone={completeTimeLog}
+          onDone={handleDone}
         />
       )}
       {!error && !timeLog && (

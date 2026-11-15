@@ -15,6 +15,9 @@ import TaskPane from "@/components/Inbox/TaskPane";
 import { Toaster } from "@/components/ui/sonner";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
+import { playCompletionSound } from "@/utils/completionSound";
+
+vi.mock("@/utils/completionSound");
 
 const buildTask = (overrides: Partial<Task> = {}): Task => ({
   id: crypto.randomUUID(),
@@ -52,6 +55,7 @@ const renderInbox = (initialPath: string = routes.inbox.index) =>
 describe("Inbox", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.clearAllMocks();
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
   });
@@ -183,6 +187,7 @@ describe("Inbox", () => {
     );
     expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Pay rent" })).not.toBeInTheDocument();
+    expect(playCompletionSound).toHaveBeenCalledOnce();
   });
 
   it("deletes the open task after confirming and closes its pane", async () => {
