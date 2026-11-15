@@ -54,6 +54,7 @@ const TASK: Task = {
     { id: "8a1d5e02-3c4f-4e6b-b7a9-1c2d3e4f5a6b", title: "Camera statistics", isCompleted: false },
     { id: "9b2e6f13-4d5a-4f7c-a8ba-2d3e4f5a6b7c", title: "Cuba economics", isCompleted: true },
   ],
+  breadcrumbs: [],
 };
 
 const renderTimer = (timeLog: TimeLog | null, task = TASK) => {

@@ -84,7 +84,8 @@ which leaves out anything the editor can't write, such as raw HTML.
 
 `task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, in
 position order (`app/views/api/tasks/_task.json.jbuilder`). Checklist items are soft-deleted (Discard), and discarded
-items are left out.
+items are left out. It also includes `breadcrumbs`, each `{ id, completed_description, restart_description, created_at }`,
+newest first: the notes left each time a session on the task was bailed out of.
 
 `POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
 creates the items with the task, positioned in array order. If any item is invalid, the request gets a 422 and nothing

@@ -14,7 +14,8 @@ class Task < ApplicationRecord
   # Discarded items stay hidden. The database deletes them with their task (on_delete: :cascade).
   has_many :checklist_items, -> { kept.order(:position) }, inverse_of: :task
   has_many :time_logs, dependent: :destroy
-  has_many :breadcrumbs, dependent: :destroy
+  # Newest first, the order the task pane's timeline shows them in.
+  has_many :breadcrumbs, -> { order(created_at: :desc, id: :desc) }, dependent: :destroy
   accepts_nested_attributes_for :checklist_items
 
   validates :title, presence: true

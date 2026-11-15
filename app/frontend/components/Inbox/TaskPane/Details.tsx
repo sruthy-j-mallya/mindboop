@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 
 import useCompleteTask from "../useCompleteTask";
+import Breadcrumbs from "./Breadcrumbs";
 import DeleteTaskButton from "./DeleteTaskButton";
 import DueDatePicker from "./DueDatePicker";
 import EstimatePicker from "./EstimatePicker";
@@ -60,6 +61,8 @@ const Details = ({ task }: DetailsProps) => {
         </header>
         <TaskSteps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
       </div>
+      {/* Where to pick the task back up, above the description so it's the first thing seen when returning to it. */}
+      <Breadcrumbs breadcrumbs={task.breadcrumbs} />
       <TaskDescription task={task} />
     </article>
   );

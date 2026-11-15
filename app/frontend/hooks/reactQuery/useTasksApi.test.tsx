@@ -27,6 +27,7 @@ const TASK: Task = {
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
   checklistItems: [{ id: "8a1d5e02-3c4f-4e6b-b7a9-1c2d3e4f5a6b", title: "Outline", isCompleted: false }],
+  breadcrumbs: [],
 };
 
 const setup = () => {

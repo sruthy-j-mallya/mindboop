@@ -130,6 +130,21 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ { "id" => item.id, "title" => item.title, "is_completed" => false } ], task["checklist_items"]
   end
 
+  def test_that_show_returns_the_tasks_breadcrumbs_newest_first
+    older = create(:breadcrumb, task: @task, created_at: 1.day.ago)
+    newer = create(:breadcrumb, task: @task)
+    create(:breadcrumb, task: @other_task)
+    sign_in @user
+
+    get api_task_path(@task)
+
+    assert_response :ok
+    breadcrumbs = response.parsed_body.dig("task", "breadcrumbs")
+    assert_equal [ newer.id, older.id ], breadcrumbs.pluck("id")
+    assert_equal newer.restart_description, breadcrumbs.first["restart_description"]
+    assert_equal newer.completed_description, breadcrumbs.first["completed_description"]
+  end
+
   def test_that_show_returns_401_when_signed_out
     get api_task_path(@task)
 
