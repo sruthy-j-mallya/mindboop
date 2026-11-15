@@ -2,6 +2,7 @@ import { SquareParking } from "lucide-react";
 
 import type { ParkingLotItemStatus } from "@/apis/types";
 import { Button } from "@/components/ui/button";
+import { useCuriosityTime } from "@/hooks/reactQuery/useCuriosityTimesApi";
 import { useInfiniteParkingLotItems } from "@/hooks/reactQuery/useParkingLotItemsApi";
 
 import ItemRow from "./ItemRow";
@@ -13,7 +14,9 @@ const ItemList = ({ status, label, emptyMessage }: ItemListProps) => {
     useInfiniteParkingLotItems({
       status,
     });
+  const { data: curiosityTime } = useCuriosityTime();
   const items = data?.pages.flatMap((page) => page.parkingLotItems) ?? [];
+  const isCuriosityRunning = !!curiosityTime?.parkingLotItem;
 
   const handleLoadMore = () => fetchNextPage();
 
@@ -40,7 +43,7 @@ const ItemList = ({ status, label, emptyMessage }: ItemListProps) => {
     <div className="flex flex-col gap-2">
       <ul aria-label={label} className="flex flex-col gap-2">
         {items.map((item) => (
-          <ItemRow key={item.id} item={item} />
+          <ItemRow key={item.id} isCuriosityRunning={isCuriosityRunning} item={item} />
         ))}
       </ul>
       {hasNextPage && (

@@ -5,8 +5,10 @@ class CreateParkingLotItems < ActiveRecord::Migration[8.1]
       # Set once the item is added as a task. The item outlives a task that's later removed for good.
       t.references :task, foreign_key: { on_delete: :nullify }, type: :uuid
       t.text :content, null: false
-      t.string :kind, null: false, default: "idea"
       t.string :status, null: false, default: "parked"
+      # Set while a curiosity time (a short timeboxed look-up) runs on this item.
+      t.datetime :curiosity_ends_at
+      t.boolean :is_curiosity_extended, null: false, default: false
       t.datetime :discarded_at
 
       t.timestamps

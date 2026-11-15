@@ -28,17 +28,17 @@ test("park thoughts during a session, then deal with them on the Parking lot pag
   await input.fill("Build an aeroplane");
   await input.press("Enter");
   await expect(parkingLot.getByText("Build an aeroplane")).toBeVisible();
-  await parkingLot.getByText("curiosity", { exact: true }).click();
+  // Each one waits for the last to land, so they're saved in the order typed.
   await input.fill("Is the library open on Sunday?");
   await input.press("Enter");
-  await parkingLot.getByText("task", { exact: true }).click();
+  await expect(parkingLot.getByText("Is the library open on Sunday?")).toBeVisible();
   await input.fill("Clean my scooter");
   await input.press("Enter");
 
   await expect(parkingLot.getByRole("list", { name: "Parked thoughts" }).getByRole("listitem")).toHaveText([
-    /Build an aeroplane\s*idea/,
-    /Is the library open on Sunday\?\s*curiosity/,
-    /Clean my scooter\s*task/,
+    /Build an aeroplane/,
+    /Is the library open on Sunday\?/,
+    /Clean my scooter/,
   ]);
 
   await page.getByRole("link", { name: "Parking lot" }).click();
@@ -48,14 +48,21 @@ test("park thoughts during a session, then deal with them on the Parking lot pag
 
   const scooter = parked.getByRole("listitem").filter({ hasText: "Clean my scooter" });
   await scooter.getByRole("button", { name: "Add as task" }).click();
+  await page.getByRole("button", { name: "Add undated" }).click();
   await expect(page.getByText("Added to your Inbox")).toBeVisible();
 
+  // A quick look-up gets a timeboxed curiosity time, shown on every page until it's dealt with.
   const library = parked.getByRole("listitem").filter({ hasText: "Is the library open on Sunday?" });
-  await library.getByRole("button", { name: "Mark addressed" }).click();
-  await expect(page.getByText("Marked as addressed")).toBeVisible();
+  await library.getByRole("button", { name: "Look into it · 5 min" }).click();
+  const curiosity = page.getByRole("region", { name: "Curiosity time" });
+  await expect(curiosity).toContainText(/Curiosity time · 0[45]:\d{2} left/);
+  await expect(library.getByText("Looking into it")).toBeVisible();
+  await curiosity.getByRole("button", { name: "Done, mark addressed" }).click();
+  await expect(curiosity).toBeHidden();
 
   const aeroplane = parked.getByRole("listitem").filter({ hasText: "Build an aeroplane" });
-  await aeroplane.getByRole("button", { name: "Discard" }).click();
+  await aeroplane.getByRole("button", { name: "Let it go" }).click();
+  await expect(page.getByText("Let go", { exact: true })).toBeVisible();
   await expect(page.getByText("Nothing parked. Your head is clear.")).toBeVisible();
 
   await page.getByRole("tab", { name: "Addressed" }).click();

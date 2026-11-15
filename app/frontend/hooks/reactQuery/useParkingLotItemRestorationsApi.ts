@@ -9,6 +9,6 @@ export const useRestoreParkingLotItem = () => {
 
   return useMutation({
     mutationFn: parkingLotItemRestorationsApi.create,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PARKING_LOT_ITEMS.LISTS }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PARKING_LOT_ITEMS.ALL }),
   });
 };

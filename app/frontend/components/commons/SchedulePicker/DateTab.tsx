@@ -5,6 +5,7 @@ import { Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 
+import { CALENDAR_CLASS_NAME, CALENDAR_CLASS_NAMES } from "./constants";
 import TimePicker from "./TimePicker";
 import type { ScheduleDraft } from "./types";
 import { moveStart, setDateTime, toTimeInputValue, withDay } from "./utils";
@@ -27,10 +28,11 @@ const DateTab = ({ draft, onChange }: DateTabProps) => {
 
   return (
     // Sized to the calendar, so the time row lines up with its first and last columns.
-    <div className="mx-auto flex w-fit flex-col gap-3">
+    <div className="mx-auto flex w-fit flex-col gap-2">
       <Calendar
         required
-        className="p-0 [--cell-size:--spacing(9)]"
+        className={CALENDAR_CLASS_NAME}
+        classNames={CALENDAR_CLASS_NAMES}
         mode="single"
         month={month}
         selected={draft.startsAt}

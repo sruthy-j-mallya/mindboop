@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
+import curiosityTimesApi from "@/apis/curiosity_times";
 import parkingLotItemConversionsApi from "@/apis/parking_lot_item_conversions";
 import parkingLotItemRestorationsApi from "@/apis/parking_lot_item_restorations";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
@@ -17,9 +18,10 @@ import { renderWithProviders } from "@/test/utils";
 const buildItem = (overrides: Partial<ParkingLotItem> = {}): ParkingLotItem => ({
   id: crypto.randomUUID(),
   content: "Build an aeroplane",
-  kind: "idea",
   status: "parked",
   taskId: null,
+  curiosityEndsAt: null,
+  isCuriosityExtended: false,
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
   ...overrides,
@@ -58,11 +60,12 @@ describe("ParkingLot", () => {
     vi.restoreAllMocks();
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
+    vi.spyOn(curiosityTimesApi, "show").mockResolvedValue({ parkingLotItem: null });
   });
 
   it("lists the parked thoughts", async () => {
     stubList({
-      parked: [buildItem(), buildItem({ content: "Is there a law on air quality?", kind: "curiosity" })],
+      parked: [buildItem(), buildItem({ content: "Is there a law on air quality?" })],
     });
     renderParkingLot();
 
@@ -86,10 +89,12 @@ describe("ParkingLot", () => {
       .mockResolvedValue({ parkingLotItem: buildItem({ content: "Renew passport" }) });
     renderParkingLot();
 
-    await userEvent.click(await screen.findByRole("radio", { name: "curiosity" }));
-    await userEvent.type(screen.getByRole("textbox", { name: "Thought to park" }), "Renew passport{Enter}");
+    await userEvent.type(
+      await screen.findByRole("textbox", { name: "Thought to park" }),
+      "Renew passport{Enter}",
+    );
 
-    expect(create).toHaveBeenCalledWith({ content: "Renew passport", kind: "curiosity" }, expect.anything());
+    expect(create).toHaveBeenCalledWith({ content: "Renew passport" }, expect.anything());
   });
 
   it("adds a thought to the Inbox and links to the new task", async () => {
@@ -102,10 +107,55 @@ describe("ParkingLot", () => {
     renderParkingLot();
 
     await userEvent.click(await screen.findByRole("button", { name: "Add as task" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Add undated" }));
 
-    expect(convert).toHaveBeenCalledWith(item.id, expect.anything());
+    expect(convert).toHaveBeenCalledWith(
+      { parkingLotItemId: item.id, isDuration: false, isAllDay: false, startsAt: null, endsAt: null },
+      expect.anything(),
+    );
     await userEvent.click(await screen.findByRole("button", { name: "Open" }));
     expect(await screen.findByText("Inbox task")).toBeVisible();
+  });
+
+  it("schedules the task while adding it", async () => {
+    const item = buildItem();
+    stubList({ parked: [item] });
+    const convert = vi
+      .spyOn(parkingLotItemConversionsApi, "create")
+      .mockResolvedValue({ parkingLotItem: { ...item, status: "converted", taskId: crypto.randomUUID() } });
+    renderParkingLot();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Add as task" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Add" }));
+
+    expect(convert).toHaveBeenCalledWith(
+      expect.objectContaining({ parkingLotItemId: item.id, isAllDay: true, startsAt: expect.any(String) }),
+      expect.anything(),
+    );
+  });
+
+  it("starts a curiosity time on a thought", async () => {
+    const item = buildItem();
+    stubList({ parked: [item] });
+    const start = vi
+      .spyOn(curiosityTimesApi, "create")
+      .mockResolvedValue({ parkingLotItem: { ...item, curiosityEndsAt: "2026-11-05T10:05:00.000Z" } });
+    renderParkingLot();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Look into it · 5 min" }));
+
+    expect(start).toHaveBeenCalledWith(item.id, expect.anything());
+  });
+
+  it("marks the thought being looked into and holds the others", async () => {
+    const running = buildItem({ curiosityEndsAt: "2026-11-05T10:05:00.000Z" });
+    stubList({ parked: [running, buildItem({ content: "Who wrote Dune?" })] });
+    vi.spyOn(curiosityTimesApi, "show").mockResolvedValue({ parkingLotItem: running });
+    renderParkingLot();
+
+    expect(await screen.findByText("Looking into it")).toBeVisible();
+    const [lookIntoIt] = screen.getAllByRole("button", { name: "Look into it · 5 min" });
+    await waitFor(() => expect(lookIntoIt).toBeDisabled());
   });
 
   it("marks a thought addressed and can undo it", async () => {
@@ -128,7 +178,7 @@ describe("ParkingLot", () => {
     expect(update).toHaveBeenLastCalledWith({ id: item.id, status: "parked" }, expect.anything());
   });
 
-  it("discards a thought and can restore it", async () => {
+  it("lets a thought go and can restore it", async () => {
     const item = buildItem();
     stubList({ parked: [item] });
     const destroy = vi.spyOn(parkingLotItemsApi, "destroy").mockResolvedValue({} as never);
@@ -137,10 +187,10 @@ describe("ParkingLot", () => {
       .mockResolvedValue({ parkingLotItem: item });
     renderParkingLot();
 
-    await userEvent.click(await screen.findByRole("button", { name: "Discard" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Let it go" }));
 
     expect(destroy).toHaveBeenCalledWith(item.id, expect.anything());
-    expect(await screen.findByText("Thought discarded")).toBeVisible();
+    expect(await screen.findByText("Let go")).toBeVisible();
 
     await userEvent.click(screen.getByRole("button", { name: "Undo" }));
 
@@ -155,6 +205,7 @@ describe("ParkingLot", () => {
     renderParkingLot();
 
     await userEvent.click(await screen.findByRole("button", { name: "Add as task" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Add undated" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Record not found.");
     expect(screen.getByRole("button", { name: "Add as task" })).toBeEnabled();

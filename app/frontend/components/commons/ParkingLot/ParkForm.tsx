@@ -6,15 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCreateParkingLotItem } from "@/hooks/reactQuery/useParkingLotItemsApi";
 
-import {
-  INITIAL_FORM_VALUES,
-  PARK_VALIDATION_SCHEMA,
-  type ParkFormValues,
-  PARKING_LOT_ITEM_KINDS,
-} from "./constants";
+import { INITIAL_FORM_VALUES, PARK_VALIDATION_SCHEMA, type ParkFormValues } from "./constants";
 
-// Parks a thought on Enter. The input clears as soon as it's sent and the kind stays picked, so the next thought can be
-// typed straight away. A failed one comes back into the input if it's still empty.
+// Parks a thought on Enter. The input clears as soon as it's sent, so the next thought can be typed straight away. A
+// failed one comes back into the input if it's still empty.
 const ParkForm = () => {
   const { mutate: createItem, error } = useCreateParkingLotItem();
   const {
@@ -33,30 +28,16 @@ const ParkForm = () => {
 
   const handleBlur = () => clearErrors("content");
 
-  const handlePark = ({ content, kind }: ParkFormValues) => {
+  const handlePark = ({ content }: ParkFormValues) => {
     resetField("content");
     const handleError = () => {
       if (!getValues("content")) setValue("content", content);
     };
-    createItem({ content, kind }, { onError: handleError });
+    createItem({ content }, { onError: handleError });
   };
 
   return (
     <form noValidate className="grid gap-2" onSubmit={handleSubmit(handlePark)}>
-      {/* Native radios, hidden behind chip-styled labels, give the group arrow-key navigation for free. */}
-      <fieldset className="flex flex-wrap gap-1">
-        <legend className="sr-only">Kind</legend>
-        {PARKING_LOT_ITEM_KINDS.map((kind) => (
-          <label
-            key={kind}
-            className="cursor-pointer rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground has-checked:bg-primary has-checked:text-primary-foreground has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50"
-          >
-            <input className="sr-only" type="radio" value={kind} {...register("kind")} />
-            {kind}
-          </label>
-        ))}
-      </fieldset>
-      {/* An explicit submit button: with the kind radios in the form, Enter alone isn't a reliable submit. */}
       <div className="relative">
         <Input
           aria-describedby={errorMessage ? "park-error" : undefined}

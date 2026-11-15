@@ -10,12 +10,12 @@ module Api
 
     def create
       authorize ParkingLotItem
-      @parking_lot_item = Current.user.parking_lot_items.create!(params.permit(:content, :kind))
+      @parking_lot_item = Current.user.parking_lot_items.create!(params.permit(:content))
       render :show, status: :created
     end
 
     def update
-      @parking_lot_item.update!(params.permit(:content, :kind, :status))
+      @parking_lot_item.update!(params.permit(:content, :status))
       render :show
     end
 

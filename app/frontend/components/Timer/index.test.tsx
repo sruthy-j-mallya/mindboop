@@ -67,9 +67,10 @@ const parkingLotListOf = (parkingLotItems: ParkingLotItem[]) => ({
 const buildParkingLotItem = (overrides: Partial<ParkingLotItem> = {}): ParkingLotItem => ({
   id: crypto.randomUUID(),
   content: "Call the bank",
-  kind: "idea",
   status: "parked",
   taskId: null,
+  curiosityEndsAt: null,
+  isCuriosityExtended: false,
   createdAt: STARTED_AT,
   updatedAt: STARTED_AT,
   ...overrides,
@@ -782,8 +783,8 @@ describe("Timer", () => {
 
   describe("parking lot", () => {
     it("lists the thoughts parked during this session, oldest first", async () => {
-      const newer = buildParkingLotItem({ content: "Is the shop open on Sunday?", kind: "curiosity" });
-      const older = buildParkingLotItem({ content: "Clean my scooter", kind: "task" });
+      const newer = buildParkingLotItem({ content: "Is the shop open on Sunday?" });
+      const older = buildParkingLotItem({ content: "Clean my scooter" });
       renderTimer(TIME_LOG, TASK, [newer, older]);
 
       const parkingLot = await screen.findByRole("region", { name: "Parking lot" });
@@ -792,7 +793,7 @@ describe("Timer", () => {
         expect.stringContaining("Clean my scooter"),
         expect.stringContaining("Is the shop open on Sunday?"),
       ]);
-      expect(thoughts[0]).toHaveTextContent(/task · \d{2}:\d{2}/);
+      expect(thoughts[0]).toHaveTextContent(/\d{2}:\d{2}/);
       expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({
         status: "parked",
         since: TIME_LOG.startedAt,
@@ -805,20 +806,18 @@ describe("Timer", () => {
       expect(await screen.findByText("Stray thought? Type it below.")).toBeVisible();
     });
 
-    it("parks a thought with the picked kind and clears the input", async () => {
+    it("parks a thought and clears the input", async () => {
       const create = vi.spyOn(parkingLotItemsApi, "create").mockResolvedValue({
-        parkingLotItem: buildParkingLotItem({ content: "Book a dentist", kind: "task" }),
+        parkingLotItem: buildParkingLotItem({ content: "Book a dentist" }),
       });
       renderTimer(TIME_LOG);
 
       const parkingLot = await screen.findByRole("region", { name: "Parking lot" });
-      await userEvent.click(within(parkingLot).getByRole("radio", { name: "task" }));
       const input = within(parkingLot).getByRole("textbox", { name: "Thought to park" });
       await userEvent.type(input, "Book a dentist{Enter}");
 
-      expect(create).toHaveBeenCalledWith({ content: "Book a dentist", kind: "task" }, expect.anything());
+      expect(create).toHaveBeenCalledWith({ content: "Book a dentist" }, expect.anything());
       expect(input).toHaveValue("");
-      expect(within(parkingLot).getByRole("radio", { name: "task" })).toBeChecked();
     });
 
     it("asks for a thought instead of parking an empty one", async () => {

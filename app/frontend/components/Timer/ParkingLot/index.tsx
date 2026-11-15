@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { cn } from "cn";
 
+import { PARKING_LOT_TAGLINE } from "@/components/commons/ParkingLot/constants";
 import ParkForm from "@/components/commons/ParkingLot/ParkForm";
 import ThoughtCard from "@/components/commons/ParkingLot/ThoughtCard";
 import { Card } from "@/components/ui/card";
@@ -28,9 +29,7 @@ const ParkingLot = ({ since, className }: ParkingLotProps) => {
         <h2 className="text-lg font-semibold" id="parking-lot-heading">
           Parking lot
         </h2>
-        <p className="text-sm text-muted-foreground">
-          Park it, don&apos;t chase it. You&apos;ll get it back.
-        </p>
+        <p className="text-sm text-muted-foreground">{PARKING_LOT_TAGLINE}</p>
       </header>
       <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto p-6">
         {error && (

@@ -20,6 +20,27 @@ class Api::ParkingLotItemConversionsControllerTest < ActionDispatch::Integration
     assert_equal @item.content, Task.find(item["task_id"]).title
   end
 
+  def test_that_create_can_schedule_the_task
+    starts_at = 1.day.from_now.beginning_of_hour
+    sign_in @user
+
+    post api_parking_lot_item_conversion_path(@item), params: { starts_at:, is_all_day: false }, as: :json
+
+    assert_response :created
+    assert_equal starts_at, @item.reload.task.starts_at
+  end
+
+  def test_that_create_rejects_an_invalid_schedule
+    sign_in @user
+
+    assert_no_difference "Task.count" do
+      post api_parking_lot_item_conversion_path(@item), params: { is_duration: true }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert @item.reload.parked?
+  end
+
   def test_that_create_returns_404_for_an_item_that_is_not_parked
     @item.update!(status: :addressed)
     sign_in @user

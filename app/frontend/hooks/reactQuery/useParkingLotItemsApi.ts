@@ -47,7 +47,7 @@ export const useUpdateParkingLotItem = () => {
 
   return useMutation({
     mutationFn: parkingLotItemsApi.update,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PARKING_LOT_ITEMS.LISTS }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PARKING_LOT_ITEMS.ALL }),
   });
 };
 
@@ -56,6 +56,6 @@ export const useDeleteParkingLotItem = () => {
 
   return useMutation({
     mutationFn: parkingLotItemsApi.destroy,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PARKING_LOT_ITEMS.LISTS }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PARKING_LOT_ITEMS.ALL }),
   });
 };

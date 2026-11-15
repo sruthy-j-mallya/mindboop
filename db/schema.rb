@@ -59,8 +59,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_120000) do
     t.uuid "user_id", null: false
     t.uuid "task_id"
     t.text "content", null: false
-    t.string "kind", default: "idea", null: false
     t.string "status", default: "parked", null: false
+    t.datetime "curiosity_ends_at"
+    t.boolean "is_curiosity_extended", default: false, null: false
     t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

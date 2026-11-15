@@ -1,14 +1,15 @@
 import { useState } from "react";
 
 import type { ParkingLotItemStatus } from "@/apis/types";
+import { PARKING_LOT_TAGLINE } from "@/components/commons/ParkingLot/constants";
 import ParkForm from "@/components/commons/ParkingLot/ParkForm";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { DEFAULT_STATUS, TABS } from "./constants";
 import ItemList from "./ItemList";
 
-// Every thought parked so far, newest first: add one to the Inbox, mark it addressed, or discard it.
+// Every thought parked so far, newest first: look into one for a few minutes, add it to the Inbox, mark it addressed,
+// or let it go.
 const ParkingLot = () => {
   const [status, setStatus] = useState<ParkingLotItemStatus>(DEFAULT_STATUS);
 
@@ -18,15 +19,9 @@ const ParkingLot = () => {
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 p-4">
       <header className="grid gap-1">
         <h1 className="text-2xl font-semibold">Parking lot</h1>
-        <p className="text-sm text-muted-foreground">
-          Park it, don&apos;t chase it. You&apos;ll get it back.
-        </p>
+        <p className="text-sm text-muted-foreground">{PARKING_LOT_TAGLINE}</p>
       </header>
-      <Card className="py-4">
-        <CardContent className="px-4">
-          <ParkForm />
-        </CardContent>
-      </Card>
+      <ParkForm />
       <Tabs value={status} onValueChange={handleStatusChange}>
         <TabsList>
           {TABS.map(({ status: tabStatus, label }) => (

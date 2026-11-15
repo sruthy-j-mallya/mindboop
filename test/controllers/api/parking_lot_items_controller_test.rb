@@ -62,13 +62,13 @@ class Api::ParkingLotItemsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
 
     assert_difference "@user.parking_lot_items.count", 1 do
-      post api_parking_lot_items_path, params: { content: @content, kind: "curiosity" }, as: :json
+      post api_parking_lot_items_path, params: { content: @content }, as: :json
     end
 
     assert_response :created
     item = response.parsed_body["parking_lot_item"]
     assert_equal @content, item["content"]
-    assert_equal "curiosity", item["kind"]
+    assert_nil item["curiosity_ends_at"]
     assert_equal "parked", item["status"]
     assert_nil item["task_id"]
     assert_not item.key?("discarded_at")
@@ -95,15 +95,6 @@ class Api::ParkingLotItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_equal "Content can't be blank", response.parsed_body["error"]
-  end
-
-  def test_that_create_rejects_an_unknown_kind
-    sign_in @user
-
-    post api_parking_lot_items_path, params: { content: @content, kind: "worry" }, as: :json
-
-    assert_response :unprocessable_content
-    assert_equal "Kind is not included in the list", response.parsed_body["error"]
   end
 
   def test_that_create_returns_401_when_signed_out

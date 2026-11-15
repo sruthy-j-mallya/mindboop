@@ -15,10 +15,13 @@ export const QUERY_KEYS = {
     DETAIL: (id: string) => ["tasks", "detail", id],
   },
   PARKING_LOT_ITEMS: {
+    // Every parking lot query: lists and the curiosity time. Changing an item can end its curiosity time.
+    ALL: ["parkingLotItems"],
     LISTS: ["parkingLotItems", "list"],
     LIST: (params: ParkingLotItemListParams) => ["parkingLotItems", "list", params],
     // Every page loaded so far, under LISTS so a mutation refreshes it with the paged lists.
     INFINITE_LIST: (filters: ParkingLotItemFilters) => ["parkingLotItems", "list", "infinite", filters],
+    CURIOSITY_TIME: ["parkingLotItems", "curiosityTime"],
   },
   TIME_LOGS: {
     CURRENT: ["timeLogs", "current"],

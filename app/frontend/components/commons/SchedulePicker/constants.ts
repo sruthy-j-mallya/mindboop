@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import type { UpdateTaskPayload } from "@/apis/types";
 import { MINUTES_PER_HOUR } from "@/constants";
 
+import type { Schedule } from "./types";
+
 export const DATE_TAB = "date";
 
 export const DURATION_TAB = "duration";
@@ -41,3 +43,11 @@ export const CLEARED_SCHEDULE: Omit<UpdateTaskPayload, "id"> = {
 };
 
 export const END_BEFORE_START_ERROR = "The end can't be before the start";
+
+export const UNSCHEDULED: Schedule = { isDuration: false, isAllDay: false, startsAt: null, endsAt: null };
+
+// A compact calendar, shared by the Date tab and the Duration tab's date fields, so the picker fits above or below its
+// button on short screens: smaller day cells and tight rows (shadcn's default leaves 0.5rem between weeks).
+export const CALENDAR_CLASS_NAME = "p-0 [--cell-size:--spacing(8)]";
+
+export const CALENDAR_CLASS_NAMES = { week: "mt-0.5 flex w-full" };

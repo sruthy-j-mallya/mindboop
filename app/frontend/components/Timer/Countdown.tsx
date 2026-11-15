@@ -1,8 +1,8 @@
 import type { TimeLog } from "@/apis/types";
 import useCurrentTime from "@/hooks/useCurrentTime";
-import { getBreakRemainingSeconds } from "@/utils";
+import { formatRemainingTime, getRemainingSeconds } from "@/utils";
 
-import { formatRemainingTime, getTimerState } from "./utils";
+import { getTimerState } from "./utils";
 
 type CountdownProps = { timeLog: TimeLog };
 
@@ -10,7 +10,7 @@ const Countdown = ({ timeLog }: CountdownProps) => {
   const { isRunning, currentBreak } = timeLog;
   const currentTime = useCurrentTime(isRunning || !!currentBreak);
   const { remainingSeconds, progress } = getTimerState(timeLog, currentTime);
-  const breakRemainingSeconds = currentBreak && getBreakRemainingSeconds(currentBreak.endsAt, currentTime);
+  const breakRemainingSeconds = currentBreak && getRemainingSeconds(currentBreak.endsAt, currentTime);
 
   const getCaption = () => {
     if (breakRemainingSeconds === null) return "remaining";

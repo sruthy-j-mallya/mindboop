@@ -104,17 +104,17 @@ export type UpdateChecklistItemPayload = Partial<Pick<ChecklistItem, "title" | "
 
 export type DeleteChecklistItemPayload = { taskId: string; id: string };
 
-export type ParkingLotItemKind = "idea" | "curiosity" | "task" | "thought";
-
 // Parked until dealt with: addressed by hand, or converted into an Inbox task (then `taskId` is set).
 export type ParkingLotItemStatus = "parked" | "addressed" | "converted";
 
 export type ParkingLotItem = {
   id: string;
   content: string;
-  kind: ParkingLotItemKind;
   status: ParkingLotItemStatus;
   taskId: string | null;
+  // Set while a curiosity time (a short timeboxed look-up) runs on the item; it can be extended once.
+  curiosityEndsAt: string | null;
+  isCuriosityExtended: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -133,7 +133,15 @@ export type ParkingLotItemListResponse = {
 
 export type ParkingLotItemResponse = { parkingLotItem: ParkingLotItem };
 
-export type CreateParkingLotItemPayload = Pick<ParkingLotItem, "content" | "kind">;
+export type CreateParkingLotItemPayload = Pick<ParkingLotItem, "content">;
 
 export type UpdateParkingLotItemPayload = Pick<ParkingLotItem, "id"> &
-  Partial<Pick<ParkingLotItem, "content" | "kind" | "status">>;
+  Partial<Pick<ParkingLotItem, "content" | "status">>;
+
+// The task's schedule is optional; without one the task lands in the Inbox undated.
+export type ConvertParkingLotItemPayload = { parkingLotItemId: string } & Partial<
+  Pick<Task, "isDuration" | "isAllDay" | "startsAt" | "endsAt">
+>;
+
+// The user's running curiosity time, if any.
+export type CuriosityTimeResponse = { parkingLotItem: ParkingLotItem | null };

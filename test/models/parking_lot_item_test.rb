@@ -18,17 +18,11 @@ class ParkingLotItemTest < ActiveSupport::TestCase
     assert build(:parking_lot_item, content: "a" * (ParkingLotItem::MAX_CONTENT_LENGTH + 1)).invalid?
   end
 
-  def test_that_a_new_item_is_a_parked_idea
+  def test_that_a_new_item_is_parked
     assert @item.parked?
-    assert @item.kind_idea?
   end
 
-  def test_that_a_thought_is_a_valid_kind
-    assert build(:parking_lot_item, kind: "thought").valid?
-  end
-
-  def test_that_an_unknown_kind_or_status_is_invalid
-    assert build(:parking_lot_item, kind: "worry").invalid?
+  def test_that_an_unknown_status_is_invalid
     assert build(:parking_lot_item, status: "snoozed").invalid?
   end
 
@@ -55,5 +49,79 @@ class ParkingLotItemTest < ActiveSupport::TestCase
     assert_no_difference "Task.count" do
       @item.convert_to_task!
     end
+  end
+
+  def test_that_convert_to_task_can_schedule_the_task
+    starts_at = 1.day.from_now.beginning_of_hour
+
+    @item.convert_to_task!(starts_at:)
+
+    assert_equal starts_at, @item.task.starts_at
+  end
+
+  def test_that_an_invalid_schedule_converts_nothing
+    assert_raises ActiveRecord::RecordInvalid do
+      @item.convert_to_task!(is_duration: true)
+    end
+
+    assert @item.reload.parked?
+  end
+
+  def test_that_start_curiosity_time_runs_for_the_curiosity_minutes
+    freeze_time do
+      @item.start_curiosity_time!
+
+      assert_equal ParkingLotItem::CURIOSITY_MINUTES.minutes.from_now, @item.curiosity_ends_at
+    end
+  end
+
+  def test_that_a_user_runs_one_curiosity_time_at_a_time
+    @item.start_curiosity_time!
+    other_item = create(:parking_lot_item, user: @item.user)
+
+    assert_raises ActiveRecord::RecordInvalid do
+      other_item.start_curiosity_time!
+    end
+
+    assert_includes other_item.errors.full_messages, "Finish your current curiosity time first"
+  end
+
+  def test_that_another_users_curiosity_time_does_not_block
+    @item.start_curiosity_time!
+
+    assert_nothing_raised { create(:parking_lot_item).start_curiosity_time! }
+  end
+
+  def test_that_curiosity_time_extends_once
+    @item.start_curiosity_time!
+    ends_at = @item.curiosity_ends_at
+
+    @item.extend_curiosity_time!
+
+    assert_equal ends_at + ParkingLotItem::CURIOSITY_MINUTES.minutes, @item.curiosity_ends_at
+    assert_raises(ActiveRecord::RecordInvalid) { @item.extend_curiosity_time! }
+  end
+
+  def test_that_extending_after_the_time_is_up_counts_from_now
+    @item.start_curiosity_time!
+
+    travel 1.hour do
+      @item.extend_curiosity_time!
+
+      assert_equal ParkingLotItem::CURIOSITY_MINUTES.minutes.from_now.to_i, @item.curiosity_ends_at.to_i
+    end
+  end
+
+  def test_that_dealing_with_an_item_ends_its_curiosity_time
+    @item.start_curiosity_time!
+    @item.update!(status: :addressed)
+
+    assert_nil @item.curiosity_ends_at
+
+    other_item = create(:parking_lot_item, user: @item.user)
+    other_item.start_curiosity_time!
+    other_item.discard!
+
+    assert_nil other_item.reload.curiosity_ends_at
   end
 end

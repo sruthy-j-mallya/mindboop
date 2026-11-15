@@ -29,7 +29,7 @@ const DurationTab = ({ draft, error, onChange }: DurationTabProps) => {
   const handleAllDayChange = (isAllDay: boolean) => onChange(setAllDay(draft, isAllDay, Date.now()));
 
   return (
-    <div className="flex flex-col gap-3 pt-1">
+    <div className="flex flex-col gap-2 pt-1">
       <MomentFields
         hasTime={hasTime}
         label="Start"
