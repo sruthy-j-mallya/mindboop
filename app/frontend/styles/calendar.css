@@ -146,6 +146,29 @@
   border-color: currentColor;
 }
 
+/*
+ * The library's resize handles are 3px strips inside the event's padding, and the time label covers the top one, so a
+ * press there moved the event instead. Make each edge a grab zone that reaches the event's border and sits above the
+ * label and title.
+ */
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-anchor {
+  z-index: 1;
+  height: 6px;
+  cursor: ns-resize;
+}
+
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-anchor:first-child {
+  top: -2px;
+}
+
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-anchor:last-child {
+  bottom: -2px;
+}
+
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-anchor .rbc-addons-dnd-resize-ns-icon {
+  margin-top: 1px;
+}
+
 /* The "+N more" popup is portaled into the calendar, so it's still under `.calendar`. */
 .calendar .rbc-overlay {
   border: 1px solid var(--border);

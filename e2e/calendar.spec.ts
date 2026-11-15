@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { isSameDay, startOfHour, subHours } from "date-fns";
 
 import { signupTokenFor } from "./helpers";
@@ -76,6 +76,48 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
   await page.getByRole("tab", { name: "Day", exact: true }).click();
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.locator(".calendar-event-task", { hasText: "Plan the month" })).toContainText("12:00 PM");
+});
+
+// Presses the event's top or bottom edge and drags it to the given slot.
+const dragEdge = async (page: Page, event: Locator, edge: "top" | "bottom", hour: number) => {
+  const from = await event.boundingBox();
+  const to = await hourSlot(page, hour).boundingBox();
+  if (!from || !to) throw new Error("The event and the slot should be on screen");
+  const x = from.x + from.width / 2;
+  await page.mouse.move(x, edge === "top" ? from.y + 1 : from.y + from.height - 1);
+  await page.mouse.down();
+  await page.mouse.move(x, to.y + 10, { steps: 10 });
+  await page.mouse.move(x, to.y + 4, { steps: 2 });
+  await page.mouse.up();
+};
+
+test("stretch a task from its start and its end", async ({ page }) => {
+  await signUp(page);
+  await page.getByRole("link", { name: "Calendar" }).click();
+  await page.getByRole("tab", { name: "Day", exact: true }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+
+  await clickSlot(page, 10);
+  const newTask = page.getByRole("dialog", { name: "New task" });
+  await newTask.getByRole("textbox", { name: "Title" }).fill("Deep work");
+  await page.keyboard.press("Escape");
+  await expect(newTask).toBeHidden();
+
+  const event = page.locator(".calendar-event-task", { hasText: "Deep work" });
+  await expect(event).toContainText("10:00 AM – 10:30 AM");
+
+  await dragEdge(page, event, "top", 9);
+  await expect(event).toContainText("9:00 AM – 10:30 AM");
+
+  await dragEdge(page, event, "bottom", 12);
+  await expect(event).toContainText("9:00 AM – 12:00 PM");
+
+  await page.reload();
+  await page.getByRole("tab", { name: "Day", exact: true }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.locator(".calendar-event-task", { hasText: "Deep work" })).toContainText(
+    "9:00 AM – 12:00 PM",
+  );
 });
 
 test("log time in the last 24 hours with only a title", async ({ page }) => {

@@ -215,12 +215,17 @@ export const getMoveError = (event: CalendarEvent, times: EventTimes, isResize: 
     return isWithinLogWindow(times, now) ? null : MOVE_ERRORS.TIME_LOG_OUTSIDE_WINDOW;
   }
 
-  // An overdue task can still be stretched, as long as it then ends in the future.
-  if (isResize) return times.end > new Date(now) ? null : MOVE_ERRORS.TASK_IN_PAST;
-
   const earliest = times.allDay ? startOfDay(now) : getCurrentSlotStart(now);
+  const isStartAllowed = times.start >= earliest;
+  if (!isResize) return isStartAllowed ? null : MOVE_ERRORS.TASK_IN_PAST;
 
-  return times.start >= earliest ? null : MOVE_ERRORS.TASK_IN_PAST;
+  // An overdue task can still be stretched at its end, as long as it then ends in the future. Stretching its start
+  // follows the same rule as a move.
+  if (times.end <= new Date(now)) return MOVE_ERRORS.TASK_IN_PAST;
+
+  const isStartMoved = times.start.getTime() !== event.start.getTime();
+
+  return isStartMoved && !isStartAllowed ? MOVE_ERRORS.TASK_IN_PAST : null;
 };
 
 const toRect = (left: number, top: number, width = 0, height = 0): AnchorRect => ({

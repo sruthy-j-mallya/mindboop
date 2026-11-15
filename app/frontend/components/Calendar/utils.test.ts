@@ -233,7 +233,7 @@ describe("getMovedTaskSchedule", () => {
 });
 
 describe("getMoveError", () => {
-  const taskEvent = { kind: "task" } as CalendarEvent;
+  const taskEvent = { kind: "task", start: at(12, 9) } as CalendarEvent;
   const timeLogEvent = { kind: "timeLog" } as CalendarEvent;
 
   it("lets a task move to the current quarter hour or later", () => {
@@ -254,6 +254,20 @@ describe("getMoveError", () => {
     expect(
       getMoveError(taskEvent, { start: at(12, 9), end: at(12, 11), allDay: false }, true, NOW),
     ).toBeNull();
+    expect(getMoveError(taskEvent, { start: at(12, 9), end: at(12, 10), allDay: false }, true, NOW)).toBe(
+      MOVE_ERRORS.TASK_IN_PAST,
+    );
+  });
+
+  it("lets a task's start be stretched only to the current quarter hour or later", () => {
+    const upcoming = { kind: "task", start: at(12, 11) } as CalendarEvent;
+
+    expect(
+      getMoveError(upcoming, { start: getCurrentSlotStart(NOW), end: at(12, 12), allDay: false }, true, NOW),
+    ).toBeNull();
+    expect(getMoveError(upcoming, { start: at(12, 9), end: at(12, 12), allDay: false }, true, NOW)).toBe(
+      MOVE_ERRORS.TASK_IN_PAST,
+    );
   });
 
   it("keeps time logs inside the last 24 hours", () => {
