@@ -1,0 +1,170 @@
+/*
+ * react-big-calendar, themed with the design tokens (so dark mode follows them too). Imported by Calendar/index.tsx
+ * after the library's own stylesheet, and scoped under `.calendar` so these rules win on specificity.
+ */
+
+.calendar .rbc-calendar {
+  color: var(--foreground);
+  font-family: inherit;
+}
+
+.calendar .rbc-month-view,
+.calendar .rbc-time-view {
+  overflow: hidden;
+  border-color: var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.calendar .rbc-header {
+  padding: 0.5rem 0.25rem;
+  border-color: var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.calendar .rbc-header + .rbc-header,
+.calendar .rbc-day-bg + .rbc-day-bg,
+.calendar .rbc-month-row + .rbc-month-row,
+.calendar .rbc-time-header-content,
+.calendar .rbc-time-header.rbc-overflowing,
+.calendar .rbc-time-content,
+.calendar .rbc-time-content > * + * > *,
+.calendar .rbc-timeslot-group,
+.calendar .rbc-day-slot .rbc-time-slot,
+.calendar .rbc-time-header-gutter,
+.calendar .rbc-allday-cell .rbc-day-bg {
+  border-color: var(--border);
+}
+
+.calendar .rbc-day-slot .rbc-time-slot {
+  border-top-color: color-mix(in oklab, var(--border) 45%, transparent);
+}
+
+.calendar .rbc-label {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.calendar .rbc-off-range-bg {
+  background: var(--muted);
+}
+
+.calendar .rbc-off-range,
+.calendar .rbc-off-range .rbc-button-link {
+  color: var(--muted-foreground);
+}
+
+.calendar .rbc-today {
+  background: color-mix(in oklab, var(--accent) 70%, transparent);
+}
+
+.calendar .rbc-date-cell {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.calendar .rbc-date-cell.rbc-now {
+  color: var(--primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.calendar .rbc-current-time-indicator {
+  height: 2px;
+  background: var(--brand-coral-dark);
+}
+
+/* Past time: shaded, and striped beyond the 24 hours time can be logged for. */
+.calendar .calendar-slot-past {
+  background: var(--muted);
+}
+
+.calendar .calendar-slot-locked {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--muted),
+    var(--muted) 6px,
+    color-mix(in oklab, var(--border) 40%, var(--muted)) 6px,
+    color-mix(in oklab, var(--border) 40%, var(--muted)) 7px
+  );
+  cursor: not-allowed;
+}
+
+.calendar .rbc-slot-selection,
+.calendar .rbc-selected-cell {
+  background: color-mix(in oklab, var(--primary) 18%, transparent);
+  color: var(--foreground);
+}
+
+/* Events. Tasks are solid; time logs are see-through, behind a blur, with a dashed edge. */
+.calendar .rbc-event,
+.calendar .rbc-day-slot .rbc-event {
+  padding: 2px 6px;
+  border-radius: calc(var(--radius) - 4px);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+.calendar .rbc-event:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.calendar .rbc-event.calendar-event-task,
+.calendar .rbc-day-slot .rbc-event.calendar-event-task {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.calendar .rbc-event.calendar-event-task.rbc-selected {
+  background: var(--brand-purple-light);
+}
+
+.calendar .rbc-event.calendar-event-time-log,
+.calendar .rbc-day-slot .rbc-event.calendar-event-time-log {
+  border: 1px dashed color-mix(in oklab, var(--primary) 45%, transparent);
+  background: color-mix(in oklab, var(--primary) 14%, transparent);
+  color: var(--foreground);
+  backdrop-filter: blur(6px);
+}
+
+.calendar .rbc-event.calendar-event-time-log.rbc-selected {
+  background: color-mix(in oklab, var(--primary) 24%, transparent);
+}
+
+.calendar .rbc-event-label {
+  opacity: 0.8;
+}
+
+.calendar .rbc-show-more {
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.75rem;
+}
+
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-icon,
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ew-icon {
+  border-color: currentColor;
+}
+
+/* The "+N more" popup is portaled into the calendar, so it's still under `.calendar`. */
+.calendar .rbc-overlay {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.25);
+}
+
+.calendar .rbc-overlay-header {
+  border-color: var(--border);
+}
+
+/* Roomier hours than the library's 40px, so a quarter hour is easy to hit. */
+.calendar .rbc-timeslot-group {
+  min-height: 3.5rem;
+}

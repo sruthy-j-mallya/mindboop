@@ -2,21 +2,38 @@ class TimeLog < ApplicationRecord
   include Discard::Model
 
   MAX_BUFFER_MINUTES = 60
+  # How far back a session can be logged by hand, or moved to. Keep in sync with TIME_LOG_WINDOW_HOURS on the client.
+  LOGGING_WINDOW = 24.hours
+  # Room for the clock drift between the browser and the server, so a log ending "now" isn't refused.
+  CLOCK_DRIFT_ALLOWANCE = 5.minutes
+  MAX_TITLE_LENGTH = 255
 
-  # Deleting a task keeps its time logs in the database, but hides them along with the task.
-  scope :active, -> { kept.joins(:task).merge(Task.kept) }
+  # Deleting a task keeps its time logs in the database, but hides them along with the task. Logs saved with only a
+  # title have no task to hide them.
+  scope :active, -> { kept.left_joins(:task).where(tasks: { discarded_at: nil }) }
   scope :in_progress, -> { where(completed_at: nil) }
+  # Logs that overlap `from...to`. A running log reaches up to now.
+  scope :overlapping, ->(from, to) {
+    where(started_at: ...to).where("COALESCE(time_logs.completed_at, ?) >= ?", Time.current, from)
+  }
 
   # The minutes of one extension. Not stored: they only add to buffer_minutes.
   attribute :extension_minutes, :integer
 
-  enum :mode, { timer: "timer", stopwatch: "stopwatch" }, validate: true
+  # A manual log records a session after the fact, from the Calendar: it never runs.
+  enum :mode, { timer: "timer", stopwatch: "stopwatch", manual: "manual" }, validate: true
 
-  belongs_to :task
+  belongs_to :user, default: -> { task&.user }
+  # Only a manual log can go without a task; it then has a title of its own.
+  belongs_to :task, optional: true
   has_many :breaks, dependent: :destroy
   has_one :current_break, -> { open }, class_name: "Break"
 
+  validates :task, presence: true, unless: :manual?
+  validates :title, presence: true, if: -> { manual? && task.nil? }
+  validates :title, length: { maximum: MAX_TITLE_LENGTH }
   validates :started_at, presence: true
+  validates :completed_at, presence: true, if: :manual?
   validates :timer_preset, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :accumulated_elapsed_seconds, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :is_running, :is_bailed_out, inclusion: { in: [ true, false ] }
@@ -24,11 +41,28 @@ class TimeLog < ApplicationRecord
     numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_BUFFER_MINUTES }
   validates :extension_minutes, numericality: { only_integer: true, greater_than: 0 }, on: :extend
   validate :session_can_be_extended, on: :extend
+  validate :session_is_finished, on: :reschedule
+  validate :times_fit_logging_window, on: %i[ log reschedule ]
 
   # A new time log always starts running now, so its timing fields never come from the client.
   def start
     now = Time.current
     assign_attributes(is_running: true, started_at: now, current_run_started_at: now)
+  end
+
+  # Saves a session that already happened, from `started_at` to `completed_at`.
+  def log!
+    assign_attributes(is_running: false, current_run_started_at: nil, accumulated_elapsed_seconds: logged_seconds)
+    save!(context: :log)
+  end
+
+  # Moves a finished session to new times, as when it's dragged on the Calendar. The new span counts as time worked.
+  def reschedule!(started_at:, completed_at:)
+    with_lock do
+      assign_attributes(started_at:, completed_at:)
+      self.accumulated_elapsed_seconds = logged_seconds
+      save!(context: :reschedule)
+    end
   end
 
   def complete!
@@ -103,6 +137,25 @@ class TimeLog < ApplicationRecord
       return accumulated_elapsed_seconds unless is_running? && current_run_started_at?
 
       accumulated_elapsed_seconds + [ (time - current_run_started_at).floor, 0 ].max
+    end
+
+    def logged_seconds
+      return accumulated_elapsed_seconds unless started_at? && completed_at?
+
+      [ (completed_at - started_at).floor, 0 ].max
+    end
+
+    def session_is_finished
+      errors.add(:base, "Only a finished session can be moved.") if completed_at_in_database.nil?
+    end
+
+    def times_fit_logging_window
+      return unless started_at? && completed_at?
+
+      now = Time.current
+      errors.add(:started_at, "can't be more than 24 hours ago") if started_at < now - LOGGING_WINDOW - CLOCK_DRIFT_ALLOWANCE
+      errors.add(:completed_at, "can't be in the future") if completed_at > now + CLOCK_DRIFT_ALLOWANCE
+      errors.add(:completed_at, "must be after the start") unless completed_at > started_at
     end
 
     def session_can_be_extended

@@ -30,7 +30,8 @@ type SessionProps = {
 };
 
 const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProps) => {
-  const { data: task, isPending, error } = useTask(timeLog.taskId);
+  // A session on the Timer always runs on a task; only a logged session (never the current one) can go without.
+  const { data: task, isPending, error } = useTask(timeLog.taskId ?? "", { enabled: !!timeLog.taskId });
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [showExtendDialog, setShowExtendDialog] = useState(false);
   const [showBailDialog, setShowBailDialog] = useState(false);

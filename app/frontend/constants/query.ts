@@ -1,4 +1,4 @@
-import type { TaskFilters, TaskListParams } from "@/apis/types";
+import type { CalendarEventsParams, TaskFilters, TaskListParams } from "@/apis/types";
 
 export const QUERY_KEYS = {
   SESSION: ["session"],
@@ -11,5 +11,10 @@ export const QUERY_KEYS = {
   },
   TIME_LOGS: {
     CURRENT: ["timeLogs", "current"],
+  },
+  CALENDAR_EVENTS: {
+    // Every range loaded so far; task and time log mutations refresh them all.
+    ALL: ["calendarEvents"],
+    LIST: (params: CalendarEventsParams) => ["calendarEvents", params],
   },
 } as const;

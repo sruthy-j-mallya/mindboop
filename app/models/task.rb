@@ -6,6 +6,11 @@ class Task < ApplicationRecord
 
   # Soonest due first, undated tasks last; ties go to the oldest task.
   scope :by_due_date, -> { order(arel_table[:starts_at].asc.nulls_last, :created_at, :id) }
+  # Scheduled tasks that overlap `from...to`. A task with only a date reaches a day past it, which covers the estimate the
+  # Calendar draws it with.
+  scope :scheduled_between, ->(from, to) {
+    where(starts_at: ...to).where("COALESCE(tasks.ends_at, tasks.starts_at + INTERVAL '1 day') >= ?", from)
+  }
 
   # The description is Markdown written in the rich-text editor; an empty editor saves as nil.
   normalizes :description, with: ->(description) { description.strip.presence }

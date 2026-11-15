@@ -78,6 +78,25 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.parsed_body["page"]
   end
 
+  def test_that_index_can_search_titles
+    match = create(:task, user: @user, title: "Write the Quarterly report")
+    create(:task, user: @user, title: "Water the plants")
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: " quarterly " }
+
+    assert_equal [ match.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
+  def test_that_index_search_treats_wildcards_as_text
+    create(:task, user: @user, title: "Plain title")
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "%" }
+
+    assert_empty response.parsed_body["tasks"]
+  end
+
   def test_that_index_can_list_only_incomplete_tasks
     completed_task = create(:task, user: @user, is_completed: true)
     sign_in @user

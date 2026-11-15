@@ -29,7 +29,8 @@ export type Task = {
   checklistItems: ChecklistItem[];
 };
 
-export type TaskFilters = { isCompleted?: boolean };
+// `searchTerm` matches any part of a title, ignoring case.
+export type TaskFilters = { isCompleted?: boolean; searchTerm?: string };
 
 export type TaskListParams = TaskFilters & { page?: number };
 
@@ -51,13 +52,17 @@ export type CreateTaskPayload = TaskFields & { checklistItemsAttributes?: Checkl
 
 export type UpdateTaskPayload = Partial<TaskFields> & Pick<Task, "id">;
 
-export type TimeLogMode = "timer" | "stopwatch";
+// A manual log is a session saved after the fact, from the Calendar; it never runs.
+export type TimeLogMode = "timer" | "stopwatch" | "manual";
 
 export type Break = { id: string; intention: string; durationMinutes: number; endsAt: string };
 
+// Only a manual log can go without a task; it then has a `title` of its own. `taskTitle` is its task's title.
 export type TimeLog = {
   id: string;
-  taskId: string;
+  taskId: string | null;
+  title: string | null;
+  taskTitle: string | null;
   mode: TimeLogMode;
   timerPreset: number | null;
   bufferMinutes: number;
@@ -74,7 +79,25 @@ export type TimeLog = {
 
 export type TimeLogResponse = { timeLog: TimeLog };
 
-export type CreateTimeLogPayload = Pick<TimeLog, "taskId" | "mode"> & Partial<Pick<TimeLog, "timerPreset">>;
+export type StartTimeLogPayload = {
+  taskId: string;
+  mode: "timer" | "stopwatch";
+  timerPreset?: number | null;
+};
+
+// A session that already happened, linked to a task or saved with only a title.
+export type LogTimePayload = { mode: "manual"; startedAt: string; completedAt: string } & (
+  { taskId: string; title?: never } | { title: string; taskId?: never }
+);
+
+export type CreateTimeLogPayload = StartTimeLogPayload | LogTimePayload;
+
+// Moves a finished session, as when it's dragged on the Calendar.
+export type UpdateTimeLogPayload = Pick<TimeLog, "id" | "startedAt"> & { completedAt: string };
+
+export type CalendarEventsParams = { from: string; to: string };
+
+export type CalendarEventsResponse = { tasks: Task[]; timeLogs: TimeLog[] };
 
 export type CreateQuickStartPayload = Pick<CreateTaskPayload, "title" | "checklistItemsAttributes"> &
   Partial<Pick<Task, "description">> & { estimatedMinutes: number };

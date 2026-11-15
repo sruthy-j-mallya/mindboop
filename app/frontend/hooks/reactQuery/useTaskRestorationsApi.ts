@@ -14,6 +14,7 @@ export const useRestoreTask = () => {
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
       ]);
     },
   });

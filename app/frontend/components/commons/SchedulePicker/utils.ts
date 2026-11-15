@@ -11,7 +11,8 @@ import {
   startOfHour,
 } from "date-fns";
 
-import type { Task, UpdateTaskPayload } from "@/apis/types";
+import type { UpdateTaskPayload } from "@/apis/types";
+import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import { MINUTES_PER_HOUR } from "@/constants";
 
 import {
@@ -123,7 +124,7 @@ export const setIsDuration = (draft: ScheduleDraft, isDuration: boolean): Schedu
 };
 
 // Opens on the task's schedule, or on today (all day) for an unscheduled task.
-export const toDraft = ({ isDuration, isAllDay, startsAt, endsAt }: Task, now: number): ScheduleDraft => {
+export const toDraft = ({ isDuration, isAllDay, startsAt, endsAt }: Schedule, now: number): ScheduleDraft => {
   if (!startsAt) {
     const today = startOfDay(now);
 

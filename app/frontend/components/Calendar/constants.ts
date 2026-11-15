@@ -1,0 +1,71 @@
+import { format, getDay, parse, startOfWeek } from "date-fns";
+import { enUS } from "date-fns/locale";
+import { dateFnsLocalizer } from "react-big-calendar";
+
+// Weeks start on Monday, as in the date picker and the Inbox.
+export const WEEK_OPTIONS = { weekStartsOn: 1 } as const;
+
+export const LOCALIZER = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: (date: Date) => startOfWeek(date, WEEK_OPTIONS),
+  getDay,
+  locales: { "en-US": enUS },
+});
+
+export const CALENDAR_VIEWS = {
+  DAY: "day",
+  MULTI_DAY: "multiDay",
+  WEEK: "week",
+  MONTH: "month",
+  YEAR: "year",
+} as const;
+
+export const DEFAULT_VIEW = CALENDAR_VIEWS.WEEK;
+
+// The toolbar's view tabs, in order.
+export const VIEW_OPTIONS = [
+  { value: CALENDAR_VIEWS.DAY, label: "Day" },
+  { value: CALENDAR_VIEWS.MULTI_DAY, label: "3 days" },
+  { value: CALENDAR_VIEWS.WEEK, label: "Week" },
+  { value: CALENDAR_VIEWS.MONTH, label: "Month" },
+  { value: CALENDAR_VIEWS.YEAR, label: "Year" },
+] as const;
+
+// How many days the multi-day view shows.
+export const MULTI_DAY_COUNT = 3;
+
+// The time grid snaps to quarter hours, with a line every hour.
+export const SLOT_MINUTES = 15;
+export const SLOTS_PER_HOUR = 4;
+
+// A task with only a date (no end) is drawn as long as its estimate, or this long without one.
+export const DEFAULT_TASK_MINUTES = 30;
+
+// How far back time can be logged or moved to. Keep in sync with TimeLog::LOGGING_WINDOW.
+export const TIME_LOG_WINDOW_HOURS = 24;
+
+// Keeps the past/future split (and running sessions) current while the page stays open.
+export const NOW_REFRESH_INTERVAL = 60_000; // 1 minute
+
+// The grid opens scrolled to an hour before now, so the next few hours are in view.
+export const SCROLL_BACK_HOURS = 1;
+
+export const EVENT_KINDS = { TASK: "task", TIME_LOG: "timeLog" } as const;
+
+export const EVENT_CLASS_NAMES = {
+  TASK: "calendar-event-task",
+  TIME_LOG: "calendar-event-time-log",
+} as const;
+
+export const SLOT_CLASS_NAMES = { PAST: "calendar-slot-past", LOCKED: "calendar-slot-locked" } as const;
+
+export const MOVE_ERRORS = {
+  TASK_IN_PAST: "Tasks can only move to now or later.",
+  TIME_LOG_OUTSIDE_WINDOW: `Time logs can only sit within the last ${TIME_LOG_WINDOW_HOURS} hours.`,
+  TIME_LOG_ALL_DAY: "A time log needs a start and an end time.",
+} as const;
+
+export const SELECTION_ERRORS = {
+  TOO_FAR_BACK: `Time can only be logged for the last ${TIME_LOG_WINDOW_HOURS} hours.`,
+} as const;

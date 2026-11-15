@@ -1,12 +1,11 @@
 import { CalendarDays } from "lucide-react";
 
 import type { Task } from "@/apis/types";
+import ScheduleLabel from "@/components/commons/ScheduleLabel";
+import SchedulePicker from "@/components/commons/SchedulePicker";
+import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
 import { Button } from "@/components/ui/button";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
-
-import ScheduleLabel from "../ScheduleLabel";
-import SchedulePicker from "../SchedulePicker";
-import type { SchedulePayload } from "../SchedulePicker/types";
 
 type DueDatePickerProps = { task: Task };
 
@@ -18,7 +17,7 @@ const DueDatePicker = ({ task }: DueDatePickerProps) => {
 
   return (
     <div className="flex flex-col gap-1">
-      <SchedulePicker task={task} onSave={handleSave}>
+      <SchedulePicker schedule={task} onSave={handleSave}>
         <Button className="text-muted-foreground" size="sm" type="button" variant="ghost">
           <CalendarDays />
           {task.startsAt ? <ScheduleLabel schedule={task} /> : "Due date"}

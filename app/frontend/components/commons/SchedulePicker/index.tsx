@@ -1,6 +1,6 @@
 import { type FormEvent, type ReactElement, useState } from "react";
 
-import type { Task } from "@/apis/types";
+import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,23 +12,23 @@ import type { ScheduleDraft, SchedulePayload } from "./types";
 import { getDraftError, setIsDuration, toDraft, toPayload } from "./utils";
 
 type SchedulePickerProps = {
-  task: Task;
+  schedule: Schedule;
   // The button that opens the popover.
   children: ReactElement;
   align?: "start" | "end";
   onSave: (schedule: SchedulePayload) => void;
 };
 
-// Sets a task's date (optionally with a time) or its duration. Changes stay in a draft until OK; closing the popover
-// any other way drops them. Clear unschedules the task. The caller saves and shows any error, so each place can lay
-// that out its own way.
-const SchedulePicker = ({ task, children, align = "start", onSave }: SchedulePickerProps) => {
+// Sets a task's date (optionally with a time) or its duration, or a new task's before it's saved. Changes stay in a
+// draft until OK; closing the popover any other way drops them. Clear unschedules the task. The caller saves and shows
+// any error, so each place can lay that out its own way.
+const SchedulePicker = ({ schedule, children, align = "start", onSave }: SchedulePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [draft, setDraft] = useState<ScheduleDraft>(() => toDraft(task, Date.now()));
+  const [draft, setDraft] = useState<ScheduleDraft>(() => toDraft(schedule, Date.now()));
   const draftError = getDraftError(draft);
 
   const handleOpenChange = (isOpening: boolean) => {
-    if (isOpening) setDraft(toDraft(task, Date.now()));
+    if (isOpening) setDraft(toDraft(schedule, Date.now()));
     setIsOpen(isOpening);
   };
 

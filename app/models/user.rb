@@ -8,6 +8,8 @@ class User < ApplicationRecord
 
   has_many :sessions, dependent: :destroy
   has_many :tasks, dependent: :destroy
+  # Logs linked to a task go with the task; this catches the ones saved with only a title.
+  has_many :time_logs, dependent: :destroy
   has_many :achievements, dependent: :destroy
 
   validates :email_address, presence: true, uniqueness: true, format: { with: EMAIL_ADDRESS_FORMAT }

@@ -3,14 +3,14 @@ import { CalendarDays, ChevronRight, Trash2 } from "lucide-react";
 import { generatePath, Link, useNavigate } from "react-router";
 
 import type { Task } from "@/apis/types";
+import ScheduleLabel from "@/components/commons/ScheduleLabel";
+import SchedulePicker from "@/components/commons/SchedulePicker";
+import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 import routes from "@/routes";
 
-import ScheduleLabel from "../ScheduleLabel";
-import SchedulePicker from "../SchedulePicker";
-import type { SchedulePayload } from "../SchedulePicker/types";
 import useCompleteTask from "../useCompleteTask";
 import useDeleteTaskWithUndo from "../useDeleteTaskWithUndo";
 import { NARROW_LAYOUT_QUERY } from "./constants";
@@ -68,7 +68,7 @@ const TaskRow = ({ task }: TaskRowProps) => {
         <TitleInput isSelected={isSelected} title={title} onFocus={handleTitleFocus} onSave={handleRename} />
         {/* Opens the same picker as the pane. Hidden on phones to leave the title room; the pane still shows it. */}
         {task.startsAt && (
-          <SchedulePicker align="end" task={task} onSave={handleScheduleSave}>
+          <SchedulePicker align="end" schedule={task} onSave={handleScheduleSave}>
             {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
             <Button
               className="h-6 shrink-0 gap-1 rounded-full border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 max-sm:hidden dark:bg-background dark:hover:bg-background"
