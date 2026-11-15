@@ -1,7 +1,13 @@
-import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 
 import tasksApi from "@/apis/tasks";
-import type { Task, TaskListParams, TaskListResponse } from "@/apis/types";
+import type { Task, TaskFilters, TaskListParams, TaskListResponse } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 
 export const useTasks = (
@@ -12,6 +18,15 @@ export const useTasks = (
     queryKey: QUERY_KEYS.TASKS.LIST(params),
     queryFn: () => tasksApi.fetchList(params),
     ...options,
+  });
+
+// Loads the list a page at a time; `fetchNextPage` adds the next one while `hasNextPage` is true.
+export const useInfiniteTasks = (filters: TaskFilters = {}) =>
+  useInfiniteQuery({
+    queryKey: QUERY_KEYS.TASKS.INFINITE_LIST(filters),
+    queryFn: ({ pageParam }) => tasksApi.fetchList({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: ({ page, totalPages }) => (page < totalPages ? page + 1 : undefined),
   });
 
 export const useTask = (id: string, options?: Omit<UseQueryOptions<Task>, "queryKey" | "queryFn">) =>

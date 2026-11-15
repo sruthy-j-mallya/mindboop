@@ -8,6 +8,7 @@ import AddStepButton from "@/components/commons/Steps/AddStepButton";
 import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
 import type { Draft } from "@/components/commons/Steps/types";
 import TaskDescription from "@/components/commons/TaskDescription";
+import TaskSteps from "@/components/commons/TaskSteps";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
@@ -19,7 +20,6 @@ import DiscardDialog from "./DiscardDialog";
 import ExtendDialog from "./ExtendDialog";
 import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
-import Steps from "./Steps";
 import { isTooShortToKeep } from "./utils";
 
 type SessionProps = {
@@ -64,8 +64,9 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   }
 
   return (
-    <Card className="mx-auto w-full max-w-2xl lg:max-w-5xl">
-      <CardContent className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+    <Card className="mx-auto w-full max-w-2xl flex-1 lg:max-w-5xl">
+      {/* The card fills the page, and the steps-and-description column takes the height left under the timer. */}
+      <CardContent className="grid flex-1 grid-rows-[auto_1fr] gap-8 lg:grid-cols-2 lg:grid-rows-[1fr] lg:gap-12">
         {/* The timer and its actions stay together (and pinned on wide screens), so a long description never
             pushes the buttons out of view. */}
         <div className="flex flex-col gap-6 lg:sticky lg:top-4 lg:self-start">
@@ -127,7 +128,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
                 <AddStepButton onClick={handleAddStep} />
               </div>
             )}
-            <Steps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
+            <TaskSteps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
           </div>
           <TaskDescription key={task.id} task={task} />
         </div>

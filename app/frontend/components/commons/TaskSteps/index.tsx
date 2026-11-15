@@ -7,10 +7,10 @@ import {
   useUpdateChecklistItem,
 } from "@/hooks/reactQuery/useChecklistItemsApi";
 
-type StepsProps = { task: Task } & Pick<CommonStepsProps, "draft" | "onDraftChange">;
+type TaskStepsProps = { task: Task } & Pick<CommonStepsProps, "draft" | "onDraftChange">;
 
-// Every change is saved at once, so ticking a step off mid-session needs no extra click.
-const Steps = ({ task: { id: taskId, checklistItems }, draft, onDraftChange }: StepsProps) => {
+// A saved task's steps. Every change is saved at once, so ticking a step off needs no extra click.
+const TaskSteps = ({ task: { id: taskId, checklistItems }, draft, onDraftChange }: TaskStepsProps) => {
   const { mutate: createChecklistItem, error: createError } = useCreateChecklistItem();
   const { mutate: updateChecklistItem, error: updateError } = useUpdateChecklistItem();
   const { mutate: deleteChecklistItem, error: deleteError } = useDeleteChecklistItem();
@@ -48,4 +48,4 @@ const Steps = ({ task: { id: taskId, checklistItems }, draft, onDraftChange }: S
   );
 };
 
-export default Steps;
+export default TaskSteps;

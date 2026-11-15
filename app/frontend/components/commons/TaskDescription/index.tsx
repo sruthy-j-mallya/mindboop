@@ -47,7 +47,7 @@ const TaskDescription = ({ task: { id, description }, isAutoFocused = false }: T
   const errorMessage = validationError ?? error?.message;
 
   return (
-    <section aria-label="Description" className="flex flex-col gap-2" onBlur={flush}>
+    <section aria-label="Description" className="flex flex-1 flex-col gap-2" onBlur={flush}>
       <RichTextEditor
         defaultValue={description ?? ""}
         describedBy={errorMessage ? errorId : undefined}

@@ -1,4 +1,4 @@
-import { LogOut, Settings, Timer, Zap } from "lucide-react";
+import { Inbox, LogOut, Settings, Timer, Zap } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import {
@@ -34,6 +34,14 @@ const AppSidebar = () => {
                   <Link to={routes.root} onClick={handleNavigate}>
                     <Zap />
                     <span>Quick start</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname.startsWith(routes.inbox.index)} tooltip="Inbox">
+                  <Link to={routes.inbox.index} onClick={handleNavigate}>
+                    <Inbox />
+                    <span>Inbox</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

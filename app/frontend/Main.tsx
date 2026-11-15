@@ -4,6 +4,9 @@ import AppLayout from "@/components/commons/AppLayout";
 import PrivateRoute from "@/components/commons/PrivateRoute";
 import CompleteSignup from "@/components/CompleteSignup";
 import ForgotPassword from "@/components/ForgotPassword";
+import Inbox from "@/components/Inbox";
+import NoTaskSelected from "@/components/Inbox/NoTaskSelected";
+import TaskPane from "@/components/Inbox/TaskPane";
 import Login from "@/components/Login";
 import QuickStart from "@/components/QuickStart";
 import ResetPassword from "@/components/ResetPassword";
@@ -17,6 +20,10 @@ const Main = () => (
     <Route element={<PrivateRoute />}>
       <Route element={<AppLayout />}>
         <Route element={<QuickStart />} path={routes.root} />
+        <Route element={<Inbox />} path={routes.inbox.index}>
+          <Route index element={<NoTaskSelected />} />
+          <Route element={<TaskPane />} path={routes.inbox.show} />
+        </Route>
         <Route element={<Timer />} path={routes.timer} />
         <Route element={<Settings />} path={routes.settings} />
       </Route>

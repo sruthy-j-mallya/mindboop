@@ -2,16 +2,17 @@ import { useEffect, useState } from "react";
 
 const TICK_INTERVAL = 1000; // 1 second
 
-const useCurrentTime = (isTicking: boolean) => {
+// `tickInterval` (ms) is how often the time refreshes while ticking.
+const useCurrentTime = (isTicking: boolean, tickInterval = TICK_INTERVAL) => {
   const [currentTime, setCurrentTime] = useState(Date.now);
 
   useEffect(() => {
     if (!isTicking) return undefined;
 
-    const interval = setInterval(() => setCurrentTime(Date.now()), TICK_INTERVAL);
+    const interval = setInterval(() => setCurrentTime(Date.now()), tickInterval);
 
     return () => clearInterval(interval);
-  }, [isTicking]);
+  }, [isTicking, tickInterval]);
 
   return currentTime;
 };

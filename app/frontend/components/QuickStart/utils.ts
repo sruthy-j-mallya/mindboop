@@ -1,4 +1,6 @@
 import type { CreateQuickStartPayload } from "@/apis/types";
+import { MINUTES_PER_HOUR } from "@/constants";
+import { formatMinutes } from "@/utils";
 
 import {
   DRAFT_SCHEMA,
@@ -21,17 +23,6 @@ export const buildQuickStartPayload = ({
   estimatedMinutes: presetMinutes ?? Number(customMinutes),
   checklistItemsAttributes: steps.map(({ text, isDone }) => ({ title: text, isCompleted: isDone })),
 });
-
-const MINUTES_PER_HOUR = 60;
-
-export const formatMinutes = (minutes: number) => {
-  const hours = Math.floor(minutes / MINUTES_PER_HOUR);
-  const rest = minutes % MINUTES_PER_HOUR;
-
-  if (hours === 0) return `${rest} min`;
-
-  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
-};
 
 // Only an hour or more needs converting, and only a time the form accepts is worth echoing back.
 export const getCustomMinutesHint = (customMinutes: string) => {
