@@ -31,3 +31,16 @@ export type SelectionIntent =
   | { kind: "task"; schedule: Schedule }
   | { kind: "timeLog"; range: TimeRange }
   | { kind: "none"; error?: string };
+
+export type WheelDelta = { x: number; y: number };
+
+export type WheelInput = Pick<WheelEvent, "deltaX" | "deltaY" | "deltaMode" | "shiftKey" | "timeStamp">;
+
+// One swipe (or run of wheel clicks) so far: how far it paged, and after it turned a page, how fast its momentum is.
+export type WheelGesture = {
+  distance: number;
+  lastWheelAt: number;
+  hasTurned: boolean;
+  peak: number;
+  slowest: number;
+};

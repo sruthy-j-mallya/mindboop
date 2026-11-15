@@ -2,16 +2,20 @@ import { describe, expect, it } from "vitest";
 
 import type { Task, TimeLog } from "@/apis/types";
 
-import { MOVE_ERRORS, SELECTION_ERRORS } from "./constants";
-import type { CalendarEvent } from "./types";
+import { CALENDAR_VIEWS, INITIAL_WHEEL_GESTURE, MOVE_ERRORS, SELECTION_ERRORS } from "./constants";
+import type { CalendarEvent, CalendarView, WheelInput } from "./types";
 import {
   getCurrentSlotStart,
   getMovedTaskSchedule,
   getMoveError,
+  getPagingDistance,
   getSelectionIntent,
   getVisibleRange,
+  shiftDate,
+  stepWheelGesture,
   toCalendarEvents,
   toTaskTimes,
+  toWheelDelta,
 } from "./utils";
 
 // Thursday 12 Nov 2026, 10:07 local time.
@@ -76,6 +80,112 @@ describe("getVisibleRange", () => {
       start: new Date(2026, 0, 1),
       end: new Date(2027, 0, 1),
     });
+  });
+});
+
+describe("shiftDate", () => {
+  it("moves by each view's page", () => {
+    expect(shiftDate(CALENDAR_VIEWS.DAY, at(12), 1)).toEqual(at(13));
+    expect(shiftDate(CALENDAR_VIEWS.MULTI_DAY, at(12), -1)).toEqual(at(9));
+    expect(shiftDate(CALENDAR_VIEWS.WEEK, at(12), 1)).toEqual(at(19));
+    expect(shiftDate(CALENDAR_VIEWS.MONTH, at(12), -1)).toEqual(new Date(2026, 9, 12));
+    expect(shiftDate(CALENDAR_VIEWS.YEAR, at(12), 1)).toEqual(new Date(2027, 10, 12));
+  });
+});
+
+describe("toWheelDelta", () => {
+  const wheel = (overrides: Partial<WheelInput> = {}): WheelInput => ({
+    deltaX: 0,
+    deltaY: 0,
+    deltaMode: 0,
+    shiftKey: false,
+    timeStamp: 0,
+    ...overrides,
+  });
+
+  it("turns a mouse wheel sideways with Shift held", () => {
+    expect(toWheelDelta(wheel({ deltaY: 30, shiftKey: true }))).toEqual({ x: 30, y: 0 });
+  });
+
+  it("counts lines as pixels", () => {
+    expect(toWheelDelta(wheel({ deltaX: 3, deltaMode: 1 }))).toEqual({ x: 48, y: 0 });
+  });
+});
+
+describe("getPagingDistance", () => {
+  it("pages sideways in every view, and up and down only in the month view", () => {
+    expect(getPagingDistance(CALENDAR_VIEWS.WEEK, { x: 30, y: 10 })).toBe(30);
+    expect(getPagingDistance(CALENDAR_VIEWS.DAY, { x: 10, y: 30 })).toBe(0);
+    expect(getPagingDistance(CALENDAR_VIEWS.YEAR, { x: 0, y: 30 })).toBe(0);
+    expect(getPagingDistance(CALENDAR_VIEWS.MONTH, { x: 0, y: -30 })).toBe(-30);
+  });
+});
+
+describe("stepWheelGesture", () => {
+  const VERTICAL = { deltaX: 0, deltaY: 50, deltaMode: 0, shiftKey: false };
+
+  // Plays sideways wheel events (deltaX, 16ms apart unless a time is given) and lists the pages turned.
+  const swipe = (view: CalendarView, events: (number | [number, number])[], deltaY = 0) => {
+    let gesture = INITIAL_WHEEL_GESTURE;
+    const steps: number[] = [];
+    events.forEach((event, index) => {
+      const [deltaX, timeStamp] = Array.isArray(event) ? event : [event, index * 16];
+      const result = stepWheelGesture(view, gesture, {
+        deltaX,
+        deltaY,
+        deltaMode: 0,
+        shiftKey: false,
+        timeStamp,
+      });
+      gesture = result.gesture;
+      if (result.step !== 0) steps.push(result.step);
+    });
+
+    return steps;
+  };
+
+  it("turns one page per swipe, ignoring its momentum", () => {
+    expect(swipe(CALENDAR_VIEWS.WEEK, [-10, -30, -60, -55, -45, -35, -25, -15, -8, -4, -2, -1])).toEqual([
+      -1,
+    ]);
+  });
+
+  it("adds up a gentle swipe until it has gone far enough", () => {
+    expect(swipe(CALENDAR_VIEWS.WEEK, [5, 8, 10, 9, 6, 3])).toEqual([1]);
+    expect(swipe(CALENDAR_VIEWS.WEEK, [5, 8, 10])).toEqual([]);
+  });
+
+  it("turns a page for each quick swipe, even while the last one's momentum is still going", () => {
+    const fastSwipe = [-20, -60, -90, -80, -70, -60];
+    const nextFinger = [-12, -40, -90, -80, -70, -60];
+
+    expect(swipe(CALENDAR_VIEWS.WEEK, [...fastSwipe, ...nextFinger, ...nextFinger])).toEqual([-1, -1, -1]);
+  });
+
+  it("starts a new swipe after a pause", () => {
+    expect(
+      swipe(CALENDAR_VIEWS.WEEK, [
+        [60, 0],
+        [60, 16],
+        [60, 300],
+      ]),
+    ).toEqual([1, 1]);
+  });
+
+  it("leaves a mostly up-and-down swipe to the time grid, but pages the month view with it", () => {
+    expect(swipe(CALENDAR_VIEWS.WEEK, [20, 20, 20], 50)).toEqual([]);
+    expect(swipe(CALENDAR_VIEWS.MONTH, [0, 0], 50)).toEqual([1]);
+  });
+
+  it("pages with a sideways swipe straight after scrolling the time grid", () => {
+    let gesture = INITIAL_WHEEL_GESTURE;
+    [0, 16, 32].forEach((timeStamp) => {
+      gesture = stepWheelGesture(CALENDAR_VIEWS.WEEK, gesture, { ...VERTICAL, timeStamp }).gesture;
+    });
+
+    expect(
+      stepWheelGesture(CALENDAR_VIEWS.WEEK, gesture, { ...VERTICAL, deltaX: -60, timeStamp: 48 }).step,
+    ).toBe(-1);
   });
 });
 

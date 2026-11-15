@@ -2,8 +2,8 @@ import { addDays, endOfDay, startOfDay } from "date-fns";
 import type { DateLocalizer, NavigateAction } from "react-big-calendar";
 import TimeGridModule from "react-big-calendar/lib/TimeGrid";
 
-import { MULTI_DAY_COUNT } from "./constants";
-import { getMultiDayRange, unwrapDefault } from "./utils";
+import { CALENDAR_VIEWS, MULTI_DAY_COUNT } from "./constants";
+import { getMultiDayRange, shiftDate, unwrapDefault } from "./utils";
 
 const TimeGrid = unwrapDefault(TimeGridModule);
 
@@ -31,9 +31,9 @@ const MultiDayView = ({ date, localizer, ...props }: MultiDayViewProps) => (
 MultiDayView.range = getDays;
 
 MultiDayView.navigate = (date: Date, action: NavigateAction) => {
-  if (action === "PREV") return addDays(date, -MULTI_DAY_COUNT);
+  if (action === "PREV") return shiftDate(CALENDAR_VIEWS.MULTI_DAY, date, -1);
 
-  return action === "NEXT" ? addDays(date, MULTI_DAY_COUNT) : date;
+  return action === "NEXT" ? shiftDate(CALENDAR_VIEWS.MULTI_DAY, date, 1) : date;
 };
 
 MultiDayView.title = (date: Date, { localizer }: { localizer: DateLocalizer }) => {

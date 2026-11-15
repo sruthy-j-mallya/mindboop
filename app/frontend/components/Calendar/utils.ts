@@ -1,6 +1,8 @@
 import {
   addDays,
   addMinutes,
+  addMonths,
+  addWeeks,
   addYears,
   endOfMonth,
   endOfWeek,
@@ -25,12 +27,18 @@ import {
   CALENDAR_VIEWS,
   DEFAULT_TASK_MINUTES,
   EVENT_KINDS,
+  INITIAL_WHEEL_GESTURE,
   MOVE_ERRORS,
   MULTI_DAY_COUNT,
   SELECTION_ERRORS,
   SLOT_MINUTES,
   TIME_LOG_WINDOW_HOURS,
   WEEK_OPTIONS,
+  WHEEL_DELTA_MODE_PIXELS,
+  WHEEL_GESTURE_GAP,
+  WHEEL_NEW_SWIPE_MIN_SPEED,
+  WHEEL_NEW_SWIPE_RATIO,
+  WHEEL_PAGE_DISTANCE,
 } from "./constants";
 import type {
   AnchorRect,
@@ -41,6 +49,9 @@ import type {
   TaskEvent,
   TimeLogEvent,
   TimeRange,
+  WheelDelta,
+  WheelGesture,
+  WheelInput,
 } from "./types";
 
 const MILLISECONDS_PER_MINUTE = 60_000;
@@ -71,6 +82,78 @@ export const getVisibleRange = (view: CalendarView, date: Date): TimeRange => {
     default:
       return { start: startOfYear(date), end: addYears(startOfYear(date), 1) };
   }
+};
+
+// The date a view lands on a page (`step` of 1 or -1) away, as its Previous and Next buttons go.
+export const shiftDate = (view: CalendarView, date: Date, step: number) => {
+  switch (view) {
+    case CALENDAR_VIEWS.DAY:
+      return addDays(date, step);
+    case CALENDAR_VIEWS.MULTI_DAY:
+      return addDays(date, step * MULTI_DAY_COUNT);
+    case CALENDAR_VIEWS.WEEK:
+      return addWeeks(date, step);
+    case CALENDAR_VIEWS.MONTH:
+      return addMonths(date, step);
+    default:
+      return addYears(date, step);
+  }
+};
+
+// A wheel event's movement in pixels. Shift turns a mouse wheel sideways, where the browser doesn't already.
+export const toWheelDelta = ({ deltaX, deltaY, deltaMode, shiftKey }: WheelInput): WheelDelta => {
+  const pixels = WHEEL_DELTA_MODE_PIXELS.at(deltaMode) ?? 1;
+  const [x, y] = shiftKey && deltaX === 0 ? [deltaY, 0] : [deltaX, deltaY];
+
+  return { x: x * pixels, y: y * pixels };
+};
+
+// How far a wheel movement pages the calendar (negative is back), or 0 when it's the grid's to scroll. Sideways
+// movement pages every view; the month view, which doesn't scroll, pages up and down too.
+export const getPagingDistance = (view: CalendarView, { x, y }: WheelDelta) => {
+  if (Math.abs(x) > Math.abs(y)) return x;
+
+  return view === CALENDAR_VIEWS.MONTH ? y : 0;
+};
+
+// A trackpad's momentum only slows down; a finger swiping again speeds the events back up.
+const isNewSwipe = ({ hasTurned, peak, slowest }: WheelGesture, speed: number) =>
+  hasTurned &&
+  slowest < peak &&
+  speed >= WHEEL_NEW_SWIPE_MIN_SPEED &&
+  speed >= slowest * WHEEL_NEW_SWIPE_RATIO;
+
+// Adds a wheel event to the swipe so far, and says which page it turns to (0 for none). A swipe turns one page at
+// most; the rest of it is ignored, until a pause or a new swipe.
+export const stepWheelGesture = (
+  view: CalendarView,
+  gesture: WheelGesture,
+  event: WheelInput,
+): { gesture: WheelGesture; step: number } => {
+  const delta = toWheelDelta(event);
+  const speed = Math.max(Math.abs(delta.x), Math.abs(delta.y));
+  const isPaused = event.timeStamp - gesture.lastWheelAt > WHEEL_GESTURE_GAP;
+  const current = isPaused || isNewSwipe(gesture, speed) ? INITIAL_WHEEL_GESTURE : gesture;
+  const lastWheelAt = event.timeStamp;
+
+  if (current.hasTurned) {
+    const isFading = speed < current.peak;
+
+    return {
+      gesture: {
+        ...current,
+        lastWheelAt,
+        peak: Math.max(current.peak, speed),
+        slowest: isFading ? Math.min(current.slowest, speed) : current.slowest,
+      },
+      step: 0,
+    };
+  }
+
+  const distance = current.distance + getPagingDistance(view, delta);
+  const step = Math.abs(distance) >= WHEEL_PAGE_DISTANCE ? Math.sign(distance) : 0;
+
+  return { gesture: { ...current, distance, lastWheelAt, hasTurned: step !== 0, peak: speed }, step };
 };
 
 // The start of the quarter hour now falls in: a click in that slot still counts as now.

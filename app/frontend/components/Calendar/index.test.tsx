@@ -1,6 +1,6 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { startOfHour, subHours } from "date-fns";
+import { addMonths, format, startOfHour, subHours } from "date-fns";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import calendarEventsApi from "@/apis/calendar_events";
@@ -82,5 +82,35 @@ describe("Calendar", () => {
 
     expect(screen.getByRole("region", { name: /^January / })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Year" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("pages through months when the month view is scrolled, one page per gesture", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    renderWithProviders(<Calendar />);
+    await userEvent.click(screen.getByRole("tab", { name: "Month" }));
+    const grid = screen.getByRole("table");
+
+    fireEvent.wheel(grid, { deltaY: 100 });
+    // The rest of the same gesture (a trackpad's momentum) doesn't turn another page.
+    fireEvent.wheel(grid, { deltaY: 100 });
+
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      format(addMonths(new Date(), 1), "MMMM yyyy"),
+    );
+  });
+
+  it("pages back a week when scrolled sideways, but leaves scrolling up and down to the grid", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    renderWithProviders(<Calendar />);
+    const title = screen.getByRole("heading", { level: 2 });
+    const thisWeek = title.textContent;
+
+    fireEvent.wheel(title, { deltaY: 100 });
+    expect(title).toHaveTextContent(thisWeek ?? "");
+
+    fireEvent.wheel(title, { deltaX: -100 });
+    expect(title).not.toHaveTextContent(thisWeek ?? "");
+    await userEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(title).toHaveTextContent(thisWeek ?? "");
   });
 });

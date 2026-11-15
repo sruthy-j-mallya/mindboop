@@ -51,6 +51,30 @@ export const NOW_REFRESH_INTERVAL = 60_000; // 1 minute
 // The grid opens scrolled to an hour before now, so the next few hours are in view.
 export const SCROLL_BACK_HOURS = 1;
 
+// Scrolling sideways over the calendar (or with Shift held) pages it like Previous/Next; in the month view, scrolling
+// up and down does too. A swipe turns one page once it has gone this far.
+export const WHEEL_PAGE_DISTANCE = 40; // pixels
+// A pause this long between wheel events ends a swipe.
+export const WHEEL_GESTURE_GAP = 200; // milliseconds
+// After a page turns, the swipe's momentum is ignored. Wheel events that pick up speed again once it has started to
+// fade (to this many times its slowest, and at least this fast) are a new swipe.
+export const WHEEL_NEW_SWIPE_RATIO = 2;
+export const WHEEL_NEW_SWIPE_MIN_SPEED = 10; // pixels per event
+
+export const INITIAL_WHEEL_GESTURE = {
+  distance: 0,
+  lastWheelAt: Number.NEGATIVE_INFINITY,
+  hasTurned: false,
+  peak: 0,
+  slowest: Number.POSITIVE_INFINITY,
+};
+
+// Pixels per wheel delta unit, indexed by `WheelEvent.deltaMode` (pixel, line, page).
+export const WHEEL_DELTA_MODE_PIXELS = [1, 16, 800] as const;
+
+// The "+N more" popup scrolls on its own.
+export const OVERLAY_SELECTOR = ".rbc-overlay";
+
 export const EVENT_KINDS = { TASK: "task", TIME_LOG: "timeLog" } as const;
 
 export const EVENT_CLASS_NAMES = {

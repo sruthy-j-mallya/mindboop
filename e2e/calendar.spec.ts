@@ -147,3 +147,24 @@ test("the year view drills down to a day", async ({ page }) => {
   await page.getByRole("button", { name: /, 1 January / }).click();
   await expect(page.getByRole("tab", { name: "Day", exact: true, selected: true })).toBeVisible();
 });
+
+test("scrolling sideways pages through dates, and up and down through months", async ({ page }) => {
+  await signUp(page);
+  await page.getByRole("link", { name: "Calendar" }).click();
+  const title = page.getByRole("heading", { level: 2 });
+  const thisWeek = await title.textContent();
+
+  const grid = page.locator(".rbc-time-content");
+  await grid.hover();
+  // Scrolling up and down only moves through the hours.
+  await page.mouse.wheel(0, 300);
+  await expect(title).toHaveText(thisWeek ?? "");
+  await page.mouse.wheel(200, 0);
+  await expect(title).not.toHaveText(thisWeek ?? "");
+
+  await page.getByRole("tab", { name: "Month" }).click();
+  const thisMonth = await title.textContent();
+  await page.locator(".rbc-month-view").hover();
+  await page.mouse.wheel(0, 200);
+  await expect(title).not.toHaveText(thisMonth ?? "");
+});

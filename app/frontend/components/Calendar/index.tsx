@@ -2,7 +2,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "@/styles/calendar.css";
 
-import { type SyntheticEvent, useMemo, useState } from "react";
+import { type SyntheticEvent, useMemo, useRef, useState } from "react";
 
 import { startOfDay, subHours } from "date-fns";
 import type { SlotInfo, View, ViewsProps } from "react-big-calendar";
@@ -31,12 +31,14 @@ import TimeLogPopover from "./TimeLogPopover";
 import Toolbar from "./Toolbar";
 import type { CalendarEvent, CalendarView, PopoverState } from "./types";
 import useEventMoves from "./useEventMoves";
+import useWheelPaging from "./useWheelPaging";
 import {
   eventToAnchorRect,
   getCurrentSlotStart,
   getLogWindowStart,
   getSelectionIntent,
   getVisibleRange,
+  shiftDate,
   toAnchorRect,
   toCalendarEvents,
 } from "./utils";
@@ -58,12 +60,14 @@ const getEventProps = ({ kind }: CalendarEvent) => ({
 });
 
 // Past time logs and upcoming tasks on one grid. Clicking or dragging across empty time adds a task from now on, or
-// logs time in the last 24 hours; tasks open for editing on click, and both move and resize by dragging.
+// logs time in the last 24 hours; tasks open for editing on click, and both move and resize by dragging. Scrolling
+// sideways pages through dates.
 const Calendar = () => {
   const [view, setView] = useState<CalendarView>(DEFAULT_VIEW);
   const [date, setDate] = useState(() => new Date());
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [scrollToTime] = useState(() => subHours(new Date(), SCROLL_BACK_HOURS));
+  const calendarRef = useRef<HTMLDivElement>(null);
   const now = useCurrentTime(true, NOW_REFRESH_INTERVAL);
   const params = useMemo(() => {
     const { start, end } = getVisibleRange(view, date);
@@ -78,6 +82,9 @@ const Calendar = () => {
   );
 
   const handleView = (nextView: View) => setView(nextView as CalendarView);
+
+  const handleWheelStep = (step: number) => setDate((current) => shiftDate(view, current, step));
+  useWheelPaging(calendarRef, view, handleWheelStep);
 
   const handleClosePopover = () => setPopover(null);
 
@@ -118,7 +125,7 @@ const Calendar = () => {
           {error.message}
         </p>
       )}
-      <div className="calendar h-[calc(100svh-5rem)] min-h-[36rem]">
+      <div ref={calendarRef} className="calendar h-[calc(100svh-5rem)] min-h-[36rem]">
         <DragAndDropCalendar
           popup
           resizable

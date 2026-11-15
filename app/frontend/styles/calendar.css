@@ -3,6 +3,15 @@
  * after the library's own stylesheet, and scoped under `.calendar` so these rules win on specificity.
  */
 
+/*
+ * Scrolling sideways pages the calendar (useWheelPaging), so while it's on the page a swipe mustn't go back or
+ * forward in the browser's history. Cancelling the wheel events doesn't stop that gesture on macOS; this does.
+ */
+html:has(.calendar),
+html:has(.calendar) body {
+  overscroll-behavior-x: none;
+}
+
 .calendar .rbc-calendar {
   color: var(--foreground);
   font-family: inherit;

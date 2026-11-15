@@ -1,8 +1,9 @@
-import { addYears, eachMonthOfInterval, endOfYear, format, startOfYear } from "date-fns";
+import { eachMonthOfInterval, endOfYear, format, startOfYear } from "date-fns";
 import type { NavigateAction } from "react-big-calendar";
 
 import { CALENDAR_VIEWS } from "../constants";
 import type { CalendarEvent } from "../types";
+import { shiftDate } from "../utils";
 import MonthGrid from "./MonthGrid";
 import { getDayCounts } from "./utils";
 
@@ -31,9 +32,9 @@ const YearView = ({ date, events, onDrillDown }: YearViewProps) => {
 YearView.range = (date: Date) => [startOfYear(date), endOfYear(date)];
 
 YearView.navigate = (date: Date, action: NavigateAction) => {
-  if (action === "PREV") return addYears(date, -1);
+  if (action === "PREV") return shiftDate(CALENDAR_VIEWS.YEAR, date, -1);
 
-  return action === "NEXT" ? addYears(date, 1) : date;
+  return action === "NEXT" ? shiftDate(CALENDAR_VIEWS.YEAR, date, 1) : date;
 };
 
 YearView.title = (date: Date) => format(date, "yyyy");
