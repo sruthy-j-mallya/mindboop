@@ -30,5 +30,5 @@ export const KIND_CLASS_NAMES: Record<ParkingLotItemKind, string> = {
   idea: "bg-brand-yellow/25",
   curiosity: "bg-brand-coral/25",
   task: "bg-brand-beige/40",
-  thought: "bg-brand-purple/15",
+  thought: "bg-brand-purple/15 dark:bg-brand-purple-light/60",
 };
