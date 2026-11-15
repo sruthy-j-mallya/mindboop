@@ -130,7 +130,8 @@ a 403, and a discarded or unknown item gets a 404. The conversion and restoratio
 
 An item is `{ id, content, kind, status, task_id, created_at, updated_at }`.
 
-- `content` is required, up to 1,000 characters (stripped). `kind` is `idea` (the default), `question` or `task`.
+- `content` is required, up to 1,000 characters (stripped). `kind` is `idea` (the default), `curiosity`, `task` or
+  `thought` (anything that is none of the others).
 - `status` starts as `parked`. `PATCH` moves it between `parked` and `addressed`. `converted` is set only by the
   conversion endpoint, which also sets `task_id`; any other combination gets a 422.
 - `GET` lists undeleted items newest first, 20 a page, as `{ parking_lot_items, parking_lot_items_count, page,

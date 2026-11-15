@@ -104,7 +104,7 @@ export type UpdateChecklistItemPayload = Partial<Pick<ChecklistItem, "title" | "
 
 export type DeleteChecklistItemPayload = { taskId: string; id: string };
 
-export type ParkingLotItemKind = "idea" | "question" | "task";
+export type ParkingLotItemKind = "idea" | "curiosity" | "task" | "thought";
 
 // Parked until dealt with: addressed by hand, or converted into an Inbox task (then `taskId` is set).
 export type ParkingLotItemStatus = "parked" | "addressed" | "converted";

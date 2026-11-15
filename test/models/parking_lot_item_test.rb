@@ -23,6 +23,10 @@ class ParkingLotItemTest < ActiveSupport::TestCase
     assert @item.kind_idea?
   end
 
+  def test_that_a_thought_is_a_valid_kind
+    assert build(:parking_lot_item, kind: "thought").valid?
+  end
+
   def test_that_an_unknown_kind_or_status_is_invalid
     assert build(:parking_lot_item, kind: "worry").invalid?
     assert build(:parking_lot_item, status: "snoozed").invalid?

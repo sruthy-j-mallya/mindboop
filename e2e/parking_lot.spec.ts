@@ -28,7 +28,7 @@ test("park thoughts during a session, then deal with them on the Parking lot pag
   await input.fill("Build an aeroplane");
   await input.press("Enter");
   await expect(parkingLot.getByText("Build an aeroplane")).toBeVisible();
-  await parkingLot.getByText("question", { exact: true }).click();
+  await parkingLot.getByText("curiosity", { exact: true }).click();
   await input.fill("Is the library open on Sunday?");
   await input.press("Enter");
   await parkingLot.getByText("task", { exact: true }).click();
@@ -37,7 +37,7 @@ test("park thoughts during a session, then deal with them on the Parking lot pag
 
   await expect(parkingLot.getByRole("list", { name: "Parked thoughts" }).getByRole("listitem")).toHaveText([
     /Build an aeroplane\s*idea/,
-    /Is the library open on Sunday\?\s*question/,
+    /Is the library open on Sunday\?\s*curiosity/,
     /Clean my scooter\s*task/,
   ]);
 

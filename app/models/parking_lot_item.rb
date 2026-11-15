@@ -5,7 +5,7 @@ class ParkingLotItem < ApplicationRecord
 
   normalizes :content, with: ->(content) { content.strip }
 
-  enum :kind, { idea: "idea", question: "question", task: "task" }, prefix: true, validate: true
+  enum :kind, { idea: "idea", curiosity: "curiosity", task: "task", thought: "thought" }, prefix: true, validate: true
   # Parked until dealt with: addressed by hand, or converted into an Inbox task.
   enum :status, { parked: "parked", addressed: "addressed", converted: "converted" }, validate: true
 

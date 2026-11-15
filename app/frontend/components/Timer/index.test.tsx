@@ -782,7 +782,7 @@ describe("Timer", () => {
 
   describe("parking lot", () => {
     it("lists the thoughts parked during this session, oldest first", async () => {
-      const newer = buildParkingLotItem({ content: "Is the shop open on Sunday?", kind: "question" });
+      const newer = buildParkingLotItem({ content: "Is the shop open on Sunday?", kind: "curiosity" });
       const older = buildParkingLotItem({ content: "Clean my scooter", kind: "task" });
       renderTimer(TIME_LOG, TASK, [newer, older]);
 

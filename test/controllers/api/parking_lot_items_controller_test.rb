@@ -62,13 +62,13 @@ class Api::ParkingLotItemsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
 
     assert_difference "@user.parking_lot_items.count", 1 do
-      post api_parking_lot_items_path, params: { content: @content, kind: "question" }, as: :json
+      post api_parking_lot_items_path, params: { content: @content, kind: "curiosity" }, as: :json
     end
 
     assert_response :created
     item = response.parsed_body["parking_lot_item"]
     assert_equal @content, item["content"]
-    assert_equal "question", item["kind"]
+    assert_equal "curiosity", item["kind"]
     assert_equal "parked", item["status"]
     assert_nil item["task_id"]
     assert_not item.key?("discarded_at")

@@ -62,7 +62,7 @@ describe("ParkingLot", () => {
 
   it("lists the parked thoughts", async () => {
     stubList({
-      parked: [buildItem(), buildItem({ content: "Is there a law on air quality?", kind: "question" })],
+      parked: [buildItem(), buildItem({ content: "Is there a law on air quality?", kind: "curiosity" })],
     });
     renderParkingLot();
 
@@ -86,10 +86,10 @@ describe("ParkingLot", () => {
       .mockResolvedValue({ parkingLotItem: buildItem({ content: "Renew passport" }) });
     renderParkingLot();
 
-    await userEvent.click(await screen.findByRole("radio", { name: "question" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "curiosity" }));
     await userEvent.type(screen.getByRole("textbox", { name: "Thought to park" }), "Renew passport{Enter}");
 
-    expect(create).toHaveBeenCalledWith({ content: "Renew passport", kind: "question" }, expect.anything());
+    expect(create).toHaveBeenCalledWith({ content: "Renew passport", kind: "curiosity" }, expect.anything());
   });
 
   it("adds a thought to the Inbox and links to the new task", async () => {
