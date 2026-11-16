@@ -685,7 +685,7 @@ describe("Inbox", () => {
       await userEvent.click(within(dialog).getByRole("button", { name: "Mark as done" }));
 
       expect(await screen.findByRole("heading", { name: `Timer for ${task.id}` })).toBeInTheDocument();
-      expect(complete).toHaveBeenCalledWith(timeLog.id, expect.anything());
+      expect(complete).toHaveBeenCalledWith({ timeLogId: timeLog.id }, expect.anything());
     });
 
     it("bails out of the running task with breadcrumbs, then opens the Timer", async () => {

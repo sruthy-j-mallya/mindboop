@@ -39,6 +39,16 @@ class Api::TimeLogCompletionsControllerTest < ActionDispatch::IntegrationTest
     assert @task.reload.is_completed
   end
 
+  def test_that_user_can_discard_the_time_past_the_timer
+    @time_log.update!(current_run_started_at: 31.minutes.ago)
+    sign_in @user
+
+    post api_time_log_completion_path(@time_log), params: { discard_overrun: true }, as: :json
+
+    assert_response :created
+    assert_equal 25.minutes.to_i, response.parsed_body["time_log"]["accumulated_elapsed_seconds"]
+  end
+
   def test_that_a_completed_time_log_is_no_longer_current
     sign_in @user
 

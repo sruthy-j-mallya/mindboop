@@ -85,7 +85,12 @@ export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & 
 
 export type ExtendTimeLogPayload = { timeLogId: string; minutes: number };
 
-export type CreateBailOutPayload = {
+// `discardOverrun` logs a timer that ran past zero at its planned time, leaving the extra time out.
+export type EndTimeLogOptions = { discardOverrun?: boolean };
+
+export type CreateCompletionPayload = EndTimeLogOptions & { timeLogId: string };
+
+export type CreateBailOutPayload = EndTimeLogOptions & {
   timeLogId: string;
   completedDescription: string;
   restartDescription: string;

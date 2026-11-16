@@ -27,7 +27,7 @@ const SwitchSessionDialog = ({ timeLog, onClose, onSwitch }: SwitchSessionDialog
   const error = completionError ?? discardError;
 
   const handleBail = () => setShowBailDialog(true);
-  const handleDone = () => completeTimeLog(timeLog.id, { onSuccess: onSwitch });
+  const handleDone = () => completeTimeLog({ timeLogId: timeLog.id }, { onSuccess: onSwitch });
   const handleDiscard = () => deleteTimeLog(timeLog.id, { onSuccess: onSwitch });
 
   if (showBailDialog) return <BailDialog timeLogId={timeLog.id} onBailedOut={onSwitch} onClose={onClose} />;

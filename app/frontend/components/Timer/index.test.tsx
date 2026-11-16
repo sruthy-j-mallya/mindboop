@@ -408,6 +408,121 @@ describe("Timer", () => {
     expect(await screen.findByRole("timer")).toHaveTextContent("00:00");
   });
 
+  describe("when the timer runs past zero", () => {
+    // A 2 minute timer, 37 seconds past zero.
+    const OVERRUN_TIME_LOG: TimeLog = { ...TIME_LOG, timerPreset: 2, accumulatedElapsedSeconds: 120 };
+
+    const overrunToggle = () => screen.findByRole("button", { name: /extra/ });
+
+    const mockCompletion = () =>
+      vi.spyOn(timeLogCompletionsApi, "create").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({
+          timeLog: { ...OVERRUN_TIME_LOG, isRunning: false, completedAt: STARTED_AT },
+        });
+      });
+
+    it("stays at zero and counts the extra time up underneath", async () => {
+      renderTimer(OVERRUN_TIME_LOG);
+
+      expect(await screen.findByRole("timer")).toHaveTextContent("00:00");
+      expect(await overrunToggle()).toHaveTextContent("+00:37 extra");
+
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+
+      expect(await overrunToggle()).toHaveTextContent("+00:39 extra");
+      expect(screen.getByRole("timer")).toHaveTextContent("00:00");
+    });
+
+    it("offers only Bail and Done", async () => {
+      renderTimer(OVERRUN_TIME_LOG);
+
+      await overrunToggle();
+
+      expect(screen.queryByRole("button", { name: "Extend" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Pause" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Bail" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Done" })).toBeEnabled();
+    });
+
+    it("shows no extra time before zero", async () => {
+      renderTimer(TIME_LOG);
+
+      await screen.findByRole("timer");
+
+      expect(screen.queryByRole("button", { name: /extra/ })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Pause" })).toBeVisible();
+    });
+
+    it("logs the extra time by default", async () => {
+      const create = mockCompletion();
+      renderTimer(OVERRUN_TIME_LOG);
+
+      expect(await overrunToggle()).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByText("counted in the log")).toBeVisible();
+      await userEvent.click(screen.getByRole("button", { name: "Done" }));
+
+      await screen.findByRole("dialog", { name: /Finished/ });
+      expect(create).toHaveBeenCalledWith(
+        { timeLogId: TIME_LOG.id, discardOverrun: false },
+        expect.anything(),
+      );
+    });
+
+    it("ends at the timer's end when the extra time is left out", async () => {
+      const create = mockCompletion();
+      renderTimer(OVERRUN_TIME_LOG);
+
+      await userEvent.click(await overrunToggle());
+      expect(await overrunToggle()).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByText("left out of the log")).toBeVisible();
+      await userEvent.click(screen.getByRole("button", { name: "Done" }));
+
+      await screen.findByRole("dialog", { name: /Finished/ });
+      expect(create).toHaveBeenCalledWith(
+        { timeLogId: TIME_LOG.id, discardOverrun: true },
+        expect.anything(),
+      );
+    });
+
+    it("bails out without the extra time when it is left out", async () => {
+      const create = vi.spyOn(timeLogBailOutsApi, "create").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({
+          timeLog: { ...OVERRUN_TIME_LOG, isRunning: false, completedAt: STARTED_AT },
+        });
+      });
+      renderTimer(OVERRUN_TIME_LOG);
+
+      await userEvent.click(await overrunToggle());
+      await userEvent.click(screen.getByRole("button", { name: "Bail" }));
+      const dialog = await screen.findByRole("dialog", { name: "Leave breadcrumbs" });
+      await userEvent.type(within(dialog).getByLabelText("Very next step"), "Finish paragraph 2");
+      await userEvent.click(within(dialog).getByRole("button", { name: "Save & exit" }));
+
+      await screen.findByRole("heading", { name: "Start a session" });
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ timeLogId: TIME_LOG.id, discardOverrun: true }),
+        expect.anything(),
+      );
+    });
+
+    it("offers only to discard when the timer's own time is too short to log", async () => {
+      const create = vi.spyOn(timeLogCompletionsApi, "create");
+      renderTimer({ ...OVERRUN_TIME_LOG, timerPreset: 1, accumulatedElapsedSeconds: 90 });
+
+      await userEvent.click(await overrunToggle());
+      await userEvent.click(screen.getByRole("button", { name: "Done" }));
+
+      expect(await screen.findByRole("dialog", { name: "Discard this timer?" })).toBeVisible();
+      expect(create).not.toHaveBeenCalled();
+    });
+  });
+
   describe("when nothing is on the clock", () => {
     const pickTask = async (title = TASK.title) => {
       await userEvent.click(await screen.findByRole("combobox", { name: "Task" }));
@@ -981,6 +1096,7 @@ describe("Timer", () => {
       expect(create).toHaveBeenCalledWith(
         {
           timeLogId: TIME_LOG.id,
+          discardOverrun: false,
           completedDescription: "Wrote the intro",
           restartDescription: "Finish paragraph 2",
         },
@@ -1014,7 +1130,12 @@ describe("Timer", () => {
 
       await waitFor(() =>
         expect(create).toHaveBeenCalledWith(
-          { timeLogId: TIME_LOG.id, completedDescription: "", restartDescription: "Finish paragraph 2" },
+          {
+            timeLogId: TIME_LOG.id,
+            discardOverrun: false,
+            completedDescription: "",
+            restartDescription: "Finish paragraph 2",
+          },
           expect.anything(),
         ),
       );
@@ -1096,7 +1217,10 @@ describe("Timer", () => {
       await clickDone();
 
       const dialog = await screen.findByRole("dialog", { name: /Finished early!/ });
-      expect(create).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
+      expect(create).toHaveBeenCalledWith(
+        { timeLogId: TIME_LOG.id, discardOverrun: false },
+        expect.anything(),
+      );
       expect(within(dialog).getByText("+1 early-finish boost")).toBeVisible();
     });
 
