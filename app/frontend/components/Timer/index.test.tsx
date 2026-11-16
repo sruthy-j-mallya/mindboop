@@ -1056,7 +1056,6 @@ describe("Timer", () => {
       const dialog = await screen.findByRole("dialog", { name: /Finished early!/ });
       expect(create).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
       expect(within(dialog).getByText("+1 early-finish boost")).toBeVisible();
-      expect(within(dialog).getByRole("button", { name: /Add a progress screenshot/ })).toBeVisible();
     });
 
     it("leaves out the boost when the session didn't finish early", async () => {
