@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AxiosResponse } from "axios";
+import { addDays, format, startOfDay } from "date-fns";
 import type { InitialEntry } from "react-router";
 
 import { ApiError } from "@/apis/axios";
@@ -109,6 +110,34 @@ describe("Timer", () => {
     expect(await screen.findByRole("heading", { name: "Draft permission" })).toBeVisible();
     expect(screen.getByRole("checkbox", { name: "Camera statistics" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Cuba economics" })).toBeChecked();
+  });
+
+  it("offers the task's due date and estimate, but not deleting it", async () => {
+    renderTimer(TIME_LOG, { ...TASK, estimatedMinutes: null });
+
+    expect(await screen.findByRole("button", { name: "Due date" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Estimate" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Delete task" })).not.toBeInTheDocument();
+  });
+
+  it("sets the due date from the task details", async () => {
+    vi.useRealTimers();
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: TASK });
+    renderTimer(TIME_LOG);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Due date" }));
+    const tomorrow = addDays(new Date(), 1);
+    await userEvent.click(
+      screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({ id: TASK.id, startsAt: startOfDay(tomorrow).toISOString() }),
+        expect.anything(),
+      ),
+    );
   });
 
   it("shows the task's description as formatted text", async () => {
