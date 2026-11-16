@@ -5,9 +5,9 @@ module ParkingLotItems
       @filters = filters
     end
 
-    # Returns the scope narrowed by whichever filters were given. Unknown or invalid values are ignored.
+    # Returns the scope narrowed by whichever filters were given.
     def process
-      filter_by_since(filter_by_status(@scope))
+      filter_by_time_log(filter_by_status(@scope))
     end
 
     private
@@ -17,18 +17,11 @@ module ParkingLotItems
         scope.where(status: @filters[:status])
       end
 
-      # The Timer lists only what was parked during the current session.
-      def filter_by_since(scope)
-        since = parse_time(@filters[:since])
-        return scope if since.nil?
+      # The Timer lists only what was parked during the session.
+      def filter_by_time_log(scope)
+        return scope if @filters[:time_log_id].blank?
 
-        scope.where(created_at: since..)
-      end
-
-      def parse_time(value)
-        Time.zone.parse(value.to_s)
-      rescue ArgumentError
-        nil
+        scope.where(time_log_id: @filters[:time_log_id])
       end
   end
 end

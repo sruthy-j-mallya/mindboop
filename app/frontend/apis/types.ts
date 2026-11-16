@@ -117,6 +117,8 @@ export type ParkingLotItem = {
   content: string;
   status: ParkingLotItemStatus;
   taskId: string | null;
+  // The focus session it was parked during, if any.
+  timeLogId: string | null;
   // Set while a curiosity time (a short timeboxed look-up) runs on the item; it can be extended once.
   curiosityEndsAt: string | null;
   isCuriosityExtended: boolean;
@@ -124,8 +126,8 @@ export type ParkingLotItem = {
   updatedAt: string;
 };
 
-// `since` (an ISO time) lists only what was parked from then on.
-export type ParkingLotItemFilters = { status?: ParkingLotItemStatus; since?: string };
+// `timeLogId` lists only what was parked during that session.
+export type ParkingLotItemFilters = { status?: ParkingLotItemStatus; timeLogId?: string };
 
 export type ParkingLotItemListParams = ParkingLotItemFilters & { page?: number };
 
@@ -138,7 +140,8 @@ export type ParkingLotItemListResponse = {
 
 export type ParkingLotItemResponse = { parkingLotItem: ParkingLotItem };
 
-export type CreateParkingLotItemPayload = Pick<ParkingLotItem, "content">;
+export type CreateParkingLotItemPayload = Pick<ParkingLotItem, "content"> &
+  Partial<Pick<ParkingLotItem, "timeLogId">>;
 
 export type UpdateParkingLotItemPayload = Pick<ParkingLotItem, "id"> &
   Partial<Pick<ParkingLotItem, "content" | "status">>;

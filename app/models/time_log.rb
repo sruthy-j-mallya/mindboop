@@ -17,6 +17,7 @@ class TimeLog < ApplicationRecord
   belongs_to :task
   has_many :breaks, dependent: :destroy
   has_one :current_break, -> { open }, class_name: "Break"
+  has_many :parking_lot_items, dependent: :nullify
 
   validates :started_at, presence: true
   validates :timer_preset, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true

@@ -34,22 +34,14 @@ class Api::ParkingLotItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ @item.id ], response.parsed_body["parking_lot_items"].pluck("id")
   end
 
-  def test_that_index_can_list_items_parked_since_a_time
-    recent_item = create(:parking_lot_item, user: @user)
+  def test_that_index_can_list_items_parked_during_a_session
+    time_log = create(:time_log, task: create(:task, user: @user))
+    session_item = create(:parking_lot_item, user: @user, time_log:)
     sign_in @user
 
-    get api_parking_lot_items_path, params: { since: 10.minutes.ago.iso8601 }
+    get api_parking_lot_items_path, params: { time_log_id: time_log.id }
 
-    assert_equal [ recent_item.id ], response.parsed_body["parking_lot_items"].pluck("id")
-  end
-
-  def test_that_index_ignores_an_invalid_since
-    sign_in @user
-
-    get api_parking_lot_items_path, params: { since: "2026-13-45" }
-
-    assert_response :ok
-    assert_equal [ @item.id ], response.parsed_body["parking_lot_items"].pluck("id")
+    assert_equal [ session_item.id ], response.parsed_body["parking_lot_items"].pluck("id")
   end
 
   def test_that_index_returns_401_when_signed_out
@@ -71,6 +63,7 @@ class Api::ParkingLotItemsControllerTest < ActionDispatch::IntegrationTest
     assert_nil item["curiosity_ends_at"]
     assert_equal "parked", item["status"]
     assert_nil item["task_id"]
+    assert_nil item["time_log_id"]
     assert_not item.key?("discarded_at")
   end
 
@@ -84,6 +77,28 @@ class Api::ParkingLotItemsControllerTest < ActionDispatch::IntegrationTest
     item = ParkingLotItem.find(response.parsed_body.dig("parking_lot_item", "id"))
     assert item.parked?
     assert_equal @user.id, item.user_id
+  end
+
+  def test_that_a_thought_can_be_parked_during_a_session
+    time_log = create(:time_log, task: create(:task, user: @user))
+    sign_in @user
+
+    post api_parking_lot_items_path, params: { content: @content, time_log_id: time_log.id }, as: :json
+
+    assert_response :created
+    assert_equal time_log.id, response.parsed_body.dig("parking_lot_item", "time_log_id")
+  end
+
+  def test_that_create_rejects_another_users_session
+    other_time_log = create(:time_log)
+    sign_in @user
+
+    assert_no_difference "ParkingLotItem.count" do
+      post api_parking_lot_items_path, params: { content: @content, time_log_id: other_time_log.id }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_equal "Time log must be one of your sessions", response.parsed_body["error"]
   end
 
   def test_that_create_rejects_an_empty_thought

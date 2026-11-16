@@ -20,6 +20,7 @@ const buildItem = (endsAt: number, overrides: Partial<ParkingLotItem> = {}): Par
   content: "How old is the lead actor?",
   status: "parked",
   taskId: null,
+  timeLogId: null,
   curiosityEndsAt: new Date(endsAt).toISOString(),
   isCuriosityExtended: false,
   createdAt: new Date(NOW).toISOString(),

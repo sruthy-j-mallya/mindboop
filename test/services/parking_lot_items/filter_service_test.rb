@@ -15,12 +15,11 @@ class ParkingLotItems::FilterServiceTest < ActiveSupport::TestCase
     assert_equal [ @old_item ], filter(status: "parked").to_a
   end
 
-  def test_that_items_can_be_filtered_by_since
-    assert_equal [ @addressed_item ], filter(since: 10.minutes.ago.iso8601).to_a
-  end
+  def test_that_items_can_be_filtered_by_time_log
+    time_log = create(:time_log, task: create(:task, user: @old_item.user))
+    @old_item.update!(time_log:)
 
-  def test_that_an_invalid_since_is_ignored
-    assert_equal 2, filter(since: "2026-13-45").count
+    assert_equal [ @old_item ], filter(time_log_id: time_log.id).to_a
   end
 
   private

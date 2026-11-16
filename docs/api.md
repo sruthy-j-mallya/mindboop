@@ -50,8 +50,8 @@ Every error response has one shape:
 | POST   | `/api/time_logs/:time_log_id/break`       | `intention`, `duration_minutes`                                              | 201 `{ time_log }`            |
 | PATCH  | `/api/time_logs/:time_log_id/break`       | –                                                                            | 200 `{ time_log }`            |
 | GET    | `/api/current_time_log`                   | –                                                                            | 200 `{ time_log }` or `null`  |
-| GET    | `/api/parking_lot_items`                  | `page`, `status`, `since` query params (optional)                            | 200 list (see below)          |
-| POST   | `/api/parking_lot_items`                  | `content`                                                                    | 201 `{ parking_lot_item }`    |
+| GET    | `/api/parking_lot_items`                  | `page`, `status`, `time_log_id` query params (optional)                      | 200 list (see below)          |
+| POST   | `/api/parking_lot_items`                  | `content`, `time_log_id` (optional)                                          | 201 `{ parking_lot_item }`    |
 | PATCH  | `/api/parking_lot_items/:id`              | `content`, `status` (both optional)                                          | 200 `{ parking_lot_item }`    |
 | DELETE | `/api/parking_lot_items/:id`              | –                                                                            | 204, soft delete              |
 | POST   | `/api/parking_lot_items/:id/conversion`   | Task schedule fields (optional)                                              | 201, adds a task              |
@@ -135,14 +135,16 @@ It returns `{ task, time_log }`, in the same shapes as the task and time log end
 Parking lot items are stray thoughts parked during focus, and belong to the signed-in user. Another user's item gets
 a 403, and a discarded or unknown item gets a 404. The conversion and restoration endpoints return `{ parking_lot_item }`.
 
-An item is `{ id, content, status, task_id, curiosity_ends_at, is_curiosity_extended, created_at, updated_at }`.
+An item is `{ id, content, status, task_id, time_log_id, curiosity_ends_at, is_curiosity_extended, created_at, updated_at }`.
 
 - `content` is required, up to 1,000 characters (stripped).
+- `time_log_id` links the item to the focus session it was parked during (the Timer's panel sends it). It must be one
+  of the user's own time logs (422 otherwise), and is cleared if that time log is deleted.
 - `status` starts as `parked`. `PATCH` moves it between `parked` and `addressed`. `converted` is set only by the
   conversion endpoint, which also sets `task_id`; any other combination gets a 422.
 - `GET` lists undeleted items oldest first, 20 a page, as `{ parking_lot_items, parking_lot_items_count, page,
-total_pages }`. `status` lists one status. `since` (an ISO 8601 time) lists items created from then on (the Timer's
-  panel passes the session's `started_at`); an unparsable `since` is ignored.
+total_pages }`. `status` lists one status. `time_log_id` lists the items parked during that session (the Timer's
+  panel and its Finished dialog use it).
 - `POST /api/parking_lot_items/:id/conversion` adds a parked item to the Inbox as a task titled with its `content`, and
   marks it `converted`, in one transaction. It optionally takes the task's schedule (`starts_at`, `ends_at`,
   `is_duration`, `is_all_day`, with the same rules as tasks); without one the task is undated, and an invalid one gets a

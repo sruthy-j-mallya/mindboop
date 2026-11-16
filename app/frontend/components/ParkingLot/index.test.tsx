@@ -20,6 +20,7 @@ const buildItem = (overrides: Partial<ParkingLotItem> = {}): ParkingLotItem => (
   content: "Build an aeroplane",
   status: "parked",
   taskId: null,
+  timeLogId: null,
   curiosityEndsAt: null,
   isCuriosityExtended: false,
   createdAt: "2026-11-05T10:00:00.000Z",

@@ -71,6 +71,7 @@ const buildParkingLotItem = (overrides: Partial<ParkingLotItem> = {}): ParkingLo
   content: "Call the bank",
   status: "parked",
   taskId: null,
+  timeLogId: null,
   curiosityEndsAt: null,
   isCuriosityExtended: false,
   createdAt: STARTED_AT,
@@ -1263,7 +1264,7 @@ describe("Timer", () => {
       expect(within(dialog).queryByText("+1 early-finish boost")).not.toBeInTheDocument();
     });
 
-    it("offers to review the parking lot while anything is parked", async () => {
+    it("offers to review the parking lot while thoughts from this session are parked", async () => {
       mockCompletion(true);
       renderTimer(TIME_LOG_AT_TWO_MINUTES, TASK, [buildParkingLotItem(), buildParkingLotItem()]);
 
@@ -1274,7 +1275,7 @@ describe("Timer", () => {
         "href",
         routes.parkingLot,
       );
-      expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({ status: "parked" });
+      expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({ status: "parked", timeLogId: TIME_LOG.id });
     });
 
     describe("with nothing parked", () => {
@@ -1364,7 +1365,7 @@ describe("Timer", () => {
       expect(thoughts[0]).toHaveTextContent(/\d{2}:\d{2}/);
       expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({
         status: "parked",
-        since: TIME_LOG.startedAt,
+        timeLogId: TIME_LOG.id,
       });
     });
 
@@ -1384,7 +1385,10 @@ describe("Timer", () => {
       const input = within(parkingLot).getByRole("textbox", { name: "Thought to park" });
       await userEvent.type(input, "Book a dentist{Enter}");
 
-      expect(create).toHaveBeenCalledWith({ content: "Book a dentist" }, expect.anything());
+      expect(create).toHaveBeenCalledWith(
+        { content: "Book a dentist", timeLogId: TIME_LOG.id },
+        expect.anything(),
+      );
       expect(input).toHaveValue("");
     });
 
