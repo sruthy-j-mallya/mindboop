@@ -95,7 +95,7 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
       <div className="relative">
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
         />
         <Input
           aria-activedescendant={isOpen && activeTask ? optionId(activeTask) : undefined}
@@ -104,7 +104,7 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
           aria-expanded={isOpen}
           aria-label="Task"
           autoComplete="off"
-          className="h-auto py-2 pl-10 text-xl font-semibold md:text-xl"
+          className="h-auto py-2 pl-9 text-base font-medium md:text-base"
           placeholder={value?.title ?? "Search your open tasks"}
           role="combobox"
           value={query ?? value?.title ?? ""}
