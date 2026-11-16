@@ -1,0 +1,21 @@
+# 027 — Start a timer from the Timer page
+
+Status: done
+Date: 2026-11-16
+
+## Goal
+
+With nothing on the clock, let the Timer page start a session on an existing task (a timer or a stopwatch) instead of
+sending the user to Quick Start.
+
+## Decisions
+
+| Area | Choice |
+| --- | --- |
+| Layout | The setup reuses the session's card (`Timer/SessionCard`): the clock side holds the task search, Stopwatch / Timer tabs, the dial and Start; the other side shows the picked task's steps and description (`Timer/TaskDetails`, shared with `Session`), editable as mid-session |
+| Tasks | A search combobox (`Timer/Setup/TaskSearch`), not a select, so a long Inbox stays reachable. Focus lists the open tasks; typing searches titles on the server with `GET /api/tasks?is_completed=false&search_term=…` (case-insensitive substring, `%`/`_` literal), debounced 250 ms, keeping the previous matches while the next load. Arrows move the highlight, Enter picks (only once the matches for what's typed have loaded), Escape closes and keeps the picked task. One page (20) of matches, with a "keep typing" note when there are more. With no open tasks, it links to the Inbox |
+| Modes | Timer is the default, preset 5 minutes. The minutes are edited in place on the dial: digits only, 1–240, applied on blur or Enter; blank or zero puts the last value back, Escape too, and more than 240 is capped. A stopwatch shows a static 00:00 |
+| Start | `POST /api/time_logs` (unchanged). `useCreateTimeLog` seeds the current time log, so the page swaps to the running session and the parking lot. A stopwatch is sent without `timer_preset` |
+| Running stopwatch | The clock (`Timer/Clock`, was `Countdown`) counts up with an "elapsed" caption and an empty ring. Extend is hidden, as the API rejects extending a stopwatch |
+| Heading | The page's heading with nothing on the clock is now "Start a session" (was "Nothing on the clock" with a link to Quick Start) |
+| Left for later | Scrolling past the first 20 matches; prefilling the minutes from the task's estimate |

@@ -1,14 +1,12 @@
 import { cn } from "cn";
-import { Link } from "react-router";
 
-import { Button } from "@/components/ui/button";
 import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import { useCompleteTimeLog } from "@/hooks/reactQuery/useTimeLogCompletionsApi";
-import routes from "@/routes";
 
 import FinishedDialog from "./FinishedDialog";
 import ParkingLot from "./ParkingLot";
 import Session from "./Session";
+import Setup from "./Setup";
 
 const Timer = () => {
   const { data: timeLog, isPending, error } = useCurrentTimeLog();
@@ -46,14 +44,7 @@ const Timer = () => {
           />
         </div>
       )}
-      {!error && !timeLog && (
-        <div className="flex flex-col items-center gap-4 py-16 text-center">
-          <h1 className="text-2xl font-semibold">Nothing on the clock</h1>
-          <Button asChild>
-            <Link to={routes.root}>Start a session</Link>
-          </Button>
-        </div>
-      )}
+      {!error && !timeLog && <Setup />}
       {completion && (
         <FinishedDialog isFinishedEarly={completion.timeLog.isFinishedEarly} onClose={resetCompletion} />
       )}

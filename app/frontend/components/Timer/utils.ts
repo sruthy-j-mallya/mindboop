@@ -28,6 +28,15 @@ export const getTimerState = (timeLog: TimeLog, currentTime: number) => {
   };
 };
 
+// What the clock shows: a timer counts down to zero, a stopwatch counts up and has no ring to fill.
+export const getClockState = (timeLog: TimeLog, currentTime: number) => {
+  if (timeLog.mode === "stopwatch") return { seconds: getElapsedSeconds(timeLog, currentTime), progress: 0 };
+
+  const { remainingSeconds, progress } = getTimerState(timeLog, currentTime);
+
+  return { seconds: remainingSeconds, progress };
+};
+
 // A stopwatch has no end, so it keeps ticking for as long as it runs.
 export const isTicking = (timeLog: TimeLog, currentTime: number) =>
   timeLog.isRunning &&

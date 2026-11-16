@@ -29,7 +29,7 @@ export type Task = {
   checklistItems: ChecklistItem[];
 };
 
-export type TaskFilters = { isCompleted?: boolean };
+export type TaskFilters = { isCompleted?: boolean; searchTerm?: string };
 
 export type TaskListParams = TaskFilters & { page?: number };
 

@@ -97,6 +97,40 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ @task.id, completed_task.id ], response.parsed_body["tasks"].pluck("id")
   end
 
+  def test_that_index_can_search_tasks_by_title
+    @task.update!(title: "Draft the permission letter")
+    other_match = create(:task, user: @user, title: "Read the DRAFT notes")
+    create(:task, user: @user, title: "Call the bank")
+    create(:task, title: "Draft someone else's plan")
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "  draft " }
+
+    assert_response :ok
+    assert_equal [ @task.id, other_match.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal 2, response.parsed_body["tasks_count"]
+  end
+
+  def test_that_index_treats_like_wildcards_in_the_search_as_text
+    @task.update!(title: "Raise to 100%")
+    create(:task, user: @user, title: "Raise to 1000")
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "100%" }
+
+    assert_equal [ @task.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
+  def test_that_index_combines_search_with_the_completion_filter
+    @task.update!(title: "Draft A")
+    create(:task, user: @user, title: "Draft B", is_completed: true)
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "draft", is_completed: false }
+
+    assert_equal [ @task.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
   def test_that_show_leaves_out_discarded_checklist_items
     item = create(:checklist_item, task: @task)
     create(:checklist_item, task: @task).discard!
