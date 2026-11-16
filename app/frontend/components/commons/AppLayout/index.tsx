@@ -31,7 +31,8 @@ const AppLayout = () => {
         <Outlet />
       </SidebarInset>
       <CurrentSession />
-      <Toaster />
+      {/* Bottom centre, clear of the mini timer in the bottom-right corner. */}
+      <Toaster position="bottom-center" />
     </SidebarProvider>
   );
 };
