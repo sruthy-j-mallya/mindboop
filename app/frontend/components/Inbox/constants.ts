@@ -19,6 +19,3 @@ export const SCHEDULE_TONE_CLASS_NAMES = {
   today: "text-primary",
   upcoming: "text-muted-foreground",
 } as const;
-
-// Long enough to notice a slip and reach for Undo.
-export const UNDO_TOAST_DURATION = 8_000; // 8 seconds

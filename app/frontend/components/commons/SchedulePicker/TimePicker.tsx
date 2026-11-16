@@ -9,7 +9,7 @@ import {
 } from "react";
 
 import { cn } from "cn";
-import { Check } from "lucide-react";
+import { Check, ChevronRight, Clock, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
@@ -28,8 +28,10 @@ type TimePickerProps = {
   // "HH:mm", or "" for no time.
   value: string;
   placeholder?: string;
-  // Lets an emptied field set "" (no time); otherwise emptying it keeps the old time.
+  // Lets an emptied field set "" (no time); otherwise emptying it keeps the old time. A row shows its own clear button.
   isClearable?: boolean;
+  // "field" is a plain input; "row" is a full-width row with a clock icon, and a chevron or a clear button at the end.
+  variant?: "field" | "row";
   className?: string;
   onChange: (time: string) => void;
 };
@@ -44,11 +46,14 @@ const TimePicker = ({
   value,
   placeholder,
   isClearable = false,
+  variant = "field",
   className,
   onChange,
 }: TimePickerProps) => {
   const listId = useId();
+  const anchorRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isRow = variant === "row";
   const [isOpen, setIsOpen] = useState(false);
   // What's being typed; null while the field shows the value.
   const [text, setText] = useState<string | null>(null);
@@ -126,7 +131,17 @@ const TimePicker = ({
   };
 
   const handleInteractOutside = (event: Event) => {
-    if (inputRef.current?.contains(event.target as Node)) event.preventDefault();
+    if (anchorRef.current?.contains(event.target as Node)) event.preventDefault();
+  };
+
+  // A click anywhere on the row edits the time.
+  const handleRowClick = () => inputRef.current?.focus();
+
+  // Keeps the list shut: clearing is done, not a reason to pick again.
+  const handleClear = (event: MouseEvent) => {
+    event.stopPropagation();
+    applyTime("");
+    setIsOpen(false);
   };
 
   // Keeps focus in the field, so clicking an option doesn't blur it first.
@@ -137,24 +152,58 @@ const TimePicker = ({
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverAnchor asChild>
-        <Input
-          aria-activedescendant={isOpen ? `${listId}-${activeIndex}` : undefined}
-          aria-autocomplete="none"
-          aria-controls={listId}
-          aria-expanded={isOpen}
-          aria-label={label}
-          autoComplete="off"
-          className={cn("w-28 tabular-nums", className)}
-          placeholder={placeholder}
-          ref={inputRef}
-          role="combobox"
-          value={text ?? (value && toTimeLabel(value))}
-          onBlur={handleBlur}
-          onChange={handleChange}
-          onClick={openList}
-          onFocus={handleFocus}
-          onKeyDown={handleKeyDown}
-        />
+        {/* The row's own clicks only move focus into the input, which has the keyboard handling. */}
+        <div
+          className={cn(
+            "flex items-center",
+            isRow &&
+              "h-9 w-full cursor-text gap-2 rounded-md bg-muted/60 px-3 text-sm transition-colors hover:bg-muted has-focus:bg-muted has-focus:ring-1 has-focus:ring-ring/40",
+            className,
+          )}
+          ref={anchorRef}
+          onClick={isRow ? handleRowClick : undefined}
+        >
+          {isRow && (
+            <Clock className={cn("size-4 shrink-0", value ? "text-primary" : "text-muted-foreground")} />
+          )}
+          <Input
+            aria-activedescendant={isOpen ? `${listId}-${activeIndex}` : undefined}
+            aria-autocomplete="none"
+            aria-controls={listId}
+            aria-expanded={isOpen}
+            aria-label={label}
+            autoComplete="off"
+            className={cn(
+              "tabular-nums",
+              isRow
+                ? "h-auto min-w-0 flex-1 border-0 bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
+                : "w-28",
+              isRow && value && "text-primary",
+            )}
+            placeholder={placeholder}
+            ref={inputRef}
+            role="combobox"
+            value={text ?? (value && toTimeLabel(value))}
+            onBlur={handleBlur}
+            onChange={handleChange}
+            onClick={openList}
+            onFocus={handleFocus}
+            onKeyDown={handleKeyDown}
+          />
+          {isRow && isClearable && value && (
+            <button
+              aria-label={`Remove ${label.toLowerCase()}`}
+              className="-mr-1 rounded-sm p-1 text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+              type="button"
+              onClick={handleClear}
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+          {isRow && !(isClearable && value) && (
+            <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+          )}
+        </div>
       </PopoverAnchor>
       <PopoverContent
         align="start"

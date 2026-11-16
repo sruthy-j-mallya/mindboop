@@ -50,6 +50,16 @@ Every error response has one shape:
 | POST   | `/api/time_logs/:time_log_id/break`       | `intention`, `duration_minutes`                           | 201 `{ time_log }`            |
 | PATCH  | `/api/time_logs/:time_log_id/break`       | –                                                         | 200 `{ time_log }`            |
 | GET    | `/api/current_time_log`                   | –                                                         | 200 `{ time_log }` or `null`  |
+| GET    | `/api/parking_lot_items`                  | `page`, `status`, `since` query params (optional)         | 200 list (see below)          |
+| POST   | `/api/parking_lot_items`                  | `content`                                                 | 201 `{ parking_lot_item }`    |
+| PATCH  | `/api/parking_lot_items/:id`              | `content`, `status` (both optional)                       | 200 `{ parking_lot_item }`    |
+| DELETE | `/api/parking_lot_items/:id`              | –                                                         | 204, soft delete              |
+| POST   | `/api/parking_lot_items/:id/conversion`   | Task schedule fields (optional)                           | 201, adds a task              |
+| POST   | `/api/parking_lot_items/:id/restoration`  | –                                                         | 201, undoes discard           |
+| GET    | `/api/curiosity_time`                     | –                                                         | 200 `{ parking_lot_item }`    |
+| POST   | `/api/curiosity_time`                     | `parking_lot_item_id`                                     | 201 `{ parking_lot_item }`    |
+| PATCH  | `/api/curiosity_time`                     | –                                                         | 200, adds more time once      |
+| DELETE | `/api/curiosity_time`                     | –                                                         | 200 `{ parking_lot_item }`    |
 
 `user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`). All ids are UUIDs.
 
@@ -116,6 +126,41 @@ page calls. `POST /api/tasks` and `POST /api/time_logs` still do each step on it
 - If the task, a checklist item or the time log is invalid, the request gets a 422 and nothing is saved.
 
 It returns `{ task, time_log }`, in the same shapes as the task and time log endpoints.
+
+## Parking lot
+
+Parking lot items are stray thoughts parked during focus, and belong to the signed-in user. Another user's item gets
+a 403, and a discarded or unknown item gets a 404. The conversion and restoration endpoints return `{ parking_lot_item }`.
+
+An item is `{ id, content, status, task_id, curiosity_ends_at, is_curiosity_extended, created_at, updated_at }`.
+
+- `content` is required, up to 1,000 characters (stripped).
+- `status` starts as `parked`. `PATCH` moves it between `parked` and `addressed`. `converted` is set only by the
+  conversion endpoint, which also sets `task_id`; any other combination gets a 422.
+- `GET` lists undeleted items oldest first, 20 a page, as `{ parking_lot_items, parking_lot_items_count, page,
+total_pages }`. `status` lists one status. `since` (an ISO 8601 time) lists items created from then on (the Timer's
+  panel passes the session's `started_at`); an unparsable `since` is ignored.
+- `POST /api/parking_lot_items/:id/conversion` adds a parked item to the Inbox as a task titled with its `content`, and
+  marks it `converted`, in one transaction. It optionally takes the task's schedule (`starts_at`, `ends_at`,
+  `is_duration`, `is_all_day`, with the same rules as tasks); without one the task is undated, and an invalid one gets a
+  422 with nothing saved. An item that isn't parked gets a 404; a repeated request makes no second task.
+- `DELETE` soft-deletes (discards) the item. `POST /api/parking_lot_items/:id/restoration` brings it back; an item that
+  isn't discarded gets a 404.
+- Marking an item addressed, converting it or discarding it ends its curiosity time.
+
+### Curiosity time
+
+`/api/curiosity_time` is the signed-in user's curiosity time: a short, timeboxed look-up on one parked item, so a quick
+question doesn't turn into a rabbit hole. At most one runs at a time. While it runs, the item's `curiosity_ends_at` is
+set. Every response is `{ parking_lot_item }`: the item, or `null` when none is running.
+
+- `GET` returns the running one.
+- `POST` starts one on `parking_lot_item_id`, ending 5 minutes from now. An item that isn't parked (or is discarded or
+  unknown) gets a 404, another user's item a 403, and starting one while another runs gets a 422 ("Finish your current
+  curiosity time first").
+- `PATCH` adds 5 more minutes, counted from the end or from now if that has passed, and sets `is_curiosity_extended`.
+  A second extension gets a 422 ("You've already added more time").
+- `DELETE` ends it; the item stays parked. `PATCH` and `DELETE` get a 404 when none is running.
 
 ## Time logs
 

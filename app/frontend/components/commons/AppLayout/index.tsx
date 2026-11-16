@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 import AppSidebar from "./AppSidebar";
 import BreakAlarm from "./BreakAlarm";
+import CuriosityAlarm from "./CuriosityAlarm";
 import { isSidebarOpen, saveSidebarOpen } from "./utils";
 
 const AppLayout = () => {
@@ -25,6 +26,7 @@ const AppLayout = () => {
           <SidebarTrigger />
         </header>
         <BreakAlarm />
+        <CuriosityAlarm />
         <Outlet />
       </SidebarInset>
       <Toaster />
