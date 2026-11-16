@@ -24,20 +24,18 @@ export const getTimerState = (timeLog: TimeLog, currentTime: number) => {
 
   return {
     remainingSeconds: totalSeconds - elapsedSeconds,
-    progress: totalSeconds > 0 ? elapsedSeconds / totalSeconds : 1,
+    // The share of the time still left: the ring starts full and empties as the timer counts down.
+    fill: totalSeconds > 0 ? (totalSeconds - elapsedSeconds) / totalSeconds : 0,
   };
 };
 
-// What the clock shows: a timer counts down to zero, a stopwatch counts up and has no ring to fill.
-export const getClockState = (
-  timeLog: TimeLog,
-  currentTime: number,
-): { seconds: number; progress?: number } => {
+// What the clock shows: a timer counts down to zero with a ring of the time left, a stopwatch counts up with none.
+export const getClockState = (timeLog: TimeLog, currentTime: number): { seconds: number; fill?: number } => {
   if (timeLog.mode === "stopwatch") return { seconds: getElapsedSeconds(timeLog, currentTime) };
 
-  const { remainingSeconds, progress } = getTimerState(timeLog, currentTime);
+  const { remainingSeconds, fill } = getTimerState(timeLog, currentTime);
 
-  return { seconds: remainingSeconds, progress };
+  return { seconds: remainingSeconds, fill };
 };
 
 // A stopwatch has no end, so it keeps ticking for as long as it runs.

@@ -68,7 +68,7 @@ const Setup = () => {
           </Dial>
         </TabsContent>
         <TabsContent className="w-full" value="timer">
-          <Dial progress={0}>
+          <Dial fill={1}>
             <MinutesInput minutes={timerMinutes} onChange={setTimerMinutes} />
             <p className="text-muted-foreground">minutes</p>
           </Dial>

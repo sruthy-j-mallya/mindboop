@@ -10,7 +10,7 @@ type ClockProps = { timeLog: TimeLog };
 const Clock = ({ timeLog }: ClockProps) => {
   const { isRunning, currentBreak, mode } = timeLog;
   const currentTime = useCurrentTime(isRunning || !!currentBreak);
-  const { seconds, progress } = getClockState(timeLog, currentTime);
+  const { seconds, fill } = getClockState(timeLog, currentTime);
   const breakRemainingSeconds = currentBreak && getRemainingSeconds(currentBreak.endsAt, currentTime);
 
   const getCaption = () => {
@@ -22,7 +22,7 @@ const Clock = ({ timeLog }: ClockProps) => {
   };
 
   return (
-    <Dial progress={progress}>
+    <Dial fill={fill}>
       <p className="text-6xl font-medium tabular-nums" role="timer">
         {formatRemainingTime(seconds)}
       </p>

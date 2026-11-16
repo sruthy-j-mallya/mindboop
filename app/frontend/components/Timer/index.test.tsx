@@ -340,6 +340,44 @@ describe("Timer", () => {
     expect(screen.getByRole("timer")).toHaveTextContent("24:21");
   });
 
+  describe("ring", () => {
+    // Decorative (aria-hidden), so there's no accessible handle; the arc is the primary-coloured circle.
+    const arcFill = () => {
+      const dashArray = document.querySelector("circle.stroke-primary")?.getAttribute("stroke-dasharray");
+
+      return dashArray === undefined ? null : Number(dashArray?.split(" ")[0]);
+    };
+
+    it("shows the time left, emptying as the timer counts down", async () => {
+      renderTimer({ ...TIME_LOG, timerPreset: 10, accumulatedElapsedSeconds: 263 });
+
+      await screen.findByRole("timer");
+      // 5 of the 10 minutes are left.
+      expect(arcFill()).toBeCloseTo(0.5);
+
+      act(() => {
+        vi.advanceTimersByTime(60_000);
+      });
+
+      expect(arcFill()).toBeCloseTo(0.4);
+    });
+
+    it("is gone once the time runs out", async () => {
+      renderTimer({ ...TIME_LOG, timerPreset: 1, accumulatedElapsedSeconds: 60 });
+
+      expect(await screen.findByRole("timer")).toHaveTextContent("00:00");
+      expect(arcFill()).toBeNull();
+    });
+
+    it("starts full before a timer is started", async () => {
+      renderTimer(null);
+
+      await screen.findByRole("heading", { name: "Start a session" });
+
+      expect(arcFill()).toBe(1);
+    });
+  });
+
   it("adds the time from earlier runs", async () => {
     renderTimer({ ...TIME_LOG, accumulatedElapsedSeconds: 60 });
 
@@ -600,14 +638,6 @@ describe("Timer", () => {
       await screen.findByRole("timer");
 
       expect(document.querySelector("circle.stroke-primary")).toBeNull();
-    });
-
-    it("keeps the progress arc for a timer", async () => {
-      renderTimer(TIME_LOG);
-
-      await screen.findByRole("timer");
-
-      expect(document.querySelector("circle.stroke-primary")).not.toBeNull();
     });
 
     it("offers every action but Extend", async () => {
