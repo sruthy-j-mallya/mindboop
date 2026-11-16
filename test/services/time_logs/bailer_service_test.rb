@@ -10,7 +10,7 @@ class TimeLogs::BailerServiceTest < ActiveSupport::TestCase
       mode: "timer",
       timer_preset: 25,
       is_running: true,
-      current_run_started_at: 1.minute.ago
+      current_run_started_at: 3.minutes.ago
     )
     @attributes = attributes_for(:breadcrumb)
   end
@@ -25,13 +25,13 @@ class TimeLogs::BailerServiceTest < ActiveSupport::TestCase
 
   def test_that_the_time_log_is_stopped_and_ended
     freeze_time do
-      @time_log.update!(accumulated_elapsed_seconds: 60, current_run_started_at: 30.seconds.ago)
+      @time_log.update!(accumulated_elapsed_seconds: 150, current_run_started_at: 30.seconds.ago)
 
       process
 
       @time_log.reload
       assert_equal Time.current, @time_log.completed_at
-      assert_equal 90, @time_log.accumulated_elapsed_seconds
+      assert_equal 180, @time_log.accumulated_elapsed_seconds
       assert_not @time_log.is_running
       assert_nil @time_log.current_run_started_at
       assert @time_log.is_bailed_out
@@ -69,6 +69,18 @@ class TimeLogs::BailerServiceTest < ActiveSupport::TestCase
 
     assert_equal completed_at, @time_log.reload.completed_at
     assert_equal 1, @task.breadcrumbs.count
+  end
+
+  def test_that_a_session_under_two_minutes_of_focus_cannot_be_bailed_out_of
+    @time_log.update!(current_run_started_at: 1.minute.ago)
+
+    assert_no_difference "Breadcrumb.count" do
+      assert_raises(ActiveRecord::RecordInvalid) { process }
+    end
+    @time_log.reload
+    assert_nil @time_log.completed_at
+    assert @time_log.is_running
+    assert_not @time_log.is_bailed_out
   end
 
   def test_that_invalid_breadcrumbs_leave_the_session_running

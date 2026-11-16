@@ -984,9 +984,42 @@ describe("Timer", () => {
         });
       });
 
+    it.each([
+      ["timer", TIME_LOG],
+      ["stopwatch", { ...TIME_LOG, mode: "stopwatch", timerPreset: null } satisfies TimeLog],
+    ])("offers only to discard a %s under two minutes of focus", async (_, timeLog) => {
+      const create = vi.spyOn(timeLogCompletionsApi, "create");
+      const destroy = vi.spyOn(timeLogsApi, "destroy").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({} as AxiosResponse);
+      });
+      renderTimer({ ...timeLog, accumulatedElapsedSeconds: 82 });
+
+      await clickDone();
+      const dialog = await screen.findByRole("dialog", { name: "Discard this timer?" });
+      expect(dialog).toHaveTextContent("too short to log");
+      await userEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
+
+      expect(await screen.findByRole("heading", { name: "Start a session" })).toBeVisible();
+      expect(destroy).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
+      expect(create).not.toHaveBeenCalled();
+      expect(screen.queryByRole("dialog", { name: /Finished/ })).not.toBeInTheDocument();
+    });
+
+    it("completes once two minutes of focus are in", async () => {
+      const create = mockCompletion(false);
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
+
+      await clickDone();
+
+      expect(await screen.findByRole("dialog", { name: /Finished!/ })).toBeVisible();
+      expect(create).toHaveBeenCalledOnce();
+    });
+
     it("completes the time log and celebrates finishing early", async () => {
       const create = mockCompletion(true);
-      renderTimer(TIME_LOG);
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
       await clickDone();
 
@@ -998,7 +1031,7 @@ describe("Timer", () => {
 
     it("leaves out the boost when the session didn't finish early", async () => {
       mockCompletion(false);
-      renderTimer(TIME_LOG);
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
       await clickDone();
 
@@ -1008,7 +1041,7 @@ describe("Timer", () => {
 
     it("offers to review the parking lot while anything is parked", async () => {
       mockCompletion(true);
-      renderTimer(TIME_LOG, TASK, [buildParkingLotItem(), buildParkingLotItem()]);
+      renderTimer(TIME_LOG_AT_TWO_MINUTES, TASK, [buildParkingLotItem(), buildParkingLotItem()]);
 
       await clickDone();
 
@@ -1029,7 +1062,7 @@ describe("Timer", () => {
 
       const renderFinished = async () => {
         mockCompletion(true);
-        renderTimer(TIME_LOG);
+        renderTimer(TIME_LOG_AT_TWO_MINUTES);
         await clickDone();
 
         return screen.findByRole("dialog", { name: /Finished early!/ });
@@ -1071,7 +1104,7 @@ describe("Timer", () => {
 
     it("shows the setup after closing the dialog", async () => {
       mockCompletion(true);
-      renderTimer(TIME_LOG);
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
       await clickDone();
       await userEvent.click(await screen.findByRole("button", { name: "Close" }));
@@ -1082,7 +1115,7 @@ describe("Timer", () => {
 
     it("keeps the session and shows the error when completing fails", async () => {
       vi.spyOn(timeLogCompletionsApi, "create").mockRejectedValue(new ApiError(500, "Something went wrong"));
-      renderTimer(TIME_LOG);
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
       await clickDone();
 

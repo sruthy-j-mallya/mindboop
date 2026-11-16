@@ -38,12 +38,13 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   const canExtend = timeLog.mode === "timer";
   const extensionMinutesLeft = MAX_EXTENSION_MINUTES - timeLog.bufferMinutes;
 
-  // Decided on the click, so the open dialog doesn't change when the elapsed time crosses the limit.
-  const handleBail = () =>
-    isTooShortToKeep(timeLog, Date.now()) ? setShowDiscardDialog(true) : setShowBailDialog(true);
+  // A session too short to log can only be discarded, whether it's ended with Bail or Done. Decided on the click, so
+  // the open dialog doesn't change when the elapsed time crosses the limit.
+  const isTooShort = () => isTooShortToKeep(timeLog, Date.now());
+  const handleBail = () => (isTooShort() ? setShowDiscardDialog(true) : setShowBailDialog(true));
   const handleBailDialogClose = () => setShowBailDialog(false);
   const handleDiscardDialogClose = () => setShowDiscardDialog(false);
-  const handleDone = () => onDone(timeLog.id);
+  const handleDone = () => (isTooShort() ? setShowDiscardDialog(true) : onDone(timeLog.id));
   const handleExtend = () => setShowExtendDialog(true);
   const handleExtendDialogClose = () => setShowExtendDialog(false);
   const handlePause = () => setShowPauseDialog(true);

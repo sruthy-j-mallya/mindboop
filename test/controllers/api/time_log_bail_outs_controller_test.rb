@@ -5,7 +5,7 @@ class Api::TimeLogBailOutsControllerTest < ActionDispatch::IntegrationTest
     @user = create(:user)
     @task = create(:task, user: @user)
     @time_log = create(
-      :time_log, task: @task, mode: "timer", timer_preset: 25, is_running: true, current_run_started_at: 1.minute.ago
+      :time_log, task: @task, mode: "timer", timer_preset: 25, is_running: true, current_run_started_at: 3.minutes.ago
     )
     @params = attributes_for(:breadcrumb)
   end
@@ -59,6 +59,19 @@ class Api::TimeLogBailOutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_equal "Restart description can't be blank", response.parsed_body["error"]
+    assert_nil @time_log.reload.completed_at
+  end
+
+  def test_that_create_returns_422_under_two_minutes_of_focus
+    @time_log.update!(current_run_started_at: 1.minute.ago)
+    sign_in @user
+
+    assert_no_difference "Breadcrumb.count" do
+      post api_time_log_bail_out_path(@time_log), params: @params
+    end
+
+    assert_response :unprocessable_content
+    assert_equal "Focus for at least 2 minutes to log a session. Discard it instead.", response.parsed_body["error"]
     assert_nil @time_log.reload.completed_at
   end
 

@@ -193,6 +193,11 @@ are ignored.
 - If the log is `is_finished_early`, the user's `early_finish` achievement count goes up by 1. A log is finished early
   when it's a `timer` with a `timer_preset` and less time elapsed than the preset. A stopwatch never is.
 
+A session needs at least 2 minutes of focus (`TimeLog::MIN_LOGGED_MINUTES`, counted from `accumulated_elapsed_seconds`
+plus the current run, so breaks don't count) to be logged, for a timer and a stopwatch alike. Under that, completing it
+gets a 422 (`"Focus for at least 2 minutes to log a session. Discard it instead."`) and nothing changes; discard it with
+`DELETE /api/time_logs/:id` instead. Bailing out has the same limit.
+
 Completing a log that's already completed changes nothing and returns it again. Another user's time log gets a 403, and
 a deleted or unknown one gets a 404.
 
@@ -209,6 +214,7 @@ Another user's time log gets a 403, and a deleted or unknown one gets a 404. `PO
 
 `POST /api/time_logs/:time_log_id/bail_out` ends a session without finishing it, in one transaction:
 
+- Under 2 minutes of focus it gets the same 422 as completing, with no breadcrumb saved.
 - A breadcrumb is saved on the time log's task, with `restart_description` (required) and `completed_description` (optional, blank
   is saved as `null`), each up to 1000 characters. Invalid values get a 422 and the session keeps going.
 - The time log stops the same way as on completion, including `completed_at`, and any open break ends.

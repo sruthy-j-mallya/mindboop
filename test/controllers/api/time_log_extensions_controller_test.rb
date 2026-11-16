@@ -95,6 +95,7 @@ class Api::TimeLogExtensionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_that_a_completed_time_log_cannot_be_extended
+    @time_log.update!(accumulated_elapsed_seconds: 150)
     @time_log.complete!
     sign_in @user
 
