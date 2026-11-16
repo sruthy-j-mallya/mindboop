@@ -49,6 +49,7 @@ class Api::BreaksControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_that_a_completed_time_log_cannot_be_paused
+    @time_log.update!(accumulated_elapsed_seconds: 150)
     @time_log.complete!
     sign_in @user
 
@@ -109,6 +110,7 @@ class Api::BreaksControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_that_completing_a_time_log_ends_its_break
+    @time_log.update!(accumulated_elapsed_seconds: 150)
     sign_in @user
     post api_time_log_break_path(@time_log), params: @params
 

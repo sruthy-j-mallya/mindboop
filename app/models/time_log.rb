@@ -2,6 +2,8 @@ class TimeLog < ApplicationRecord
   include Discard::Model
 
   MAX_BUFFER_MINUTES = 60
+  # A session shorter than this is too short to log: it can only be discarded, not completed or bailed out of.
+  MIN_LOGGED_MINUTES = 2
 
   # Deleting a task keeps its time logs in the database, but hides them along with the task.
   scope :active, -> { kept.joins(:task).merge(Task.kept) }
@@ -24,6 +26,7 @@ class TimeLog < ApplicationRecord
     numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_BUFFER_MINUTES }
   validates :extension_minutes, numericality: { only_integer: true, greater_than: 0 }, on: :extend
   validate :session_can_be_extended, on: :extend
+  validate :long_enough_to_log, on: :end
 
   # A new time log always starts running now, so its timing fields never come from the client.
   def start
@@ -31,14 +34,16 @@ class TimeLog < ApplicationRecord
     assign_attributes(is_running: true, started_at: now, current_run_started_at: now)
   end
 
+  # Raises (RecordInvalid) for a session under MIN_LOGGED_MINUTES of focus, with nothing changed.
   def complete!
     now = Time.current
-    update!(
+    assign_attributes(
       accumulated_elapsed_seconds: elapsed_seconds_at(now),
       is_running: false,
       current_run_started_at: nil,
       completed_at: now
     )
+    save!(context: :end)
     end_current_break(now)
   end
 
@@ -105,7 +110,14 @@ class TimeLog < ApplicationRecord
       accumulated_elapsed_seconds + [ (time - current_run_started_at).floor, 0 ].max
     end
 
-    def session_can_be_extended
+    # Only focus counts: time on a break isn't in accumulated_elapsed_seconds.
+    def long_enough_to_log
+      return if accumulated_elapsed_seconds >= MIN_LOGGED_MINUTES.minutes.to_i
+
+      errors.add(:base, "Focus for at least #{MIN_LOGGED_MINUTES} minutes to log a session. Discard it instead.")
+    end
+
+        def session_can_be_extended
       errors.add(:base, "This session is already finished.") if completed_at?
       errors.add(:base, "Only a timer can be extended.") unless timer? && timer_preset?
     end

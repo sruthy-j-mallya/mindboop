@@ -19,5 +19,5 @@ Make Done on the Timer page end the session, mark its task as done and count an 
 | Achievements | `achievements` table with one row per user and `kind`, and a `count`. `early_finish` is the only kind so far. No read endpoint yet |
 | Dialog | Rendered from `Timer`, not `Session`, because `Session` unmounts once the log stops being current. Its state is the mutation's `data` |
 | Not finished early | The same dialog titled "Finished!", without the boost card |
-| Move on to next | Links to Quick start. Replaces the design's "Review parking lot" |
+| Move on to next | Links to Quick start. Replaces the design's "Review parking lot". Superseded by `027-start-from-timer.md`: "Review parking lot" is back |
 | Left for later | "Add a progress screenshot" is rendered but not wired. Extend, Pause and Bail are still not wired |

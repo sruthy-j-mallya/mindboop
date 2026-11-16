@@ -17,8 +17,8 @@ const DiscardDialog = ({ timeLogId, onClose }: DiscardDialogProps) => {
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl">Discard this timer?</DialogTitle>
           <DialogDescription className="text-base">
-            You&apos;ve been at this for under {DISCARD_BELOW_MINUTES} minutes, so bailing now discards the
-            timer and it won&apos;t be saved.
+            You&apos;ve focused for under {DISCARD_BELOW_MINUTES} minutes, which is too short to log. Ending
+            now discards the timer and it won&apos;t be saved.
           </DialogDescription>
         </DialogHeader>
         {error && (
