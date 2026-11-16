@@ -593,6 +593,23 @@ describe("Timer", () => {
       expect(screen.getByRole("timer")).toHaveTextContent("00:39");
     });
 
+    // The ring is decorative (aria-hidden), so there's no accessible handle; the arc is the primary-coloured circle.
+    it("draws no progress arc, not even a dot at the top", async () => {
+      renderTimer(STOPWATCH);
+
+      await screen.findByRole("timer");
+
+      expect(document.querySelector("circle.stroke-primary")).toBeNull();
+    });
+
+    it("keeps the progress arc for a timer", async () => {
+      renderTimer(TIME_LOG);
+
+      await screen.findByRole("timer");
+
+      expect(document.querySelector("circle.stroke-primary")).not.toBeNull();
+    });
+
     it("offers every action but Extend", async () => {
       renderTimer(STOPWATCH);
 

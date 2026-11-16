@@ -62,7 +62,7 @@ const Setup = () => {
           ))}
         </TabsList>
         <TabsContent className="w-full" value="stopwatch">
-          <Dial progress={0}>
+          <Dial>
             <p className="text-6xl font-medium tabular-nums">00:00</p>
             <p className="text-muted-foreground">counts up</p>
           </Dial>
