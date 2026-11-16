@@ -38,7 +38,7 @@ test("begin a session, and keep it counting down through a reload", async ({ pag
   expect((await page.getByRole("timer").textContent())! <= timeBeforeReload!).toBe(true);
 });
 
-test("finish a session early and move on to the next one", async ({ page }) => {
+test("finish a session early, and watch the dialog fade away with nothing parked", async ({ page }) => {
   await signUp(page);
 
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
@@ -51,11 +51,32 @@ test("finish a session early and move on to the next one", async ({ page }) => {
   const dialog = page.getByRole("dialog", { name: /Finished early!/ });
   await expect(dialog.getByText("+1 early-finish boost")).toBeVisible();
 
-  await dialog.getByRole("link", { name: "Move on to next" }).click();
-  await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
-
-  await page.getByRole("link", { name: "Timer" }).click();
+  // Nothing was parked, so there's nothing to review: the dialog fades away by itself.
+  await expect(dialog.getByRole("link")).toHaveCount(0);
+  await expect(dialog).toBeHidden({ timeout: 10_000 });
   await expect(page.getByRole("heading", { name: "Start a session" })).toBeVisible();
+});
+
+test("finish a session with a parked thought and go review the parking lot", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "Begin" }).click();
+  const input = page
+    .getByRole("region", { name: "Parking lot" })
+    .getByRole("textbox", { name: "Thought to park" });
+  await input.fill("Book a dentist");
+  await input.press("Enter");
+  await expect(page.getByRole("list", { name: "Parked thoughts" }).getByText("Book a dentist")).toBeVisible();
+
+  await page.getByRole("button", { name: "Done" }).click();
+  await page
+    .getByRole("dialog", { name: /Finished/ })
+    .getByRole("link", { name: "Review parking lot · 1" })
+    .click();
+
+  await expect(page).toHaveURL("/parking-lot");
+  await expect(page.getByRole("list", { name: "Parked" }).getByText("Book a dentist")).toBeVisible();
 });
 
 test.describe("pausing", () => {

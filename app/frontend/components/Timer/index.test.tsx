@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AxiosResponse } from "axios";
 
@@ -977,10 +977,6 @@ describe("Timer", () => {
       expect(create).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
       expect(within(dialog).getByText("+1 early-finish boost")).toBeVisible();
       expect(within(dialog).getByRole("button", { name: /Add a progress screenshot/ })).toBeVisible();
-      expect(within(dialog).getByRole("link", { name: "Move on to next" })).toHaveAttribute(
-        "href",
-        routes.root,
-      );
     });
 
     it("leaves out the boost when the session didn't finish early", async () => {
@@ -991,10 +987,72 @@ describe("Timer", () => {
 
       const dialog = await screen.findByRole("dialog", { name: /Finished!/ });
       expect(within(dialog).queryByText("+1 early-finish boost")).not.toBeInTheDocument();
-      expect(within(dialog).getByRole("link", { name: "Move on to next" })).toBeVisible();
     });
 
-    it("shows that nothing is on the clock after closing the dialog", async () => {
+    it("offers to review the parking lot while anything is parked", async () => {
+      mockCompletion(true);
+      renderTimer(TIME_LOG, TASK, [buildParkingLotItem(), buildParkingLotItem()]);
+
+      await clickDone();
+
+      const dialog = await screen.findByRole("dialog", { name: /Finished early!/ });
+      expect(await within(dialog).findByRole("link", { name: "Review parking lot · 2" })).toHaveAttribute(
+        "href",
+        routes.parkingLot,
+      );
+      expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({ status: "parked" });
+    });
+
+    describe("with nothing parked", () => {
+      beforeEach(() => {
+        // setTimeout too, for the fade; time still runs so Testing Library's waits work.
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        vi.setSystemTime(new Date(STARTED_AT).getTime() + 37_000);
+      });
+
+      const renderFinished = async () => {
+        mockCompletion(true);
+        renderTimer(TIME_LOG);
+        await clickDone();
+
+        return screen.findByRole("dialog", { name: /Finished early!/ });
+      };
+
+      it("fades the dialog away on its own, then shows the setup", async () => {
+        const dialog = await renderFinished();
+        expect(within(dialog).queryByRole("link")).not.toBeInTheDocument();
+
+        act(() => {
+          vi.advanceTimersByTime(3900);
+        });
+        expect(screen.getByRole("dialog")).toBeVisible();
+
+        act(() => {
+          vi.advanceTimersByTime(200);
+        });
+
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        expect(await screen.findByRole("heading", { name: "Start a session" })).toBeVisible();
+      });
+
+      it("waits while the pointer is over the dialog", async () => {
+        const dialog = await renderFinished();
+
+        fireEvent.pointerEnter(dialog);
+        act(() => {
+          vi.advanceTimersByTime(10_000);
+        });
+        expect(screen.getByRole("dialog")).toBeVisible();
+
+        fireEvent.pointerLeave(dialog);
+        act(() => {
+          vi.advanceTimersByTime(4000);
+        });
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      });
+    });
+
+    it("shows the setup after closing the dialog", async () => {
       mockCompletion(true);
       renderTimer(TIME_LOG);
 

@@ -18,4 +18,5 @@ sending the user to Quick Start.
 | Start | `POST /api/time_logs` (unchanged). `useCreateTimeLog` seeds the current time log, so the page swaps to the running session and the parking lot. A stopwatch is sent without `timer_preset` |
 | Running stopwatch | The clock (`Timer/Clock`, was `Countdown`) counts up with an "elapsed" caption and an empty ring. Extend is hidden, as the API rejects extending a stopwatch |
 | Heading | The page's heading with nothing on the clock is now "Start a session" (was "Nothing on the clock" with a link to Quick Start) |
+| Finished dialog | "Move on to next" (to Quick Start) is gone. While anything is parked (`GET /api/parking_lot_items?status=parked`, any session) it shows "Review parking lot · N", linking to `/parking-lot`. Otherwise it fades away by itself after 4 seconds (a slower 700 ms fade-out), waiting while the pointer is over it; the X and Escape still close it at once. The parent drops it once the fade-out ends (`onCloseAutoFocus`) |
 | Left for later | Scrolling past the first 20 matches; prefilling the minutes from the task's estimate |
