@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
 import { cn } from "cn";
-import { Upload } from "lucide-react";
 import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
@@ -63,10 +62,6 @@ const FinishedDialog = ({ isFinishedEarly, onClose }: FinishedDialogProps) => {
             {description}
           </div>
         )}
-        <Button size="lg" type="button" variant="outline">
-          <Upload />
-          Add a progress screenshot (optional)
-        </Button>
         {parkedCount > 0 && (
           <Button asChild size="lg">
             <Link to={routes.parkingLot}>Review parking lot · {parkedCount}</Link>
