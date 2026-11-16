@@ -484,3 +484,27 @@ test("start an estimated Inbox task, switching from the one on the clock by mark
   await expect(page.getByRole("textbox", { name: "Call the bank" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Draft permission" })).toBeHidden();
 });
+
+test("keep the clock in view in a mini timer on other pages, and go back to the Timer from it", async ({
+  page,
+}) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("timer")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Current session" })).toBeHidden();
+
+  await page.getByRole("link", { name: "Inbox" }).click();
+  const session = page.getByRole("region", { name: "Current session" });
+  await expect(session.getByRole("timer")).toHaveText(/^09:[0-5]\d$/);
+
+  await page.getByRole("link", { name: "Parking lot" }).click();
+  await expect(session.getByRole("timer")).toHaveText(/^09:[0-5]\d$/);
+
+  await session.getByRole("link", { name: "Back to timer" }).click();
+  await expect(page).toHaveURL("/timer");
+  await expect(page.getByRole("heading", { name: "Draft permission" })).toBeVisible();
+  await expect(session).toBeHidden();
+});
