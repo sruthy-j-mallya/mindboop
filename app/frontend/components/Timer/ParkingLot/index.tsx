@@ -15,8 +15,7 @@ type ParkingLotProps = { since: string; className?: string };
 const ParkingLot = ({ since, className }: ParkingLotProps) => {
   const { data, isPending, error } = useParkingLotItems({ status: "parked", since });
   const listRef = useRef<HTMLDivElement>(null);
-  // The API lists newest first.
-  const items = (data?.parkingLotItems ?? []).toReversed();
+  const items = data?.parkingLotItems ?? [];
 
   useEffect(() => {
     const list = listRef.current;

@@ -8,7 +8,7 @@ class Api::ParkingLotItemsControllerTest < ActionDispatch::IntegrationTest
     @content = Faker::Lorem.sentence
   end
 
-  def test_that_index_returns_only_the_users_kept_items_newest_first
+  def test_that_index_returns_only_the_users_kept_items_oldest_first
     newer_item = create(:parking_lot_item, user: @user)
     create(:parking_lot_item, user: @user, discarded_at: Time.current)
     sign_in @user
@@ -16,7 +16,7 @@ class Api::ParkingLotItemsControllerTest < ActionDispatch::IntegrationTest
     get api_parking_lot_items_path
 
     assert_response :ok
-    assert_equal [ newer_item.id, @item.id ], response.parsed_body["parking_lot_items"].pluck("id")
+    assert_equal [ @item.id, newer_item.id ], response.parsed_body["parking_lot_items"].pluck("id")
     assert_equal 2, response.parsed_body["parking_lot_items_count"]
     assert_equal 1, response.parsed_body["total_pages"]
   end

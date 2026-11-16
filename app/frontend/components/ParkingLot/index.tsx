@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEFAULT_STATUS, TABS } from "./constants";
 import ItemList from "./ItemList";
 
-// Every thought parked so far, newest first: look into one for a few minutes, add it to the Inbox, mark it addressed,
+// Every thought parked so far, oldest first: look into one for a few minutes, add it to the Inbox, mark it addressed,
 // or let it go.
 const ParkingLot = () => {
   const [status, setStatus] = useState<ParkingLotItemStatus>(DEFAULT_STATUS);

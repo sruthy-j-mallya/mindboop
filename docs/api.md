@@ -137,7 +137,7 @@ An item is `{ id, content, status, task_id, curiosity_ends_at, is_curiosity_exte
 - `content` is required, up to 1,000 characters (stripped).
 - `status` starts as `parked`. `PATCH` moves it between `parked` and `addressed`. `converted` is set only by the
   conversion endpoint, which also sets `task_id`; any other combination gets a 422.
-- `GET` lists undeleted items newest first, 20 a page, as `{ parking_lot_items, parking_lot_items_count, page,
+- `GET` lists undeleted items oldest first, 20 a page, as `{ parking_lot_items, parking_lot_items_count, page,
 total_pages }`. `status` lists one status. `since` (an ISO 8601 time) lists items created from then on (the Timer's
   panel passes the session's `started_at`); an unparsable `since` is ignored.
 - `POST /api/parking_lot_items/:id/conversion` adds a parked item to the Inbox as a task titled with its `content`, and

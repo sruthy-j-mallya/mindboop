@@ -783,9 +783,9 @@ describe("Timer", () => {
 
   describe("parking lot", () => {
     it("lists the thoughts parked during this session, oldest first", async () => {
-      const newer = buildParkingLotItem({ content: "Is the shop open on Sunday?" });
       const older = buildParkingLotItem({ content: "Clean my scooter" });
-      renderTimer(TIME_LOG, TASK, [newer, older]);
+      const newer = buildParkingLotItem({ content: "Is the shop open on Sunday?" });
+      renderTimer(TIME_LOG, TASK, [older, newer]);
 
       const parkingLot = await screen.findByRole("region", { name: "Parking lot" });
       const thoughts = await within(parkingLot).findAllByRole("listitem");
