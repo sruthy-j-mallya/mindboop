@@ -6,8 +6,8 @@ import type { TimeLog } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import useCurrentTime from "@/hooks/useCurrentTime";
+import { isTicking } from "@/utils/timeLogs";
 
-import { isTicking } from "../utils";
 import { MAX_VOLUME, NO_SOUND, SOUNDS } from "./constants";
 import useAmbience from "./useAmbience";
 import useAmbiencePreference from "./useAmbiencePreference";

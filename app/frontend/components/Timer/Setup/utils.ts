@@ -1,4 +1,4 @@
-import type { CreateTimeLogPayload, TimeLogMode } from "@/apis/types";
+import type { CreateTimeLogPayload, Task, TimeLogMode } from "@/apis/types";
 
 import { MODES, TIMER_MINUTES_MAX, TIMER_MINUTES_MAX_DIGITS, TIMER_MINUTES_MIN } from "./constants";
 
@@ -26,3 +26,9 @@ export const buildTimeLogPayload = ({
   timerMinutes: number;
 }): CreateTimeLogPayload =>
   mode === "timer" ? { taskId, mode, timerPreset: timerMinutes } : { taskId, mode };
+
+// A task's estimate presets the timer, unless it's longer than a timer can run.
+export const getEstimatedTimerMinutes = ({ estimatedMinutes }: Task) =>
+  estimatedMinutes && estimatedMinutes >= TIMER_MINUTES_MIN && estimatedMinutes <= TIMER_MINUTES_MAX
+    ? estimatedMinutes
+    : null;

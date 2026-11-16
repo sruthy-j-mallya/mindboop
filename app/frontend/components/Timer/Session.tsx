@@ -4,12 +4,13 @@ import { cn } from "cn";
 import { LogOut, PartyPopper, Pause, Plus } from "lucide-react";
 
 import type { TimeLog } from "@/apis/types";
+import BailDialog from "@/components/commons/BailDialog";
 import BreakBanner from "@/components/commons/BreakBanner";
 import { Button } from "@/components/ui/button";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
+import { isTooShortToKeep } from "@/utils/timeLogs";
 
 import Ambience from "./Ambience";
-import BailDialog from "./BailDialog";
 import Clock from "./Clock";
 import DiscardDialog from "./DiscardDialog";
 import ExtendDialog from "./ExtendDialog";
@@ -17,7 +18,6 @@ import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
 import SessionCard from "./SessionCard";
 import TaskDetails from "./TaskDetails";
-import { isTooShortToKeep } from "./utils";
 
 type SessionProps = {
   timeLog: TimeLog;

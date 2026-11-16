@@ -10,6 +10,10 @@ export const MINUTES_PER_HOUR = 60;
 
 export const SECONDS_PER_MINUTE = 60;
 
+// Mirrors TimeLog::MIN_LOGGED_MINUTES: a session with less focus than this can't be logged (completed or bailed out
+// of), only discarded.
+export const DISCARD_BELOW_MINUTES = 2;
+
 // Keep in sync with Task::MAX_ESTIMATED_MINUTES.
 export const TASK_ESTIMATE_MAX_MINUTES = 1440; // 24 hours
 

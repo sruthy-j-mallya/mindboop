@@ -11,9 +11,10 @@ import { BREADCRUMB_VALIDATION_SCHEMA, type BreadcrumbFormValues, INITIAL_FORM_V
 
 const LABEL_CLASS_NAME = "font-normal tracking-wider text-muted-foreground uppercase";
 
-type BailDialogProps = { timeLogId: string; onClose: () => void };
+// `onBailedOut` runs once the session is saved, and defaults to closing; `onClose` alone is for dismissing.
+type BailDialogProps = { timeLogId: string; onClose: () => void; onBailedOut?: () => void };
 
-const BailDialog = ({ timeLogId, onClose }: BailDialogProps) => {
+const BailDialog = ({ timeLogId, onClose, onBailedOut = onClose }: BailDialogProps) => {
   const {
     register,
     handleSubmit,
@@ -26,7 +27,7 @@ const BailDialog = ({ timeLogId, onClose }: BailDialogProps) => {
   const { mutate: bailOut, isPending, error } = useBailOutTimeLog();
 
   const handleValidSubmit = (values: BreadcrumbFormValues) =>
-    bailOut({ timeLogId, ...values }, { onSuccess: onClose });
+    bailOut({ timeLogId, ...values }, { onSuccess: onBailedOut });
 
   return (
     <Dialog open onOpenChange={onClose}>

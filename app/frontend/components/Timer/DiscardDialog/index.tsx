@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DISCARD_BELOW_MINUTES } from "@/constants";
 import { useDeleteTimeLog } from "@/hooks/reactQuery/useTimeLogsApi";
-
-import { DISCARD_BELOW_MINUTES } from "../constants";
 
 type DiscardDialogProps = { timeLogId: string; onClose: () => void };
 
