@@ -3,14 +3,14 @@ module Api
     before_action :set_parking_lot_item, only: %i[ update destroy ]
 
     def index
-      items = ParkingLotItems::FilterService.new(policy_scope(ParkingLotItem).kept, params.slice(:status, :since)).process
+      items = ParkingLotItems::FilterService.new(policy_scope(ParkingLotItem).kept, params.slice(:status, :time_log_id)).process
       # Oldest first; id breaks created_at ties, so an item can't repeat or go missing across pages.
       @pagy, @parking_lot_items = pagy(items.order(:created_at, :id))
     end
 
     def create
       authorize ParkingLotItem
-      @parking_lot_item = Current.user.parking_lot_items.create!(params.permit(:content))
+      @parking_lot_item = Current.user.parking_lot_items.create!(params.permit(:content, :time_log_id))
       render :show, status: :created
     end
 

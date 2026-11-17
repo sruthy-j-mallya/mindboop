@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_14_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -65,9 +65,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_120000) do
     t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "time_log_id"
     t.index ["discarded_at"], name: "index_parking_lot_items_on_discarded_at"
     t.index ["status"], name: "index_parking_lot_items_on_status"
     t.index ["task_id"], name: "index_parking_lot_items_on_task_id"
+    t.index ["time_log_id"], name: "index_parking_lot_items_on_time_log_id"
     t.index ["user_id"], name: "index_parking_lot_items_on_user_id"
   end
 
@@ -279,6 +281,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_14_120000) do
   add_foreign_key "breaks", "time_logs"
   add_foreign_key "checklist_items", "tasks", on_delete: :cascade
   add_foreign_key "parking_lot_items", "tasks", on_delete: :nullify
+  add_foreign_key "parking_lot_items", "time_logs", on_delete: :nullify
   add_foreign_key "parking_lot_items", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade

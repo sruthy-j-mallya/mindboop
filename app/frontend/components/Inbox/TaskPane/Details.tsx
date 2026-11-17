@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 import type { Task } from "@/apis/types";
+import DueDatePicker from "@/components/commons/DueDatePicker";
+import EstimatePicker from "@/components/commons/EstimatePicker";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
 import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
 import type { Draft } from "@/components/commons/Steps/types";
@@ -11,8 +13,6 @@ import { Separator } from "@/components/ui/separator";
 
 import useCompleteTask from "../useCompleteTask";
 import DeleteTaskButton from "./DeleteTaskButton";
-import DueDatePicker from "./DueDatePicker";
-import EstimatePicker from "./EstimatePicker";
 import StartTaskButton from "./StartTaskButton";
 
 type DetailsProps = { task: Task };

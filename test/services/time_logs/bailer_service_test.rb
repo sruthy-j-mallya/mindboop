@@ -38,6 +38,16 @@ class TimeLogs::BailerServiceTest < ActiveSupport::TestCase
     end
   end
 
+  def test_that_a_discarded_overrun_logs_the_planned_time
+    freeze_time do
+      @time_log.update!(current_run_started_at: 31.minutes.ago)
+
+      process(discard_overrun: true)
+
+      assert_equal 25.minutes.to_i, @time_log.reload.accumulated_elapsed_seconds
+    end
+  end
+
   def test_that_the_task_stays_open
     process
 
@@ -95,7 +105,7 @@ class TimeLogs::BailerServiceTest < ActiveSupport::TestCase
   end
 
   private
-    def process
-      TimeLogs::BailerService.new(@time_log, @attributes).process!
+    def process(**options)
+      TimeLogs::BailerService.new(@time_log, @attributes, **options).process!
     end
 end

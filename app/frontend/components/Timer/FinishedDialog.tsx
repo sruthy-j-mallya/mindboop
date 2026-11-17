@@ -8,16 +8,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useParkingLotItems } from "@/hooks/reactQuery/useParkingLotItemsApi";
 import routes from "@/routes";
 
-import { FINISHED_DIALOG_FADE_DELAY, PARKED_FILTERS } from "./constants";
+import { FINISHED_DIALOG_FADE_DELAY } from "./constants";
 
-type FinishedDialogProps = { isFinishedEarly: boolean; onClose: () => void };
+type FinishedDialogProps = { isFinishedEarly: boolean; timeLogId: string; onClose: () => void };
 
-// Points to the Parking lot while anything is parked there. Otherwise there's nothing to move on to, so the dialog
-// fades away by itself, waiting while the pointer is over it.
-const FinishedDialog = ({ isFinishedEarly, onClose }: FinishedDialogProps) => {
+// Points to the Parking lot while thoughts parked during this session are still waiting there. Otherwise there's
+// nothing to move on to, so the dialog fades away by itself, waiting while the pointer is over it.
+const FinishedDialog = ({ isFinishedEarly, timeLogId, onClose }: FinishedDialogProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
-  const { data, isPending } = useParkingLotItems(PARKED_FILTERS);
+  const { data, isPending } = useParkingLotItems({ status: "parked", timeLogId });
   const parkedCount = data?.parkingLotItemsCount ?? 0;
   const isFadingAway = !isPending && parkedCount === 0;
   const isFadeDue = isFadingAway && !isHovered;

@@ -14,11 +14,14 @@ class ParkingLotItem < ApplicationRecord
 
   belongs_to :user
   belongs_to :task, optional: true
+  # The focus session it was parked during, if any.
+  belongs_to :time_log, optional: true
 
   validates :content, presence: true, length: { maximum: MAX_CONTENT_LENGTH }
   validates :task, presence: true, if: :converted?
   validates :task, absence: true, unless: :converted?
   validate :curiosity_time_is_the_only_one, if: :starting_curiosity_time?
+  validate :time_log_is_the_users, if: :time_log
 
   # Dealing with the item, or letting it go, ends its curiosity time.
   before_save :clear_curiosity_time, if: -> { !parked? || discarded? }
@@ -60,6 +63,12 @@ class ParkingLotItem < ApplicationRecord
       return unless user.parking_lot_items.in_curiosity_time.where.not(id:).exists?
 
       errors.add(:base, "Finish your current curiosity time first")
+    end
+
+    def time_log_is_the_users
+      return if time_log.task.user_id == user_id
+
+      errors.add(:time_log, "must be one of your sessions")
     end
 
     def clear_curiosity_time

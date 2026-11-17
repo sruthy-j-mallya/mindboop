@@ -17,6 +17,7 @@ class TimeLog < ApplicationRecord
   belongs_to :task
   has_many :breaks, dependent: :destroy
   has_one :current_break, -> { open }, class_name: "Break"
+  has_many :parking_lot_items, dependent: :nullify
 
   validates :started_at, presence: true
   validates :timer_preset, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
@@ -34,11 +35,14 @@ class TimeLog < ApplicationRecord
     assign_attributes(is_running: true, started_at: now, current_run_started_at: now)
   end
 
-  # Raises (RecordInvalid) for a session under MIN_LOGGED_MINUTES of focus, with nothing changed.
-  def complete!
+  # Raises (RecordInvalid) for a session under MIN_LOGGED_MINUTES of focus, with nothing changed. With
+  # `discard_overrun`, a timer that ran past zero logs only its planned time (preset plus buffer).
+  def complete!(discard_overrun: false)
     now = Time.current
+    elapsed_seconds = elapsed_seconds_at(now)
+    elapsed_seconds = [ elapsed_seconds, planned_seconds ].min if discard_overrun && timer? && timer_preset?
     assign_attributes(
-      accumulated_elapsed_seconds: elapsed_seconds_at(now),
+      accumulated_elapsed_seconds: elapsed_seconds,
       is_running: false,
       current_run_started_at: nil,
       completed_at: now
@@ -47,9 +51,9 @@ class TimeLog < ApplicationRecord
     end_current_break(now)
   end
 
-  def bail_out!
+  def bail_out!(discard_overrun: false)
     self.is_bailed_out = true
-    complete!
+    complete!(discard_overrun:)
   end
 
   def pause!(break_attributes)
@@ -86,7 +90,7 @@ class TimeLog < ApplicationRecord
       now = Time.current
       update!(
         buffer_minutes: buffer_minutes + extension_minutes,
-        accumulated_elapsed_seconds: [ elapsed_seconds_at(now), (timer_preset + buffer_minutes).minutes.to_i ].min,
+        accumulated_elapsed_seconds: [ elapsed_seconds_at(now), planned_seconds ].min,
         current_run_started_at: (now if is_running?)
       )
     end
@@ -110,6 +114,11 @@ class TimeLog < ApplicationRecord
       accumulated_elapsed_seconds + [ (time - current_run_started_at).floor, 0 ].max
     end
 
+    # Where a timer reaches zero, read before buffer_minutes changes.
+    def planned_seconds
+      (timer_preset + buffer_minutes).minutes.to_i
+    end
+
     # Only focus counts: time on a break isn't in accumulated_elapsed_seconds.
     def long_enough_to_log
       return if accumulated_elapsed_seconds >= MIN_LOGGED_MINUTES.minutes.to_i
@@ -117,7 +126,7 @@ class TimeLog < ApplicationRecord
       errors.add(:base, "Focus for at least #{MIN_LOGGED_MINUTES} minutes to log a session. Discard it instead.")
     end
 
-        def session_can_be_extended
+    def session_can_be_extended
       errors.add(:base, "This session is already finished.") if completed_at?
       errors.add(:base, "Only a timer can be extended.") unless timer? && timer_preset?
     end

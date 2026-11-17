@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import type { EndTimeLogOptions } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -12,9 +13,13 @@ import { BREADCRUMB_VALIDATION_SCHEMA, type BreadcrumbFormValues, INITIAL_FORM_V
 const LABEL_CLASS_NAME = "font-normal tracking-wider text-muted-foreground uppercase";
 
 // `onBailedOut` runs once the session is saved, and defaults to closing; `onClose` alone is for dismissing.
-type BailDialogProps = { timeLogId: string; onClose: () => void; onBailedOut?: () => void };
+type BailDialogProps = EndTimeLogOptions & {
+  timeLogId: string;
+  onClose: () => void;
+  onBailedOut?: () => void;
+};
 
-const BailDialog = ({ timeLogId, onClose, onBailedOut = onClose }: BailDialogProps) => {
+const BailDialog = ({ timeLogId, discardOverrun, onClose, onBailedOut = onClose }: BailDialogProps) => {
   const {
     register,
     handleSubmit,
@@ -27,7 +32,7 @@ const BailDialog = ({ timeLogId, onClose, onBailedOut = onClose }: BailDialogPro
   const { mutate: bailOut, isPending, error } = useBailOutTimeLog();
 
   const handleValidSubmit = (values: BreadcrumbFormValues) =>
-    bailOut({ timeLogId, ...values }, { onSuccess: onBailedOut });
+    bailOut({ timeLogId, discardOverrun, ...values }, { onSuccess: onBailedOut });
 
   return (
     <Dialog open onOpenChange={onClose}>

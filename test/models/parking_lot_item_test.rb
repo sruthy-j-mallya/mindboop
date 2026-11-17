@@ -26,6 +26,20 @@ class ParkingLotItemTest < ActiveSupport::TestCase
     assert build(:parking_lot_item, status: "snoozed").invalid?
   end
 
+  def test_that_an_item_can_belong_to_its_users_session_only
+    assert build(:parking_lot_item, user: @item.user, time_log: create(:time_log, task: create(:task, user: @item.user))).valid?
+    assert build(:parking_lot_item, user: @item.user, time_log: create(:time_log)).invalid?
+  end
+
+  def test_that_destroying_the_session_keeps_the_item
+    time_log = create(:time_log, task: create(:task, user: @item.user))
+    @item.update!(time_log:)
+
+    time_log.destroy!
+
+    assert_nil @item.reload.time_log_id
+  end
+
   def test_that_only_a_converted_item_has_a_task
     task = create(:task, user: @item.user)
 

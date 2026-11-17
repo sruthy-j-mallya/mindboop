@@ -3,6 +3,7 @@ import { CalendarDays, ChevronRight, Trash2 } from "lucide-react";
 import { generatePath, Link, useNavigate } from "react-router";
 
 import type { Task } from "@/apis/types";
+import ScheduleLabel from "@/components/commons/ScheduleLabel";
 import SchedulePicker from "@/components/commons/SchedulePicker";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 import routes from "@/routes";
 
-import ScheduleLabel from "../ScheduleLabel";
 import useCompleteTask from "../useCompleteTask";
 import useDeleteTaskWithUndo from "../useDeleteTaskWithUndo";
 import { NARROW_LAYOUT_QUERY } from "./constants";

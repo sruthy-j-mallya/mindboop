@@ -8,12 +8,12 @@ import ThoughtCard from "@/components/commons/ParkingLot/ThoughtCard";
 import { Card } from "@/components/ui/card";
 import { useParkingLotItems } from "@/hooks/reactQuery/useParkingLotItemsApi";
 
-type ParkingLotProps = { since: string; className?: string };
+type ParkingLotProps = { timeLogId: string; className?: string };
 
 // Catches stray thoughts during a session, so they can wait for the Parking lot page instead of pulling focus. Lists
-// only what's still parked since the session started, oldest first like a chat, and keeps the newest in view.
-const ParkingLot = ({ since, className }: ParkingLotProps) => {
-  const { data, isPending, error } = useParkingLotItems({ status: "parked", since });
+// only what's still parked from this session, oldest first like a chat, and keeps the newest in view.
+const ParkingLot = ({ timeLogId, className }: ParkingLotProps) => {
+  const { data, isPending, error } = useParkingLotItems({ status: "parked", timeLogId });
   const listRef = useRef<HTMLDivElement>(null);
   const items = data?.parkingLotItems ?? [];
 
@@ -50,7 +50,7 @@ const ParkingLot = ({ since, className }: ParkingLotProps) => {
         )}
       </div>
       <div className="border-t px-6 py-4">
-        <ParkForm />
+        <ParkForm timeLogId={timeLogId} />
       </div>
     </Card>
   );

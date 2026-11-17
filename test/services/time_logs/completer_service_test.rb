@@ -61,6 +61,48 @@ class TimeLogs::CompleterServiceTest < ActiveSupport::TestCase
     assert_empty @user.achievements
   end
 
+  def test_that_an_overrun_is_kept_by_default
+    freeze_time do
+      time_log = create_timer(buffer_minutes: 5, current_run_started_at: 33.minutes.ago)
+
+      process(time_log)
+
+      assert_equal 33.minutes.to_i, time_log.reload.accumulated_elapsed_seconds
+    end
+  end
+
+  def test_that_a_discarded_overrun_logs_the_planned_time_with_the_buffer
+    freeze_time do
+      time_log = create_timer(buffer_minutes: 5, current_run_started_at: 33.minutes.ago)
+
+      process(time_log, discard_overrun: true)
+
+      assert_equal 30.minutes.to_i, time_log.reload.accumulated_elapsed_seconds
+    end
+  end
+
+  def test_that_discarding_the_overrun_keeps_time_short_of_the_plan
+    freeze_time do
+      time_log = create_timer
+
+      process(time_log, discard_overrun: true)
+
+      assert_equal 3.minutes.to_i, time_log.reload.accumulated_elapsed_seconds
+    end
+  end
+
+  def test_that_a_stopwatch_has_no_overrun_to_discard
+    freeze_time do
+      time_log = create(
+        :time_log, task: @task, mode: "stopwatch", is_running: true, current_run_started_at: 40.minutes.ago
+      )
+
+      process(time_log, discard_overrun: true)
+
+      assert_equal 40.minutes.to_i, time_log.reload.accumulated_elapsed_seconds
+    end
+  end
+
   def test_that_completing_twice_counts_once_and_keeps_the_first_completion
     time_log = create_timer
     process(time_log)
@@ -115,8 +157,8 @@ class TimeLogs::CompleterServiceTest < ActiveSupport::TestCase
   end
 
   private
-    def process(time_log)
-      TimeLogs::CompleterService.new(time_log).process!
+    def process(time_log, **options)
+      TimeLogs::CompleterService.new(time_log, **options).process!
     end
 
     def create_timer(**attributes)

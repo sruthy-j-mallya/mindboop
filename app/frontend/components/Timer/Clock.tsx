@@ -1,16 +1,22 @@
 import type { TimeLog } from "@/apis/types";
-import useCurrentTime from "@/hooks/useCurrentTime";
 import { formatRemainingTime, getRemainingSeconds } from "@/utils";
-import { getClockState } from "@/utils/timeLogs";
+import { getClockState, getOverrunSeconds } from "@/utils/timeLogs";
 
 import Dial from "./Dial";
+import OverrunToggle from "./OverrunToggle";
 
-type ClockProps = { timeLog: TimeLog };
+type ClockProps = {
+  timeLog: TimeLog;
+  currentTime: number;
+  isOverrunIncluded: boolean;
+  onOverrunToggle: () => void;
+};
 
-const Clock = ({ timeLog }: ClockProps) => {
-  const { isRunning, currentBreak, mode } = timeLog;
-  const currentTime = useCurrentTime(isRunning || !!currentBreak);
+// A timer stays at zero once its time is up, with the time past it counting up underneath.
+const Clock = ({ timeLog, currentTime, isOverrunIncluded, onOverrunToggle }: ClockProps) => {
+  const { currentBreak, mode } = timeLog;
   const { seconds, fill } = getClockState(timeLog, currentTime);
+  const overrunSeconds = getOverrunSeconds(timeLog, currentTime);
   const breakRemainingSeconds = currentBreak && getRemainingSeconds(currentBreak.endsAt, currentTime);
 
   const getCaption = () => {
@@ -26,7 +32,11 @@ const Clock = ({ timeLog }: ClockProps) => {
       <p className="text-6xl font-medium tabular-nums" role="timer">
         {formatRemainingTime(seconds)}
       </p>
-      <p className="text-muted-foreground">{getCaption()}</p>
+      {overrunSeconds > 0 && !currentBreak ? (
+        <OverrunToggle isIncluded={isOverrunIncluded} seconds={overrunSeconds} onToggle={onOverrunToggle} />
+      ) : (
+        <p className="text-muted-foreground">{getCaption()}</p>
+      )}
     </Dial>
   );
 };

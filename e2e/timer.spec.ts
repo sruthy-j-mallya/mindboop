@@ -68,6 +68,34 @@ test("finish a session early, and watch the dialog fade away with nothing parked
   await expect(page.getByRole("heading", { name: "Start a session" })).toBeVisible();
 });
 
+test("run past the timer, leave the extra time out, and finish", async ({ page }) => {
+  const email = await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("timer")).toBeVisible();
+  backdateSession(email, 11 * 60);
+  await page.reload();
+
+  await expect(page.getByRole("timer")).toHaveText("00:00");
+  await expect(page.getByRole("button", { name: "Add the extra time to the log" })).toHaveText(
+    /^01:[0-5]\d$/,
+  );
+  await expect(page.getByRole("button", { name: "Extend" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Pause" })).toHaveCount(0);
+
+  // The extra time is left out unless added.
+  await expect(page.getByText("extra time not logged")).toBeVisible();
+
+  const completion = page.waitForResponse((response) => response.url().endsWith("/completion"));
+  await page.getByRole("button", { name: "Done" }).click();
+  const { time_log: timeLog } = await (await completion).json();
+
+  expect(timeLog.accumulated_elapsed_seconds).toBe(10 * 60);
+  await expect(page.getByRole("dialog", { name: /Finished!/ })).toBeVisible();
+});
+
 test("finish a session with a parked thought and go review the parking lot", async ({ page }) => {
   const email = await signUp(page);
 

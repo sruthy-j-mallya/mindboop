@@ -1,4 +1,4 @@
-import type { TimeLog } from "@/apis/types";
+import type { EndTimeLogOptions, TimeLog } from "@/apis/types";
 import { DISCARD_BELOW_MINUTES, SECONDS_PER_MINUTE } from "@/constants";
 
 // The time log is the source of truth, so elapsed time is always derived from it and never counted on the client.
@@ -13,11 +13,31 @@ const getElapsedSeconds = (
   return accumulatedElapsedSeconds + Math.max(currentRunSeconds, 0);
 };
 
-export const isTooShortToKeep = (timeLog: TimeLog, currentTime: number) =>
-  getElapsedSeconds(timeLog, currentTime) < DISCARD_BELOW_MINUTES * SECONDS_PER_MINUTE;
+// Where a timer reaches zero: its preset plus any extensions.
+const getPlannedSeconds = ({ timerPreset, bufferMinutes }: TimeLog) =>
+  ((timerPreset ?? 0) + bufferMinutes) * SECONDS_PER_MINUTE;
+
+// How far a timer has run past zero. A stopwatch has no end, so it never overruns.
+export const getOverrunSeconds = (timeLog: TimeLog, currentTime: number) => {
+  if (timeLog.mode !== "timer" || !timeLog.timerPreset) return 0;
+
+  return Math.max(getElapsedSeconds(timeLog, currentTime) - getPlannedSeconds(timeLog), 0);
+};
+
+// With `discardOverrun`, only the time up to zero would be logged, so only that counts.
+export const isTooShortToKeep = (
+  timeLog: TimeLog,
+  currentTime: number,
+  { discardOverrun = false }: EndTimeLogOptions = {},
+) => {
+  const overrunSeconds = discardOverrun ? getOverrunSeconds(timeLog, currentTime) : 0;
+  const loggedSeconds = getElapsedSeconds(timeLog, currentTime) - overrunSeconds;
+
+  return loggedSeconds < DISCARD_BELOW_MINUTES * SECONDS_PER_MINUTE;
+};
 
 export const getTimerState = (timeLog: TimeLog, currentTime: number) => {
-  const totalSeconds = ((timeLog.timerPreset ?? 0) + timeLog.bufferMinutes) * SECONDS_PER_MINUTE;
+  const totalSeconds = getPlannedSeconds(timeLog);
   const elapsedSeconds = Math.min(getElapsedSeconds(timeLog, currentTime), totalSeconds);
 
   return {

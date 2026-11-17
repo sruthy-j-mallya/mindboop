@@ -8,9 +8,11 @@ import { useCreateParkingLotItem } from "@/hooks/reactQuery/useParkingLotItemsAp
 
 import { INITIAL_FORM_VALUES, PARK_VALIDATION_SCHEMA, type ParkFormValues } from "./constants";
 
-// Parks a thought on Enter. The input clears as soon as it's sent, so the next thought can be typed straight away. A
+type ParkFormProps = { timeLogId?: string };
+
+// Parks a thought on Enter, linked to the session it was parked during when there is one. The input clears as soon as it's sent, so the next thought can be typed straight away. A
 // failed one comes back into the input if it's still empty.
-const ParkForm = () => {
+const ParkForm = ({ timeLogId }: ParkFormProps) => {
   const { mutate: createItem, error } = useCreateParkingLotItem();
   const {
     register,
@@ -33,7 +35,7 @@ const ParkForm = () => {
     const handleError = () => {
       if (!getValues("content")) setValue("content", content);
     };
-    createItem({ content }, { onError: handleError });
+    createItem({ content, timeLogId }, { onError: handleError });
   };
 
   return (

@@ -1,16 +1,15 @@
 import { CalendarDays } from "lucide-react";
 
 import type { Task } from "@/apis/types";
+import ScheduleLabel from "@/components/commons/ScheduleLabel";
 import SchedulePicker from "@/components/commons/SchedulePicker";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
 import { Button } from "@/components/ui/button";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 
-import ScheduleLabel from "../ScheduleLabel";
-
 type DueDatePickerProps = { task: Task };
 
-// The pane's schedule button: the date once set, "Due date" until then.
+// A task's schedule button: the date once set, "Due date" until then.
 const DueDatePicker = ({ task }: DueDatePickerProps) => {
   const { mutate: updateTask, error } = useUpdateTask();
 

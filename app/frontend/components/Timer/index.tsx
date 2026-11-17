@@ -40,13 +40,17 @@ const Timer = () => {
           />
           <ParkingLot
             className="mx-auto h-[28rem] w-full max-w-2xl lg:max-w-5xl xl:sticky xl:top-4 xl:h-[calc(100svh-6rem)] xl:max-w-none xl:self-start"
-            since={timeLog.startedAt}
+            timeLogId={timeLog.id}
           />
         </div>
       )}
       {!error && !timeLog && <Setup />}
       {completion && (
-        <FinishedDialog isFinishedEarly={completion.timeLog.isFinishedEarly} onClose={resetCompletion} />
+        <FinishedDialog
+          isFinishedEarly={completion.timeLog.isFinishedEarly}
+          timeLogId={completion.timeLog.id}
+          onClose={resetCompletion}
+        />
       )}
     </div>
   );
