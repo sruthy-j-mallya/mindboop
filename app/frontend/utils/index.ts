@@ -1,4 +1,4 @@
-import { MINUTES_PER_HOUR } from "@/constants";
+import { MINUTES_PER_HOUR, SECONDS_PER_MINUTE } from "@/constants";
 
 type KeyTransform = (key: string) => string;
 
@@ -24,9 +24,19 @@ export const keysToCamelCase = <T>(value: unknown) => transformKeys(value, toCam
 
 export const keysToSnakeCase = <T>(value: unknown) => transformKeys(value, toSnakeCase) as T;
 
-// Rounds up, so a break doesn't read as over during its last second.
-export const getBreakRemainingSeconds = (endsAt: string, currentTime: number) =>
+// Seconds until `endsAt` (a break's or a curiosity time's end). Rounds up, so it doesn't read as over during its last
+// second.
+export const getRemainingSeconds = (endsAt: string, currentTime: number) =>
   Math.max(Math.ceil((Date.parse(endsAt) - currentTime) / 1000), 0);
+
+const pad = (value: number) => String(value).padStart(2, "0");
+
+// "04:59".
+export const formatRemainingTime = (remainingSeconds: number) => {
+  const minutes = Math.floor(remainingSeconds / SECONDS_PER_MINUTE);
+
+  return `${pad(minutes)}:${pad(remainingSeconds % SECONDS_PER_MINUTE)}`;
+};
 
 // "45 min", "2 h", "1 h 30 min".
 export const formatMinutes = (minutes: number) => {

@@ -1,14 +1,18 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { addDays, format, set, startOfDay } from "date-fns";
-import { generatePath, Route, Routes } from "react-router";
+import { generatePath, Route, Routes, useLocation } from "react-router";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
+import currentTimeLogsApi from "@/apis/current_time_logs";
 import taskRestorationsApi from "@/apis/task_restorations";
 import tasksApi from "@/apis/tasks";
-import type { Task } from "@/apis/types";
+import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
+import timeLogCompletionsApi from "@/apis/time_log_completions";
+import timeLogsApi from "@/apis/time_logs";
+import type { Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import Inbox from "@/components/Inbox";
 import NoTaskSelected from "@/components/Inbox/NoTaskSelected";
@@ -36,6 +40,36 @@ const buildTask = (overrides: Partial<Task> = {}): Task => ({
   ...overrides,
 });
 
+const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => {
+  // Running for 5 minutes, long enough to log.
+  const startedAt = new Date(Date.now() - 5 * 60_000).toISOString();
+
+  return {
+    id: crypto.randomUUID(),
+    taskId: crypto.randomUUID(),
+    mode: "timer",
+    timerPreset: 25,
+    bufferMinutes: 0,
+    accumulatedElapsedSeconds: 0,
+    isRunning: true,
+    currentRunStartedAt: startedAt,
+    startedAt,
+    completedAt: null,
+    isFinishedEarly: false,
+    currentBreak: null,
+    createdAt: startedAt,
+    updatedAt: startedAt,
+    ...overrides,
+  };
+};
+
+// Stands in for the Timer page, showing the task the Inbox sent it.
+const TimerPage = () => {
+  const state = useLocation().state as { taskId?: string } | null;
+
+  return <h1>Timer for {state?.taskId ?? "nothing"}</h1>;
+};
+
 const listOf = (tasks: Task[]) => ({ tasks, tasksCount: tasks.length, page: 1, totalPages: 1 });
 
 const renderInbox = (initialPath: string = routes.inbox.index) =>
@@ -46,6 +80,7 @@ const renderInbox = (initialPath: string = routes.inbox.index) =>
           <Route index element={<NoTaskSelected />} />
           <Route element={<TaskPane />} path={routes.inbox.show} />
         </Route>
+        <Route element={<TimerPage />} path={routes.timer} />
       </Routes>
       <Toaster />
     </>,
@@ -62,6 +97,7 @@ describe("Inbox", () => {
     });
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
+    vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
   });
 
   it("lists only incomplete tasks", async () => {
@@ -593,5 +629,128 @@ describe("Inbox", () => {
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith({ id: task.id, estimatedMinutes: null }, expect.anything()),
     );
+  });
+
+  describe("when starting a task from its pane", () => {
+    const task = buildTask({ title: "Write the report" });
+    const running = buildTask({ title: "Sort the mail" });
+
+    const renderPane = (timeLog: TimeLog | null) => {
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog });
+      vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task, running]));
+      vi.spyOn(tasksApi, "show").mockImplementation((id) =>
+        Promise.resolve({ task: id === running.id ? running : task }),
+      );
+      renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+    };
+
+    const clickStart = async () => {
+      const start = await screen.findByRole("button", { name: "Start" });
+      await waitFor(() => expect(start).toBeEnabled());
+      await userEvent.click(start);
+    };
+
+    it("opens the Timer with the task picked when nothing is on the clock", async () => {
+      renderPane(null);
+
+      await clickStart();
+
+      expect(await screen.findByRole("heading", { name: `Timer for ${task.id}` })).toBeInTheDocument();
+    });
+
+    it("leads to the Timer when the task is already on the clock", async () => {
+      renderPane(buildTimeLog({ taskId: task.id }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "On the clock" }));
+
+      expect(await screen.findByRole("heading", { name: "Timer for nothing" })).toBeInTheDocument();
+    });
+
+    it("shows the running session and stays put on cancel", async () => {
+      renderPane(buildTimeLog({ taskId: running.id }));
+
+      await clickStart();
+      const dialog = await screen.findByRole("dialog", { name: "Switch tasks?" });
+      const session = within(dialog).getByRole("region", { name: "Running session" });
+      expect(await within(session).findByText("Sort the mail")).toBeInTheDocument();
+      expect(within(session).getByRole("timer")).toHaveTextContent(/^Timer · 2\d:\d\d left$/);
+      await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(screen.getByRole("heading", { name: "Write the report" })).toBeInTheDocument();
+    });
+
+    it("marks the running task as done, then opens the Timer", async () => {
+      const timeLog = buildTimeLog({ taskId: running.id });
+      renderPane(timeLog);
+      const complete = vi.spyOn(timeLogCompletionsApi, "create").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({ timeLog: { ...timeLog, completedAt: new Date().toISOString() } });
+      });
+
+      await clickStart();
+      const dialog = await screen.findByRole("dialog", { name: "Switch tasks?" });
+      await userEvent.click(within(dialog).getByRole("button", { name: "Mark as done" }));
+
+      expect(await screen.findByRole("heading", { name: `Timer for ${task.id}` })).toBeInTheDocument();
+      expect(complete).toHaveBeenCalledWith({ timeLogId: timeLog.id }, expect.anything());
+    });
+
+    it("bails out of the running task with breadcrumbs, then opens the Timer", async () => {
+      const timeLog = buildTimeLog({ taskId: running.id, mode: "stopwatch", timerPreset: null });
+      renderPane(timeLog);
+      const bailOut = vi.spyOn(timeLogBailOutsApi, "create").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({ timeLog: { ...timeLog, completedAt: new Date().toISOString() } });
+      });
+
+      await clickStart();
+      const dialog = await screen.findByRole("dialog", { name: "Switch tasks?" });
+      expect(within(dialog).getByRole("timer")).toHaveTextContent(/^Stopwatch · 05:0\d elapsed$/);
+      await userEvent.click(within(dialog).getByRole("button", { name: "Bail out" }));
+      const breadcrumbs = await screen.findByRole("dialog", { name: "Leave breadcrumbs" });
+      await userEvent.type(within(breadcrumbs).getByLabelText("Very next step"), "Reply to the bank");
+      await userEvent.click(within(breadcrumbs).getByRole("button", { name: "Save & exit" }));
+
+      expect(await screen.findByRole("heading", { name: `Timer for ${task.id}` })).toBeInTheDocument();
+      expect(bailOut).toHaveBeenCalledWith(
+        { timeLogId: timeLog.id, completedDescription: "", restartDescription: "Reply to the bank" },
+        expect.anything(),
+      );
+    });
+
+    it("only offers to discard a session too short to log", async () => {
+      const now = new Date().toISOString();
+      const timeLog = buildTimeLog({ taskId: running.id, startedAt: now, currentRunStartedAt: now });
+      renderPane(timeLog);
+      const destroy = vi.spyOn(timeLogsApi, "destroy").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve(undefined as never);
+      });
+
+      await clickStart();
+      const dialog = await screen.findByRole("dialog", { name: "Switch tasks?" });
+      expect(within(dialog).queryByRole("button", { name: "Mark as done" })).not.toBeInTheDocument();
+      expect(within(dialog).queryByRole("button", { name: "Bail out" })).not.toBeInTheDocument();
+      await userEvent.click(within(dialog).getByRole("button", { name: "Discard and switch" }));
+
+      expect(await screen.findByRole("heading", { name: `Timer for ${task.id}` })).toBeInTheDocument();
+      expect(destroy).toHaveBeenCalledWith(timeLog.id, expect.anything());
+    });
+
+    it("stays open with the error when ending the running session fails", async () => {
+      renderPane(buildTimeLog({ taskId: running.id }));
+      vi.spyOn(timeLogCompletionsApi, "create").mockRejectedValue(new ApiError(422, "Something went wrong"));
+
+      await clickStart();
+      const dialog = await screen.findByRole("dialog", { name: "Switch tasks?" });
+      await userEvent.click(within(dialog).getByRole("button", { name: "Mark as done" }));
+
+      expect(await within(dialog).findByRole("alert")).toHaveTextContent("Something went wrong");
+      expect(screen.queryByRole("heading", { name: /^Timer for/ })).not.toBeInTheDocument();
+    });
   });
 });

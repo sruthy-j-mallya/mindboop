@@ -1,15 +1,16 @@
-import { Link } from "react-router";
+import { cn } from "cn";
 
-import { Button } from "@/components/ui/button";
+import type { CreateCompletionPayload } from "@/apis/types";
 import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import { useCompleteTimeLog } from "@/hooks/reactQuery/useTimeLogCompletionsApi";
 import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
-import routes from "@/routes";
 import { unlockAudio } from "@/utils/audioContext";
 import { playCompletionSound } from "@/utils/completionSound";
 
 import FinishedDialog from "./FinishedDialog";
+import ParkingLot from "./ParkingLot";
 import Session from "./Session";
+import Setup from "./Setup";
 
 const Timer = () => {
   const { data: timeLog, isPending, error } = useCurrentTimeLog();
@@ -24,39 +25,43 @@ const Timer = () => {
   } = useCompleteTimeLog();
 
   // Unlocked in the click, so the chime can play once the save lands and the finished dialog opens.
-  const handleDone = (timeLogId: string) => {
+  const handleDone = (payload: CreateCompletionPayload) => {
     unlockAudio();
-    completeTimeLog(timeLogId, { onSuccess: () => playCompletionSound(preference?.completionSound) });
+    completeTimeLog(payload, { onSuccess: () => playCompletionSound(preference?.completionSound) });
   };
 
   if (isPending) return null;
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col p-4">
+    <div className={cn("mx-auto flex w-full max-w-5xl flex-1 flex-col p-4", timeLog && "xl:max-w-7xl")}>
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error.message}
         </p>
       )}
+      {/* The parking lot sits beside the session on wide screens, and under it otherwise. */}
       {!error && timeLog && (
-        <Session
-          key={timeLog.id}
-          completionError={completionError?.message}
-          isCompleting={isCompleting}
-          timeLog={timeLog}
-          onDone={handleDone}
-        />
-      )}
-      {!error && !timeLog && (
-        <div className="flex flex-col items-center gap-4 py-16 text-center">
-          <h1 className="text-2xl font-semibold">Nothing on the clock</h1>
-          <Button asChild>
-            <Link to={routes.root}>Start a session</Link>
-          </Button>
+        <div className="grid flex-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <Session
+            key={timeLog.id}
+            completionError={completionError?.message}
+            isCompleting={isCompleting}
+            timeLog={timeLog}
+            onDone={handleDone}
+          />
+          <ParkingLot
+            className="mx-auto h-[28rem] w-full max-w-2xl lg:max-w-5xl xl:sticky xl:top-4 xl:h-[calc(100svh-6rem)] xl:max-w-none xl:self-start"
+            timeLogId={timeLog.id}
+          />
         </div>
       )}
+      {!error && !timeLog && <Setup />}
       {completion && (
-        <FinishedDialog isFinishedEarly={completion.timeLog.isFinishedEarly} onClose={resetCompletion} />
+        <FinishedDialog
+          isFinishedEarly={completion.timeLog.isFinishedEarly}
+          timeLogId={completion.timeLog.id}
+          onClose={resetCompletion}
+        />
       )}
     </div>
   );

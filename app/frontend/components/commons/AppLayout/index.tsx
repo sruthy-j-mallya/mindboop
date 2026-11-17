@@ -8,6 +8,8 @@ import useApplyTheme from "@/hooks/useApplyTheme";
 
 import AppSidebar from "./AppSidebar";
 import BreakAlarm from "./BreakAlarm";
+import CuriosityAlarm from "./CuriosityAlarm";
+import CurrentSession from "./CurrentSession";
 import { isSidebarOpen, saveSidebarOpen } from "./utils";
 
 const AppLayout = () => {
@@ -27,9 +29,12 @@ const AppLayout = () => {
           <SidebarTrigger />
         </header>
         <BreakAlarm />
+        <CuriosityAlarm />
         <Outlet />
       </SidebarInset>
-      <Toaster />
+      <CurrentSession />
+      {/* Bottom centre, clear of the mini timer in the bottom-right corner. */}
+      <Toaster position="bottom-center" />
     </SidebarProvider>
   );
 };

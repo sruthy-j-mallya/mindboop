@@ -8,6 +8,7 @@ import Inbox from "@/components/Inbox";
 import NoTaskSelected from "@/components/Inbox/NoTaskSelected";
 import TaskPane from "@/components/Inbox/TaskPane";
 import Login from "@/components/Login";
+import ParkingLot from "@/components/ParkingLot";
 import QuickStart from "@/components/QuickStart";
 import ResetPassword from "@/components/ResetPassword";
 import Settings from "@/components/Settings";
@@ -25,6 +26,7 @@ const Main = () => (
           <Route element={<TaskPane />} path={routes.inbox.show} />
         </Route>
         <Route element={<Timer />} path={routes.timer} />
+        <Route element={<ParkingLot />} path={routes.parkingLot} />
         <Route element={<Settings />} path={routes.settings} />
       </Route>
     </Route>

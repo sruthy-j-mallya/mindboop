@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 import type { Task } from "@/apis/types";
+import DueDatePicker from "@/components/commons/DueDatePicker";
+import EstimatePicker from "@/components/commons/EstimatePicker";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
 import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
 import type { Draft } from "@/components/commons/Steps/types";
@@ -11,8 +13,7 @@ import { Separator } from "@/components/ui/separator";
 
 import useCompleteTask from "../useCompleteTask";
 import DeleteTaskButton from "./DeleteTaskButton";
-import DueDatePicker from "./DueDatePicker";
-import EstimatePicker from "./EstimatePicker";
+import StartTaskButton from "./StartTaskButton";
 
 type DetailsProps = { task: Task };
 
@@ -28,8 +29,8 @@ const Details = ({ task }: DetailsProps) => {
     <article className="flex flex-1 flex-col gap-8">
       {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
       <div className="flex flex-col gap-2">
-        {/* The complete checkbox, the due date and the estimate sit in the top-left corner, above the title; the add-step
-            and delete buttons in the top right. */}
+        {/* The complete checkbox, the due date and the estimate sit in the top-left corner, above the title; the add-step,
+            delete and start buttons in the top right. */}
         <header className="flex flex-col gap-3">
           <div className="flex min-h-8 items-start justify-between gap-4">
             <div className="flex min-h-8 items-start gap-3">
@@ -49,6 +50,7 @@ const Details = ({ task }: DetailsProps) => {
             <div className="flex shrink-0 items-center gap-1">
               {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
               <DeleteTaskButton task={task} />
+              <StartTaskButton task={task} />
             </div>
           </div>
           <h2 className="text-xl font-semibold wrap-anywhere">{task.title}</h2>

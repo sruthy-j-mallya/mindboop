@@ -5,14 +5,14 @@ Date: 2026-10-31
 
 ## Goal
 
-Adopt coding standards adapted from neeto-auth-web (minus private `@bigbinary/*`/`neeto*` packages), record them
-as a Claude rule in `.agents/rules/code-standards.md`, and migrate the existing code to them.
+Adopt coding standards, record them as a Claude rule in `.agents/rules/code-standards.md`, and migrate the
+existing code to them.
 
-## Decisions (conflicts between the neeto standard and this repo)
+## Decisions
 
 | Area | Choice |
 | --- | --- |
-| Frontend layout | Neeto layout under `app/frontend`: `apis/`, `hooks/reactQuery/`, `stores/`, `constants/`, `utils/`, `components/{commons,ui,<Feature>}`, `routes.ts`, `Main.tsx` |
+| Frontend layout | Feature-folder layout under `app/frontend`: `apis/`, `hooks/reactQuery/`, `stores/`, `constants/`, `utils/`, `components/{commons,ui,<Feature>}`, `routes.ts`, `Main.tsx` |
 | Aliases | Keep the single `@/` alias |
 | HTTP | axios (`apis/axios.ts`) with CSRF header and interceptors; one `apis/<resource>.ts` per Rails resource |
 | Casing | camelCase on the client, snake_case on the server, converted by axios interceptors |
