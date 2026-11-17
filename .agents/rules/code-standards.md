@@ -1,6 +1,6 @@
 # Code standards
 
-House rules for this repo, adapted from neeto-auth-web (decisions in `.agents/plans/003-code-standards.md`).
+House rules for this repo (decisions in `.agents/plans/003-code-standards.md`).
 Follow them in all new and changed code.
 
 ## Frontend (`app/frontend`, TypeScript + React)
