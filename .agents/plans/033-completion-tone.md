@@ -1,6 +1,6 @@
-# 026 — Completion tone
+# 033 — Completion tone
 
-Status: done (sound choice superseded by 027)
+Status: done (sound choice superseded by 034)
 Date: 2026-11-15
 
 ## Goal

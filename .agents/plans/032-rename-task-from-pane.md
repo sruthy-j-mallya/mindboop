@@ -5,7 +5,7 @@ Date: 2026-11-17
 
 ## Goal
 
-Edit a task's title inline in the task pane (`/inbox/:taskId`), the same way as in its Inbox row (plan 025). Until now
+Edit a task's title inline in the task pane (`/inbox/:taskId`), the same way as in its Inbox row (plan 024). Until now
 the pane's title was a static heading.
 
 ## Decisions

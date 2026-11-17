@@ -1,4 +1,4 @@
-# 025 — Rename a task in its Inbox row
+# 024 — Rename a task in its Inbox row
 
 Status: done
 Date: 2026-11-14
