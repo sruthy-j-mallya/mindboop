@@ -670,6 +670,7 @@ describe("Timer", () => {
       ["1.5", "15"],
       ["-3", "03"],
       ["0", "05"],
+      ["1", "05"],
       ["", "05"],
       ["999", "240"],
     ])("turns %j typed minutes into %s", async (typed, shown) => {

@@ -7,7 +7,7 @@ export const findMode = (value: string) => MODES.find((mode) => mode.value === v
 // Keeps only digits, so the field can't hold seconds, signs or decimals.
 export const sanitizeMinutes = (value: string) => value.replace(/\D/g, "").slice(0, TIMER_MINUTES_MAX_DIGITS);
 
-// The minutes typed, capped at the maximum, or null when there's nothing usable (blank or zero) to keep.
+// The minutes typed, capped at the maximum, or null when there's nothing usable (blank or under the minimum) to keep.
 export const parseMinutes = (value: string) => {
   const minutes = Number.parseInt(value, 10);
   if (Number.isNaN(minutes) || minutes < TIMER_MINUTES_MIN) return null;

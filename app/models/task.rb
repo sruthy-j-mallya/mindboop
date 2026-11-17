@@ -23,6 +23,8 @@ class Task < ApplicationRecord
     allow_nil: true
   # A quick start runs a timer, which needs a target.
   validates :estimated_minutes, presence: true, on: :quick_start
+  validates :estimated_minutes, numericality: { greater_than_or_equal_to: TimeLog::MIN_LOGGED_MINUTES },
+    allow_nil: true, on: :quick_start
   validates :is_duration, :is_all_day, :is_completed, inclusion: { in: [ true, false ] }
   # A task is scheduled for a date (starts_at only) or a duration (starts_at to ends_at). All-day ones keep the start
   # of each day in the user's time zone.

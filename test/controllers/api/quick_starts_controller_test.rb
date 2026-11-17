@@ -84,6 +84,17 @@ class Api::QuickStartsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Estimated minutes can't be blank", response.parsed_body["error"]
   end
 
+  def test_that_create_rejects_an_estimate_shorter_than_a_session_can_log
+    sign_in @user
+
+    assert_no_difference [ "Task.count", "TimeLog.count" ] do
+      post api_quick_starts_path, params: { title: @title, estimated_minutes: 1 }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_equal "Estimated minutes must be greater than or equal to 2", response.parsed_body["error"]
+  end
+
   def test_that_create_saves_nothing_when_a_checklist_item_is_invalid
     sign_in @user
 

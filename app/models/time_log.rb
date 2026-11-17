@@ -20,7 +20,9 @@ class TimeLog < ApplicationRecord
   has_many :parking_lot_items, dependent: :nullify
 
   validates :started_at, presence: true
-  validates :timer_preset, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  # A timer shorter than the least that can be logged could only ever be discarded.
+  validates :timer_preset,
+    numericality: { only_integer: true, greater_than_or_equal_to: MIN_LOGGED_MINUTES }, allow_nil: true
   validates :accumulated_elapsed_seconds, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :is_running, :is_bailed_out, inclusion: { in: [ true, false ] }
   validates :buffer_minutes,
