@@ -403,6 +403,67 @@ describe("Inbox", () => {
     expect(screen.getByRole("textbox", { name: "Cancel the gym" })).toHaveValue("Cancel the gym");
   });
 
+  it("renames a task from its pane", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    const renamed = { ...task, title: "Cancel the gym membership" };
+    vi.spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce(listOf([task]))
+      .mockResolvedValue(listOf([renamed]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: renamed });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    const input = await screen.findByRole("textbox", { name: "Task title" });
+    expect(input).toHaveValue("Cancel the gym");
+    await userEvent.clear(input);
+    await userEvent.type(input, "  Cancel the gym membership {Enter}");
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith(
+        { id: task.id, title: "Cancel the gym membership" },
+        expect.anything(),
+      ),
+    );
+    expect(await screen.findByRole("heading", { name: "Cancel the gym membership" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Task title" })).toHaveValue("Cancel the gym membership");
+    expect(await screen.findByRole("textbox", { name: "Cancel the gym membership" })).toBeInTheDocument();
+  });
+
+  it("keeps the old title when renaming from the pane is cancelled, left blank or unchanged", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi.spyOn(tasksApi, "update");
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    const input = await screen.findByRole("textbox", { name: "Task title" });
+    await userEvent.type(input, " and the pool{Escape}");
+    expect(input).toHaveValue("Cancel the gym");
+
+    await userEvent.clear(input);
+    await userEvent.keyboard("{Enter}");
+    expect(input).toHaveValue("Cancel the gym");
+
+    await userEvent.type(input, " {Backspace}");
+    await userEvent.tab();
+
+    expect(input).toHaveValue("Cancel the gym");
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("shows the error when renaming from the pane fails", async () => {
+    const task = buildTask({ title: "Cancel the gym" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(422, "Title is too long"));
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.type(await screen.findByRole("textbox", { name: "Task title" }), " and the pool{Enter}");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Title is too long");
+    expect(screen.getByRole("textbox", { name: "Task title" })).toHaveValue("Cancel the gym");
+  });
+
   it("shows each task's date in the list", async () => {
     const startsAt = startOfDay(addDays(new Date(), 1)).toISOString();
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(

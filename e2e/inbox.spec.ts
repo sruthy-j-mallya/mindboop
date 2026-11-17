@@ -126,3 +126,20 @@ test("rename a task in its row", async ({ page }) => {
     "Cancel the gym membership",
   );
 });
+
+test("rename a task from its pane", async ({ page }) => {
+  await signUp(page);
+
+  await page.goto("/inbox");
+  await addTasks(page, ["Cancel the gym"]);
+  await page.getByRole("textbox", { name: "Cancel the gym" }).click();
+
+  const title = page.getByRole("textbox", { name: "Task title" });
+  await title.fill("Cancel the gym membership");
+  await title.press("Enter");
+  await expect(page.getByRole("heading", { name: "Cancel the gym membership" })).toBeVisible();
+  await expectTasks(page, ["Cancel the gym membership"]);
+
+  await page.reload();
+  await expect(page.getByRole("textbox", { name: "Task title" })).toHaveValue("Cancel the gym membership");
+});
