@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AxiosResponse } from "axios";
+import type { InitialEntry } from "react-router";
 
 import { ApiError } from "@/apis/axios";
 import breaksApi from "@/apis/breaks";
@@ -78,12 +79,17 @@ const buildParkingLotItem = (overrides: Partial<ParkingLotItem> = {}): ParkingLo
 
 const taskListOf = (tasks: Task[]) => ({ tasks, tasksCount: tasks.length, page: 1, totalPages: 1 });
 
-const renderTimer = (timeLog: TimeLog | null, task = TASK, parkingLotItems: ParkingLotItem[] = []) => {
+const renderTimer = (
+  timeLog: TimeLog | null,
+  task = TASK,
+  parkingLotItems: ParkingLotItem[] = [],
+  initialPath: InitialEntry = routes.timer,
+) => {
   vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog });
   vi.spyOn(tasksApi, "fetchList").mockResolvedValue(taskListOf([task]));
   vi.spyOn(parkingLotItemsApi, "fetchList").mockResolvedValue(parkingLotListOf(parkingLotItems));
   vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
-  renderWithProviders(<Timer />);
+  renderWithProviders(<Timer />, undefined, initialPath);
 };
 
 describe("Timer", () => {
@@ -442,20 +448,56 @@ describe("Timer", () => {
       expect(screen.getByRole("button", { name: "Start" })).toBeEnabled();
     });
 
-    it("starts a timer with the preset, then shows the session and the parking lot", async () => {
+    it("starts a timer preset to the task's estimate, then shows the session and the parking lot", async () => {
       const create = mockStart(TIME_LOG);
       renderTimer(null);
 
       await pickTask();
+      expect(minutesInput()).toHaveValue("25");
       await userEvent.click(screen.getByRole("button", { name: "Start" }));
 
       expect(create).toHaveBeenCalledWith(
-        { taskId: TASK.id, mode: "timer", timerPreset: 5 },
+        { taskId: TASK.id, mode: "timer", timerPreset: 25 },
         expect.anything(),
       );
       expect(await screen.findByRole("timer")).toBeVisible();
       expect(screen.getByRole("heading", { name: TASK.title })).toBeVisible();
       expect(screen.getByRole("region", { name: "Parking lot" })).toBeVisible();
+    });
+
+    it("keeps the 5 minute preset for a task with no estimate or one over 4 hours", async () => {
+      renderTimer(null, { ...TASK, estimatedMinutes: 241 });
+
+      await pickTask();
+
+      await waitFor(() => expect(screen.getByRole("button", { name: "Start" })).toBeEnabled());
+      expect(minutesInput()).toHaveValue("05");
+    });
+
+    it("switches to a timer when the picked task has an estimate", async () => {
+      renderTimer(null, { ...TASK, estimatedMinutes: 240 });
+
+      await userEvent.click(await screen.findByRole("tab", { name: "Stopwatch" }));
+      await pickTask();
+
+      expect(await screen.findByRole("tab", { name: "Timer" })).toHaveAttribute("aria-selected", "true");
+      expect(minutesInput()).toHaveValue("240");
+    });
+
+    it("preselects the task sent from the Inbox, preset to its estimate", async () => {
+      const create = mockStart(TIME_LOG);
+      renderTimer(null, TASK, [], { pathname: routes.timer, state: { taskId: TASK.id } });
+
+      await waitFor(() => expect(screen.getByRole("combobox", { name: "Task" })).toHaveValue(TASK.title));
+      expect(tasksApi.show).toHaveBeenCalledWith(TASK.id);
+      expect(minutesInput()).toHaveValue("25");
+      expect(await screen.findByRole("checkbox", { name: "Camera statistics" })).toBeVisible();
+      await userEvent.click(screen.getByRole("button", { name: "Start" }));
+
+      expect(create).toHaveBeenCalledWith(
+        { taskId: TASK.id, mode: "timer", timerPreset: 25 },
+        expect.anything(),
+      );
     });
 
     it("edits the preset minutes in place", async () => {

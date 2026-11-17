@@ -2,24 +2,19 @@ import { type ChangeEvent, useId } from "react";
 
 import { cn } from "cn";
 
-import type { TimeLog } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import useCurrentTime from "@/hooks/useCurrentTime";
+import useAmbienceStore from "@/stores/useAmbienceStore";
 
-import { isTicking } from "../utils";
 import { MAX_VOLUME, NO_SOUND, SOUNDS } from "./constants";
-import useAmbience from "./useAmbience";
-import useAmbiencePreference from "./useAmbiencePreference";
 
-type AmbienceProps = { timeLog: TimeLog };
-
-const Ambience = ({ timeLog }: AmbienceProps) => {
+// Picks the background sound and its volume. The app layout's `Ambience` plays it.
+const Picker = () => {
   const volumeId = useId();
-  const { soundId, setSoundId, volume, setVolume } = useAmbiencePreference();
-  const currentTime = useCurrentTime(timeLog.isRunning);
-  // Plays while the clock runs; stops for breaks and once the time is up.
-  useAmbience({ soundId, volume, isPlaying: isTicking(timeLog, currentTime) });
+  const soundId = useAmbienceStore((state) => state.soundId);
+  const setSoundId = useAmbienceStore((state) => state.setSoundId);
+  const volume = useAmbienceStore((state) => state.volume);
+  const setVolume = useAmbienceStore((state) => state.setVolume);
 
   const selectedSound = SOUNDS.find(({ id }) => id === soundId) ?? SOUNDS[0];
   const SelectedIcon = selectedSound.icon;
@@ -84,4 +79,4 @@ const Ambience = ({ timeLog }: AmbienceProps) => {
   );
 };
 
-export default Ambience;
+export default Picker;

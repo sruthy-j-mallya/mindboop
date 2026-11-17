@@ -1,9 +1,9 @@
 import type { TimeLog } from "@/apis/types";
 import useCurrentTime from "@/hooks/useCurrentTime";
 import { formatRemainingTime, getRemainingSeconds } from "@/utils";
+import { getClockState } from "@/utils/timeLogs";
 
 import Dial from "./Dial";
-import { getClockState } from "./utils";
 
 type ClockProps = { timeLog: TimeLog };
 

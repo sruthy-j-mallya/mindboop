@@ -1,7 +1,5 @@
 import type { TimeLog } from "@/apis/types";
-import { SECONDS_PER_MINUTE } from "@/constants";
-
-import { DISCARD_BELOW_MINUTES } from "./constants";
+import { DISCARD_BELOW_MINUTES, SECONDS_PER_MINUTE } from "@/constants";
 
 // The time log is the source of truth, so elapsed time is always derived from it and never counted on the client.
 const getElapsedSeconds = (

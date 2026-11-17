@@ -441,3 +441,70 @@ test("edit the steps and the description mid-session, and keep them through a re
 
   await expect(steps).toHaveText(["Third", "First", "Second", "Almost", "Middle"]);
 });
+
+test("start an estimated Inbox task, switching from the one on the clock by marking it done", async ({
+  page,
+}) => {
+  const email = await signUp(page);
+  await addInboxTask(page, "Draft permission");
+  await addInboxTask(page, "Call the bank");
+
+  // Start the first task from its pane: the Timer opens with it picked.
+  await page.getByRole("link", { name: "Inbox" }).click();
+  await page.getByRole("textbox", { name: "Draft permission" }).click();
+  await page.getByRole("button", { name: "Start" }).click();
+  await expect(page).toHaveURL("/timer");
+  await expect(page.getByRole("combobox", { name: "Task" })).toHaveValue("Draft permission");
+  await page.getByRole("button", { name: "Start" }).click();
+  await expect(page.getByRole("heading", { name: "Draft permission" })).toBeVisible();
+  await focusForTwoMinutes(page, email);
+
+  // Estimate the second task, then start it: the first is still on the clock.
+  await page.getByRole("link", { name: "Inbox" }).click();
+  await page.getByRole("textbox", { name: "Call the bank" }).click();
+  await page.getByRole("button", { name: "Estimate" }).click();
+  await page.getByLabel("Minutes").fill("45");
+  await page.getByRole("button", { name: "OK" }).click();
+  await expect(page.getByRole("button", { name: "45 min" })).toBeVisible();
+  await page.getByRole("button", { name: "Start" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Switch tasks?" });
+  await expect(dialog.getByRole("region", { name: "Running session" })).toContainText("Draft permission");
+  await dialog.getByRole("button", { name: "Mark as done" }).click();
+
+  await expect(page).toHaveURL("/timer");
+  await expect(page.getByRole("combobox", { name: "Task" })).toHaveValue("Call the bank");
+  await expect(page.getByRole("textbox", { name: /Timer minutes/ })).toHaveValue("45");
+  await page.getByRole("button", { name: "Start" }).click();
+  await expect(page.getByRole("heading", { name: "Call the bank" })).toBeVisible();
+  await expect(page.getByRole("timer")).toHaveText(/^4[45]:[0-5]\d$/);
+
+  // The finished task has left the Inbox.
+  await page.getByRole("link", { name: "Inbox" }).click();
+  await expect(page.getByRole("textbox", { name: "Call the bank" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Draft permission" })).toBeHidden();
+});
+
+test("keep the clock in view in a mini timer on other pages, and go back to the Timer from it", async ({
+  page,
+}) => {
+  await signUp(page);
+
+  await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "10 min" }).click();
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("timer")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Current session" })).toBeHidden();
+
+  await page.getByRole("link", { name: "Inbox" }).click();
+  const session = page.getByRole("region", { name: "Current session" });
+  await expect(session.getByRole("timer")).toHaveText(/^09:[0-5]\d$/);
+
+  await page.getByRole("link", { name: "Parking lot" }).click();
+  await expect(session.getByRole("timer")).toHaveText(/^09:[0-5]\d$/);
+
+  await session.getByRole("link", { name: "Back to timer" }).click();
+  await expect(page).toHaveURL("/timer");
+  await expect(page.getByRole("heading", { name: "Draft permission" })).toBeVisible();
+  await expect(session).toBeHidden();
+});

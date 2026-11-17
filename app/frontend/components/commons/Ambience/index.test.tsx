@@ -1,11 +1,12 @@
-import { act, fireEvent, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { act } from "@testing-library/react";
 
 import type { TimeLog } from "@/apis/types";
+import useAmbienceStore from "@/stores/useAmbienceStore";
 import { renderWithProviders } from "@/test/utils";
 
-import { SOUND_STORAGE_KEY, VOLUME_STORAGE_KEY } from "./constants";
+import { DEFAULT_VOLUME, NO_SOUND } from "./constants";
 import Ambience from "./index";
+import type { SoundId } from "./types";
 import { playSound } from "./utils";
 
 vi.mock("./utils", async (importOriginal) => ({
@@ -51,11 +52,7 @@ class FakeAudioContext {
   }
 }
 
-const openPicker = async () => {
-  await userEvent.click(screen.getByRole("button", { name: /Background sound/ }));
-
-  return screen.findByRole("dialog", { name: "Background sound" });
-};
+const chooseSound = (soundId: SoundId) => act(() => useAmbienceStore.getState().setSoundId(soundId));
 
 describe("Ambience", () => {
   beforeEach(() => {
@@ -64,6 +61,8 @@ describe("Ambience", () => {
     vi.stubGlobal("AudioContext", FakeAudioContext);
     vi.mocked(playSound).mockReturnValue(stopSound);
     localStorage.clear();
+    // The store lives in module state, so each test starts from the defaults.
+    useAmbienceStore.setState({ soundId: NO_SOUND, volume: DEFAULT_VOLUME });
     createdContexts.length = 0;
   });
 
@@ -73,37 +72,20 @@ describe("Ambience", () => {
     vi.clearAllMocks();
   });
 
-  it("starts silent and offers the sounds", async () => {
+  it("stays silent with no sound chosen", () => {
     renderWithProviders(<Ambience timeLog={TIME_LOG} />);
 
-    await openPicker();
-
-    expect(screen.getByRole("button", { name: "None" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Rain" })).toHaveAttribute("aria-pressed", "false");
-    ["Bells", "Harp", "Flute", "Morning dew", "Night"].forEach((name) =>
-      expect(screen.getByRole("button", { name })).toBeVisible(),
-    );
     expect(createdContexts).toHaveLength(0);
     expect(playSound).not.toHaveBeenCalled();
   });
 
-  it("plays the chosen sound while the timer runs and remembers it", async () => {
+  it("plays the chosen sound while the timer runs and switches without stacking", () => {
+    chooseSound("rain");
     renderWithProviders(<Ambience timeLog={TIME_LOG} />);
 
-    await openPicker();
-    await userEvent.click(screen.getByRole("button", { name: "Rain" }));
-
-    expect(screen.getByRole("button", { name: "Rain" })).toHaveAttribute("aria-pressed", "true");
     expect(playSound).toHaveBeenCalledWith(createdContexts[0], expect.anything(), "rain");
-    expect(localStorage.getItem(SOUND_STORAGE_KEY)).toBe("rain");
-  });
 
-  it("switches sounds without stacking them", async () => {
-    localStorage.setItem(SOUND_STORAGE_KEY, "rain");
-    renderWithProviders(<Ambience timeLog={TIME_LOG} />);
-
-    await openPicker();
-    await userEvent.click(screen.getByRole("button", { name: "Waves" }));
+    chooseSound("waves");
 
     expect(stopSound).toHaveBeenCalledTimes(1);
     expect(playSound).toHaveBeenLastCalledWith(createdContexts[0], expect.anything(), "waves");
@@ -111,7 +93,7 @@ describe("Ambience", () => {
   });
 
   it("stays quiet while the timer is paused and plays once it resumes", () => {
-    localStorage.setItem(SOUND_STORAGE_KEY, "harp");
+    chooseSound("harp");
     const { rerender } = renderWithProviders(<Ambience timeLog={PAUSED_TIME_LOG} />);
 
     expect(playSound).not.toHaveBeenCalled();
@@ -126,7 +108,7 @@ describe("Ambience", () => {
   });
 
   it("stops when the time runs out", () => {
-    localStorage.setItem(SOUND_STORAGE_KEY, "clock");
+    chooseSound("clock");
     renderWithProviders(
       <Ambience timeLog={{ ...TIME_LOG, timerPreset: 1, accumulatedElapsedSeconds: 20 }} />,
     );
@@ -141,7 +123,7 @@ describe("Ambience", () => {
   });
 
   it("keeps playing a stopwatch with no end", () => {
-    localStorage.setItem(SOUND_STORAGE_KEY, "piano");
+    chooseSound("piano");
     renderWithProviders(<Ambience timeLog={{ ...TIME_LOG, mode: "stopwatch", timerPreset: null }} />);
 
     act(() => {
@@ -153,7 +135,7 @@ describe("Ambience", () => {
   });
 
   it("stops the sound when the session ends", () => {
-    localStorage.setItem(SOUND_STORAGE_KEY, "wind");
+    chooseSound("wind");
     const { unmount } = renderWithProviders(<Ambience timeLog={TIME_LOG} />);
 
     unmount();
@@ -162,15 +144,12 @@ describe("Ambience", () => {
     expect(createdContexts[0].close).toHaveBeenCalled();
   });
 
-  it("changes and remembers the volume", async () => {
-    localStorage.setItem(SOUND_STORAGE_KEY, "campfire");
+  it("follows the chosen volume", () => {
+    chooseSound("campfire");
     renderWithProviders(<Ambience timeLog={TIME_LOG} />);
 
-    await openPicker();
-    fireEvent.change(screen.getByRole("slider", { name: "Volume" }), { target: { value: "100" } });
+    act(() => useAmbienceStore.getState().setVolume(100));
 
-    expect(screen.getByRole("slider", { name: "Volume" })).toHaveValue("100");
     expect(setMasterVolume).toHaveBeenCalledWith(1, 0, expect.any(Number));
-    expect(localStorage.getItem(VOLUME_STORAGE_KEY)).toBe("100");
   });
 });
