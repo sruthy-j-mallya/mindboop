@@ -13,7 +13,8 @@ import { parseMinutes, sanitizeMinutes } from "./utils";
 type MinutesInputProps = { minutes: number; onChange: (minutes: number) => void };
 
 // The timer's minutes, edited in place on the clock face. Whole minutes only: the seconds always read ":00". Typing
-// is kept as a draft and applied on blur or Enter; a blank or zero draft puts the last value back, Escape too.
+// is kept as a draft and applied on blur or Enter; a blank draft or one under the minimum puts the last value back,
+// Escape too.
 const MinutesInput = ({ minutes, onChange }: MinutesInputProps) => {
   const [draft, setDraft] = useState<string | null>(null);
   const isCancellingRef = useRef(false);

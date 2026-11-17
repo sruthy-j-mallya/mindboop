@@ -11,10 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 import routes from "@/routes";
 
+import TitleInput from "../TitleInput";
 import useCompleteTask from "../useCompleteTask";
 import useDeleteTaskWithUndo from "../useDeleteTaskWithUndo";
+import useRenameTask from "../useRenameTask";
 import { NARROW_LAYOUT_QUERY } from "./constants";
-import TitleInput from "./TitleInput";
 
 type TaskRowProps = { task: Task };
 
@@ -24,15 +25,8 @@ const TaskRow = ({ task }: TaskRowProps) => {
   const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(id);
   const { deleteTask, isDeleting, error: deleteError } = useDeleteTaskWithUndo(task);
   const { mutate: updateTask, error: scheduleError } = useUpdateTask();
-  const {
-    mutate: renameTask,
-    variables: renameVariables,
-    isPending: isRenaming,
-    error: renameError,
-  } = useUpdateTask();
+  const { title, renameTask, error: renameError } = useRenameTask(task);
   const error = completeError ?? deleteError ?? scheduleError ?? renameError;
-  // Shows the new title while it saves, so the old one doesn't flash back until the list refreshes.
-  const title = (isRenaming && renameVariables.title) || task.title;
 
   const handleScheduleSave = (schedule: SchedulePayload) => updateTask({ id, ...schedule });
 
@@ -42,11 +36,6 @@ const TaskRow = ({ task }: TaskRowProps) => {
   // there the title only edits and the chevron opens the task.
   const handleTitleFocus = () => {
     if (!isSelected && !window.matchMedia(NARROW_LAYOUT_QUERY).matches) navigate(taskPath);
-  };
-
-  // A task can't go untitled, so an emptied title leaves the old one in place. An unchanged one isn't saved again.
-  const handleRename = (newTitle: string) => {
-    if (newTitle && newTitle !== title) renameTask({ id, title: newTitle });
   };
 
   return (
@@ -65,7 +54,14 @@ const TaskRow = ({ task }: TaskRowProps) => {
           disabled={isCompleting || isDeleting}
           onCheckedChange={completeTask}
         />
-        <TitleInput isSelected={isSelected} title={title} onFocus={handleTitleFocus} onSave={handleRename} />
+        <TitleInput
+          className="min-w-0 flex-1 py-2 text-sm"
+          isSelected={isSelected}
+          label={title}
+          title={title}
+          onFocus={handleTitleFocus}
+          onSave={renameTask}
+        />
         {/* Opens the same picker as the pane. Hidden on phones to leave the title room; the pane still shows it. */}
         {task.startsAt && (
           <SchedulePicker align="end" schedule={task} onSave={handleScheduleSave}>

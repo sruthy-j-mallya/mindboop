@@ -125,7 +125,7 @@ shape as `GET /api/tasks/:id`, since a move also changes the other items' order.
 page calls. `POST /api/tasks` and `POST /api/time_logs` still do each step on its own.
 
 - It accepts `title`, `description`, `estimated_minutes` and `checklist_items_attributes`, with the same rules as
-  `POST /api/tasks`, except that `estimated_minutes` is required. Other task fields are ignored.
+  `POST /api/tasks`, except that `estimated_minutes` is required and at least 2. Other task fields are ignored.
 - The time log is a running `timer` whose `timer_preset` is the task's `estimated_minutes`. It starts the same way as one
   from `POST /api/time_logs`, and time log fields sent by the client are ignored.
 - If the task, a checklist item or the time log is invalid, the request gets a 422 and nothing is saved.
@@ -176,10 +176,10 @@ unknown time log gets a 404, and so does a time log whose task was deleted.
 
 `POST /api/time_logs` accepts these fields:
 
-| Field          | Notes                                      |
-| -------------- | ------------------------------------------ |
-| `mode`         | Required, `timer` or `stopwatch`           |
-| `timer_preset` | Optional, positive whole number of minutes |
+| Field          | Notes                                                                       |
+| -------------- | --------------------------------------------------------------------------- |
+| `mode`         | Required, `timer` or `stopwatch`                                            |
+| `timer_preset` | Optional, whole number of minutes, at least 2 (the least a session can log) |
 
 A new time log starts running at once: the server sets `started_at` and `current_run_started_at` to the current time,
 `is_running` to `true`, `accumulated_elapsed_seconds` to 0 and `completed_at` to `null`. Any of these sent by the client

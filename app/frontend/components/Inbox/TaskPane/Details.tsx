@@ -11,7 +11,9 @@ import TaskSteps from "@/components/commons/TaskSteps";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 
+import TitleInput from "../TitleInput";
 import useCompleteTask from "../useCompleteTask";
+import useRenameTask from "../useRenameTask";
 import DeleteTaskButton from "./DeleteTaskButton";
 import StartTaskButton from "./StartTaskButton";
 
@@ -20,7 +22,9 @@ type DetailsProps = { task: Task };
 // Rendered with `key={task.id}`, so an open step row doesn't carry over to the next task picked.
 const Details = ({ task }: DetailsProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
-  const { completeTask, isCompleting, error } = useCompleteTask(task.id);
+  const { completeTask, isCompleting, error: completeError } = useCompleteTask(task.id);
+  const { title, renameTask, error: renameError } = useRenameTask(task);
+  const error = completeError ?? renameError;
 
   // A row that's already open keeps its place rather than being replaced.
   const handleAddStep = () => setStepDraft((draft) => draft ?? NEW_STEP_DRAFT);
@@ -53,7 +57,15 @@ const Details = ({ task }: DetailsProps) => {
               <StartTaskButton task={task} />
             </div>
           </div>
-          <h2 className="text-xl font-semibold wrap-anywhere">{task.title}</h2>
+          {/* The heading keeps the title as its name; the field inside it edits the title in place. */}
+          <h2 aria-label={title} className="flex text-xl font-semibold">
+            <TitleInput
+              className="-mx-2 w-full rounded-md px-2 py-0.5 transition-colors hover:bg-muted focus:bg-muted"
+              label="Task title"
+              title={title}
+              onSave={renameTask}
+            />
+          </h2>
           {error && (
             <p className="text-sm text-destructive" role="alert">
               {error.message}
