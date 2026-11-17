@@ -8,12 +8,12 @@ import OverrunToggle from "./OverrunToggle";
 type ClockProps = {
   timeLog: TimeLog;
   currentTime: number;
-  isOverrunDiscarded: boolean;
+  isOverrunIncluded: boolean;
   onOverrunToggle: () => void;
 };
 
 // A timer stays at zero once its time is up, with the time past it counting up underneath.
-const Clock = ({ timeLog, currentTime, isOverrunDiscarded, onOverrunToggle }: ClockProps) => {
+const Clock = ({ timeLog, currentTime, isOverrunIncluded, onOverrunToggle }: ClockProps) => {
   const { currentBreak, mode } = timeLog;
   const { seconds, fill } = getClockState(timeLog, currentTime);
   const overrunSeconds = getOverrunSeconds(timeLog, currentTime);
@@ -33,7 +33,7 @@ const Clock = ({ timeLog, currentTime, isOverrunDiscarded, onOverrunToggle }: Cl
         {formatRemainingTime(seconds)}
       </p>
       {overrunSeconds > 0 && !currentBreak ? (
-        <OverrunToggle isDiscarded={isOverrunDiscarded} seconds={overrunSeconds} onToggle={onOverrunToggle} />
+        <OverrunToggle isIncluded={isOverrunIncluded} seconds={overrunSeconds} onToggle={onOverrunToggle} />
       ) : (
         <p className="text-muted-foreground">{getCaption()}</p>
       )}

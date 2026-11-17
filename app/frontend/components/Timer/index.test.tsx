@@ -442,7 +442,7 @@ describe("Timer", () => {
     // A 2 minute timer, 37 seconds past zero.
     const OVERRUN_TIME_LOG: TimeLog = { ...TIME_LOG, timerPreset: 2, accumulatedElapsedSeconds: 120 };
 
-    const overrunToggle = () => screen.findByRole("button", { name: /extra/ });
+    const overrunToggle = () => screen.findByRole("button", { name: /extra time/ });
 
     const mockCompletion = () =>
       vi.spyOn(timeLogCompletionsApi, "create").mockImplementation(() => {
@@ -457,13 +457,13 @@ describe("Timer", () => {
       renderTimer(OVERRUN_TIME_LOG);
 
       expect(await screen.findByRole("timer")).toHaveTextContent("00:00");
-      expect(await overrunToggle()).toHaveTextContent("+00:37 extra");
+      expect(await overrunToggle()).toHaveTextContent("00:37");
 
       act(() => {
         vi.advanceTimersByTime(2000);
       });
 
-      expect(await overrunToggle()).toHaveTextContent("+00:39 extra");
+      expect(await overrunToggle()).toHaveTextContent("00:39");
       expect(screen.getByRole("timer")).toHaveTextContent("00:00");
     });
 
@@ -483,32 +483,16 @@ describe("Timer", () => {
 
       await screen.findByRole("timer");
 
-      expect(screen.queryByRole("button", { name: /extra/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /extra time/ })).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Pause" })).toBeVisible();
     });
 
-    it("logs the extra time by default", async () => {
+    it("leaves the extra time out by default", async () => {
       const create = mockCompletion();
       renderTimer(OVERRUN_TIME_LOG);
 
-      expect(await overrunToggle()).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByText("counted in the log")).toBeVisible();
-      await userEvent.click(screen.getByRole("button", { name: "Done" }));
-
-      await screen.findByRole("dialog", { name: /Finished/ });
-      expect(create).toHaveBeenCalledWith(
-        { timeLogId: TIME_LOG.id, discardOverrun: false },
-        expect.anything(),
-      );
-    });
-
-    it("ends at the timer's end when the extra time is left out", async () => {
-      const create = mockCompletion();
-      renderTimer(OVERRUN_TIME_LOG);
-
-      await userEvent.click(await overrunToggle());
-      expect(await overrunToggle()).toHaveAttribute("aria-pressed", "false");
-      expect(screen.getByText("left out of the log")).toBeVisible();
+      expect(await overrunToggle()).toHaveAccessibleName("Add the extra time to the log");
+      expect(screen.getByText("extra time not logged")).toBeVisible();
       await userEvent.click(screen.getByRole("button", { name: "Done" }));
 
       await screen.findByRole("dialog", { name: /Finished/ });
@@ -518,7 +502,28 @@ describe("Timer", () => {
       );
     });
 
-    it("bails out without the extra time when it is left out", async () => {
+    it("logs the extra time once it is added, and leaves it out again when removed", async () => {
+      const create = mockCompletion();
+      renderTimer(OVERRUN_TIME_LOG);
+
+      await userEvent.click(await overrunToggle());
+      expect(await overrunToggle()).toHaveAccessibleName("Remove the extra time from the log");
+      expect(screen.getByText("extra time logged")).toBeVisible();
+
+      await userEvent.click(await overrunToggle());
+      expect(await overrunToggle()).toHaveAccessibleName("Add the extra time to the log");
+
+      await userEvent.click(await overrunToggle());
+      await userEvent.click(screen.getByRole("button", { name: "Done" }));
+
+      await screen.findByRole("dialog", { name: /Finished/ });
+      expect(create).toHaveBeenCalledWith(
+        { timeLogId: TIME_LOG.id, discardOverrun: false },
+        expect.anything(),
+      );
+    });
+
+    it("bails out without the extra time by default", async () => {
       const create = vi.spyOn(timeLogBailOutsApi, "create").mockImplementation(() => {
         vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
 
@@ -528,7 +533,7 @@ describe("Timer", () => {
       });
       renderTimer(OVERRUN_TIME_LOG);
 
-      await userEvent.click(await overrunToggle());
+      await overrunToggle();
       await userEvent.click(screen.getByRole("button", { name: "Bail" }));
       const dialog = await screen.findByRole("dialog", { name: "Leave breadcrumbs" });
       await userEvent.type(within(dialog).getByLabelText("Very next step"), "Finish paragraph 2");
@@ -545,7 +550,7 @@ describe("Timer", () => {
       const create = vi.spyOn(timeLogCompletionsApi, "create");
       renderTimer({ ...OVERRUN_TIME_LOG, timerPreset: 1, accumulatedElapsedSeconds: 90 });
 
-      await userEvent.click(await overrunToggle());
+      await overrunToggle();
       await userEvent.click(screen.getByRole("button", { name: "Done" }));
 
       expect(await screen.findByRole("dialog", { name: "Discard this timer?" })).toBeVisible();

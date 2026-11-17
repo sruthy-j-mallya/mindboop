@@ -1,27 +1,28 @@
-import { cn } from "cn";
+import { Minus, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { formatRemainingTime } from "@/utils";
 
-type OverrunToggleProps = { seconds: number; isDiscarded: boolean; onToggle: () => void };
+type OverrunToggleProps = { seconds: number; isIncluded: boolean; onToggle: () => void };
 
 // Under a timer that ran past zero: how far past it is, and whether that extra time goes into the log when the
-// session ends. Pressed (the default) keeps it; unpressed logs the session at its planned time.
-const OverrunToggle = ({ seconds, isDiscarded, onToggle }: OverrunToggleProps) => (
+// session ends. It's left out by default (the session logs at its planned time); + adds it, − takes it back out.
+const OverrunToggle = ({ seconds, isIncluded, onToggle }: OverrunToggleProps) => (
   <>
     <Button
-      aria-pressed={!isDiscarded}
+      aria-label={isIncluded ? "Remove the extra time from the log" : "Add the extra time to the log"}
       className="rounded-full tabular-nums"
       size="sm"
-      title={isDiscarded ? "Log the extra time" : "Leave the extra time out"}
+      title={isIncluded ? "Remove the extra time from the log" : "Add the extra time to the log"}
       type="button"
-      variant={isDiscarded ? "outline" : "secondary"}
+      variant={isIncluded ? "outline" : "secondary"}
       onClick={onToggle}
     >
-      <span className={cn(isDiscarded && "line-through")}>+{formatRemainingTime(seconds)}</span> extra
+      {isIncluded ? <Minus /> : <Plus />}
+      {formatRemainingTime(seconds)}
     </Button>
     <p className="text-xs text-muted-foreground">
-      {isDiscarded ? "left out of the log" : "counted in the log"}
+      {isIncluded ? "extra time logged" : "extra time not logged"}
     </p>
   </>
 );

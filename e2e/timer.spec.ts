@@ -79,14 +79,14 @@ test("run past the timer, leave the extra time out, and finish", async ({ page }
   await page.reload();
 
   await expect(page.getByRole("timer")).toHaveText("00:00");
-  const overrun = page.getByRole("button", { name: /extra/ });
-  await expect(overrun).toHaveText(/^\+01:[0-5]\d extra$/);
+  await expect(page.getByRole("button", { name: "Add the extra time to the log" })).toHaveText(
+    /^01:[0-5]\d$/,
+  );
   await expect(page.getByRole("button", { name: "Extend" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Pause" })).toHaveCount(0);
 
-  await overrun.click();
-  await expect(overrun).toHaveAttribute("aria-pressed", "false");
-  await expect(page.getByText("left out of the log")).toBeVisible();
+  // The extra time is left out unless added.
+  await expect(page.getByText("extra time not logged")).toBeVisible();
 
   const completion = page.waitForResponse((response) => response.url().endsWith("/completion"));
   await page.getByRole("button", { name: "Done" }).click();

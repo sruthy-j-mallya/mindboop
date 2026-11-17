@@ -14,7 +14,7 @@ without that extra time logged.
 | --- | --- |
 | Overrun | `getOverrunSeconds` in `utils/timeLogs.ts`: elapsed time past preset + buffer, for a timer only. The clock stays at 00:00 |
 | Controls | Once overrun, Extend and Pause are hidden; only Bail and Done remain (two columns) |
-| Overrun toggle | `Timer/OverrunToggle`, in place of the "remaining" caption: a pill `+MM:SS extra` that counts up, with `aria-pressed`. Pressed (default) logs the extra time; unpressed strikes it through and logs the session at its planned time. A caption says which |
+| Overrun toggle | `Timer/OverrunToggle`, in place of the "remaining" caption: a pill button with the extra time counting up. By default the extra time is left out (the session logs at its planned time) and the button reads `+ MM:SS` (secondary, "Add the extra time to the log"); once added it reads `− MM:SS` (outline, "Remove the extra time from the log"). A short hint underneath: "extra time not logged" / "extra time logged" |
 | API | `discard_overrun` (optional boolean) on `POST …/completion` and `POST …/bail_out`. `TimeLog#complete!(discard_overrun:)` caps `accumulated_elapsed_seconds` at the planned seconds for a timer; default keeps everything, so other callers (Inbox switch) are unchanged |
 | Too short | With the extra time left out, the 2-minute minimum is checked against the capped time, so a 1-minute timer still offers only Discard |
 | Left for later | Overrun in the mini timer (it shows 00:00); a chime when the timer reaches zero |

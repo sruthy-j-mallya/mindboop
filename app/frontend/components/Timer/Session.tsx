@@ -33,13 +33,13 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   const [showExtendDialog, setShowExtendDialog] = useState(false);
   const [showBailDialog, setShowBailDialog] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  const [isOverrunDiscarded, setIsOverrunDiscarded] = useState(false);
+  const [isOverrunIncluded, setIsOverrunIncluded] = useState(false);
   const { currentBreak } = timeLog;
   const isOnBreak = !!currentBreak;
   const currentTime = useCurrentTime(timeLog.isRunning || isOnBreak);
   // Once a timer runs past zero, the session can only end: there's nothing left to extend or pause.
   const hasOverrun = getOverrunSeconds(timeLog, currentTime) > 0;
-  const discardOverrun = hasOverrun && isOverrunDiscarded;
+  const discardOverrun = hasOverrun && !isOverrunIncluded;
   // A stopwatch has no end to push back.
   const canExtend = timeLog.mode === "timer" && !hasOverrun;
   const extensionMinutesLeft = MAX_EXTENSION_MINUTES - timeLog.bufferMinutes;
@@ -52,7 +52,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   const handleDiscardDialogClose = () => setShowDiscardDialog(false);
   const handleDone = () =>
     isTooShort() ? setShowDiscardDialog(true) : onDone({ timeLogId: timeLog.id, discardOverrun });
-  const handleOverrunToggle = () => setIsOverrunDiscarded((isDiscarded) => !isDiscarded);
+  const handleOverrunToggle = () => setIsOverrunIncluded((isIncluded) => !isIncluded);
   const handleExtend = () => setShowExtendDialog(true);
   const handleExtendDialogClose = () => setShowExtendDialog(false);
   const handlePause = () => setShowPauseDialog(true);
@@ -82,7 +82,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
         </header>
         <Clock
           currentTime={currentTime}
-          isOverrunDiscarded={isOverrunDiscarded}
+          isOverrunIncluded={isOverrunIncluded}
           timeLog={timeLog}
           onOverrunToggle={handleOverrunToggle}
         />
