@@ -17,6 +17,7 @@ const TASK: Task = {
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
   checklistItems: [],
+  breadcrumbs: [],
 };
 
 const SCHEDULE = { isDuration: false, isAllDay: false, startsAt: "2026-11-13T09:00:00.000Z", endsAt: null };

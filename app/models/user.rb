@@ -11,6 +11,8 @@ class User < ApplicationRecord
   # Logs linked to a task go with the task; this catches the ones saved with only a title.
   has_many :time_logs, dependent: :destroy
   has_many :achievements, dependent: :destroy
+  has_one :preference, class_name: "UserPreference", dependent: :destroy
+  has_many :parking_lot_items, dependent: :destroy
 
   validates :email_address, presence: true, uniqueness: true, format: { with: EMAIL_ADDRESS_FORMAT }
   validates :password, length: { minimum: 8 }, allow_nil: true

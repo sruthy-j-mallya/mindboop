@@ -2,14 +2,14 @@ import type { Break } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { useEndBreak } from "@/hooks/reactQuery/useBreaksApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
-import { getBreakRemainingSeconds } from "@/utils";
+import { getRemainingSeconds } from "@/utils";
 
 type BreakBannerProps = { currentBreak: Break; timeLogId: string };
 
 const BreakBanner = ({ currentBreak: { intention, endsAt }, timeLogId }: BreakBannerProps) => {
   const currentTime = useCurrentTime(true);
   const { mutate: endBreak, isPending, error } = useEndBreak();
-  const isOver = getBreakRemainingSeconds(endsAt, currentTime) === 0;
+  const isOver = getRemainingSeconds(endsAt, currentTime) === 0;
 
   const handleBack = () => endBreak(timeLogId);
 

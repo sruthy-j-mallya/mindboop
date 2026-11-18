@@ -8,6 +8,13 @@ export const useBailOutTimeLog = () => {
 
   return useMutation({
     mutationFn: timeLogBailOutsApi.create,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
+    // The task gains a breadcrumb, so its detail refetches too. A session on the Timer always has a task. The finished
+    // session also shows on the Calendar.
+    onSuccess: ({ timeLog: { taskId } }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.DETAIL(taskId ?? "") }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
+      ]),
   });
 };

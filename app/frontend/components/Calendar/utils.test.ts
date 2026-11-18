@@ -36,6 +36,7 @@ const buildTask = (overrides: Partial<Task> = {}): Task => ({
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
   checklistItems: [],
+  breadcrumbs: [],
   ...overrides,
 });
 

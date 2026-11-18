@@ -10,6 +10,3 @@ export const INITIAL_FORM_VALUES: TaskFormValues = { title: "" };
 
 // Only tasks still to do are listed; ticking one off takes it out of the Inbox.
 export const INBOX_FILTERS = { isCompleted: false };
-
-// Long enough to notice a slip and reach for Undo.
-export const UNDO_TOAST_DURATION = 8_000; // 8 seconds

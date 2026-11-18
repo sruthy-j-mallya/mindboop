@@ -4,8 +4,8 @@ module Api
 
     def index
       # id breaks created_at ties, so a task can't repeat or go missing across pages.
-      tasks = filter_by_search_term(filter_by_completion(policy_scope(Task).kept))
-      @pagy, @tasks = pagy(tasks.includes(:checklist_items).by_due_date)
+      tasks = Tasks::FilterService.new(policy_scope(Task).kept, params.slice(:is_completed, :search_term)).process
+      @pagy, @tasks = pagy(tasks.includes(:checklist_items, :breadcrumbs).by_due_date)
     end
 
     def show
@@ -29,22 +29,8 @@ module Api
 
     private
       def set_task
-        @task = Task.kept.includes(:checklist_items).find(params[:id])
+        @task = Task.kept.includes(:checklist_items, :breadcrumbs).find(params[:id])
         authorize @task
-      end
-
-      # The Inbox asks for `is_completed=false`; leaving it out lists every task.
-      def filter_by_completion(scope)
-        return scope if params[:is_completed].blank?
-
-        scope.where(is_completed: ActiveModel::Type::Boolean.new.cast(params[:is_completed]))
-      end
-
-      # The Calendar's time log popover looks tasks up by title.
-      def filter_by_search_term(scope)
-        return scope if params[:search_term].blank?
-
-        scope.where("tasks.title ILIKE ?", "%#{Task.sanitize_sql_like(params[:search_term].strip)}%")
       end
 
       def task_params

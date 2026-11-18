@@ -17,5 +17,5 @@ Make Bail on the Timer page end the running session and save breadcrumbs, so the
 | Not a finish | `time_logs.is_bailed_out` keeps a bailed log from counting as finished early. The task stays open and no achievement is awarded |
 | Repeats | Bailing out of an ended log changes nothing and returns it, as completing does, so there is no second breadcrumb |
 | Under 2 minutes of focus | Bail warns instead of asking for breadcrumbs, and confirming soft-deletes the log with the existing `DELETE /api/time_logs/:id`. No breadcrumb is saved and the task stays open. Checked on the client when Bail is clicked, and breaks don't count towards the 2 minutes |
-| Afterwards | The Timer page falls back to "Nothing on the clock" |
+| Afterwards | The Timer page falls back to "Nothing on the clock" (now the "Start a session" setup, see 027) |
 | Left for later | Showing breadcrumbs anywhere, and a way back to the open task. Nothing reads them yet |

@@ -1,28 +1,41 @@
 import { type FormEvent, type ReactElement, useState } from "react";
 
-import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { CLEARED_SCHEDULE, DATE_TAB, DURATION_TAB } from "./constants";
+import { CLEARED_SCHEDULE, DATE_TAB, DURATION_TAB, UNSCHEDULED } from "./constants";
 import DateTab from "./DateTab";
 import DurationTab from "./DurationTab";
-import type { ScheduleDraft, SchedulePayload } from "./types";
+import type { Schedule, ScheduleDraft, SchedulePayload } from "./types";
 import { getDraftError, setIsDuration, toDraft, toPayload } from "./utils";
 
 type SchedulePickerProps = {
-  schedule: Schedule;
+  // The schedule the picker opens on; unscheduled by default.
+  schedule?: Schedule;
   // The button that opens the popover.
   children: ReactElement;
-  align?: "start" | "end";
+  align?: "start" | "center" | "end";
+  // Where it opens; "left" suits buttons in the middle of a page, where there's no room above or below.
+  side?: "top" | "right" | "bottom" | "left";
+  // The buttons' labels: Clear saves no schedule, OK saves the picked one.
+  clearLabel?: string;
+  saveLabel?: string;
   onSave: (schedule: SchedulePayload) => void;
 };
 
-// Sets a task's date (optionally with a time) or its duration, or a new task's before it's saved. Changes stay in a
-// draft until OK; closing the popover any other way drops them. Clear unschedules the task. The caller saves and shows
-// any error, so each place can lay that out its own way.
-const SchedulePicker = ({ schedule, children, align = "start", onSave }: SchedulePickerProps) => {
+// Picks a date (optionally with a time) or a duration. Changes stay in a draft until OK; closing the popover any other
+// way drops them. Clear saves no schedule. The caller saves and shows any error, so each place can lay that out its own
+// way.
+const SchedulePicker = ({
+  schedule = UNSCHEDULED,
+  children,
+  align = "start",
+  side = "bottom",
+  clearLabel = "Clear",
+  saveLabel = "OK",
+  onSave,
+}: SchedulePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState<ScheduleDraft>(() => toDraft(schedule, Date.now()));
   const draftError = getDraftError(draft);
@@ -49,8 +62,14 @@ const SchedulePicker = ({ schedule, children, align = "start", onSave }: Schedul
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent align={align} aria-label="Schedule" className="w-80 p-3">
-        <form noValidate className="flex flex-col gap-3" onSubmit={handleSubmit}>
+      <PopoverContent
+        align={align}
+        aria-label="Schedule"
+        side={side}
+        // Scrolls when it can't fit above or below its button, so OK stays reachable on short screens.
+        className="max-h-(--radix-popover-content-available-height) w-72 overflow-y-auto p-2.5"
+      >
+        <form noValidate className="flex flex-col gap-2" onSubmit={handleSubmit}>
           <Tabs value={draft.isDuration ? DURATION_TAB : DATE_TAB} onValueChange={handleTabChange}>
             <TabsList className="w-full">
               <TabsTrigger value={DATE_TAB}>Date</TabsTrigger>
@@ -64,10 +83,12 @@ const SchedulePicker = ({ schedule, children, align = "start", onSave }: Schedul
             </TabsContent>
           </Tabs>
           <div className="grid grid-cols-2 gap-2">
-            <Button type="button" variant="outline" onClick={handleClear}>
-              Clear
+            <Button size="sm" type="button" variant="outline" onClick={handleClear}>
+              {clearLabel}
             </Button>
-            <Button type="submit">OK</Button>
+            <Button size="sm" type="submit">
+              {saveLabel}
+            </Button>
           </div>
         </form>
       </PopoverContent>

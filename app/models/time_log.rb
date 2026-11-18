@@ -7,6 +7,8 @@ class TimeLog < ApplicationRecord
   # Room for the clock drift between the browser and the server, so a log ending "now" isn't refused.
   CLOCK_DRIFT_ALLOWANCE = 5.minutes
   MAX_TITLE_LENGTH = 255
+  # A session shorter than this is too short to log: it can only be discarded, not completed or bailed out of.
+  MIN_LOGGED_MINUTES = 2
 
   # Deleting a task keeps its time logs in the database, but hides them along with the task. Logs saved with only a
   # title have no task to hide them.
@@ -28,13 +30,16 @@ class TimeLog < ApplicationRecord
   belongs_to :task, optional: true
   has_many :breaks, dependent: :destroy
   has_one :current_break, -> { open }, class_name: "Break"
+  has_many :parking_lot_items, dependent: :nullify
 
   validates :task, presence: true, unless: :manual?
   validates :title, presence: true, if: -> { manual? && task.nil? }
   validates :title, length: { maximum: MAX_TITLE_LENGTH }
   validates :started_at, presence: true
   validates :completed_at, presence: true, if: :manual?
-  validates :timer_preset, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  # A timer shorter than the least that can be logged could only ever be discarded.
+  validates :timer_preset,
+    numericality: { only_integer: true, greater_than_or_equal_to: MIN_LOGGED_MINUTES }, allow_nil: true
   validates :accumulated_elapsed_seconds, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :is_running, :is_bailed_out, inclusion: { in: [ true, false ] }
   validates :buffer_minutes,
@@ -43,6 +48,7 @@ class TimeLog < ApplicationRecord
   validate :session_can_be_extended, on: :extend
   validate :session_is_finished, on: :reschedule
   validate :times_fit_logging_window, on: %i[ log reschedule ]
+  validate :long_enough_to_log, on: :end
 
   # A new time log always starts running now, so its timing fields never come from the client.
   def start
@@ -65,20 +71,25 @@ class TimeLog < ApplicationRecord
     end
   end
 
-  def complete!
+  # Raises (RecordInvalid) for a session under MIN_LOGGED_MINUTES of focus, with nothing changed. With
+  # `discard_overrun`, a timer that ran past zero logs only its planned time (preset plus buffer).
+  def complete!(discard_overrun: false)
     now = Time.current
-    update!(
-      accumulated_elapsed_seconds: elapsed_seconds_at(now),
+    elapsed_seconds = elapsed_seconds_at(now)
+    elapsed_seconds = [ elapsed_seconds, planned_seconds ].min if discard_overrun && timer? && timer_preset?
+    assign_attributes(
+      accumulated_elapsed_seconds: elapsed_seconds,
       is_running: false,
       current_run_started_at: nil,
       completed_at: now
     )
+    save!(context: :end)
     end_current_break(now)
   end
 
-  def bail_out!
+  def bail_out!(discard_overrun: false)
     self.is_bailed_out = true
-    complete!
+    complete!(discard_overrun:)
   end
 
   def pause!(break_attributes)
@@ -115,7 +126,7 @@ class TimeLog < ApplicationRecord
       now = Time.current
       update!(
         buffer_minutes: buffer_minutes + extension_minutes,
-        accumulated_elapsed_seconds: [ elapsed_seconds_at(now), (timer_preset + buffer_minutes).minutes.to_i ].min,
+        accumulated_elapsed_seconds: [ elapsed_seconds_at(now), planned_seconds ].min,
         current_run_started_at: (now if is_running?)
       )
     end
@@ -156,6 +167,18 @@ class TimeLog < ApplicationRecord
       errors.add(:started_at, "can't be more than 24 hours ago") if started_at < now - LOGGING_WINDOW - CLOCK_DRIFT_ALLOWANCE
       errors.add(:completed_at, "can't be in the future") if completed_at > now + CLOCK_DRIFT_ALLOWANCE
       errors.add(:completed_at, "must be after the start") unless completed_at > started_at
+    end
+
+    # Where a timer reaches zero, read before buffer_minutes changes.
+    def planned_seconds
+      (timer_preset + buffer_minutes).minutes.to_i
+    end
+
+    # Only focus counts: time on a break isn't in accumulated_elapsed_seconds.
+    def long_enough_to_log
+      return if accumulated_elapsed_seconds >= MIN_LOGGED_MINUTES.minutes.to_i
+
+      errors.add(:base, "Focus for at least #{MIN_LOGGED_MINUTES} minutes to log a session. Discard it instead.")
     end
 
     def session_can_be_extended

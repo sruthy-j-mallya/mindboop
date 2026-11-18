@@ -12,7 +12,6 @@ import {
 } from "date-fns";
 
 import type { UpdateTaskPayload } from "@/apis/types";
-import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import { MINUTES_PER_HOUR } from "@/constants";
 
 import {
@@ -23,7 +22,7 @@ import {
   TIME_SLOT_MINUTES,
   TIME_TEXT_PATTERN,
 } from "./constants";
-import type { ScheduleDraft } from "./types";
+import type { Schedule, ScheduleDraft } from "./types";
 
 export const toTimeInputValue = (date: Date) => format(date, TIME_INPUT_FORMAT);
 

@@ -1,0 +1,30 @@
+# 036 — Calendar
+
+Status: done
+Date: 2026-11-15
+
+## Goal
+
+A Calendar page, reached from the sidebar, showing past time logs and upcoming tasks on one grid, with tasks and time
+logs added and changed by clicking and dragging.
+
+## Decisions
+
+| Area | Choice |
+| --- | --- |
+| Library | [react-big-calendar](https://github.com/jquense/react-big-calendar) with its drag-and-drop addon and the date-fns localizer (weeks from Monday), themed with the design tokens in `styles/calendar.css` (scoped under `.calendar`, so dark mode follows the tokens). The toolbar is our own (`Calendar/Toolbar`: Today, previous/next, the title, view tabs) |
+| Views | Day, 3 days (`Calendar/MultiDayView`, a custom view on the library's `TimeGrid`), Week (default), Month and Year (`Calendar/YearView`: twelve small months; a dot for days with tasks, a faded one for logged time; picking a day opens it in the day view). The grid snaps to quarter hours |
+| CommonJS interop | The addon and `TimeGrid` are CommonJS. Under `"type": "module"` the production build hands over the whole `exports` as the default import, while Vite's dev server and Vitest unwrap it, so `unwrapDefault` (Calendar/utils) accepts either. `TimeGrid` is declared in `app/frontend/types/react-big-calendar.d.ts` |
+| Scroll paging | Scrolling sideways over the calendar (a trackpad swipe, or Shift + wheel) pages it like Previous/Next in every view; the month view, which doesn't scroll, also pages up and down. Up and down elsewhere still scrolls the hours (and the year view's months). `useWheelPaging` (logic in `stepWheelGesture`) turns a page once a swipe passes 40px and ignores the rest of its momentum, so one swipe turns one page however hard; a pause of 200ms, or events speeding up again once the momentum has faded (a new finger swipe), start a new swipe, so quick repeated swipes each turn a page; `overscroll-behavior-x: none` on the root while the calendar is shown (calendar.css) keeps a swipe from going back in the browser's history, which cancelling the wheel events alone doesn't on macOS. `shiftDate` (Calendar/utils) is the one place a view's page size lives |
+| API | `GET /api/calendar_events?from&to` (`CalendarEventsController`) returns `{ tasks, time_logs }` for the range, unpaged (capped at 400 days): incomplete scheduled tasks (`Task.scheduled_between`) and time logs (`TimeLog.overlapping`). One query (`useCalendarEvents`, `QUERY_KEYS.CALENDAR_EVENTS`, `keepPreviousData`) per visible range; task and time log mutations invalidate `CALENDAR_EVENTS.ALL` |
+| Look | Upcoming tasks are solid primary. Time logs are see-through primary behind a blur with a dashed edge. Past time is shaded, and time older than 24 hours is striped |
+| Task times | A timed date is drawn as long as its estimate (30 min without one); an all-day date or duration in the all-day row. Completed and unscheduled tasks aren't shown |
+| Clicking empty time | From the current quarter hour on: a "New task" popover with a timed date at that slot (a drag across slots gives a duration; a future whole day, an all-day date). Earlier, within the last 24 hours: a "Log time" popover for that slot (clipped at now). Past whole days, and time older than 24 hours (with a toast), do nothing |
+| New task popover | `Calendar/TaskPopover/New`: the Inbox pane's content (schedule, estimate, title, steps, description) in a popover beside the click, through the shared `TaskForm` (RHF + Zod). Leaving it (outside click, Escape, Enter in the title) saves the task with its steps in one `POST /api/tasks`; one left without a title is dropped. A failed save shows a toast |
+| Editing a task | Clicking a task opens `TaskPopover/Edit` with the same form. Steps save as they change (`TaskSteps`); the title, schedule, estimate and description save on leaving, only what changed. An emptied title keeps it open with the error |
+| Popovers | `Calendar/AnchoredPopover`: a modal Radix popover on a virtual anchor (the click point or the selected slots), so the click that closes it doesn't select a slot behind it. The addon reports a click on an event as a slot click too, a moment later, so a slot selection while a popover is open is ignored |
+| Logging time | `TimeLogPopover`: "What did you work on?", with matching tasks offered below (`GET /api/tasks?search_term`, 5 at most) to link the time to instead. Leaving it saves `POST /api/time_logs` with `mode: "manual"` and the slot's times; an empty one is dropped |
+| Time log model | Migration: `time_logs.user_id` (backfilled from the task), nullable `task_id`, `title`. New `manual` mode, with `TimeLog#log!` (finished at once, `accumulated_elapsed_seconds` = the span) and `#reschedule!`; both check the 24-hour window (`LOGGING_WINDOW`, 5 minutes' drift allowed). `TimeLogPolicy` checks the log's user and, when it has one, its task's owner. `TimeLog.active` left-joins tasks so title-only logs stay visible |
+| Dragging | Tasks move and resize (`useEventMoves`). A move keeps a date a date and a duration a duration; a resize makes a duration; the all-day row makes all-day dates. Tasks can't move before the current quarter hour (an overdue one can still be stretched into the future). Finished time logs within the last 24 hours move and resize (`PATCH /api/time_logs/:id`), staying inside that window. The dropped times are held locally until the save and refetch settle; a refused or failed move snaps back with a toast |
+| Shared components | `SchedulePicker`, `ScheduleLabel` (with `formatSchedule`/`getScheduleTone`) and `EstimatePicker` live in `components/commons` (promoted on main by 026-parking-lot-review and 030-timer-overrun). `EstimatePicker` now takes values (`estimatedMinutes`, children) and an `onSave` instead of a task, like `SchedulePicker`, so the Calendar's draft form can use it; `commons/TaskEstimatePicker` is the task-bound button (as `DueDatePicker` is for the schedule) used by the Inbox pane and the Timer |
+| Out of scope | Completing or deleting a task from the Calendar, retitling or relinking a logged session, and showing breaks as gaps in a time log |

@@ -21,9 +21,11 @@ class TimeLogTest < ActiveSupport::TestCase
     assert_not build(:time_log, started_at: nil).valid?
   end
 
-  def test_that_timer_preset_must_be_a_positive_integer_when_present
+  def test_that_timer_preset_must_be_a_whole_number_of_at_least_the_minimum_logged_minutes_when_present
     assert_not build(:time_log, timer_preset: 0).valid?
-    assert_not build(:time_log, timer_preset: 1.5).valid?
+    assert_not build(:time_log, timer_preset: TimeLog::MIN_LOGGED_MINUTES - 1).valid?
+    assert_not build(:time_log, timer_preset: 2.5).valid?
+    assert build(:time_log, timer_preset: TimeLog::MIN_LOGGED_MINUTES).valid?
     assert build(:time_log, timer_preset: nil).valid?
   end
 

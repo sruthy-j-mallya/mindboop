@@ -4,13 +4,17 @@ import { Outlet } from "react-router";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import useApplyTheme from "@/hooks/useApplyTheme";
 
 import AppSidebar from "./AppSidebar";
 import BreakAlarm from "./BreakAlarm";
+import CuriosityAlarm from "./CuriosityAlarm";
+import CurrentSession from "./CurrentSession";
 import { isSidebarOpen, saveSidebarOpen } from "./utils";
 
 const AppLayout = () => {
   const [isOpen, setIsOpen] = useState(isSidebarOpen);
+  useApplyTheme();
 
   const handleOpenChange = (nextIsOpen: boolean) => {
     setIsOpen(nextIsOpen);
@@ -25,9 +29,12 @@ const AppLayout = () => {
           <SidebarTrigger />
         </header>
         <BreakAlarm />
+        <CuriosityAlarm />
         <Outlet />
       </SidebarInset>
-      <Toaster />
+      <CurrentSession />
+      {/* Bottom centre, clear of the mini timer in the bottom-right corner. */}
+      <Toaster position="bottom-center" />
     </SidebarProvider>
   );
 };

@@ -1,3 +1,6 @@
+import type { AlarmSoundId } from "@/utils/alarmSound/types";
+import type { CompletionSoundId } from "@/utils/completionSound/types";
+
 export type User = { id: string; emailAddress: string };
 
 export type UserResponse = { user: User };
@@ -14,6 +17,14 @@ export type RequestEmailConfirmationPayload = { emailAddress: string };
 
 export type ChecklistItem = { id: string; title: string; isCompleted: boolean };
 
+// Left when a session is bailed out of: what got done (optional) and where to pick the task back up.
+export type Breadcrumb = {
+  id: string;
+  completedDescription: string | null;
+  restartDescription: string;
+  createdAt: string;
+};
+
 export type Task = {
   id: string;
   title: string;
@@ -27,6 +38,7 @@ export type Task = {
   createdAt: string;
   updatedAt: string;
   checklistItems: ChecklistItem[];
+  breadcrumbs: Breadcrumb[];
 };
 
 // `searchTerm` matches any part of a title, ignoring case.
@@ -52,8 +64,11 @@ export type CreateTaskPayload = TaskFields & { checklistItemsAttributes?: Checkl
 
 export type UpdateTaskPayload = Partial<TaskFields> & Pick<Task, "id">;
 
+// The modes a session can be started in, on the Timer.
+export type StartableTimeLogMode = "timer" | "stopwatch";
+
 // A manual log is a session saved after the fact, from the Calendar; it never runs.
-export type TimeLogMode = "timer" | "stopwatch" | "manual";
+export type TimeLogMode = StartableTimeLogMode | "manual";
 
 export type Break = { id: string; intention: string; durationMinutes: number; endsAt: string };
 
@@ -81,7 +96,7 @@ export type TimeLogResponse = { timeLog: TimeLog };
 
 export type StartTimeLogPayload = {
   taskId: string;
-  mode: "timer" | "stopwatch";
+  mode: StartableTimeLogMode;
   timerPreset?: number | null;
 };
 
@@ -108,7 +123,12 @@ export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & 
 
 export type ExtendTimeLogPayload = { timeLogId: string; minutes: number };
 
-export type CreateBailOutPayload = {
+// `discardOverrun` logs a timer that ran past zero at its planned time, leaving the extra time out.
+export type EndTimeLogOptions = { discardOverrun?: boolean };
+
+export type CreateCompletionPayload = EndTimeLogOptions & { timeLogId: string };
+
+export type CreateBailOutPayload = EndTimeLogOptions & {
   timeLogId: string;
   completedDescription: string;
   restartDescription: string;
@@ -126,3 +146,60 @@ export type UpdateChecklistItemPayload = Partial<Pick<ChecklistItem, "title" | "
 };
 
 export type DeleteChecklistItemPayload = { taskId: string; id: string };
+
+export type Theme = "system" | "light" | "dark";
+
+export type UserPreference = {
+  theme: Theme;
+  completionSound: CompletionSoundId;
+  breakAlarmSound: AlarmSoundId;
+};
+
+export type UserPreferenceResponse = { userPreference: UserPreference };
+
+export type UpdateUserPreferencePayload = Partial<UserPreference>;
+
+// Parked until dealt with: addressed by hand, or converted into an Inbox task (then `taskId` is set).
+export type ParkingLotItemStatus = "parked" | "addressed" | "converted";
+
+export type ParkingLotItem = {
+  id: string;
+  content: string;
+  status: ParkingLotItemStatus;
+  taskId: string | null;
+  // The focus session it was parked during, if any.
+  timeLogId: string | null;
+  // Set while a curiosity time (a short timeboxed look-up) runs on the item; it can be extended once.
+  curiosityEndsAt: string | null;
+  isCuriosityExtended: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// `timeLogId` lists only what was parked during that session.
+export type ParkingLotItemFilters = { status?: ParkingLotItemStatus; timeLogId?: string };
+
+export type ParkingLotItemListParams = ParkingLotItemFilters & { page?: number };
+
+export type ParkingLotItemListResponse = {
+  parkingLotItems: ParkingLotItem[];
+  parkingLotItemsCount: number;
+  page: number;
+  totalPages: number;
+};
+
+export type ParkingLotItemResponse = { parkingLotItem: ParkingLotItem };
+
+export type CreateParkingLotItemPayload = Pick<ParkingLotItem, "content"> &
+  Partial<Pick<ParkingLotItem, "timeLogId">>;
+
+export type UpdateParkingLotItemPayload = Pick<ParkingLotItem, "id"> &
+  Partial<Pick<ParkingLotItem, "content" | "status">>;
+
+// The task's schedule is optional; without one the task lands in the Inbox undated.
+export type ConvertParkingLotItemPayload = { parkingLotItemId: string } & Partial<
+  Pick<Task, "isDuration" | "isAllDay" | "startsAt" | "endsAt">
+>;
+
+// The user's running curiosity time, if any.
+export type CuriosityTimeResponse = { parkingLotItem: ParkingLotItem | null };

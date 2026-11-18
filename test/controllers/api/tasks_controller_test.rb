@@ -116,6 +116,40 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ @task.id, completed_task.id ], response.parsed_body["tasks"].pluck("id")
   end
 
+  def test_that_index_can_search_tasks_by_title
+    @task.update!(title: "Draft the permission letter")
+    other_match = create(:task, user: @user, title: "Read the DRAFT notes")
+    create(:task, user: @user, title: "Call the bank")
+    create(:task, title: "Draft someone else's plan")
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "  draft " }
+
+    assert_response :ok
+    assert_equal [ @task.id, other_match.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal 2, response.parsed_body["tasks_count"]
+  end
+
+  def test_that_index_treats_like_wildcards_in_the_search_as_text
+    @task.update!(title: "Raise to 100%")
+    create(:task, user: @user, title: "Raise to 1000")
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "100%" }
+
+    assert_equal [ @task.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
+  def test_that_index_combines_search_with_the_completion_filter
+    @task.update!(title: "Draft A")
+    create(:task, user: @user, title: "Draft B", is_completed: true)
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "draft", is_completed: false }
+
+    assert_equal [ @task.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
   def test_that_show_leaves_out_discarded_checklist_items
     item = create(:checklist_item, task: @task)
     create(:checklist_item, task: @task).discard!
@@ -147,6 +181,21 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal @task.title, task["title"]
     assert_not task.key?("discarded_at")
     assert_equal [ { "id" => item.id, "title" => item.title, "is_completed" => false } ], task["checklist_items"]
+  end
+
+  def test_that_show_returns_the_tasks_breadcrumbs_newest_first
+    older = create(:breadcrumb, task: @task, created_at: 1.day.ago)
+    newer = create(:breadcrumb, task: @task)
+    create(:breadcrumb, task: @other_task)
+    sign_in @user
+
+    get api_task_path(@task)
+
+    assert_response :ok
+    breadcrumbs = response.parsed_body.dig("task", "breadcrumbs")
+    assert_equal [ newer.id, older.id ], breadcrumbs.pluck("id")
+    assert_equal newer.restart_description, breadcrumbs.first["restart_description"]
+    assert_equal newer.completed_description, breadcrumbs.first["completed_description"]
   end
 
   def test_that_show_returns_401_when_signed_out

@@ -1,4 +1,10 @@
-import type { CalendarEventsParams, TaskFilters, TaskListParams } from "@/apis/types";
+import type {
+  CalendarEventsParams,
+  ParkingLotItemFilters,
+  ParkingLotItemListParams,
+  TaskFilters,
+  TaskListParams,
+} from "@/apis/types";
 
 export const QUERY_KEYS = {
   SESSION: ["session"],
@@ -9,9 +15,19 @@ export const QUERY_KEYS = {
     INFINITE_LIST: (filters: TaskFilters) => ["tasks", "list", "infinite", filters],
     DETAIL: (id: string) => ["tasks", "detail", id],
   },
+  PARKING_LOT_ITEMS: {
+    // Every parking lot query: lists and the curiosity time. Changing an item can end its curiosity time.
+    ALL: ["parkingLotItems"],
+    LISTS: ["parkingLotItems", "list"],
+    LIST: (params: ParkingLotItemListParams) => ["parkingLotItems", "list", params],
+    // Every page loaded so far, under LISTS so a mutation refreshes it with the paged lists.
+    INFINITE_LIST: (filters: ParkingLotItemFilters) => ["parkingLotItems", "list", "infinite", filters],
+    CURIOSITY_TIME: ["parkingLotItems", "curiosityTime"],
+  },
   TIME_LOGS: {
     CURRENT: ["timeLogs", "current"],
   },
+  USER_PREFERENCE: ["userPreference"],
   CALENDAR_EVENTS: {
     // Every range loaded so far; task and time log mutations refresh them all.
     ALL: ["calendarEvents"],

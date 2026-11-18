@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-import { DATE_LABEL_FORMAT } from "./constants";
+import { CALENDAR_CLASS_NAME, CALENDAR_CLASS_NAMES, DATE_LABEL_FORMAT } from "./constants";
 
 type DatePickerProps = {
   label: string;
@@ -46,7 +46,8 @@ const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
       <PopoverContent align="start" className="w-auto p-3">
         <Calendar
           required
-          className="p-0 [--cell-size:--spacing(9)]"
+          className={CALENDAR_CLASS_NAME}
+          classNames={CALENDAR_CLASS_NAMES}
           mode="single"
           month={month}
           selected={value}
