@@ -144,6 +144,28 @@ html:has(.calendar) body {
   opacity: 0.8;
 }
 
+/*
+ * In the time grid the title comes first and keeps its room; the time range goes under it and shrinks away when the
+ * event is too short for both. The library's `column wrap` put the title beside the label instead, cut off.
+ */
+.calendar .rbc-day-slot .rbc-event {
+  flex-flow: column nowrap;
+}
+
+.calendar .rbc-day-slot .rbc-event-content {
+  order: -1;
+  flex: none;
+  height: auto;
+  line-height: inherit;
+}
+
+.calendar .rbc-day-slot .rbc-event-label {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-width: 100%;
+  padding-right: 0;
+}
+
 .calendar .rbc-show-more {
   background: transparent;
   color: var(--primary);
