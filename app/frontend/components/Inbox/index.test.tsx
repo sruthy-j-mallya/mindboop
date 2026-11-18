@@ -37,6 +37,7 @@ const buildTask = (overrides: Partial<Task> = {}): Task => ({
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
   checklistItems: [],
+  breadcrumbs: [],
   ...overrides,
 });
 
@@ -189,6 +190,46 @@ describe("Inbox", () => {
     expect(screen.getByRole("textbox", { name: /Plan the trip/ })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("list", { name: "Steps" })).toHaveTextContent("Book flights");
     expect(show).toHaveBeenCalledWith(task.id);
+  });
+
+  it("shows the task's breadcrumbs in the pane, newest first", async () => {
+    const task = buildTask({
+      breadcrumbs: [
+        {
+          id: crypto.randomUUID(),
+          completedDescription: null,
+          restartDescription: "Book the hotel",
+          createdAt: "2026-11-06T10:00:00.000Z",
+        },
+        {
+          id: crypto.randomUUID(),
+          completedDescription: "Compared flights",
+          restartDescription: "Book flights",
+          createdAt: "2026-11-05T10:00:00.000Z",
+        },
+      ],
+    });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    const breadcrumbs = await screen.findByRole("region", { name: "Breadcrumbs" });
+    const items = within(breadcrumbs).getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent("Book the hotel");
+    expect(items[0]).not.toHaveTextContent("Got done");
+    expect(items[1]).toHaveTextContent("Book flights");
+    expect(items[1]).toHaveTextContent("Compared flights");
+  });
+
+  it("leaves out the breadcrumbs when the task has none", async () => {
+    const task = buildTask();
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    expect(await screen.findByRole("heading", { name: task.title })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Breadcrumbs" })).not.toBeInTheDocument();
   });
 
   it("completes the open task from its pane", async () => {

@@ -17,6 +17,14 @@ export type RequestEmailConfirmationPayload = { emailAddress: string };
 
 export type ChecklistItem = { id: string; title: string; isCompleted: boolean };
 
+// Left when a session is bailed out of: what got done (optional) and where to pick the task back up.
+export type Breadcrumb = {
+  id: string;
+  completedDescription: string | null;
+  restartDescription: string;
+  createdAt: string;
+};
+
 export type Task = {
   id: string;
   title: string;
@@ -30,6 +38,7 @@ export type Task = {
   createdAt: string;
   updatedAt: string;
   checklistItems: ChecklistItem[];
+  breadcrumbs: Breadcrumb[];
 };
 
 export type TaskFilters = { isCompleted?: boolean; searchTerm?: string };

@@ -61,6 +61,7 @@ const TASK: Task = {
     { id: "8a1d5e02-3c4f-4e6b-b7a9-1c2d3e4f5a6b", title: "Camera statistics", isCompleted: false },
     { id: "9b2e6f13-4d5a-4f7c-a8ba-2d3e4f5a6b7c", title: "Cuba economics", isCompleted: true },
   ],
+  breadcrumbs: [],
 };
 
 const parkingLotListOf = (parkingLotItems: ParkingLotItem[]) => ({
@@ -164,6 +165,40 @@ describe("Timer", () => {
     const description = await screen.findByRole("region", { name: "Description" });
     expect(await within(description).findByRole("textbox", { name: "Description" })).toHaveTextContent("");
     expect(screen.queryByRole("button", { name: "Add a description" })).not.toBeInTheDocument();
+  });
+
+  it("shows the task's breadcrumbs, newest first", async () => {
+    renderTimer(TIME_LOG, {
+      ...TASK,
+      breadcrumbs: [
+        {
+          id: crypto.randomUUID(),
+          completedDescription: null,
+          restartDescription: "Write the conclusion",
+          createdAt: "2026-11-04T10:00:00.000Z",
+        },
+        {
+          id: crypto.randomUUID(),
+          completedDescription: "Drafted the intro",
+          restartDescription: "Find sources",
+          createdAt: "2026-11-03T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const breadcrumbs = await screen.findByRole("region", { name: "Breadcrumbs" });
+    const items = within(breadcrumbs).getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent("Write the conclusion");
+    expect(items[1]).toHaveTextContent("Find sources");
+    expect(items[1]).toHaveTextContent("Drafted the intro");
+  });
+
+  it("leaves out the breadcrumbs when the task has none", async () => {
+    renderTimer(TIME_LOG);
+
+    expect(await screen.findByRole("heading", { name: "Draft permission" })).toBeVisible();
+    expect(screen.queryByRole("region", { name: "Breadcrumbs" })).not.toBeInTheDocument();
   });
 
   describe("when editing the steps", () => {

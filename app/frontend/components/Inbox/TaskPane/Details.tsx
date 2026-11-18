@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { Task } from "@/apis/types";
+import Breadcrumbs from "@/components/commons/Breadcrumbs";
 import DueDatePicker from "@/components/commons/DueDatePicker";
 import EstimatePicker from "@/components/commons/EstimatePicker";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
@@ -74,6 +75,8 @@ const Details = ({ task }: DetailsProps) => {
         </header>
         <TaskSteps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
       </div>
+      {/* Where to pick the task back up, above the description so it's the first thing seen when returning to it. */}
+      <Breadcrumbs breadcrumbs={task.breadcrumbs} />
       <TaskDescription task={task} />
     </article>
   );

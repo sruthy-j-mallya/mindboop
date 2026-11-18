@@ -10,7 +10,7 @@ module Api
 
     private
       def set_task
-        @task = Task.discarded.includes(:checklist_items).find(params[:task_id])
+        @task = Task.discarded.includes(:checklist_items, :breadcrumbs).find(params[:task_id])
         authorize @task, :update?
       end
   end
