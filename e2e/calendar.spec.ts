@@ -30,6 +30,13 @@ const clickSlot = async (page: Page, hour: number) => {
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 };
 
+// A dropped event shows where it landed before its save finishes. Wait for the save before reloading or dragging
+// again, or the reload cancels it, or the two saves race.
+const waitForTaskSave = (page: Page) =>
+  page.waitForResponse(
+    (response) => response.request().method() === "PATCH" && /\/api\/tasks\/[^/]+$/.test(response.url()),
+  );
+
 test("add, edit and move a task from the calendar", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
@@ -61,16 +68,20 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
   const renamed = page.locator(".calendar-event-task", { hasText: "Plan the month" });
   await expect(renamed).toBeVisible();
 
-  // Dragged two hours later.
+  // Dragged two hours later, by its middle: its top and bottom edges are resize handles.
   const from = await renamed.boundingBox();
   const to = await hourSlot(page, 12).boundingBox();
   if (!from || !to) throw new Error("The event and the slot should be on screen");
-  await page.mouse.move(from.x + from.width / 2, from.y + 4);
+  const x = from.x + from.width / 2;
+  const grabOffset = from.height / 2;
+  await page.mouse.move(x, from.y + grabOffset);
   await page.mouse.down();
-  await page.mouse.move(from.x + from.width / 2, to.y + 10, { steps: 10 });
-  await page.mouse.move(from.x + from.width / 2, to.y + 4, { steps: 2 });
+  await page.mouse.move(x, to.y + grabOffset + 6, { steps: 10 });
+  await page.mouse.move(x, to.y + grabOffset, { steps: 2 });
+  const saved = waitForTaskSave(page);
   await page.mouse.up();
   await expect(renamed).toContainText("12:00 PM – 12:30 PM");
+  await saved;
 
   await page.reload();
   await page.getByRole("tab", { name: "Day", exact: true }).click();
@@ -78,17 +89,20 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
   await expect(page.locator(".calendar-event-task", { hasText: "Plan the month" })).toContainText("12:00 PM");
 });
 
-// Presses the event's top or bottom edge and drags it to the given slot.
+// Presses the middle of the event's top or bottom resize handle and drags it to the given slot.
 const dragEdge = async (page: Page, event: Locator, edge: "top" | "bottom", hour: number) => {
-  const from = await event.boundingBox();
+  const handles = event.locator(".rbc-addons-dnd-resize-ns-anchor");
+  const from = await (edge === "top" ? handles.first() : handles.last()).boundingBox();
   const to = await hourSlot(page, hour).boundingBox();
-  if (!from || !to) throw new Error("The event and the slot should be on screen");
+  if (!from || !to) throw new Error("The handle and the slot should be on screen");
   const x = from.x + from.width / 2;
-  await page.mouse.move(x, edge === "top" ? from.y + 1 : from.y + from.height - 1);
+  await page.mouse.move(x, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(x, to.y + 10, { steps: 10 });
   await page.mouse.move(x, to.y + 4, { steps: 2 });
+  const saved = waitForTaskSave(page);
   await page.mouse.up();
+  await saved;
 };
 
 test("stretch a task from its start and its end", async ({ page }) => {
