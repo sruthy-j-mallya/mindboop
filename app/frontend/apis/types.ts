@@ -1,3 +1,6 @@
+import type { AlarmSoundId } from "@/utils/alarmSound/types";
+import type { CompletionSoundId } from "@/utils/completionSound/types";
+
 export type User = { id: string; emailAddress: string };
 
 export type UserResponse = { user: User };
@@ -38,7 +41,7 @@ export type Task = {
   breadcrumbs: Breadcrumb[];
 };
 
-export type TaskFilters = { isCompleted?: boolean };
+export type TaskFilters = { isCompleted?: boolean; searchTerm?: string };
 
 export type TaskListParams = TaskFilters & { page?: number };
 
@@ -94,7 +97,12 @@ export type CreateBreakPayload = Pick<Break, "intention" | "durationMinutes"> & 
 
 export type ExtendTimeLogPayload = { timeLogId: string; minutes: number };
 
-export type CreateBailOutPayload = {
+// `discardOverrun` logs a timer that ran past zero at its planned time, leaving the extra time out.
+export type EndTimeLogOptions = { discardOverrun?: boolean };
+
+export type CreateCompletionPayload = EndTimeLogOptions & { timeLogId: string };
+
+export type CreateBailOutPayload = EndTimeLogOptions & {
   timeLogId: string;
   completedDescription: string;
   restartDescription: string;
@@ -112,3 +120,60 @@ export type UpdateChecklistItemPayload = Partial<Pick<ChecklistItem, "title" | "
 };
 
 export type DeleteChecklistItemPayload = { taskId: string; id: string };
+
+export type Theme = "system" | "light" | "dark";
+
+export type UserPreference = {
+  theme: Theme;
+  completionSound: CompletionSoundId;
+  breakAlarmSound: AlarmSoundId;
+};
+
+export type UserPreferenceResponse = { userPreference: UserPreference };
+
+export type UpdateUserPreferencePayload = Partial<UserPreference>;
+
+// Parked until dealt with: addressed by hand, or converted into an Inbox task (then `taskId` is set).
+export type ParkingLotItemStatus = "parked" | "addressed" | "converted";
+
+export type ParkingLotItem = {
+  id: string;
+  content: string;
+  status: ParkingLotItemStatus;
+  taskId: string | null;
+  // The focus session it was parked during, if any.
+  timeLogId: string | null;
+  // Set while a curiosity time (a short timeboxed look-up) runs on the item; it can be extended once.
+  curiosityEndsAt: string | null;
+  isCuriosityExtended: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// `timeLogId` lists only what was parked during that session.
+export type ParkingLotItemFilters = { status?: ParkingLotItemStatus; timeLogId?: string };
+
+export type ParkingLotItemListParams = ParkingLotItemFilters & { page?: number };
+
+export type ParkingLotItemListResponse = {
+  parkingLotItems: ParkingLotItem[];
+  parkingLotItemsCount: number;
+  page: number;
+  totalPages: number;
+};
+
+export type ParkingLotItemResponse = { parkingLotItem: ParkingLotItem };
+
+export type CreateParkingLotItemPayload = Pick<ParkingLotItem, "content"> &
+  Partial<Pick<ParkingLotItem, "timeLogId">>;
+
+export type UpdateParkingLotItemPayload = Pick<ParkingLotItem, "id"> &
+  Partial<Pick<ParkingLotItem, "content" | "status">>;
+
+// The task's schedule is optional; without one the task lands in the Inbox undated.
+export type ConvertParkingLotItemPayload = { parkingLotItemId: string } & Partial<
+  Pick<Task, "isDuration" | "isAllDay" | "startsAt" | "endsAt">
+>;
+
+// The user's running curiosity time, if any.
+export type CuriosityTimeResponse = { parkingLotItem: ParkingLotItem | null };

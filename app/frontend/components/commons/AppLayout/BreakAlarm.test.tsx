@@ -1,8 +1,10 @@
 import { QueryClient } from "@tanstack/react-query";
 import { act, screen } from "@testing-library/react";
 
+import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
-import type { TimeLog } from "@/apis/types";
+import type { TimeLog, UserPreference } from "@/apis/types";
+import userPreferencesApi from "@/apis/user_preferences";
 import { QUERY_KEYS } from "@/constants/query";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
@@ -16,6 +18,15 @@ vi.mock("@/utils/notifications");
 
 const NOW = new Date("2026-11-06T10:00:00.000Z").getTime();
 const ONE_MINUTE = 60_000;
+const PREFERENCE: UserPreference = { theme: "system", completionSound: "rising", breakAlarmSound: "chimes" };
+
+// The preference loads with the app, before any break, so it's already cached here.
+const buildQueryClient = () => {
+  const queryClient = new QueryClient();
+  queryClient.setQueryData(QUERY_KEYS.USER_PREFERENCE, PREFERENCE);
+
+  return queryClient;
+};
 
 const timeLogWithBreak = (endsAt: number): TimeLog => ({
   id: "5b7c9e14-2a3d-4f60-8e1b-6c4d2f0a9b37",
@@ -41,7 +52,7 @@ const timeLogWithBreak = (endsAt: number): TimeLog => ({
 
 const renderAlarm = async (timeLog: TimeLog | null, path: string = routes.root) => {
   vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog });
-  renderWithProviders(<BreakAlarm />, undefined, path);
+  renderWithProviders(<BreakAlarm />, buildQueryClient(), path);
   await act(() => vi.advanceTimersByTimeAsync(0));
 };
 
@@ -79,7 +90,7 @@ describe("BreakAlarm", () => {
     expect(startAlarmSound).not.toHaveBeenCalled();
 
     await advance(1);
-    expect(startAlarmSound).toHaveBeenCalledTimes(1);
+    expect(startAlarmSound).toHaveBeenCalledExactlyOnceWith("chimes");
   });
 
   it("rings for a minute, then goes quiet with a notification", async () => {
@@ -98,7 +109,7 @@ describe("BreakAlarm", () => {
   it("keeps ringing through a reload during the ringing minute", async () => {
     await renderAlarm(timeLogWithBreak(NOW - 1000));
 
-    expect(startAlarmSound).toHaveBeenCalledTimes(1);
+    expect(startAlarmSound).toHaveBeenCalledExactlyOnceWith("chimes");
 
     await advance(ONE_MINUTE);
     expect(stopSound).toHaveBeenCalledTimes(1);
@@ -121,6 +132,17 @@ describe("BreakAlarm", () => {
     expect(screen.getByRole("button", { name: "I'm back" })).toBeVisible();
   });
 
+  it("rings the default alarm when the user's choice can't be loaded", async () => {
+    vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: timeLogWithBreak(NOW - 1000) });
+    vi.spyOn(userPreferencesApi, "show").mockRejectedValue(new ApiError(500, "Something went wrong"));
+    renderWithProviders(<BreakAlarm />, new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+    // The two requests settle one after the other; the alarm still has most of its minute left.
+    await advance(10);
+
+    expect(startAlarmSound).toHaveBeenCalledExactlyOnceWith(undefined);
+  });
+
   it("leaves the banner to the Timer page while still ringing there", async () => {
     await renderAlarm(timeLogWithBreak(NOW - 1000), routes.timer);
 
@@ -130,7 +152,7 @@ describe("BreakAlarm", () => {
 
   describe("when coming back", () => {
     const renderWithClient = async (timeLog: TimeLog) => {
-      const queryClient = new QueryClient();
+      const queryClient = buildQueryClient();
       vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog });
       renderWithProviders(<BreakAlarm />, queryClient);
       await advance(0);

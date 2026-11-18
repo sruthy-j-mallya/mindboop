@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 import type { Task } from "@/apis/types";
+import DueDatePicker from "@/components/commons/DueDatePicker";
+import EstimatePicker from "@/components/commons/EstimatePicker";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
 import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
 import type { Draft } from "@/components/commons/Steps/types";
@@ -9,18 +11,21 @@ import TaskSteps from "@/components/commons/TaskSteps";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 
+import TitleInput from "../TitleInput";
 import useCompleteTask from "../useCompleteTask";
+import useRenameTask from "../useRenameTask";
 import Breadcrumbs from "./Breadcrumbs";
 import DeleteTaskButton from "./DeleteTaskButton";
-import DueDatePicker from "./DueDatePicker";
-import EstimatePicker from "./EstimatePicker";
+import StartTaskButton from "./StartTaskButton";
 
 type DetailsProps = { task: Task };
 
 // Rendered with `key={task.id}`, so an open step row doesn't carry over to the next task picked.
 const Details = ({ task }: DetailsProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
-  const { completeTask, isCompleting, error } = useCompleteTask(task.id);
+  const { completeTask, isCompleting, error: completeError } = useCompleteTask(task.id);
+  const { title, renameTask, error: renameError } = useRenameTask(task);
+  const error = completeError ?? renameError;
 
   // A row that's already open keeps its place rather than being replaced.
   const handleAddStep = () => setStepDraft((draft) => draft ?? NEW_STEP_DRAFT);
@@ -29,8 +34,8 @@ const Details = ({ task }: DetailsProps) => {
     <article className="flex flex-1 flex-col gap-8">
       {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
       <div className="flex flex-col gap-2">
-        {/* The complete checkbox, the due date and the estimate sit in the top-left corner, above the title; the add-step
-            and delete buttons in the top right. */}
+        {/* The complete checkbox, the due date and the estimate sit in the top-left corner, above the title; the add-step,
+            delete and start buttons in the top right. */}
         <header className="flex flex-col gap-3">
           <div className="flex min-h-8 items-start justify-between gap-4">
             <div className="flex min-h-8 items-start gap-3">
@@ -50,9 +55,18 @@ const Details = ({ task }: DetailsProps) => {
             <div className="flex shrink-0 items-center gap-1">
               {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
               <DeleteTaskButton task={task} />
+              <StartTaskButton task={task} />
             </div>
           </div>
-          <h2 className="text-xl font-semibold wrap-anywhere">{task.title}</h2>
+          {/* The heading keeps the title as its name; the field inside it edits the title in place. */}
+          <h2 aria-label={title} className="flex text-xl font-semibold">
+            <TitleInput
+              className="-mx-2 w-full rounded-md px-2 py-0.5 transition-colors hover:bg-muted focus:bg-muted"
+              label="Task title"
+              title={title}
+              onSave={renameTask}
+            />
+          </h2>
           {error && (
             <p className="text-sm text-destructive" role="alert">
               {error.message}

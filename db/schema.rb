@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -53,6 +53,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["task_id", "position"], name: "index_checklist_items_on_task_id_and_position"
+  end
+
+  create_table "parking_lot_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.uuid "task_id"
+    t.text "content", null: false
+    t.string "status", default: "parked", null: false
+    t.datetime "curiosity_ends_at"
+    t.boolean "is_curiosity_extended", default: false, null: false
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "time_log_id"
+    t.index ["discarded_at"], name: "index_parking_lot_items_on_discarded_at"
+    t.index ["status"], name: "index_parking_lot_items_on_status"
+    t.index ["task_id"], name: "index_parking_lot_items_on_task_id"
+    t.index ["time_log_id"], name: "index_parking_lot_items_on_time_log_id"
+    t.index ["user_id"], name: "index_parking_lot_items_on_user_id"
   end
 
   create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -250,6 +268,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
     t.index ["task_id"], name: "index_time_logs_on_task_id"
   end
 
+  create_table "user_preferences", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "theme", default: "system", null: false
+    t.string "completion_sound", default: "rising", null: false
+    t.string "break_alarm_sound", default: "classic", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_user_preferences_on_user_id", unique: true
+  end
+
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "email_address", null: false
     t.string "password_digest", null: false
@@ -262,6 +290,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
   add_foreign_key "breadcrumbs", "tasks"
   add_foreign_key "breaks", "time_logs"
   add_foreign_key "checklist_items", "tasks", on_delete: :cascade
+  add_foreign_key "parking_lot_items", "tasks", on_delete: :nullify
+  add_foreign_key "parking_lot_items", "time_logs", on_delete: :nullify
+  add_foreign_key "parking_lot_items", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -273,4 +304,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_200001) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "tasks", "users"
   add_foreign_key "time_logs", "tasks"
+  add_foreign_key "user_preferences", "users"
 end
