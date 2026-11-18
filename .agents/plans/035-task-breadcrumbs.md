@@ -1,4 +1,4 @@
-# 026 — Breadcrumbs timeline in the task pane
+# 035 — Breadcrumbs timeline in the task pane
 
 Status: done
 Date: 2026-11-15
