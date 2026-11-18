@@ -167,6 +167,40 @@ describe("Timer", () => {
     expect(screen.queryByRole("button", { name: "Add a description" })).not.toBeInTheDocument();
   });
 
+  it("shows the task's breadcrumbs, newest first", async () => {
+    renderTimer(TIME_LOG, {
+      ...TASK,
+      breadcrumbs: [
+        {
+          id: crypto.randomUUID(),
+          completedDescription: null,
+          restartDescription: "Write the conclusion",
+          createdAt: "2026-11-04T10:00:00.000Z",
+        },
+        {
+          id: crypto.randomUUID(),
+          completedDescription: "Drafted the intro",
+          restartDescription: "Find sources",
+          createdAt: "2026-11-03T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const breadcrumbs = await screen.findByRole("region", { name: "Breadcrumbs" });
+    const items = within(breadcrumbs).getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent("Write the conclusion");
+    expect(items[1]).toHaveTextContent("Find sources");
+    expect(items[1]).toHaveTextContent("Drafted the intro");
+  });
+
+  it("leaves out the breadcrumbs when the task has none", async () => {
+    renderTimer(TIME_LOG);
+
+    expect(await screen.findByRole("heading", { name: "Draft permission" })).toBeVisible();
+    expect(screen.queryByRole("region", { name: "Breadcrumbs" })).not.toBeInTheDocument();
+  });
+
   describe("when editing the steps", () => {
     const [FIRST_ITEM, SECOND_ITEM] = TASK.checklistItems;
 

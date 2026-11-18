@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { Task } from "@/apis/types";
+import Breadcrumbs from "@/components/commons/Breadcrumbs";
 import DueDatePicker from "@/components/commons/DueDatePicker";
 import EstimatePicker from "@/components/commons/EstimatePicker";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
@@ -14,7 +15,6 @@ import { Separator } from "@/components/ui/separator";
 import TitleInput from "../TitleInput";
 import useCompleteTask from "../useCompleteTask";
 import useRenameTask from "../useRenameTask";
-import Breadcrumbs from "./Breadcrumbs";
 import DeleteTaskButton from "./DeleteTaskButton";
 import StartTaskButton from "./StartTaskButton";
 

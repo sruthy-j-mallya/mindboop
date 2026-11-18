@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { Task } from "@/apis/types";
+import Breadcrumbs from "@/components/commons/Breadcrumbs";
 import DueDatePicker from "@/components/commons/DueDatePicker";
 import EstimatePicker from "@/components/commons/EstimatePicker";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
@@ -11,7 +12,8 @@ import TaskSteps from "@/components/commons/TaskSteps";
 
 type TaskDetailsProps = { task: Task };
 
-// The due date, estimate, steps and description can be changed from the Timer page; each change saves on its own.
+// The due date, estimate, steps and description can be changed from the Timer page; each change saves on its own. The
+// breadcrumbs are read-only.
 const TaskDetails = ({ task }: TaskDetailsProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
 
@@ -33,6 +35,8 @@ const TaskDetails = ({ task }: TaskDetailsProps) => {
         </div>
         <TaskSteps draft={stepDraft} task={task} onDraftChange={setStepDraft} />
       </div>
+      {/* Where the last session left off, above the description, as in the Inbox task pane. */}
+      <Breadcrumbs breadcrumbs={task.breadcrumbs} />
       <TaskDescription key={task.id} task={task} />
     </>
   );
