@@ -46,6 +46,14 @@ const AppSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === routes.calendar} tooltip="Calendar">
+                  <Link to={routes.calendar} onClick={handleNavigate}>
+                    <CalendarDays />
+                    <span>Calendar</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === routes.timer} tooltip="Timer">
                   <Link to={routes.timer} onClick={handleNavigate}>
                     <Timer />
@@ -58,14 +66,6 @@ const AppSidebar = () => {
                   <Link to={routes.parkingLot} onClick={handleNavigate}>
                     <SquareParking />
                     <span>Parking lot</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname === routes.calendar} tooltip="Calendar">
-                  <Link to={routes.calendar} onClick={handleNavigate}>
-                    <CalendarDays />
-                    <span>Calendar</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
