@@ -152,6 +152,13 @@ html:has(.calendar) body {
   flex-flow: column nowrap;
 }
 
+/* Editable events wrap the label and title in the drag-and-drop addon's resize box, so it lays them out instead. */
+.calendar .rbc-day-slot .rbc-addons-dnd-resizable {
+  display: flex;
+  flex-flow: column nowrap;
+  overflow: hidden;
+}
+
 .calendar .rbc-day-slot .rbc-event-content {
   order: -1;
   flex: none;
