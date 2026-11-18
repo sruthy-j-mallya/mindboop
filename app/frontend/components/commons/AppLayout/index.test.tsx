@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import sessionsApi from "@/apis/sessions";
 import type { TimeLog } from "@/apis/types";
+import userPreferencesApi from "@/apis/user_preferences";
 import { playSound } from "@/components/commons/Ambience/utils";
 import AppLayout from "@/components/commons/AppLayout";
 import routes from "@/routes";
@@ -48,6 +49,30 @@ describe("AppLayout", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
+      userPreference: { theme: "system", completionSound: "rising", breakAlarmSound: "classic" },
+    });
+  });
+
+  afterEach(() => document.documentElement.classList.remove("dark"));
+
+  it("applies the user's saved theme", async () => {
+    vi.mocked(userPreferencesApi.show).mockResolvedValue({
+      userPreference: { theme: "dark", completionSound: "rising", breakAlarmSound: "classic" },
+    });
+
+    renderWithProviders(<AppLayout />);
+
+    await waitFor(() => expect(document.documentElement).toHaveClass("dark"));
+  });
+
+  it("follows the device when the theme is set to match it", async () => {
+    document.documentElement.classList.add("dark");
+
+    renderWithProviders(<AppLayout />);
+
+    // The test setup's matchMedia reports a light device.
+    await waitFor(() => expect(document.documentElement).not.toHaveClass("dark"));
   });
 
   it("offers Quick start, Inbox, Timer and Parking lot in the sidebar and settings in the footer", () => {

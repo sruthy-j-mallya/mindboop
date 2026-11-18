@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       resource :break, only: %i[ create update ]
     end
     resource :current_time_log, only: :show
+    resource :user_preference, only: %i[ show update ]
     resource :curiosity_time, only: %i[ show create update destroy ]
     resources :parking_lot_items, only: %i[ index create update destroy ] do
       resource :conversion, only: :create, controller: "parking_lot_item_conversions"

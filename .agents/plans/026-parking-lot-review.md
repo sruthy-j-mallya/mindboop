@@ -7,7 +7,7 @@ Date: 2026-11-15
 
 Make reviewing the Parking lot safe for ADHD/autistic users: a quick look-up gets a short timebox with a reminder
 instead of becoming a rabbit hole, a thought that needs real time gets a slot right away, and the page reads calmer
-(no kinds, no colour blocks, "Let it go" instead of "Discard"). Follows the UX review of plan 024.
+(no kinds, no colour blocks, "Let it go" instead of "Discard"). Follows the UX review of plan 025.
 
 ## Now
 

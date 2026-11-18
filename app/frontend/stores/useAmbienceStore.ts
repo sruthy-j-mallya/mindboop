@@ -9,28 +9,13 @@ import {
   VOLUME_STORAGE_KEY,
 } from "@/components/commons/Ambience/constants";
 import type { SoundId } from "@/components/commons/Ambience/types";
+import { readStorage, writeStorage } from "@/utils/storage";
 
 type AmbienceStore = {
   soundId: SoundId;
   volume: number;
   setSoundId: (soundId: SoundId) => void;
   setVolume: (volume: number) => void;
-};
-
-const readStorage = (key: string) => {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const writeStorage = (key: string, value: string) => {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // Storage can be blocked; the choice still holds until the next reload.
-  }
 };
 
 const readSoundId = (): SoundId =>

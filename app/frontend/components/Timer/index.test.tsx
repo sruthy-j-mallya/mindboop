@@ -15,9 +15,13 @@ import timeLogCompletionsApi from "@/apis/time_log_completions";
 import timeLogExtensionsApi from "@/apis/time_log_extensions";
 import timeLogsApi from "@/apis/time_logs";
 import type { ParkingLotItem, Task, TimeLog } from "@/apis/types";
+import userPreferencesApi from "@/apis/user_preferences";
 import Timer from "@/components/Timer";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
+import { playCompletionSound } from "@/utils/completionSound";
+
+vi.mock("@/utils/completionSound");
 
 const STARTED_AT = "2026-11-05T10:00:00.000Z";
 
@@ -91,6 +95,9 @@ const renderTimer = (
   vi.spyOn(tasksApi, "fetchList").mockResolvedValue(taskListOf([task]));
   vi.spyOn(parkingLotItemsApi, "fetchList").mockResolvedValue(parkingLotListOf(parkingLotItems));
   vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+  vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
+    userPreference: { theme: "system", completionSound: "glass", breakAlarmSound: "classic" },
+  });
   renderWithProviders(<Timer />, undefined, initialPath);
 };
 
@@ -103,6 +110,7 @@ describe("Timer", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it("shows the task and its steps", async () => {
@@ -1257,6 +1265,7 @@ describe("Timer", () => {
         { timeLogId: TIME_LOG.id, discardOverrun: false },
         expect.anything(),
       );
+      expect(playCompletionSound).toHaveBeenCalledExactlyOnceWith("glass");
       expect(within(dialog).getByText("+1 early-finish boost")).toBeVisible();
     });
 
@@ -1353,6 +1362,7 @@ describe("Timer", () => {
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
       expect(screen.getByRole("timer")).toBeVisible();
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(playCompletionSound).not.toHaveBeenCalled();
     });
   });
 

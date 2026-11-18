@@ -11,14 +11,11 @@
 
     <%= yield :head %>
 
-    <%# Applies the saved theme (or the OS preference) before first paint. useTheme.ts handles later changes. %>
+    <%# Applies the saved theme (or the OS preference) before first paint. useApplyTheme.ts handles later changes. %>
     <%= javascript_tag do %>
       (() => {
-        let theme = null;
-        try {
-          theme = localStorage.getItem("theme");
-        } catch {}
-        const isDark = theme ? theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+        const theme = <%= raw theme_preference.to_json %>;
+        const isDark = theme === "system" ? matchMedia("(prefers-color-scheme: dark)").matches : theme === "dark";
         document.documentElement.classList.toggle("dark", isDark);
       })();
     <% end %>

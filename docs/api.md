@@ -50,6 +50,8 @@ Every error response has one shape:
 | POST   | `/api/time_logs/:time_log_id/break`       | `intention`, `duration_minutes`                                              | 201 `{ time_log }`            |
 | PATCH  | `/api/time_logs/:time_log_id/break`       | –                                                                            | 200 `{ time_log }`            |
 | GET    | `/api/current_time_log`                   | –                                                                            | 200 `{ time_log }` or `null`  |
+| GET    | `/api/user_preference`                    | –                                                                            | 200 `{ user_preference }`     |
+| PATCH  | `/api/user_preference`                    | `theme`, `completion_sound`, `break_alarm_sound` (any)                       | 200 `{ user_preference }`     |
 | GET    | `/api/parking_lot_items`                  | `page`, `status`, `time_log_id` query params (optional)                      | 200 list (see below)          |
 | POST   | `/api/parking_lot_items`                  | `content`, `time_log_id` (optional)                                          | 201 `{ parking_lot_item }`    |
 | PATCH  | `/api/parking_lot_items/:id`              | `content`, `status` (both optional)                                          | 200 `{ parking_lot_item }`    |
@@ -246,6 +248,23 @@ log also ends its break. Another user's time log gets a 403, and a deleted or un
 With no such log, it returns 200 with `{ "time_log": null }`.
 
 `POST /api/time_logs` requires a `task_id`. A missing, unknown or deleted task gets a 404, and another user's task gets a 403.
+
+## User preference
+
+The signed-in user's settings, one per account (`UserPreference`), returned as
+`{ theme, completion_sound, break_alarm_sound }`.
+
+| Field               | Values                                                                                     | Default   |
+| ------------------- | ------------------------------------------------------------------------------------------ | --------- |
+| `theme`             | `system` (follow the device), `light`, `dark`                                              | `system`  |
+| `completion_sound`  | `rising`, `crisp`, `wood`, `soft`, `glass`, `triple`, `tick_ding`, `bell`, `chime`, `none` | `rising`  |
+| `break_alarm_sound` | `classic`, `digital`, `chimes`, `marimba`, `bell`                                          | `classic` |
+
+- `GET` returns the defaults until the user first changes something; no row is saved by reading.
+- `PATCH` changes only the fields it's given, saving the row on the first change. An unknown value gets a 422 and
+  nothing is saved.
+- Both only ever touch the signed-in user's preference, so there's no id in the path.
+- The layout (`application.html.erb`) also reads `theme` to apply it before first paint.
 
 ## Sign-up
 

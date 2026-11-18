@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useStartBreak } from "@/hooks/reactQuery/useBreaksApi";
-import { unlockAlarmSound } from "@/utils/alarmSound";
+import { unlockAudio } from "@/utils/audioContext";
 import { requestNotificationPermission } from "@/utils/notifications";
 
 import {
@@ -37,7 +37,7 @@ const PauseDialog = ({ timeLogId, onClose }: PauseDialogProps) => {
 
   const handleFormSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     // Both need the click itself, which validation (asynchronous) would no longer count as.
-    unlockAlarmSound();
+    unlockAudio();
     requestNotificationPermission();
 
     return handleSubmit(handleValidSubmit)(event);

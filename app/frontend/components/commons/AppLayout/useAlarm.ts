@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { startAlarmSound, unlockAlarmSound } from "@/utils/alarmSound";
+import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
+import { startAlarmSound } from "@/utils/alarmSound";
+import { unlockAudio } from "@/utils/audioContext";
 import { showNotification } from "@/utils/notifications";
 
 import { ALARM_PHASES } from "./constants";
@@ -10,6 +12,9 @@ import { getAlarmPhase, getNextAlarmChange } from "./utils";
 // Rings when `endsAt` passes, then goes quiet and leaves a notification. Shared by breaks and curiosity times; the
 // caller keys its component per alarm, so each one starts from the state of the moment it appears.
 const useAlarm = (endsAt: string, { tag, title, body }: AlarmNotification) => {
+  // Waits for the user's choice of alarm, but rings the default if it can't be loaded.
+  const { data: preference, isPending: isPreferencePending } = useUserPreference();
+  const alarmSound = preference?.breakAlarmSound;
   const [currentTime, setCurrentTime] = useState(Date.now);
   const phase = getAlarmPhase(endsAt, currentTime);
   const [wasQuietOnMount] = useState(phase === ALARM_PHASES.QUIET);
@@ -41,20 +46,20 @@ const useAlarm = (endsAt: string, { tag, title, body }: AlarmNotification) => {
 
   // A reload loses the permission to play sound until the next gesture.
   useEffect(() => {
-    window.addEventListener("pointerdown", unlockAlarmSound);
-    window.addEventListener("keydown", unlockAlarmSound);
+    window.addEventListener("pointerdown", unlockAudio);
+    window.addEventListener("keydown", unlockAudio);
 
     return () => {
-      window.removeEventListener("pointerdown", unlockAlarmSound);
-      window.removeEventListener("keydown", unlockAlarmSound);
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
     };
   }, []);
 
   useEffect(() => {
-    if (!isRinging) return undefined;
+    if (!isRinging || isPreferencePending) return undefined;
 
-    return startAlarmSound();
-  }, [isRinging]);
+    return startAlarmSound(alarmSound);
+  }, [isRinging, isPreferencePending, alarmSound]);
 
   useEffect(() => {
     if (!isQuiet || wasQuietOnMount) return undefined;

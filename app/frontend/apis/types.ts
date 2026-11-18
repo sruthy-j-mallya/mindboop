@@ -1,3 +1,6 @@
+import type { AlarmSoundId } from "@/utils/alarmSound/types";
+import type { CompletionSoundId } from "@/utils/completionSound/types";
+
 export type User = { id: string; emailAddress: string };
 
 export type UserResponse = { user: User };
@@ -108,6 +111,18 @@ export type UpdateChecklistItemPayload = Partial<Pick<ChecklistItem, "title" | "
 };
 
 export type DeleteChecklistItemPayload = { taskId: string; id: string };
+
+export type Theme = "system" | "light" | "dark";
+
+export type UserPreference = {
+  theme: Theme;
+  completionSound: CompletionSoundId;
+  breakAlarmSound: AlarmSoundId;
+};
+
+export type UserPreferenceResponse = { userPreference: UserPreference };
+
+export type UpdateUserPreferencePayload = Partial<UserPreference>;
 
 // Parked until dealt with: addressed by hand, or converted into an Inbox task (then `taskId` is set).
 export type ParkingLotItemStatus = "parked" | "addressed" | "converted";

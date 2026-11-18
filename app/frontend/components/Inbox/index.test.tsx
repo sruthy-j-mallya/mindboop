@@ -13,12 +13,16 @@ import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import timeLogCompletionsApi from "@/apis/time_log_completions";
 import timeLogsApi from "@/apis/time_logs";
 import type { Task, TimeLog } from "@/apis/types";
+import userPreferencesApi from "@/apis/user_preferences";
 import Inbox from "@/components/Inbox";
 import NoTaskSelected from "@/components/Inbox/NoTaskSelected";
 import TaskPane from "@/components/Inbox/TaskPane";
 import { Toaster } from "@/components/ui/sonner";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
+import { playCompletionSound } from "@/utils/completionSound";
+
+vi.mock("@/utils/completionSound");
 
 const buildTask = (overrides: Partial<Task> = {}): Task => ({
   id: crypto.randomUUID(),
@@ -87,6 +91,10 @@ const renderInbox = (initialPath: string = routes.inbox.index) =>
 describe("Inbox", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.clearAllMocks();
+    vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
+      userPreference: { theme: "system", completionSound: "bell", breakAlarmSound: "classic" },
+    });
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
@@ -219,6 +227,7 @@ describe("Inbox", () => {
     );
     expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Pay rent" })).not.toBeInTheDocument();
+    expect(playCompletionSound).toHaveBeenCalledExactlyOnceWith("bell");
   });
 
   it("deletes the open task after confirming and closes its pane", async () => {

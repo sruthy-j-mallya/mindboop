@@ -3,6 +3,7 @@ import { act, fireEvent, screen } from "@testing-library/react";
 import curiosityTimesApi from "@/apis/curiosity_times";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
 import type { ParkingLotItem } from "@/apis/types";
+import userPreferencesApi from "@/apis/user_preferences";
 import { renderWithProviders } from "@/test/utils";
 import { startAlarmSound } from "@/utils/alarmSound";
 import { showNotification } from "@/utils/notifications";
@@ -32,6 +33,9 @@ const advance = (milliseconds: number) => act(() => vi.advanceTimersByTimeAsync(
 
 const renderAlarm = async (parkingLotItem: ParkingLotItem | null) => {
   vi.spyOn(curiosityTimesApi, "show").mockResolvedValue({ parkingLotItem });
+  vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
+    userPreference: { theme: "system", completionSound: "rising", breakAlarmSound: "marimba" },
+  });
   renderWithProviders(<CuriosityAlarm />);
   await advance(0);
 };
@@ -64,7 +68,7 @@ describe("CuriosityAlarm", () => {
 
     await advance(5 * ONE_MINUTE);
 
-    expect(startAlarmSound).toHaveBeenCalledTimes(1);
+    expect(startAlarmSound).toHaveBeenCalledExactlyOnceWith("marimba");
     expect(screen.getByText("Time's up. Got your answer?")).toBeVisible();
     expect(screen.getByRole("button", { name: "5 more minutes" })).toBeVisible();
 

@@ -1,7 +1,11 @@
 import { cn } from "cn";
 
+import type { CreateCompletionPayload } from "@/apis/types";
 import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import { useCompleteTimeLog } from "@/hooks/reactQuery/useTimeLogCompletionsApi";
+import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
+import { unlockAudio } from "@/utils/audioContext";
+import { playCompletionSound } from "@/utils/completionSound";
 
 import FinishedDialog from "./FinishedDialog";
 import ParkingLot from "./ParkingLot";
@@ -10,6 +14,7 @@ import Setup from "./Setup";
 
 const Timer = () => {
   const { data: timeLog, isPending, error } = useCurrentTimeLog();
+  const { data: preference } = useUserPreference();
   // Lives here and not in Session, which unmounts as soon as the completed log stops being the current one.
   const {
     mutate: completeTimeLog,
@@ -18,6 +23,12 @@ const Timer = () => {
     error: completionError,
     reset: resetCompletion,
   } = useCompleteTimeLog();
+
+  // Unlocked in the click, so the chime can play once the save lands and the finished dialog opens.
+  const handleDone = (payload: CreateCompletionPayload) => {
+    unlockAudio();
+    completeTimeLog(payload, { onSuccess: () => playCompletionSound(preference?.completionSound) });
+  };
 
   if (isPending) return null;
 
@@ -36,7 +47,7 @@ const Timer = () => {
             completionError={completionError?.message}
             isCompleting={isCompleting}
             timeLog={timeLog}
-            onDone={completeTimeLog}
+            onDone={handleDone}
           />
           <ParkingLot
             className="mx-auto h-[28rem] w-full max-w-2xl lg:max-w-5xl xl:sticky xl:top-4 xl:h-[calc(100svh-6rem)] xl:max-w-none xl:self-start"
