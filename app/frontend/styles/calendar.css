@@ -25,6 +25,22 @@ html:has(.calendar) body {
   background: var(--card);
 }
 
+/*
+ * The time grid still scrolls, just without a visible scrollbar. The library pads the header by the scrollbar's
+ * width (an inline margin) when the grid overflows; with no scrollbar that would misalign the columns.
+ */
+.calendar .rbc-time-content {
+  scrollbar-width: none;
+}
+
+.calendar .rbc-time-content::-webkit-scrollbar {
+  display: none;
+}
+
+.calendar .rbc-time-header.rbc-overflowing {
+  margin-right: 0 !important;
+}
+
 .calendar .rbc-header {
   padding: 0.5rem 0.25rem;
   border-color: var(--border);
