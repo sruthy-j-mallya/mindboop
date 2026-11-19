@@ -5,16 +5,16 @@ import { Inbox, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import routes from "@/routes";
-import { getTaskListPath } from "@/utils";
 
-import AreaBadge from "../AreaBadge";
 import NewAreaDialog from "../AreaDialog/New";
 import { INBOX_DROP_ID, INBOX_NAME } from "../constants";
+import AreaItem from "./AreaItem";
 import NavItem from "./NavItem";
 import SuggestionChips from "./SuggestionChips";
 import Suggestions from "./Suggestions";
 
-// The Inbox and the areas, oldest first, to switch between and drop tasks on. A column on wide screens, a row that
+// The Inbox and the areas, oldest first, to switch between and drop tasks on (and to edit or delete, from an area's
+// right-click menu). A column on wide screens, a row that
 // scrolls sideways on narrow ones. Until there are areas, the suggestions show here too.
 const AreaNav = () => {
   const [isAdding, setIsAdding] = useState(false);
@@ -44,14 +44,8 @@ const AreaNav = () => {
           target={{ lifeAreaId: null, name: INBOX_NAME }}
           to={routes.inbox.index}
         />
-        {lifeAreas.map(({ id, name, color, icon }) => (
-          <NavItem
-            key={id}
-            icon={<AreaBadge className="size-5" color={color} icon={icon} />}
-            id={id}
-            target={{ lifeAreaId: id, name }}
-            to={getTaskListPath(id)}
-          />
+        {lifeAreas.map((lifeArea) => (
+          <AreaItem key={lifeArea.id} lifeArea={lifeArea} />
         ))}
       </ul>
       {error && (

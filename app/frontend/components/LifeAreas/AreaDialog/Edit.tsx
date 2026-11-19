@@ -1,39 +1,29 @@
 import { useState } from "react";
 
-import { useNavigate } from "react-router";
-import { toast } from "sonner";
-
 import type { LifeArea } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useDeleteLifeArea, useUpdateLifeArea } from "@/hooks/reactQuery/useLifeAreasApi";
-import routes from "@/routes";
+import { useUpdateLifeArea } from "@/hooks/reactQuery/useLifeAreasApi";
 
+import useDeleteArea from "../useDeleteArea";
 import AreaForm from "./AreaForm";
 import type { LifeAreaFormValues } from "./constants";
 
 type EditAreaDialogProps = { lifeArea: LifeArea; onClose: () => void };
 
-// Changes an area, or deletes it after a second click. Its tasks then go back to the Inbox, which opens.
+// Changes an area, or deletes it after a second click. Its tasks then go back to the Inbox.
 const EditAreaDialog = ({ lifeArea, onClose }: EditAreaDialogProps) => {
   const { id, name, color, icon, defaultSound } = lifeArea;
-  const navigate = useNavigate();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const { mutate: updateLifeArea, isPending: isUpdating, error: updateError } = useUpdateLifeArea();
-  const { mutate: deleteLifeArea, isPending: isDeleting, error: deleteError } = useDeleteLifeArea();
+  const { deleteArea, isDeleting, error: deleteError } = useDeleteArea(lifeArea, onClose);
   const error = updateError ?? deleteError;
 
   const handleSubmit = (values: LifeAreaFormValues) =>
     updateLifeArea({ id, ...values }, { onSuccess: onClose });
 
-  const handleDeleted = () => {
-    onClose();
-    navigate(routes.inbox.index);
-    toast(`Deleted ${name}. Its tasks are back in the Inbox.`);
-  };
-
   const handleDelete = () => {
-    if (isConfirmingDelete) deleteLifeArea(id, { onSuccess: handleDeleted });
+    if (isConfirmingDelete) deleteArea();
     else setIsConfirmingDelete(true);
   };
 

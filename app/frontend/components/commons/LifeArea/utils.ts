@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { LIFE_AREA_COLORS, LIFE_AREA_ICONS } from "./constants";
 import type { LifeAreaColorId, LifeAreaIconId } from "./types";
 
@@ -8,3 +10,7 @@ export const getLifeAreaColor = (id: LifeAreaColorId) =>
 // An area's icon (its label and component) by its key, falling back to the first likewise.
 export const findLifeAreaIcon = (id: LifeAreaIconId) =>
   LIFE_AREA_ICONS.find((icon) => icon.id === id) ?? LIFE_AREA_ICONS[0];
+
+// The inline style that hands an area's colour to `.area-tint` and friends.
+export const toAreaColorStyle = (color: LifeAreaColorId) =>
+  ({ "--area-color": getLifeAreaColor(color) }) as CSSProperties;

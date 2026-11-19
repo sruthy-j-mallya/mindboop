@@ -21,12 +21,14 @@ export const buildCreatePayload = ({
   title,
   description,
   estimatedMinutes,
+  lifeAreaId,
   schedule,
   steps,
 }: TaskFormValues): CreateTaskPayload => ({
   title,
   ...(description && { description }),
   estimatedMinutes,
+  lifeAreaId,
   ...schedule,
   checklistItemsAttributes: steps.map(({ text, isDone }) => ({ title: text, isCompleted: isDone })),
 });

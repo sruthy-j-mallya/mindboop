@@ -69,10 +69,22 @@ test("add an area from a suggestion, move a task into it, search and edit it", a
   await expect(page.getByRole("heading", { name: "Career" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Review the PRs" })).toBeVisible();
 
-  // Deleting the area sends its tasks back to the Inbox.
-  await page.getByRole("button", { name: "Edit Career" }).click();
-  await page.getByRole("button", { name: "Delete area" }).click();
-  await page.getByRole("button", { name: "Delete area and move tasks" }).click();
+  // Moving the open task from its pane takes the pane along to the Inbox.
+  await page.getByRole("textbox", { name: "Plan the sprint" }).click();
+  await page.getByRole("button", { name: "Area of life: Career" }).click();
+  await page.getByRole("dialog", { name: "Areas of life" }).getByRole("button", { name: "Inbox" }).click();
+  await expect(page).toHaveURL(/\/inbox\/[\w-]+$/);
+  await expect(page.getByRole("heading", { name: "Plan the sprint" })).toBeVisible();
+
+  // Deleting the area from its right-click menu sends its tasks back to the Inbox.
+  await nav.getByRole("link", { name: "Career" }).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await page
+    .getByRole("dialog", { name: "Delete Career?" })
+    .getByRole("button", { name: "Delete area" })
+    .click();
+  await expect(nav.getByRole("link", { name: "Career" })).toBeHidden();
+  await page.getByRole("link", { name: "Areas of life" }).click();
   await expect(page).toHaveURL("/inbox");
   await expect(page.getByRole("textbox", { name: "Plan the sprint" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Review the PRs" })).toBeVisible();

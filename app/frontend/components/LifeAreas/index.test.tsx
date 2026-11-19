@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { generatePath, Route, Routes, useLocation } from "react-router";
 import { toast } from "sonner";
@@ -302,5 +302,76 @@ describe("LifeAreas", () => {
     expect(destroy).toHaveBeenCalledWith(lifeArea.id, expect.anything());
     await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index));
     expect(await screen.findByText("Deleted Work. Its tasks are back in the Inbox.")).toBeInTheDocument();
+  });
+
+  it("edits an area from its right-click menu in the sidebar", async () => {
+    const lifeArea = buildLifeArea();
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
+    const update = vi.spyOn(lifeAreasApi, "update").mockResolvedValue({ lifeArea });
+    renderLifeAreas();
+
+    fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
+    const dialog = screen.getByRole("dialog", { name: "Edit Work" });
+    await userEvent.click(within(dialog).getByRole("radio", { name: "Rose" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(update).toHaveBeenCalledWith(
+      { id: lifeArea.id, name: "Work", color: "rose", icon: "briefcase", defaultSound: "rain" },
+      expect.anything(),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("deletes an area from its right-click menu, staying on the list in view", async () => {
+    const lifeArea = buildLifeArea();
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
+    const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
+    renderLifeAreas();
+
+    fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+    const dialog = screen.getByRole("dialog", { name: "Delete Work?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(destroy).not.toHaveBeenCalled();
+
+    fireEvent.contextMenu(screen.getByRole("link", { name: "Work" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [] });
+    await userEvent.click(
+      within(screen.getByRole("dialog", { name: "Delete Work?" })).getByRole("button", {
+        name: "Delete area",
+      }),
+    );
+
+    expect(destroy).toHaveBeenCalledWith(lifeArea.id, expect.anything());
+    expect(await screen.findByText("Deleted Work. Its tasks are back in the Inbox.")).toBeInTheDocument();
+    expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index);
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Work" })).not.toBeInTheDocument());
+  });
+
+  it("moves the open task to another area from its pane, which follows it", async () => {
+    const lifeArea = buildLifeArea();
+    const task = buildTask({ title: "Plan the sprint" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    const update = vi
+      .spyOn(tasksApi, "update")
+      .mockResolvedValue({ task: { ...task, lifeAreaId: lifeArea.id } });
+    renderLifeAreas(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    const pane = await screen.findByRole("article");
+    await userEvent.click(await within(pane).findByRole("button", { name: "Area of life: Inbox" }));
+    const picker = await screen.findByRole("dialog", { name: "Areas of life" });
+    expect(within(picker).getByRole("button", { name: "Inbox" })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(within(picker).getByRole("button", { name: "Work" }));
+
+    expect(update).toHaveBeenCalledWith({ id: task.id, lifeAreaId: lifeArea.id }, expect.anything());
+    await waitFor(() =>
+      expect(screen.getByTestId("path")).toHaveTextContent(
+        generatePath(routes.lifeAreas.task, { lifeAreaId: lifeArea.id, taskId: task.id }),
+      ),
+    );
   });
 });

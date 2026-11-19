@@ -5,9 +5,9 @@ import { useForm, useWatch } from "react-hook-form";
 import { NO_SOUND, SOUNDS } from "@/components/commons/Ambience/constants";
 import FormField from "@/components/commons/FormField";
 import { LIFE_AREA_COLORS, LIFE_AREA_ICONS } from "@/components/commons/LifeArea/constants";
+import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
 import { Button } from "@/components/ui/button";
 
-import { toAreaColorStyle } from "../utils";
 import ChoiceField from "./ChoiceField";
 import { LIFE_AREA_VALIDATION_SCHEMA, type LifeAreaFormValues } from "./constants";
 

@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 
 import type { LifeArea } from "@/apis/types";
+import LifeAreaBadge from "@/components/commons/LifeArea/Badge";
 import { Button } from "@/components/ui/button";
 
-import AreaBadge from "../AreaBadge";
 import EditAreaDialog from "../AreaDialog/Edit";
 import { INBOX_NAME } from "../constants";
 
@@ -28,7 +28,11 @@ const BoardHeading = ({ id, lifeArea }: BoardHeadingProps) => {
 
   return (
     <div className="flex items-center gap-3">
-      <AreaBadge className="size-8 rounded-lg [&_svg]:size-4.5" color={lifeArea.color} icon={lifeArea.icon} />
+      <LifeAreaBadge
+        className="size-8 rounded-lg [&_svg]:size-4.5"
+        color={lifeArea.color}
+        icon={lifeArea.icon}
+      />
       <h1 className="min-w-0 truncate text-2xl font-semibold" id={id}>
         {lifeArea.name}
       </h1>

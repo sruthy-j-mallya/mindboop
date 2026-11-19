@@ -1,14 +1,13 @@
 import { cn } from "cn";
 
 import type { LifeArea } from "@/apis/types";
-import { findLifeAreaIcon } from "@/components/commons/LifeArea/utils";
 
-import { toAreaColorStyle } from "./utils";
+import { findLifeAreaIcon, toAreaColorStyle } from "./utils";
 
-type AreaBadgeProps = Pick<LifeArea, "color" | "icon"> & { className?: string };
+type LifeAreaBadgeProps = Pick<LifeArea, "color" | "icon"> & { className?: string };
 
 // An area's icon on a tile of its colour.
-const AreaBadge = ({ color, icon, className }: AreaBadgeProps) => {
+const LifeAreaBadge = ({ color, icon, className }: LifeAreaBadgeProps) => {
   const lifeAreaIcon = findLifeAreaIcon(icon);
   const Icon = lifeAreaIcon.icon;
 
@@ -23,4 +22,4 @@ const AreaBadge = ({ color, icon, className }: AreaBadgeProps) => {
   );
 };
 
-export default AreaBadge;
+export default LifeAreaBadge;

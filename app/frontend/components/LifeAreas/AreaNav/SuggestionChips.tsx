@@ -3,11 +3,11 @@ import { toast } from "sonner";
 import type { ApiError } from "@/apis/axios";
 import type { CreateLifeAreaPayload, LifeArea } from "@/apis/types";
 import { SOUNDS } from "@/components/commons/Ambience/constants";
-import { findLifeAreaIcon } from "@/components/commons/LifeArea/utils";
+import { findLifeAreaIcon, toAreaColorStyle } from "@/components/commons/LifeArea/utils";
 import { useCreateLifeArea } from "@/hooks/reactQuery/useLifeAreasApi";
 
 import { LIFE_AREA_SUGGESTIONS } from "../constants";
-import { isNameTaken, toAreaColorStyle } from "../utils";
+import { isNameTaken } from "../utils";
 
 type SuggestionChipsProps = { lifeAreas: LifeArea[] };
 

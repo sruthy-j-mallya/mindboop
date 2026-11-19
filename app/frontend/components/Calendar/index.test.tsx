@@ -1,12 +1,13 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { addDays, addMonths, format, startOfDay, startOfHour, subHours } from "date-fns";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import calendarEventsApi from "@/apis/calendar_events";
 import currentTimeLogsApi from "@/apis/current_time_logs";
+import lifeAreasApi from "@/apis/life_areas";
 import tasksApi from "@/apis/tasks";
-import type { Task, TimeLog } from "@/apis/types";
+import type { LifeArea, Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import { renderWithProviders } from "@/test/utils";
 
@@ -61,7 +62,21 @@ const chooseView = async (view: string) => {
   await userEvent.click(screen.getByRole("option", { name: view }));
 };
 
+const LIFE_AREA: LifeArea = {
+  id: "area-1",
+  name: "Work",
+  color: "teal",
+  icon: "briefcase",
+  defaultSound: "none",
+  createdAt: "2026-11-05T10:00:00.000Z",
+  updatedAt: "2026-11-05T10:00:00.000Z",
+};
+
 describe("Calendar", () => {
+  beforeEach(() => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [LIFE_AREA] });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     localStorage.clear();
@@ -104,6 +119,33 @@ describe("Calendar", () => {
     expect(within(dialog).getByRole("button", { name: "Add step" })).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "Delete task" })).toBeInTheDocument();
     expect(await within(dialog).findByRole("button", { name: "Start" })).toBeEnabled();
+  });
+
+  it("colours a task in an area of life with the area's colour", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({
+      tasks: [{ ...TASK, lifeAreaId: LIFE_AREA.id }],
+      timeLogs: [],
+    });
+    renderWithProviders(<Calendar />);
+    await chooseView("Month");
+
+    const event = (await screen.findByTitle("Plan the week")).closest<HTMLElement>(".rbc-event");
+    await waitFor(() => expect(event).toHaveClass("calendar-event-area"));
+    expect(event?.style.getPropertyValue("--area-color")).toBe("#0f766e");
+  });
+
+  it("moves a task to an area of life from its popover", async () => {
+    const update = vi
+      .spyOn(tasksApi, "update")
+      .mockResolvedValue({ task: { ...TASK, lifeAreaId: LIFE_AREA.id } });
+    const dialog = await openTask();
+
+    await userEvent.click(await within(dialog).findByRole("button", { name: "Area of life: Inbox" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Work" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({ id: "task-1", lifeAreaId: LIFE_AREA.id }, expect.anything()),
+    );
   });
 
   it("shows an unset estimate as just its icon, which still opens the picker", async () => {
