@@ -1,12 +1,16 @@
+import { type ChangeEvent, type ReactNode, useState } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ReactNode } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { NO_SOUND, SOUNDS } from "@/components/commons/Ambience/constants";
+import type { SoundId } from "@/components/commons/Ambience/types";
+import useAmbience from "@/components/commons/Ambience/useAmbience";
 import FormField from "@/components/commons/FormField";
 import { LIFE_AREA_COLORS, LIFE_AREA_ICONS } from "@/components/commons/LifeArea/constants";
 import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
 import { Button } from "@/components/ui/button";
+import useAmbienceStore from "@/stores/useAmbienceStore";
 
 import ChoiceField from "./ChoiceField";
 import { LIFE_AREA_VALIDATION_SCHEMA, type LifeAreaFormValues } from "./constants";
@@ -35,6 +39,7 @@ const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({
 }));
 
 // The add and edit dialogs' form: a name, a colour, an icon (shown in the colour picked) and the background sound.
+// Picking a sound previews it at the app's volume until another is picked or the dialog closes.
 const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, children }: AreaFormProps) => {
   const {
     register,
@@ -45,6 +50,13 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
     defaultValues: initialValues,
     resolver: zodResolver(LIFE_AREA_VALIDATION_SCHEMA),
   });
+  const [previewSoundId, setPreviewSoundId] = useState<SoundId>(NO_SOUND);
+  const volume = useAmbienceStore((state) => state.volume);
+  useAmbience({ soundId: previewSoundId, volume, isPlaying: true });
+
+  const handleSoundChange = (event: ChangeEvent<HTMLInputElement>) =>
+    setPreviewSoundId(event.target.value as SoundId);
+
   const colorStyle = toAreaColorStyle(useWatch({ control, name: "color" }));
   const iconOptions = LIFE_AREA_ICONS.map(({ id, label, icon: Icon }) => ({
     value: id,
@@ -62,7 +74,7 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
         hint="Plays when you start a session on one of the area’s tasks."
         legend="Background sound"
         options={SOUND_OPTIONS}
-        registration={register("defaultSound")}
+        registration={register("defaultSound", { onChange: handleSoundChange })}
       />
       {error && (
         <p className="text-sm text-destructive" role="alert">
