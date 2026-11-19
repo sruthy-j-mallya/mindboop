@@ -1,4 +1,4 @@
-import { Boxes, CalendarDays, LogOut, Repeat, Settings, SquareParking, Timer, Zap } from "lucide-react";
+import { Boxes, CalendarDays, LogOut, Settings, SquareParking, SunMoon, Timer, Zap } from "lucide-react";
 import { Link, useLocation, useMatch } from "react-router";
 
 import {
@@ -64,7 +64,7 @@ const AppSidebar = () => {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isRoutinesActive} tooltip="Routines">
                   <Link to={routes.routines.index} onClick={handleNavigate}>
-                    <Repeat />
+                    <SunMoon />
                     <span>Routines</span>
                   </Link>
                 </SidebarMenuButton>
