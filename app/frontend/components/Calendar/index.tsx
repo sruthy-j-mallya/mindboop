@@ -2,7 +2,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "@/styles/calendar.css";
 
-import { type SyntheticEvent, useMemo, useRef, useState } from "react";
+import { type SyntheticEvent, useCallback, useMemo, useRef, useState } from "react";
 
 import { startOfDay, subHours } from "date-fns";
 import type { SlotInfo, ToolbarProps, View, ViewsProps } from "react-big-calendar";
@@ -10,11 +10,11 @@ import { toast } from "sonner";
 
 import { useCalendarEvents } from "@/hooks/reactQuery/useCalendarEventsApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
+import { writeStorage } from "@/utils/storage";
 
 import {
   CALENDAR_VIEWS,
-  DEFAULT_MULTI_DAY_COUNT,
-  DEFAULT_VIEW,
+  DAY_COUNT_STORAGE_KEY,
   EVENT_CLASS_NAMES,
   EVENT_KINDS,
   LOCALIZER,
@@ -23,6 +23,7 @@ import {
   SLOT_CLASS_NAMES,
   SLOT_MINUTES,
   SLOTS_PER_HOUR,
+  VIEW_STORAGE_KEY,
 } from "./constants";
 import DragAndDropCalendar from "./DragAndDropCalendar";
 import MultiDayView from "./MultiDayView";
@@ -39,6 +40,8 @@ import {
   getLogWindowStart,
   getSelectionIntent,
   getVisibleRange,
+  readStoredDayCount,
+  readStoredView,
   shiftDate,
   toAnchorRect,
   toCalendarEvents,
@@ -62,9 +65,9 @@ const getEventProps = ({ kind }: CalendarEvent) => ({
 // logs time in the last 24 hours; tasks open for editing on click, and both move and resize by dragging. Scrolling
 // sideways pages through dates, as does scrolling up and down in the month view.
 const Calendar = () => {
-  const [view, setView] = useState<CalendarView>(DEFAULT_VIEW);
+  const [view, setView] = useState<CalendarView>(readStoredView);
   const [date, setDate] = useState(() => new Date());
-  const [dayCount, setDayCount] = useState<number>(DEFAULT_MULTI_DAY_COUNT);
+  const [dayCount, setDayCount] = useState<number>(readStoredDayCount);
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [scrollToTime] = useState(() => subHours(new Date(), SCROLL_BACK_HOURS));
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -81,17 +84,26 @@ const Calendar = () => {
     [tasks, timeLogs, now, movedTimes],
   );
 
+  const handleDayCountChange = useCallback((nextDayCount: number) => {
+    setDayCount(nextDayCount);
+    writeStorage(DAY_COUNT_STORAGE_KEY, String(nextDayCount));
+  }, []);
+
   // react-big-calendar only hands its toolbar its own props, so the day count goes in through a wrapper.
   const components = useMemo(
     () => ({
       toolbar: (toolbarProps: ToolbarProps<CalendarEvent>) => (
-        <Toolbar {...toolbarProps} dayCount={dayCount} onDayCountChange={setDayCount} />
+        <Toolbar {...toolbarProps} dayCount={dayCount} onDayCountChange={handleDayCountChange} />
       ),
     }),
-    [dayCount],
+    [dayCount, handleDayCountChange],
   );
 
-  const handleView = (nextView: View) => setView(nextView as CalendarView);
+  // The view and day count are kept across reloads; the date always opens on today.
+  const handleView = (nextView: View) => {
+    setView(nextView as CalendarView);
+    writeStorage(VIEW_STORAGE_KEY, nextView);
+  };
 
   const handleWheelStep = (step: number) => setDate((current) => shiftDate(view, current, step, dayCount));
   useWheelPaging(calendarRef, view, handleWheelStep);

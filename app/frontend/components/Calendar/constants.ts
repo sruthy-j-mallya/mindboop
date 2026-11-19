@@ -37,6 +37,10 @@ export const VIEW_OPTIONS = [
 export const DEFAULT_MULTI_DAY_COUNT = 3;
 export const MULTI_DAY_COUNT_OPTIONS = [2, 3, 4, 5, 6] as const;
 
+// The view and day count last picked, so a reload opens the calendar as it was left.
+export const VIEW_STORAGE_KEY = "calendar.view";
+export const DAY_COUNT_STORAGE_KEY = "calendar.day_count";
+
 // The time grid snaps to quarter hours, with a line every hour.
 export const SLOT_MINUTES = 15;
 export const SLOTS_PER_HOUR = 4;

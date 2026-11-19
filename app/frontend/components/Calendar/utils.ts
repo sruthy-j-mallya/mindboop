@@ -22,17 +22,23 @@ import type { SyntheticEvent } from "react";
 import type { Task, TimeLog } from "@/apis/types";
 import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
+import { readStorage } from "@/utils/storage";
 
 import {
   CALENDAR_VIEWS,
+  DAY_COUNT_STORAGE_KEY,
   DEFAULT_MULTI_DAY_COUNT,
   DEFAULT_TASK_MINUTES,
+  DEFAULT_VIEW,
   EVENT_KINDS,
   INITIAL_WHEEL_GESTURE,
   MOVE_ERRORS,
+  MULTI_DAY_COUNT_OPTIONS,
   SELECTION_ERRORS,
   SLOT_MINUTES,
   TIME_LOG_WINDOW_HOURS,
+  VIEW_OPTIONS,
+  VIEW_STORAGE_KEY,
   WEEK_OPTIONS,
   WHEEL_DELTA_MODE_PIXELS,
   WHEEL_GESTURE_GAP,
@@ -56,6 +62,20 @@ import type {
 } from "./types";
 
 const MILLISECONDS_PER_MINUTE = 60_000;
+
+// The view last picked, or the default when none was kept (or what was kept is no longer a view).
+export const readStoredView = (): CalendarView => {
+  const stored = readStorage(VIEW_STORAGE_KEY);
+
+  return VIEW_OPTIONS.find(({ value }) => value === stored)?.value ?? DEFAULT_VIEW;
+};
+
+// The multi-day view's day count last picked, or the default when none was kept (or it's no longer offered).
+export const readStoredDayCount = (): number => {
+  const stored = Number(readStorage(DAY_COUNT_STORAGE_KEY));
+
+  return MULTI_DAY_COUNT_OPTIONS.find((count) => count === stored) ?? DEFAULT_MULTI_DAY_COUNT;
+};
 
 // `dayCount` days from the chosen one.
 export const getMultiDayRange = (date: Date, dayCount: number): TimeRange => {

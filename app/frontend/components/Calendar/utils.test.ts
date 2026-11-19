@@ -1,8 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import type { Task, TimeLog } from "@/apis/types";
 
-import { CALENDAR_VIEWS, INITIAL_WHEEL_GESTURE, MOVE_ERRORS, SELECTION_ERRORS } from "./constants";
+import {
+  CALENDAR_VIEWS,
+  DAY_COUNT_STORAGE_KEY,
+  DEFAULT_MULTI_DAY_COUNT,
+  DEFAULT_VIEW,
+  INITIAL_WHEEL_GESTURE,
+  MOVE_ERRORS,
+  SELECTION_ERRORS,
+  VIEW_STORAGE_KEY,
+} from "./constants";
 import type { CalendarEvent, CalendarView, WheelInput } from "./types";
 import {
   getCurrentSlotStart,
@@ -11,6 +20,8 @@ import {
   getPagingDistance,
   getSelectionIntent,
   getVisibleRange,
+  readStoredDayCount,
+  readStoredView,
   shiftDate,
   stepWheelGesture,
   toCalendarEvents,
@@ -58,6 +69,29 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => ({
   createdAt: "2026-11-12T08:30:00.000Z",
   updatedAt: "2026-11-12T08:30:00.000Z",
   ...overrides,
+});
+
+describe("readStoredView and readStoredDayCount", () => {
+  afterEach(() => localStorage.clear());
+
+  it("reads back the view and day count last picked", () => {
+    localStorage.setItem(VIEW_STORAGE_KEY, CALENDAR_VIEWS.MONTH);
+    localStorage.setItem(DAY_COUNT_STORAGE_KEY, "5");
+
+    expect(readStoredView()).toBe(CALENDAR_VIEWS.MONTH);
+    expect(readStoredDayCount()).toBe(5);
+  });
+
+  it("falls back to the defaults when nothing, or nothing valid, was kept", () => {
+    expect(readStoredView()).toBe(DEFAULT_VIEW);
+    expect(readStoredDayCount()).toBe(DEFAULT_MULTI_DAY_COUNT);
+
+    localStorage.setItem(VIEW_STORAGE_KEY, "agenda");
+    localStorage.setItem(DAY_COUNT_STORAGE_KEY, "42");
+
+    expect(readStoredView()).toBe(DEFAULT_VIEW);
+    expect(readStoredDayCount()).toBe(DEFAULT_MULTI_DAY_COUNT);
+  });
 });
 
 describe("getVisibleRange", () => {

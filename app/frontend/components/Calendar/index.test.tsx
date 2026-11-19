@@ -54,7 +54,10 @@ const chooseView = async (view: string) => {
 };
 
 describe("Calendar", () => {
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
 
   it("shows the visible range's tasks and time logs, each in its own style", async () => {
     const fetchList = vi
@@ -112,6 +115,20 @@ describe("Calendar", () => {
       from: addDays(today, 5).toISOString(),
       to: addDays(today, 10).toISOString(),
     });
+  });
+
+  it("opens in the view and day count last picked after a reload", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    const { unmount } = renderWithProviders(<Calendar />);
+    await chooseView("Multi-day");
+    await userEvent.click(screen.getByRole("combobox", { name: "Number of days" }));
+    await userEvent.click(screen.getByRole("option", { name: "4 days" }));
+    unmount();
+
+    renderWithProviders(<Calendar />);
+
+    expect(screen.getByRole("combobox", { name: "Calendar view" })).toHaveTextContent("Multi-day");
+    expect(screen.getAllByRole("columnheader")).toHaveLength(4);
   });
 
   it("pages through months when the month view is scrolled, one page per gesture", async () => {
