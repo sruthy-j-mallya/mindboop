@@ -114,10 +114,11 @@ describe("toWheelDelta", () => {
 });
 
 describe("getPagingDistance", () => {
-  it("pages sideways in every view, and up and down only in the month view", () => {
+  it("pages sideways in every view, and up and down only in the month and year views", () => {
     expect(getPagingDistance(CALENDAR_VIEWS.WEEK, { x: 30, y: 10 })).toBe(30);
     expect(getPagingDistance(CALENDAR_VIEWS.DAY, { x: 10, y: 30 })).toBe(0);
-    expect(getPagingDistance(CALENDAR_VIEWS.YEAR, { x: 0, y: 30 })).toBe(0);
+    expect(getPagingDistance(CALENDAR_VIEWS.YEAR, { x: 0, y: 30 })).toBe(30);
+    expect(getPagingDistance(CALENDAR_VIEWS.YEAR, { x: -30, y: 0 })).toBe(-30);
     expect(getPagingDistance(CALENDAR_VIEWS.MONTH, { x: 0, y: -30 })).toBe(-30);
   });
 });

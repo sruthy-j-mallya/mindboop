@@ -100,6 +100,32 @@ describe("Calendar", () => {
     );
   });
 
+  it.each([
+    ["up and down", { deltaY: 100 }, 1],
+    ["sideways", { deltaX: -100 }, -1],
+  ])("pages through years when the year view is scrolled %s", async (_, wheel, step) => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    renderWithProviders(<Calendar />);
+    await userEvent.click(screen.getByRole("tab", { name: "Year" }));
+    const thisYear = new Date().getFullYear();
+
+    fireEvent.wheel(screen.getByRole("region", { name: `January ${thisYear}` }), wheel);
+
+    expect(screen.getByRole("region", { name: `January ${thisYear + step}` })).toBeInTheDocument();
+  });
+
+  it("pages back a month when the month view is scrolled sideways", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    renderWithProviders(<Calendar />);
+    await userEvent.click(screen.getByRole("tab", { name: "Month" }));
+
+    fireEvent.wheel(screen.getByRole("table"), { deltaX: -100 });
+
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      format(addMonths(new Date(), -1), "MMMM yyyy"),
+    );
+  });
+
   it("pages back a week when scrolled sideways, but leaves scrolling up and down to the grid", async () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
     renderWithProviders(<Calendar />);
