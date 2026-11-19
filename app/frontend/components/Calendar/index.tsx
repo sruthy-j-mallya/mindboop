@@ -29,6 +29,7 @@ import DragAndDropCalendar from "./DragAndDropCalendar";
 import MultiDayView from "./MultiDayView";
 import EditTaskPopover from "./TaskPopover/Edit";
 import NewTaskPopover from "./TaskPopover/New";
+import ShowTaskPopover from "./TaskPopover/Show";
 import TimeLogPopover from "./TimeLogPopover";
 import Toolbar from "./Toolbar";
 import type { CalendarEvent, CalendarView, PopoverState } from "./types";
@@ -62,7 +63,8 @@ const getEventProps = ({ kind }: CalendarEvent) => ({
 });
 
 // Past time logs and upcoming tasks on one grid. Clicking or dragging across empty time adds a task from now on, or
-// logs time in the last 24 hours; tasks open for editing on click, and both move and resize by dragging. Scrolling
+// logs time in the last 24 hours; tasks open for editing on click, time logs show their task read only, and both move and
+// resize by dragging. Scrolling
 // sideways pages through dates, as does scrolling up and down in the month view.
 const Calendar = () => {
   const [view, setView] = useState<CalendarView>(readStoredView);
@@ -123,11 +125,11 @@ const Calendar = () => {
     else if (intent.error) toast.error(intent.error);
   };
 
-  // Time logs only move and resize; a click on one does nothing.
+  // A time log shows its task read only; one logged without a task has nothing to show.
   const handleSelectEvent = (event: CalendarEvent, domEvent: SyntheticEvent<HTMLElement>) => {
-    if (event.kind === EVENT_KINDS.TASK) {
-      setPopover({ kind: "editTask", anchor: eventToAnchorRect(domEvent), task: event.task });
-    }
+    const anchor = eventToAnchorRect(domEvent);
+    if (event.kind === EVENT_KINDS.TASK) setPopover({ kind: "editTask", anchor, task: event.task });
+    else if (event.timeLog.taskId) setPopover({ kind: "showTask", anchor, taskId: event.timeLog.taskId });
   };
 
   // Past time is shaded, and time beyond the 24 hours that can be logged more so.
@@ -182,6 +184,9 @@ const Calendar = () => {
       )}
       {popover?.kind === "editTask" && (
         <EditTaskPopover anchor={popover.anchor} task={popover.task} onClose={handleClosePopover} />
+      )}
+      {popover?.kind === "showTask" && (
+        <ShowTaskPopover anchor={popover.anchor} taskId={popover.taskId} onClose={handleClosePopover} />
       )}
       {popover?.kind === "newTimeLog" && (
         <TimeLogPopover anchor={popover.anchor} range={popover.range} onClose={handleClosePopover} />

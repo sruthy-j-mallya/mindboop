@@ -126,6 +126,41 @@ describe("Calendar", () => {
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Edit task" })).not.toBeInTheDocument());
   });
 
+  it("shows a time log's task read only when the log is clicked", async () => {
+    const task: Task = {
+      ...TASK,
+      isCompleted: true,
+      checklistItems: [{ id: "step-1", title: "List the meetings", isCompleted: true }],
+    };
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({
+      tasks: [],
+      timeLogs: [{ ...TIME_LOG, taskId: "task-1" }],
+    });
+    const show = vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderWithProviders(<Calendar />);
+    await chooseView("Month");
+    await userEvent.click(await screen.findByTitle("Answer emails"));
+
+    const dialog = await screen.findByRole("dialog", { name: "Task details" });
+    expect(await within(dialog).findByRole("heading", { name: "Plan the week" })).toBeInTheDocument();
+    expect(show).toHaveBeenCalledWith("task-1");
+    expect(within(dialog).getByRole("checkbox", { name: "Completed" })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: "Completed" })).toBeDisabled();
+    expect(within(dialog).getByRole("checkbox", { name: "List the meetings" })).toBeDisabled();
+    expect(within(dialog).getByText("30 min")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("opens nothing for a time log without a task", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [TIME_LOG] });
+    renderWithProviders(<Calendar />);
+    await chooseView("Month");
+    await userEvent.click(await screen.findByTitle("Answer emails"));
+
+    expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument();
+  });
+
   it("closes the task's popover once the task is deleted", async () => {
     const destroy = vi.spyOn(tasksApi, "destroy").mockResolvedValue(undefined as never);
     const dialog = await openTask();
