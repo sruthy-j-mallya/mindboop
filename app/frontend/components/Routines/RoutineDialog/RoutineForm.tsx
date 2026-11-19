@@ -1,0 +1,134 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { ReactNode } from "react";
+import { useForm, useWatch } from "react-hook-form";
+
+import { SOUNDS } from "@/components/commons/Ambience/constants";
+import useSoundPreview from "@/components/commons/Ambience/useSoundPreview";
+import ChoiceField from "@/components/commons/ChoiceField";
+import FormField from "@/components/commons/FormField";
+import { LIFE_AREA_COLORS } from "@/components/commons/LifeArea/constants";
+import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
+import { ROUTINE_ICONS } from "@/components/commons/Routine/constants";
+import { Button } from "@/components/ui/button";
+
+import {
+  DURATION_PRESETS,
+  ROUTINE_MAX_MINUTES,
+  ROUTINE_MIN_MINUTES,
+  ROUTINE_VALIDATION_SCHEMA,
+  type RoutineFormValues,
+} from "./constants";
+import ReminderField from "./ReminderField";
+
+type RoutineFormProps = {
+  initialValues: RoutineFormValues;
+  submitLabel: string;
+  isSubmitting: boolean;
+  error?: string;
+  onSubmit: (values: RoutineFormValues) => void;
+  children?: ReactNode;
+};
+
+const COLOR_OPTIONS = LIFE_AREA_COLORS.map(({ id, label, value }) => ({
+  value: id,
+  label,
+  content: <span className="size-5 rounded-full" style={{ background: value }} />,
+}));
+
+const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({
+  value: id,
+  label: id === "none" ? "Keep the current sound" : label,
+  content: <Icon className="size-4" />,
+}));
+
+// The add and edit dialogs' form: a name, how long, how it looks, what it sounds like, and an optional reminder.
+const RoutineForm = ({
+  initialValues,
+  submitLabel,
+  isSubmitting,
+  error,
+  onSubmit,
+  children,
+}: RoutineFormProps) => {
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm<RoutineFormValues>({
+    defaultValues: initialValues,
+    resolver: zodResolver(ROUTINE_VALIDATION_SCHEMA),
+  });
+  const handleSoundChange = useSoundPreview();
+  const colorStyle = toAreaColorStyle(useWatch({ control, name: "color" }));
+  const durationMinutes = useWatch({ control, name: "durationMinutes" });
+  const iconOptions = ROUTINE_ICONS.map(({ id, label, icon: Icon }) => ({
+    value: id,
+    label,
+    style: colorStyle,
+    content: <Icon className="size-4 text-(--area-color)" />,
+  }));
+
+  const handlePreset = (minutes: number) => setValue("durationMinutes", minutes, { shouldValidate: true });
+
+  return (
+    <form noValidate className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
+      <FormField
+        autoComplete="off"
+        error={errors.title?.message}
+        label="Name"
+        placeholder="Shower, meditation, fold clothes…"
+        {...register("title")}
+      />
+      <div className="grid gap-2">
+        <FormField
+          className="w-28"
+          error={errors.durationMinutes?.message}
+          inputMode="numeric"
+          label="Minutes"
+          max={ROUTINE_MAX_MINUTES}
+          min={ROUTINE_MIN_MINUTES}
+          type="number"
+          {...register("durationMinutes", { valueAsNumber: true })}
+        />
+        <div aria-label="Common durations" className="flex flex-wrap gap-1.5" role="group">
+          {DURATION_PRESETS.map((minutes) => (
+            <Button
+              key={minutes}
+              aria-pressed={durationMinutes === minutes}
+              size="sm"
+              type="button"
+              variant={durationMinutes === minutes ? "secondary" : "ghost"}
+              onClick={() => handlePreset(minutes)}
+            >
+              {minutes} min
+            </Button>
+          ))}
+        </div>
+      </div>
+      <ChoiceField legend="Icon" options={iconOptions} registration={register("icon")} />
+      <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
+      <ChoiceField
+        hint="Plays when you start the routine. Pick one to hear a few seconds."
+        legend="Background sound"
+        options={SOUND_OPTIONS}
+        registration={register("sound", { onChange: handleSoundChange })}
+      />
+      <ReminderField control={control} errors={errors} register={register} />
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {children}
+        <Button disabled={isSubmitting} type="submit">
+          {submitLabel}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+export default RoutineForm;

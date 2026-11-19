@@ -4,6 +4,15 @@ FactoryBot.define do
     mode { "stopwatch" }
     started_at { Time.current }
 
+    # A session started from a routine, with no task.
+    trait :routine do
+      task { nil }
+      routine
+      user { routine.user }
+      mode { "timer" }
+      timer_preset { routine.duration_minutes }
+    end
+
     # A session logged by hand from the Calendar, with only a title.
     trait :manual do
       task { nil }

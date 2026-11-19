@@ -3,9 +3,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { DISCARD_BELOW_MINUTES } from "@/constants";
 import { useDeleteTimeLog } from "@/hooks/reactQuery/useTimeLogsApi";
 
-type DiscardDialogProps = { timeLogId: string; onClose: () => void };
+type DiscardDialogProps = {
+  timeLogId: string;
+  // Chosen by the user (a routine's session can go at any time), rather than forced by a session too short to log.
+  isChosen?: boolean;
+  onClose: () => void;
+};
 
-const DiscardDialog = ({ timeLogId, onClose }: DiscardDialogProps) => {
+const DiscardDialog = ({ timeLogId, isChosen = false, onClose }: DiscardDialogProps) => {
   const { mutate: deleteTimeLog, isPending, error } = useDeleteTimeLog();
 
   const handleDiscard = () => deleteTimeLog(timeLogId, { onSuccess: onClose });
@@ -16,8 +21,9 @@ const DiscardDialog = ({ timeLogId, onClose }: DiscardDialogProps) => {
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl">Discard this timer?</DialogTitle>
           <DialogDescription className="text-base">
-            You&apos;ve focused for under {DISCARD_BELOW_MINUTES} minutes, which is too short to log. Ending
-            now discards the timer and it won&apos;t be saved.
+            {isChosen
+              ? "This session won’t be saved or counted. No harm done: the routine is here whenever you want it."
+              : `You've focused for under ${DISCARD_BELOW_MINUTES} minutes, which is too short to log. Ending now discards the timer and it won't be saved.`}
           </DialogDescription>
         </DialogHeader>
         {error && (

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { LogOut, PartyPopper } from "lucide-react";
+import { LogOut, PartyPopper, X } from "lucide-react";
 
 import type { TimeLog } from "@/apis/types";
 import BailDialog from "@/components/commons/BailDialog";
@@ -24,6 +24,9 @@ const SwitchSessionDialog = ({ timeLog, onClose, onSwitch }: SwitchSessionDialog
   const { mutate: completeTimeLog, isPending: isCompleting, error: completionError } = useCompleteTimeLog();
   const { mutate: deleteTimeLog, isPending: isDiscarding, error: discardError } = useDeleteTimeLog();
   const isEnding = isCompleting || isDiscarding;
+  // A routine's session has no task to leave breadcrumbs on, so it's marked as done or discarded instead.
+  const canBail = !timeLog.routineId;
+  const onTheClock = timeLog.routineId ? "A routine" : "Another task";
   const error = completionError ?? discardError;
 
   const handleBail = () => setShowBailDialog(true);
@@ -40,7 +43,7 @@ const SwitchSessionDialog = ({ timeLog, onClose, onSwitch }: SwitchSessionDialog
           <DialogDescription className="text-base">
             {isTooShort
               ? `You've focused for under ${DISCARD_BELOW_MINUTES} minutes, too short to log. Switching discards this session.`
-              : "Another task is on the clock. Wrap it up to start this one."}
+              : `${onTheClock} is on the clock. Wrap it up to start this one.`}
           </DialogDescription>
         </DialogHeader>
         <RunningSession timeLog={timeLog} />
@@ -55,10 +58,17 @@ const SwitchSessionDialog = ({ timeLog, onClose, onSwitch }: SwitchSessionDialog
           </Button>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <Button disabled={isEnding} size="lg" type="button" variant="outline" onClick={handleBail}>
-              <LogOut />
-              Bail out
-            </Button>
+            {canBail ? (
+              <Button disabled={isEnding} size="lg" type="button" variant="outline" onClick={handleBail}>
+                <LogOut />
+                Bail out
+              </Button>
+            ) : (
+              <Button disabled={isEnding} size="lg" type="button" variant="outline" onClick={handleDiscard}>
+                <X />
+                Discard
+              </Button>
+            )}
             <Button disabled={isEnding} size="lg" type="button" onClick={handleDone}>
               <PartyPopper />
               Mark as done

@@ -66,7 +66,7 @@ class ParkingLotItem < ApplicationRecord
     end
 
     def time_log_is_the_users
-      return if time_log.task.user_id == user_id
+      return if time_log.user_id == user_id
 
       errors.add(:time_log, "must be one of your sessions")
     end

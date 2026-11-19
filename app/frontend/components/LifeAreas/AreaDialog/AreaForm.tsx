@@ -3,12 +3,13 @@ import type { ReactNode } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { NO_SOUND, SOUNDS } from "@/components/commons/Ambience/constants";
+import useSoundPreview from "@/components/commons/Ambience/useSoundPreview";
+import ChoiceField from "@/components/commons/ChoiceField";
 import FormField from "@/components/commons/FormField";
 import { LIFE_AREA_COLORS, LIFE_AREA_ICONS } from "@/components/commons/LifeArea/constants";
 import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
 import { Button } from "@/components/ui/button";
 
-import ChoiceField from "./ChoiceField";
 import { LIFE_AREA_VALIDATION_SCHEMA, type LifeAreaFormValues } from "./constants";
 
 type AreaFormProps = {
@@ -45,6 +46,7 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
     defaultValues: initialValues,
     resolver: zodResolver(LIFE_AREA_VALIDATION_SCHEMA),
   });
+  const handleSoundChange = useSoundPreview();
   const colorStyle = toAreaColorStyle(useWatch({ control, name: "color" }));
   const iconOptions = LIFE_AREA_ICONS.map(({ id, label, icon: Icon }) => ({
     value: id,
@@ -59,10 +61,10 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
       <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
       <ChoiceField legend="Icon" options={iconOptions} registration={register("icon")} />
       <ChoiceField
-        hint="Plays when you start a session on one of the area’s tasks."
+        hint="Plays when you start a session on one of the area’s tasks. Pick one to hear a few seconds."
         legend="Background sound"
         options={SOUND_OPTIONS}
-        registration={register("defaultSound")}
+        registration={register("defaultSound", { onChange: handleSoundChange })}
       />
       {error && (
         <p className="text-sm text-destructive" role="alert">

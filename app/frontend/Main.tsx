@@ -13,6 +13,9 @@ import Login from "@/components/Login";
 import ParkingLot from "@/components/ParkingLot";
 import QuickStart from "@/components/QuickStart";
 import ResetPassword from "@/components/ResetPassword";
+import Routines from "@/components/Routines";
+import NoRoutineSelected from "@/components/Routines/NoRoutineSelected";
+import RoutinePane from "@/components/Routines/RoutinePane";
 import Settings from "@/components/Settings";
 import Signup from "@/components/Signup";
 import Timer from "@/components/Timer";
@@ -23,6 +26,10 @@ const Main = () => (
     <Route element={<PrivateRoute />}>
       <Route element={<AppLayout />}>
         <Route element={<QuickStart />} path={routes.root} />
+        <Route element={<Routines />} path={routes.routines.index}>
+          <Route index element={<NoRoutineSelected />} />
+          <Route element={<RoutinePane />} path={routes.routines.show} />
+        </Route>
         <Route element={<LifeAreas />}>
           <Route element={<TaskBoard />} path={routes.inbox.index}>
             <Route index element={<NoTaskSelected />} />

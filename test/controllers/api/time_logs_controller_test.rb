@@ -100,6 +100,31 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  def test_that_user_can_start_a_routine_for_its_duration
+    @time_log.update!(started_at: 1.hour.ago, completed_at: 50.minutes.ago, accumulated_elapsed_seconds: 600)
+    routine = create(:routine, user: @user, duration_minutes: 12)
+    sign_in @user
+
+    assert_difference "routine.time_logs.count", 1 do
+      post api_time_logs_path, params: { routine_id: routine.id, mode: "timer" }, as: :json
+    end
+
+    assert_response :created
+    time_log = response.parsed_body["time_log"]
+    assert_equal [ nil, routine.id, routine.title, 12, true ],
+      time_log.values_at("task_id", "routine_id", "routine_title", "timer_preset", "is_running")
+  end
+
+  def test_that_create_returns_404_for_another_users_routine
+    sign_in @user
+
+    assert_no_difference "TimeLog.count" do
+      post api_time_logs_path, params: { routine_id: create(:routine).id, mode: "timer" }, as: :json
+    end
+
+    assert_response :not_found
+  end
+
   def test_that_destroy_soft_deletes_the_time_log
     sign_in @user
 

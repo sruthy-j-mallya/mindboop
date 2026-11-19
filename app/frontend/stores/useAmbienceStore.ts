@@ -2,11 +2,11 @@ import { create } from "zustand";
 
 import {
   DEFAULT_VOLUME,
-  LIFE_AREA_SOUND_STORAGE_KEY,
   MAX_VOLUME,
   NO_SOUND,
   SOUND_STORAGE_KEY,
   SOUNDS,
+  STARTING_SOUND_STORAGE_KEY,
   VOLUME_STORAGE_KEY,
 } from "@/components/commons/Ambience/constants";
 import type { SoundId } from "@/components/commons/Ambience/types";
@@ -15,11 +15,11 @@ import { readStorage, writeStorage } from "@/utils/storage";
 type AmbienceStore = {
   soundId: SoundId;
   volume: number;
-  // The session the last area sound was switched to for, so it switches once per session.
-  lifeAreaSoundTimeLogId: string | null;
+  // The session the last starting sound (its area's or routine's) was switched to for, so it switches once per session.
+  startingSoundTimeLogId: string | null;
   setSoundId: (soundId: SoundId) => void;
   setVolume: (volume: number) => void;
-  applyLifeAreaSound: (timeLogId: string, soundId: SoundId) => void;
+  applyStartingSound: (timeLogId: string, soundId: SoundId) => void;
 };
 
 const readSoundId = (): SoundId =>
@@ -34,12 +34,12 @@ const readVolume = () => {
 // The background sound, picked on the Timer page and played app-wide while a session runs. A preference of this
 // browser, so it's remembered locally rather than on the server.
 //
-// A session on a task in an area of life switches to the area's sound once, as it starts; a sound picked after that
-// stays. The session it switched for is kept too, so a reload doesn't switch it back.
+// A session on a routine, or on a task in an area of life, switches to its sound once, as it starts; a sound picked
+// after that stays. The session it switched for is kept too, so a reload doesn't switch it back.
 const useAmbienceStore = create<AmbienceStore>()((set, get) => ({
   soundId: readSoundId(),
   volume: readVolume(),
-  lifeAreaSoundTimeLogId: readStorage(LIFE_AREA_SOUND_STORAGE_KEY),
+  startingSoundTimeLogId: readStorage(STARTING_SOUND_STORAGE_KEY),
   setSoundId: (soundId) => {
     writeStorage(SOUND_STORAGE_KEY, soundId);
     set({ soundId });
@@ -48,12 +48,12 @@ const useAmbienceStore = create<AmbienceStore>()((set, get) => ({
     writeStorage(VOLUME_STORAGE_KEY, String(volume));
     set({ volume });
   },
-  applyLifeAreaSound: (timeLogId, soundId) => {
-    if (soundId === NO_SOUND || get().lifeAreaSoundTimeLogId === timeLogId) return;
+  applyStartingSound: (timeLogId, soundId) => {
+    if (soundId === NO_SOUND || get().startingSoundTimeLogId === timeLogId) return;
 
     writeStorage(SOUND_STORAGE_KEY, soundId);
-    writeStorage(LIFE_AREA_SOUND_STORAGE_KEY, timeLogId);
-    set({ soundId, lifeAreaSoundTimeLogId: timeLogId });
+    writeStorage(STARTING_SOUND_STORAGE_KEY, timeLogId);
+    set({ soundId, startingSoundTimeLogId: timeLogId });
   },
 }));
 

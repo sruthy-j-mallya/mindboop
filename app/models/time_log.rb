@@ -24,14 +24,16 @@ class TimeLog < ApplicationRecord
   enum :mode, { timer: "timer", stopwatch: "stopwatch", manual: "manual" }, validate: true
 
   belongs_to :user, default: -> { task&.user }
-  # Only a manual log can go without a task; it then has a title of its own.
+  # A manual log can go without a task (it then has a title of its own), and so can a session on a routine.
   belongs_to :task, optional: true
+  belongs_to :routine, optional: true
   has_many :breaks, dependent: :destroy
   has_one :current_break, -> { open }, class_name: "Break"
   has_many :parking_lot_items, dependent: :nullify
 
-  validates :task, presence: true, unless: :manual?
+  validates :task, presence: true, unless: -> { manual? || routine }
   validates :title, presence: true, if: -> { manual? && task.nil? }
+  validate :routine_belongs_to_user, if: :routine_id?
   validates :title, length: { maximum: MAX_TITLE_LENGTH }
   validates :started_at, presence: true
   validates :completed_at, presence: true, if: :manual?
@@ -143,12 +145,18 @@ class TimeLog < ApplicationRecord
   end
 
   # Only a timer has a target to beat, so a stopwatch never finishes early. The target is the original plan, so
-  # finishing inside the buffer doesn't count. Bailing out ends the session without finishing it.
+  # finishing inside the buffer doesn't count. Bailing out ends the session without finishing it. A routine's timer is a
+  # guide, not a target: any time on it counts the same.
   def finished_early?
-    completed_at? && !is_bailed_out? && timer? && timer_preset? && accumulated_elapsed_seconds < timer_preset.minutes.to_i
+    task_id? && completed_at? && !is_bailed_out? && timer? && timer_preset? && accumulated_elapsed_seconds < timer_preset.minutes.to_i
   end
 
   private
+    # An unknown routine and another user's read the same, so an id gives nothing away.
+    def routine_belongs_to_user
+      errors.add(:routine, "must exist") if routine&.user_id != user_id
+    end
+
     def end_current_break(time)
       current_break&.update!(ended_at: time)
       reset_current_break

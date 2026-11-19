@@ -53,6 +53,8 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => {
     taskId: crypto.randomUUID(),
     title: null,
     taskTitle: null,
+    routineId: null,
+    routineTitle: null,
     lifeAreaId: null,
     isTaskDeleted: false,
     mode: "timer",

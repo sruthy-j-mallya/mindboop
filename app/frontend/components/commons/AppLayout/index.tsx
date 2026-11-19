@@ -10,6 +10,7 @@ import AppSidebar from "./AppSidebar";
 import BreakAlarm from "./BreakAlarm";
 import CuriosityAlarm from "./CuriosityAlarm";
 import CurrentSession from "./CurrentSession";
+import RoutineReminders from "./RoutineReminders";
 import { isSidebarOpen, saveSidebarOpen } from "./utils";
 
 const AppLayout = () => {
@@ -33,6 +34,7 @@ const AppLayout = () => {
         <Outlet />
       </SidebarInset>
       <CurrentSession />
+      <RoutineReminders />
       {/* Bottom centre, clear of the mini timer in the bottom-right corner. */}
       <Toaster position="bottom-center" />
     </SidebarProvider>

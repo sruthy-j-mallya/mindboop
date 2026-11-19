@@ -1,11 +1,13 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { format } from "date-fns";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
+import routinesApi from "@/apis/routines";
 import sessionsApi from "@/apis/sessions";
-import type { TimeLog } from "@/apis/types";
+import type { Routine, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import { playSound } from "@/components/commons/Ambience/utils";
 import AppLayout from "@/components/commons/AppLayout";
@@ -27,6 +29,8 @@ const TIME_LOG: TimeLog = {
   taskId: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23",
   title: null,
   taskTitle: null,
+  routineId: null,
+  routineTitle: null,
   lifeAreaId: null,
   isTaskDeleted: false,
   mode: "timer",
@@ -59,9 +63,40 @@ describe("AppLayout", () => {
     vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
       userPreference: { theme: "system", completionSound: "rising", breakAlarmSound: "classic" },
     });
+    vi.spyOn(routinesApi, "fetchList").mockResolvedValue({ routines: [] });
   });
 
   afterEach(() => document.documentElement.classList.remove("dark"));
+
+  it("reminds about a routine once on its day, with a way to start it", async () => {
+    localStorage.removeItem("routines.remindedOn");
+    const now = new Date();
+    const routine: Routine = {
+      id: crypto.randomUUID(),
+      title: "Meditation",
+      icon: "flower-2",
+      color: "violet",
+      sound: "none",
+      durationMinutes: 10,
+      reminderTime: format(now, "HH:mm"),
+      reminderDays: [now.getDay()],
+      sessionsCount: 0,
+      totalSeconds: 0,
+      lastDoneAt: null,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    };
+    vi.mocked(routinesApi.fetchList).mockResolvedValue({ routines: [routine] });
+
+    renderWithProviders(<AppLayout />);
+
+    expect(await screen.findByText("Time for Meditation?")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Start" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Not now" })).toBeVisible();
+    expect(JSON.parse(localStorage.getItem("routines.remindedOn") ?? "{}")).toEqual({
+      [routine.id]: format(now, "yyyy-MM-dd"),
+    });
+  });
 
   it("applies the user's saved theme", async () => {
     vi.mocked(userPreferencesApi.show).mockResolvedValue({
@@ -82,7 +117,7 @@ describe("AppLayout", () => {
     await waitFor(() => expect(document.documentElement).not.toHaveClass("dark"));
   });
 
-  it("offers Quick start, Inbox, Calendar, Timer and Parking lot in the sidebar and settings in the footer", () => {
+  it("offers Quick start, Inbox, Calendar, Routines, Timer and Parking lot in the sidebar and settings in the footer", () => {
     const { container } = renderWithProviders(<AppLayout />);
 
     const content = within(container.querySelector<HTMLElement>('[data-slot="sidebar-content"]')!);
@@ -92,6 +127,7 @@ describe("AppLayout", () => {
       "Quick start",
       "Areas of life",
       "Calendar",
+      "Routines",
       "Timer",
       "Parking lot",
     ]);
@@ -159,7 +195,7 @@ describe("AppLayout", () => {
       vi.useRealTimers();
       // Not unstubAllGlobals, which would also drop the setup file's matchMedia stub.
       vi.clearAllMocks();
-      useAmbienceStore.setState({ soundId: "none", lifeAreaSoundTimeLogId: null });
+      useAmbienceStore.setState({ soundId: "none", startingSoundTimeLogId: null });
     });
 
     it("starts a session on a task in an area of life with the area's sound, once", async () => {
@@ -189,7 +225,7 @@ describe("AppLayout", () => {
 
       // A sound picked during the session stays: the area's applies only as it starts.
       act(() => useAmbienceStore.getState().setSoundId("waves"));
-      act(() => useAmbienceStore.getState().applyLifeAreaSound(TIME_LOG.id, "piano"));
+      act(() => useAmbienceStore.getState().applyStartingSound(TIME_LOG.id, "piano"));
       expect(useAmbienceStore.getState().soundId).toBe("waves");
     });
 

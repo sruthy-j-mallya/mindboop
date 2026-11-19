@@ -172,4 +172,17 @@ class TimeLogs::CompleterServiceTest < ActiveSupport::TestCase
         **attributes
       )
     end
+
+  def test_that_a_routine_session_is_logged_without_completing_anything
+    freeze_time do
+      time_log = create(:time_log, :routine, started_at: 10.minutes.ago, current_run_started_at: 10.minutes.ago,
+        is_running: true, timer_preset: 30)
+
+      assert_no_difference "Achievement.count" do
+        TimeLogs::CompleterService.new(time_log).process!
+      end
+
+      assert_equal [ Time.current, 600 ], time_log.reload.values_at(:completed_at, :accumulated_elapsed_seconds)
+    end
+  end
 end

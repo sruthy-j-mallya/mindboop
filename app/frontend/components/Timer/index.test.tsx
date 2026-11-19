@@ -9,6 +9,7 @@ import breaksApi from "@/apis/breaks";
 import checklistItemsApi from "@/apis/checklist_items";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
+import routinesApi from "@/apis/routines";
 import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import timeLogCompletionsApi from "@/apis/time_log_completions";
@@ -32,6 +33,8 @@ const TIME_LOG: TimeLog = {
   taskId: TASK_ID,
   title: null,
   taskTitle: null,
+  routineId: null,
+  routineTitle: null,
   lifeAreaId: null,
   isTaskDeleted: false,
   mode: "timer",
@@ -119,6 +122,46 @@ describe("Timer", () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
     vi.clearAllMocks();
+  });
+
+  it("runs a routine's session without a task, ending with Done or Discard instead of Bail", async () => {
+    const routineId = crypto.randomUUID();
+    vi.spyOn(routinesApi, "fetchList").mockResolvedValue({
+      routines: [
+        {
+          id: routineId,
+          title: "Meditation",
+          icon: "flower-2",
+          color: "violet",
+          sound: "none",
+          durationMinutes: 10,
+          reminderTime: null,
+          reminderDays: [],
+          sessionsCount: 0,
+          totalSeconds: 0,
+          lastDoneAt: null,
+          createdAt: STARTED_AT,
+          updatedAt: STARTED_AT,
+        },
+      ],
+    });
+    renderTimer({ ...TIME_LOG, taskId: null, routineId, routineTitle: "Meditation", timerPreset: 10 });
+
+    expect(await screen.findByRole("heading", { name: "Meditation" })).toBeVisible();
+    expect(screen.getByText(/Any time you give this counts/)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Done" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Bail" })).not.toBeInTheDocument();
+    expect(tasksApi.show).not.toHaveBeenCalled();
+
+    // Past the two minutes a session needs to be logged, it can still be discarded.
+    vi.setSystemTime(new Date(STARTED_AT).getTime() + 5 * 60_000);
+    const destroy = vi.spyOn(timeLogsApi, "destroy").mockResolvedValue({} as never);
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("This session won’t be saved or counted.");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
+
+    await waitFor(() => expect(destroy).toHaveBeenCalledWith(TIME_LOG.id, expect.anything()));
   });
 
   it("shows the task and its steps", async () => {

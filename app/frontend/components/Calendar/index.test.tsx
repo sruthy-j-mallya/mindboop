@@ -41,6 +41,8 @@ const TIME_LOG: TimeLog = {
   taskId: null,
   title: "Answer emails",
   taskTitle: null,
+  routineId: null,
+  routineTitle: null,
   lifeAreaId: null,
   isTaskDeleted: false,
   mode: "manual",

@@ -34,6 +34,8 @@ const timeLogWithBreak = (endsAt: number): TimeLog => ({
   taskId: TASK_ID,
   title: null,
   taskTitle: null,
+  routineId: null,
+  routineTitle: null,
   lifeAreaId: null,
   isTaskDeleted: false,
   mode: "timer",

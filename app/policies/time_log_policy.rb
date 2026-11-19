@@ -22,8 +22,10 @@ class TimeLogPolicy < ApplicationPolicy
   end
 
   private
-    # A log's task, when it has one, must be the user's too.
+    # A log's task or routine, when it has one, must be the user's too.
     def owner?
-      record.user_id == user.id && (record.task.nil? || record.task.user_id == user.id)
+      record.user_id == user.id &&
+        (record.task.nil? || record.task.user_id == user.id) &&
+        (record.routine.nil? || record.routine.user_id == user.id)
     end
 end

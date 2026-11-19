@@ -1,5 +1,6 @@
 import type { SoundId } from "@/components/commons/Ambience/types";
 import type { LifeAreaColorId, LifeAreaIconId } from "@/components/commons/LifeArea/types";
+import type { RoutineIconId } from "@/components/commons/Routine/types";
 import type { AlarmSoundId } from "@/utils/alarmSound/types";
 import type { CompletionSoundId } from "@/utils/completionSound/types";
 
@@ -89,12 +90,15 @@ export type TimeLogMode = StartableTimeLogMode | "manual";
 
 export type Break = { id: string; intention: string; durationMinutes: number; endsAt: string };
 
-// Only a manual log can go without a task; it then has a `title` of its own. `taskTitle` is its task's title.
+// A manual log can go without a task (it then has a `title` of its own), and so can a session on a routine.
+// `taskTitle` and `routineTitle` are its task's and routine's titles.
 export type TimeLog = {
   id: string;
   taskId: string | null;
+  routineId: string | null;
   title: string | null;
   taskTitle: string | null;
+  routineTitle: string | null;
   // Its task's area of life, which the Calendar colours it by.
   lifeAreaId: string | null;
   // The work still counts once its task is deleted, but the task can't be opened.
@@ -115,11 +119,11 @@ export type TimeLog = {
 
 export type TimeLogResponse = { timeLog: TimeLog };
 
+// A session runs on a task, or on a routine (a timer for the routine's duration unless `timerPreset` says otherwise).
 export type StartTimeLogPayload = {
-  taskId: string;
   mode: StartableTimeLogMode;
   timerPreset?: number | null;
-};
+} & ({ taskId: string; routineId?: never } | { routineId: string; taskId?: never });
 
 // A session that already happened, linked to a task or saved with only a title.
 export type LogTimePayload = { mode: "manual"; startedAt: string; completedAt: string } & (
@@ -244,3 +248,36 @@ export type LifeAreaResponse = { lifeArea: LifeArea };
 export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "icon" | "defaultSound">;
 
 export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> & Pick<LifeArea, "id">;
+
+// A timer started again and again (a shower, meditation). `reminderTime` ("HH:MM", local time) and `reminderDays`
+// (0 = Sunday … 6) set an optional reminder. The stats count its finished sessions.
+export type Routine = {
+  id: string;
+  title: string;
+  icon: RoutineIconId;
+  color: LifeAreaColorId;
+  sound: SoundId;
+  durationMinutes: number;
+  reminderTime: string | null;
+  reminderDays: number[];
+  sessionsCount: number;
+  totalSeconds: number;
+  lastDoneAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RoutineListResponse = { routines: Routine[] };
+
+export type RoutineResponse = { routine: Routine };
+
+export type CreateRoutinePayload = Pick<
+  Routine,
+  "title" | "icon" | "color" | "sound" | "durationMinutes" | "reminderTime" | "reminderDays"
+>;
+
+export type UpdateRoutinePayload = Partial<CreateRoutinePayload> & Pick<Routine, "id">;
+
+export type RoutineTimeLogsParams = { routineId: string; from: string; to: string };
+
+export type RoutineTimeLogsResponse = { timeLogs: TimeLog[] };

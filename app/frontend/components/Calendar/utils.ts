@@ -245,7 +245,7 @@ const toTimeLogEvent = (timeLog: TimeLog, now: number): TimeLogEvent => {
   return {
     id: timeLog.id,
     kind: EVENT_KINDS.TIME_LOG,
-    title: timeLog.title ?? timeLog.taskTitle ?? "Untitled session",
+    title: timeLog.title ?? timeLog.taskTitle ?? timeLog.routineTitle ?? "Untitled session",
     start,
     end,
     allDay: false,

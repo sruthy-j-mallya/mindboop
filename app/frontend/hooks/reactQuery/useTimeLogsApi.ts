@@ -17,12 +17,17 @@ export const useCreateTimeLog = () => {
   });
 };
 
+// A routine's session that moves or goes changes the routine's stats and history too.
 export const useUpdateTimeLog = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: timeLogsApi.update,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ROUTINES.ALL }),
+      ]),
   });
 };
 
@@ -35,6 +40,7 @@ export const useDeleteTimeLog = () => {
       Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ROUTINES.ALL }),
       ]),
   });
 };
