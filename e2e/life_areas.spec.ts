@@ -58,7 +58,8 @@ test("add an area from a suggestion, move a task into it, search and edit it", a
   await expect(page.getByRole("textbox", { name: "Review the PRs" })).toBeVisible();
   await page.getByRole("searchbox", { name: "Search tasks" }).fill("");
 
-  await page.getByRole("button", { name: "Edit Work" }).click();
+  await work.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Edit" }).click();
   const dialog = page.getByRole("dialog", { name: "Edit Work" });
   await dialog.getByRole("textbox", { name: "Name" }).fill("Career");
   await dialog.getByRole("radio", { name: "Teal" }).check();

@@ -257,13 +257,14 @@ describe("LifeAreas", () => {
     expect(await screen.findByRole("textbox", { name: "Call the bank" })).toBeInTheDocument();
   });
 
-  it("edits an area", async () => {
+  it("edits an area from its right-click menu in the sidebar", async () => {
     const lifeArea = buildLifeArea();
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
     const update = vi.spyOn(lifeAreasApi, "update").mockResolvedValue({ lifeArea });
     renderLifeAreas(areaPath(lifeArea.id));
 
-    await userEvent.click(await screen.findByRole("button", { name: "Edit Work" }));
+    fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
     const dialog = screen.getByRole("dialog", { name: "Edit Work" });
     expect(within(dialog).getByRole("radio", { name: "Indigo" })).toBeChecked();
     expect(within(dialog).getByRole("radio", { name: "Briefcase" })).toBeChecked();
@@ -288,7 +289,8 @@ describe("LifeAreas", () => {
     const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
     renderLifeAreas(areaPath(lifeArea.id));
 
-    await userEvent.click(await screen.findByRole("button", { name: "Edit Work" }));
+    fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
     const dialog = screen.getByRole("dialog", { name: "Edit Work" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete area" }));
     expect(destroy).not.toHaveBeenCalled();
@@ -302,25 +304,6 @@ describe("LifeAreas", () => {
     expect(destroy).toHaveBeenCalledWith(lifeArea.id, expect.anything());
     await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index));
     expect(await screen.findByText("Deleted Work. Its tasks are back in the Inbox.")).toBeInTheDocument();
-  });
-
-  it("edits an area from its right-click menu in the sidebar", async () => {
-    const lifeArea = buildLifeArea();
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
-    const update = vi.spyOn(lifeAreasApi, "update").mockResolvedValue({ lifeArea });
-    renderLifeAreas();
-
-    fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
-    await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
-    const dialog = screen.getByRole("dialog", { name: "Edit Work" });
-    await userEvent.click(within(dialog).getByRole("radio", { name: "Rose" }));
-    await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-
-    expect(update).toHaveBeenCalledWith(
-      { id: lifeArea.id, name: "Work", color: "rose", icon: "briefcase", defaultSound: "rain" },
-      expect.anything(),
-    );
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("deletes an area from its right-click menu, staying on the list in view", async () => {
