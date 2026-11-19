@@ -1,0 +1,61 @@
+import {
+  Baby,
+  BookOpen,
+  Brain,
+  Briefcase,
+  Coffee,
+  Dumbbell,
+  Gamepad2,
+  Heart,
+  HeartPulse,
+  House,
+  Laptop,
+  Music,
+  Palette,
+  PawPrint,
+  Plane,
+  Smile,
+  Sparkles,
+  Sprout,
+  Users,
+  Wallet,
+} from "lucide-react";
+
+import type { LifeAreaColor, LifeAreaIcon } from "./types";
+
+// Deep enough for white text on the Calendar's solid task blocks, in light and dark mode alike (Tailwind's 700s).
+export const LIFE_AREA_COLORS: LifeAreaColor[] = [
+  { id: "rose", label: "Rose", value: "#be123c" },
+  { id: "orange", label: "Orange", value: "#c2410c" },
+  { id: "amber", label: "Amber", value: "#b45309" },
+  { id: "lime", label: "Lime", value: "#4d7c0f" },
+  { id: "emerald", label: "Emerald", value: "#047857" },
+  { id: "teal", label: "Teal", value: "#0f766e" },
+  { id: "sky", label: "Sky", value: "#0369a1" },
+  { id: "indigo", label: "Indigo", value: "#4338ca" },
+  { id: "violet", label: "Violet", value: "#6d28d9" },
+  { id: "slate", label: "Slate", value: "#475569" },
+];
+
+export const LIFE_AREA_ICONS: LifeAreaIcon[] = [
+  { id: "briefcase", label: "Briefcase", icon: Briefcase },
+  { id: "laptop", label: "Laptop", icon: Laptop },
+  { id: "heart", label: "Heart", icon: Heart },
+  { id: "users", label: "People", icon: Users },
+  { id: "house", label: "House", icon: House },
+  { id: "heart-pulse", label: "Heartbeat", icon: HeartPulse },
+  { id: "dumbbell", label: "Dumbbell", icon: Dumbbell },
+  { id: "brain", label: "Brain", icon: Brain },
+  { id: "gamepad-2", label: "Game", icon: Gamepad2 },
+  { id: "palette", label: "Palette", icon: Palette },
+  { id: "music", label: "Music", icon: Music },
+  { id: "book-open", label: "Book", icon: BookOpen },
+  { id: "sprout", label: "Sprout", icon: Sprout },
+  { id: "wallet", label: "Wallet", icon: Wallet },
+  { id: "plane", label: "Plane", icon: Plane },
+  { id: "coffee", label: "Coffee", icon: Coffee },
+  { id: "paw-print", label: "Paw", icon: PawPrint },
+  { id: "baby", label: "Baby", icon: Baby },
+  { id: "sparkles", label: "Sparkles", icon: Sparkles },
+  { id: "smile", label: "Smile", icon: Smile },
+];

@@ -91,6 +91,8 @@ export const EVENT_KINDS = { TASK: "task", TIME_LOG: "timeLog" } as const;
 
 export const EVENT_CLASS_NAMES = {
   TASK: "calendar-event-task",
+  // Added to an event in an area of life, coloured by `--area-color`.
+  LIFE_AREA: "calendar-event-area",
   TIME_LOG: "calendar-event-time-log",
 } as const;
 

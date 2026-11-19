@@ -1,4 +1,7 @@
+import { generatePath } from "react-router";
+
 import { MINUTES_PER_HOUR, SECONDS_PER_MINUTE } from "@/constants";
+import routes from "@/routes";
 
 type KeyTransform = (key: string) => string;
 
@@ -50,3 +53,12 @@ export const formatMinutes = (minutes: number) => {
 
 // shadcn generates `import { cn } from "@/utils"` (see components.json); re-export the package so it resolves.
 export { cn } from "cn";
+
+// The task list a task opens beside: an area's, or the Inbox's for a task in no area.
+export const getTaskListPath = (lifeAreaId?: string | null) =>
+  lifeAreaId ? generatePath(routes.lifeAreas.show, { lifeAreaId }) : routes.inbox.index;
+
+export const getTaskPath = (taskId: string, lifeAreaId?: string | null) =>
+  lifeAreaId
+    ? generatePath(routes.lifeAreas.task, { lifeAreaId, taskId })
+    : generatePath(routes.inbox.show, { taskId });

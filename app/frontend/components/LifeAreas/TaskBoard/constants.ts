@@ -8,5 +8,4 @@ export type TaskFormValues = z.infer<typeof TASK_VALIDATION_SCHEMA>;
 
 export const INITIAL_FORM_VALUES: TaskFormValues = { title: "" };
 
-// Only tasks still to do are listed; ticking one off takes it out of the Inbox.
-export const INBOX_FILTERS = { isCompleted: false };
+export const SEARCH_DEBOUNCE_DELAY = 300; // milliseconds

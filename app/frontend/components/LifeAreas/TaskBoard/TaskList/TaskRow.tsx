@@ -1,6 +1,7 @@
+import { useDraggable } from "@dnd-kit/core";
 import { cn } from "cn";
-import { CalendarDays, ChevronRight, Trash2 } from "lucide-react";
-import { generatePath, Link, useNavigate } from "react-router";
+import { CalendarDays, ChevronRight, GripVertical, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router";
 
 import type { Task } from "@/apis/types";
 import ScheduleLabel from "@/components/commons/ScheduleLabel";
@@ -13,8 +14,9 @@ import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 import useCompleteTask from "@/hooks/useCompleteTask";
 import useDeleteTaskWithUndo from "@/hooks/useDeleteTaskWithUndo";
 import useRenameTask from "@/hooks/useRenameTask";
-import routes from "@/routes";
+import { getTaskPath } from "@/utils";
 
+import type { DragData } from "../../types";
 import { NARROW_LAYOUT_QUERY } from "./constants";
 
 type TaskRowProps = { task: Task };
@@ -27,10 +29,12 @@ const TaskRow = ({ task }: TaskRowProps) => {
   const { mutate: updateTask, error: scheduleError } = useUpdateTask();
   const { title, renameTask, error: renameError } = useRenameTask(task);
   const error = completeError ?? deleteError ?? scheduleError ?? renameError;
+  const dragData: DragData = { task };
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id, data: dragData });
 
   const handleScheduleSave = (schedule: SchedulePayload) => updateTask({ id, ...schedule });
 
-  const taskPath = generatePath(routes.inbox.show, { taskId: id });
+  const taskPath = getTaskPath(id, task.lifeAreaId);
 
   // On wide screens, going into the title also opens the task beside the list. Narrow screens show one at a time, so
   // there the title only edits and the chevron opens the task.
@@ -39,14 +43,27 @@ const TaskRow = ({ task }: TaskRowProps) => {
   };
 
   return (
-    <li className="grid gap-1">
+    <li ref={setNodeRef} className="grid gap-1">
       <div
         className={cn(
-          "group flex items-center gap-3 rounded-md px-3 transition-colors focus-within:bg-muted hover:bg-muted",
+          "group flex items-center gap-3 rounded-md pr-3 pl-1 transition-colors focus-within:bg-muted hover:bg-muted",
           isSelected && "bg-muted",
-          isDeleting && "opacity-50",
+          (isDeleting || isDragging) && "opacity-50",
         )}
       >
+        {/* Drags the task onto an area (or the Inbox) beside the list. It shows while the row is hovered or has focus,
+            keeping its space so the row doesn't shift; touch screens can't hover, so it always shows there. */}
+        <Button
+          aria-label={`Move ${title}`}
+          className="-mr-2 w-4 shrink-0 cursor-grab touch-none text-muted-foreground opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 active:cursor-grabbing pointer-coarse:opacity-100"
+          size="icon-xs"
+          type="button"
+          variant="ghost"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical />
+        </Button>
         <Checkbox
           aria-label={`Complete ${title}`}
           checked={isCompleting}

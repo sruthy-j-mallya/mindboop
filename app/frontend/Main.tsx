@@ -1,13 +1,14 @@
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 
 import Calendar from "@/components/Calendar";
 import AppLayout from "@/components/commons/AppLayout";
 import PrivateRoute from "@/components/commons/PrivateRoute";
 import CompleteSignup from "@/components/CompleteSignup";
 import ForgotPassword from "@/components/ForgotPassword";
-import Inbox from "@/components/Inbox";
-import NoTaskSelected from "@/components/Inbox/NoTaskSelected";
-import TaskPane from "@/components/Inbox/TaskPane";
+import LifeAreas from "@/components/LifeAreas";
+import TaskBoard from "@/components/LifeAreas/TaskBoard";
+import NoTaskSelected from "@/components/LifeAreas/TaskBoard/NoTaskSelected";
+import TaskPane from "@/components/LifeAreas/TaskBoard/TaskPane";
 import Login from "@/components/Login";
 import ParkingLot from "@/components/ParkingLot";
 import QuickStart from "@/components/QuickStart";
@@ -22,10 +23,17 @@ const Main = () => (
     <Route element={<PrivateRoute />}>
       <Route element={<AppLayout />}>
         <Route element={<QuickStart />} path={routes.root} />
-        <Route element={<Inbox />} path={routes.inbox.index}>
-          <Route index element={<NoTaskSelected />} />
-          <Route element={<TaskPane />} path={routes.inbox.show} />
+        <Route element={<LifeAreas />}>
+          <Route element={<TaskBoard />} path={routes.inbox.index}>
+            <Route index element={<NoTaskSelected />} />
+            <Route element={<TaskPane />} path={routes.inbox.show} />
+          </Route>
+          <Route element={<TaskBoard />} path={routes.lifeAreas.show}>
+            <Route index element={<NoTaskSelected />} />
+            <Route element={<TaskPane />} path={routes.lifeAreas.task} />
+          </Route>
         </Route>
+        <Route element={<Navigate replace to={routes.inbox.index} />} path={routes.lifeAreas.index} />
         <Route element={<Timer />} path={routes.timer} />
         <Route element={<ParkingLot />} path={routes.parkingLot} />
         <Route element={<Calendar />} path={routes.calendar} />

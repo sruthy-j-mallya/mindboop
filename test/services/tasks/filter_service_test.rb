@@ -27,6 +27,20 @@ class Tasks::FilterServiceTest < ActiveSupport::TestCase
     assert_empty filter(search_term: "dentist", is_completed: "false").to_a
   end
 
+  def test_that_the_inbox_lists_only_tasks_without_an_area
+    create(:task, user: @open_task.user, life_area: create(:life_area, user: @open_task.user))
+
+    assert_equal [ @open_task, @completed_task ].sort_by(&:id), filter(is_in_inbox: "true").sort_by(&:id)
+    assert_equal 3, filter(is_in_inbox: "false").count
+  end
+
+  def test_that_tasks_can_be_filtered_by_area
+    life_area = create(:life_area, user: @open_task.user)
+    task_in_area = create(:task, user: @open_task.user, life_area:)
+
+    assert_equal [ task_in_area ], filter(life_area_id: life_area.id).to_a
+  end
+
   private
     def filter(filters)
       Tasks::FilterService.new(Task.all, filters).process

@@ -32,6 +32,7 @@ const TIME_LOG: TimeLog = {
   taskId: TASK_ID,
   title: null,
   taskTitle: null,
+  lifeAreaId: null,
   isTaskDeleted: false,
   mode: "timer",
   timerPreset: 25,
@@ -60,6 +61,7 @@ const TASK: Task = {
   isCompleted: false,
   startsAt: null,
   endsAt: null,
+  lifeAreaId: null,
   createdAt: STARTED_AT,
   updatedAt: STARTED_AT,
   checklistItems: [

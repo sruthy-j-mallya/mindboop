@@ -1,3 +1,5 @@
+import type { SoundId } from "@/components/commons/Ambience/types";
+import type { LifeAreaColorId, LifeAreaIconId } from "@/components/commons/LifeArea/types";
 import type { AlarmSoundId } from "@/utils/alarmSound/types";
 import type { CompletionSoundId } from "@/utils/completionSound/types";
 
@@ -35,14 +37,22 @@ export type Task = {
   isCompleted: boolean;
   startsAt: string | null;
   endsAt: string | null;
+  // The area of life it's in; without one, it's in the Inbox.
+  lifeAreaId: string | null;
   createdAt: string;
   updatedAt: string;
   checklistItems: ChecklistItem[];
   breadcrumbs: Breadcrumb[];
 };
 
-// `searchTerm` matches any part of a title, ignoring case.
-export type TaskFilters = { isCompleted?: boolean; searchTerm?: string };
+// `searchTerm` matches any part of a title, ignoring case. `isInInbox` lists only tasks without an area, `lifeAreaId`
+// only those in that area.
+export type TaskFilters = {
+  isCompleted?: boolean;
+  searchTerm?: string;
+  isInInbox?: boolean;
+  lifeAreaId?: string;
+};
 
 export type TaskListParams = TaskFilters & { page?: number };
 
@@ -54,7 +64,14 @@ type TaskFields = Pick<Task, "title"> &
   Partial<
     Pick<
       Task,
-      "description" | "estimatedMinutes" | "isDuration" | "isAllDay" | "isCompleted" | "startsAt" | "endsAt"
+      | "description"
+      | "estimatedMinutes"
+      | "isDuration"
+      | "isAllDay"
+      | "isCompleted"
+      | "startsAt"
+      | "endsAt"
+      | "lifeAreaId"
     >
   >;
 
@@ -78,6 +95,8 @@ export type TimeLog = {
   taskId: string | null;
   title: string | null;
   taskTitle: string | null;
+  // Its task's area of life, which the Calendar colours it by.
+  lifeAreaId: string | null;
   // The work still counts once its task is deleted, but the task can't be opened.
   isTaskDeleted: boolean;
   mode: TimeLogMode;
@@ -205,3 +224,23 @@ export type ConvertParkingLotItemPayload = { parkingLotItemId: string } & Partia
 
 // The user's running curiosity time, if any.
 export type CuriosityTimeResponse = { parkingLotItem: ParkingLotItem | null };
+
+// A part of life (Work, Health, …) that groups tasks. `defaultSound` is the background sound a session on one of its
+// tasks starts with; "none" keeps the one picked last.
+export type LifeArea = {
+  id: string;
+  name: string;
+  color: LifeAreaColorId;
+  icon: LifeAreaIconId;
+  defaultSound: SoundId;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LifeAreaListResponse = { lifeAreas: LifeArea[] };
+
+export type LifeAreaResponse = { lifeArea: LifeArea };
+
+export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "icon" | "defaultSound">;
+
+export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> & Pick<LifeArea, "id">;

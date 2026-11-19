@@ -9,6 +9,12 @@ const routes = {
     index: "/inbox",
     show: "/inbox/:taskId",
   },
+  lifeAreas: {
+    // Leads to the Inbox, where the areas are listed beside it.
+    index: "/areas",
+    show: "/areas/:lifeAreaId",
+    task: "/areas/:lifeAreaId/:taskId",
+  },
   signup: {
     new: "/signup",
     // Rails mailers link here through the `complete_signup` route.

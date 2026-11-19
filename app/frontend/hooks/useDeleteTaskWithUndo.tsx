@@ -1,4 +1,4 @@
-import { useMatch, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 
 import type { ApiError } from "@/apis/axios";
@@ -7,14 +7,15 @@ import UndoLabel from "@/components/commons/UndoLabel";
 import { UNDO_TOAST_DURATION } from "@/constants";
 import { useRestoreTask } from "@/hooks/reactQuery/useTaskRestorationsApi";
 import { useDeleteTask } from "@/hooks/reactQuery/useTasksApi";
-import routes from "@/routes";
+import useOpenTask from "@/hooks/useOpenTask";
 
-// Deletes a task from its list row or its pane, then offers to undo it in a toast. A deleted task leaves the Inbox, so
-// its pane closes with it; a pane shown elsewhere (the Calendar's popover) closes through `onDeleted`. `isDeleting` stays true after the delete, until the refreshed list drops the task.
+// Deletes a task from its list row or its pane, then offers to undo it in a toast. A deleted task leaves its list (the Inbox or an
+// area), so its pane closes with it; a pane shown elsewhere (the Calendar's popover) closes through `onDeleted`. `isDeleting` stays true after the delete, until the refreshed list drops the task.
 // The promises (mutateAsync) settle even once the row has unmounted, which mutate's callbacks wouldn't.
 const useDeleteTaskWithUndo = ({ id, title }: Pick<Task, "id" | "title">, onDeleted?: () => void) => {
   const navigate = useNavigate();
-  const isSelected = useMatch(routes.inbox.show)?.params.taskId === id;
+  const { openTaskId, listPath } = useOpenTask();
+  const isSelected = openTaskId === id;
   const { mutateAsync: deleteTask, isPending, isSuccess, error } = useDeleteTask();
   const { mutateAsync: restoreTask } = useRestoreTask();
 
@@ -23,7 +24,7 @@ const useDeleteTaskWithUndo = ({ id, title }: Pick<Task, "id" | "title">, onDele
   const handleUndo = () => restoreTask(id).catch(handleRestoreFailed);
 
   const handleDeleted = () => {
-    if (isSelected) navigate(routes.inbox.index);
+    if (isSelected) navigate(listPath);
     onDeleted?.();
     toast(`Deleted “${title}”`, {
       action: { label: <UndoLabel />, onClick: handleUndo },

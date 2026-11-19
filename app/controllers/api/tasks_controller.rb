@@ -3,8 +3,7 @@ module Api
     before_action :set_task, only: %i[ show update destroy ]
 
     def index
-      # id breaks created_at ties, so a task can't repeat or go missing across pages.
-      tasks = Tasks::FilterService.new(policy_scope(Task).kept, params.slice(:is_completed, :search_term)).process
+      tasks = Tasks::FilterService.new(policy_scope(Task).kept, params.slice(*Tasks::FilterService::FILTERS)).process
       @pagy, @tasks = pagy(tasks.includes(:checklist_items, :breadcrumbs).by_due_date)
     end
 
@@ -35,7 +34,8 @@ module Api
 
       def task_params
         params.permit(
-          :title, :description, :estimated_minutes, :is_duration, :is_all_day, :is_completed, :starts_at, :ends_at
+          :title, :description, :estimated_minutes, :is_duration, :is_all_day, :is_completed, :starts_at, :ends_at,
+          :life_area_id
         )
       end
 
