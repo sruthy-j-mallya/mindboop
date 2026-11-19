@@ -72,7 +72,12 @@ Every error response has one shape:
 Tasks belong to the signed-in user. `GET /api/tasks` lists only their undeleted tasks, soonest `starts_at` first
 with undated tasks last; ties go to the oldest task. Another user's task gets a 403. A deleted or unknown task gets a 404.
 
+`DELETE /api/tasks/:id` soft deletes the task. Its time logs stay: work done before the delete still counts, and they
+stay on the Calendar. A session still running on it ends at that moment, the way a completion ends it but without
+completing the task. One with under 2 minutes of focus is discarded instead.
+
 `POST /api/tasks/:task_id/restoration` brings back a deleted task (the Inbox's Undo). A task that isn't deleted gets a 404.
+A session that ended when the task was deleted stays ended.
 
 The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
 pages. A missing or invalid `page` returns the first page, and a page past the end returns an empty `tasks`.
@@ -177,7 +182,8 @@ set. Every response is `{ parking_lot_item }`: the item, or `null` when none is 
 
 A time log belongs to a user, and usually to one of their tasks. Only a `manual` log (time logged afterwards from the
 Calendar) can go without a task; it then has a `title` of its own. Another user's time log gets a 403. A deleted or
-unknown time log gets a 404, and so does a time log whose task was deleted.
+unknown time log gets a 404. A time log whose task was deleted is still listed, moved and deleted like any other, but
+no new log can be started or logged on that task.
 
 `POST /api/time_logs` accepts these fields:
 
@@ -193,12 +199,19 @@ A `manual` log is saved finished: `is_running` is `false`, and `accumulated_elap
 `started_at` to `completed_at`. Its times allow 5 minutes of clock drift. A log that breaks these rules gets a 422.
 `task_id` is optional for it; when given, the same task rules apply as for any other log.
 
+A user does one thing at a time, so their time logs can't overlap. Creating a log (of any mode), or moving one with
+`PATCH /api/time_logs/:id`, gets a 422 (`"This overlaps another session. You can only do one thing at a time."`) when
+its span shares any moment with another of their time logs. Logs may touch, one ending as the next starts. A running log
+has no end yet, so it blocks everything after its start: end it before starting another, or logging time after its
+start. Deleted logs don't count, but the logs of a deleted task do. A database constraint
+(`time_logs_no_overlap`) backs this up, so two requests at once can't both get in. `POST /api/quick_starts` follows the same rule.
+
 A `timer` or `stopwatch` log starts running at once: the server sets `started_at` and `current_run_started_at` to the current time,
 `is_running` to `true`, `accumulated_elapsed_seconds` to 0 and `completed_at` to `null`. Any of these sent by the client
 are ignored.
 
 `time_log` also includes `id`, `task_id` (`null` for a log with only a title), `title`, `task_title` (its task's title, or
-`null`), `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
+`null`), `is_task_deleted` (whether its task was deleted), `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
 `{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise
 (`app/views/api/time_logs/_time_log.json.jbuilder`).
 

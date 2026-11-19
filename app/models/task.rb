@@ -38,4 +38,13 @@ class Task < ApplicationRecord
   validates :ends_at, presence: true, if: :is_duration
   validates :ends_at, absence: true, unless: :is_duration
   validates :ends_at, comparison: { greater_than_or_equal_to: :starts_at }, if: -> { starts_at? && ends_at? }
+
+  before_discard :stop_running_session
+
+  private
+    # Work done on a task still counts once it's deleted, but no more can be done on it, so a running session ends here.
+    # Restoring the task doesn't restart it.
+    def stop_running_session
+      time_logs.kept.in_progress.each(&:stop!)
+    end
 end

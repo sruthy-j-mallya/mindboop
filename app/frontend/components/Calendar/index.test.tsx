@@ -39,6 +39,7 @@ const TIME_LOG: TimeLog = {
   taskId: null,
   title: "Answer emails",
   taskTitle: null,
+  isTaskDeleted: false,
   mode: "manual",
   timerPreset: null,
   bufferMinutes: 0,
@@ -159,6 +160,22 @@ describe("Calendar", () => {
     await userEvent.click(await screen.findByTitle("Answer emails"));
 
     expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument();
+  });
+
+  it("opens nothing for a time log whose task was deleted", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({
+      tasks: [],
+      timeLogs: [
+        { ...TIME_LOG, title: null, taskId: "task-1", taskTitle: "Plan the week", isTaskDeleted: true },
+      ],
+    });
+    const show = vi.spyOn(tasksApi, "show");
+    renderWithProviders(<Calendar />);
+    await chooseView("Month");
+    await userEvent.click(await screen.findByTitle("Plan the week"));
+
+    expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument();
+    expect(show).not.toHaveBeenCalled();
   });
 
   it("closes the task's popover once the task is deleted", async () => {

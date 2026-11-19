@@ -56,6 +56,7 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => ({
   taskId: null,
   title: "Answer emails",
   taskTitle: null,
+  isTaskDeleted: false,
   mode: "manual",
   timerPreset: null,
   bufferMinutes: 0,

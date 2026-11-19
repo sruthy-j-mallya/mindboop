@@ -3,7 +3,7 @@ module Api
     def show
       authorize TimeLog, :index?
       # id breaks started_at ties, so the same log comes back every time.
-      @time_log = policy_scope(TimeLog).active.in_progress.order(started_at: :desc, id: :desc).first
+      @time_log = policy_scope(TimeLog).kept.in_progress.order(started_at: :desc, id: :desc).first
     end
   end
 end

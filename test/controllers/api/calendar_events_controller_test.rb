@@ -15,7 +15,7 @@ class Api::CalendarEventsControllerTest < ActionDispatch::IntegrationTest
     create(:task, user: @user, starts_at: @to + 1.day)
     create(:task, user: @user)
     create(:task, user: @user, starts_at: @from + 2.days, is_completed: true)
-    create(:time_log, :manual, user: @user, started_at: 2.hours.ago, completed_at: 1.hour.ago).discard!
+    create(:time_log, :manual, user: @user, started_at: 4.hours.ago, completed_at: 3.hours.ago).discard!
     sign_in @user
 
     get api_calendar_events_path, params: { from: @from.iso8601, to: @to.iso8601 }
@@ -23,6 +23,19 @@ class Api::CalendarEventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal [ @task.id ], response.parsed_body["tasks"].pluck("id")
     assert_equal [ @time_log.id, task_log.id ].sort, response.parsed_body["time_logs"].pluck("id").sort
+  end
+
+  def test_that_time_logs_of_a_deleted_task_are_listed
+    task = create(:task, user: @user)
+    time_log = create(:time_log, task:, started_at: 4.hours.ago, completed_at: 3.hours.ago)
+    task.discard!
+    sign_in @user
+
+    get api_calendar_events_path, params: { from: @from.iso8601, to: @to.iso8601 }
+
+    listed = response.parsed_body["time_logs"].find { |log| log["id"] == time_log.id }
+    assert_equal task.title, listed["task_title"]
+    assert_equal true, listed["is_task_deleted"]
   end
 
   def test_that_a_duration_started_before_the_range_is_listed

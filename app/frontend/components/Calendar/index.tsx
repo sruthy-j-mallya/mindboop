@@ -125,11 +125,16 @@ const Calendar = () => {
     else if (intent.error) toast.error(intent.error);
   };
 
-  // A time log shows its task read only; one logged without a task has nothing to show.
+  // A time log shows its task read only; one logged without a task, or whose task was deleted, has nothing to show.
   const handleSelectEvent = (event: CalendarEvent, domEvent: SyntheticEvent<HTMLElement>) => {
     const anchor = eventToAnchorRect(domEvent);
-    if (event.kind === EVENT_KINDS.TASK) setPopover({ kind: "editTask", anchor, task: event.task });
-    else if (event.timeLog.taskId) setPopover({ kind: "showTask", anchor, taskId: event.timeLog.taskId });
+    if (event.kind === EVENT_KINDS.TASK) {
+      setPopover({ kind: "editTask", anchor, task: event.task });
+      return;
+    }
+
+    const { taskId, isTaskDeleted } = event.timeLog;
+    if (taskId && !isTaskDeleted) setPopover({ kind: "showTask", anchor, taskId });
   };
 
   // Past time is shaded, and time beyond the 24 hours that can be logged more so.

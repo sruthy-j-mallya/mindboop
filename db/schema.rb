@@ -12,6 +12,7 @@
 
 ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
 
   create_table "achievements", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -269,6 +270,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_120000) do
     t.index ["discarded_at"], name: "index_time_logs_on_discarded_at"
     t.index ["task_id"], name: "index_time_logs_on_task_id"
     t.index ["user_id", "started_at"], name: "index_time_logs_on_user_id_and_started_at"
+    t.exclusion_constraint "user_id WITH =, tsrange(started_at, completed_at) WITH &&", where: "discarded_at IS NULL", using: :gist, name: "time_logs_no_overlap"
   end
 
   create_table "user_preferences", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

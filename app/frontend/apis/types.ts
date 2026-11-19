@@ -78,6 +78,8 @@ export type TimeLog = {
   taskId: string | null;
   title: string | null;
   taskTitle: string | null;
+  // The work still counts once its task is deleted, but the task can't be opened.
+  isTaskDeleted: boolean;
   mode: TimeLogMode;
   timerPreset: number | null;
   bufferMinutes: number;

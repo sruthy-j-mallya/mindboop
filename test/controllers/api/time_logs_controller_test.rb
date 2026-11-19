@@ -11,6 +11,7 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
 
   def test_that_user_can_create_a_running_time_log
     freeze_time
+    @time_log.update!(is_running: false, started_at: 1.hour.ago, completed_at: 1.minute.ago)
     sign_in @user
 
     assert_difference "@task.time_logs.count", 1 do
@@ -31,6 +32,7 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
 
   def test_that_create_ignores_timing_fields_from_the_client
     freeze_time
+    @time_log.update!(is_running: false, started_at: 1.hour.ago, completed_at: 1.minute.ago)
     sign_in @user
     sent_at = 1.hour.ago
 
@@ -231,6 +233,18 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2.hours.to_i, time_log.accumulated_elapsed_seconds
   end
 
+  def test_that_update_moves_a_session_of_a_deleted_task
+    freeze_time
+    time_log = create(:time_log, task: @task, started_at: 6.hours.ago, completed_at: 5.hours.ago)
+    @task.discard!
+    sign_in @user
+
+    patch api_time_log_path(time_log), params: { started_at: 4.hours.ago, completed_at: 3.hours.ago }, as: :json
+
+    assert_response :ok
+    assert_equal 4.hours.ago, time_log.reload.started_at
+  end
+
   def test_that_update_rejects_a_move_past_24_hours
     time_log = create(:time_log, :manual, user: @user)
     sign_in @user
@@ -249,6 +263,45 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
     assert_equal "Only a finished session can be moved.", response.parsed_body["error"]
     assert_nil @time_log.reload.completed_at
+  end
+
+  def test_that_create_rejects_a_session_while_another_is_running
+    sign_in @user
+
+    assert_no_difference "TimeLog.count" do
+      post api_time_logs_path, params: { task_id: @task.id, mode: "timer", timer_preset: 15 }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_equal TimeLog::OVERLAP_ERROR, response.parsed_body["error"]
+  end
+
+  def test_that_a_logged_session_cannot_overlap_another
+    freeze_time
+    create(:time_log, :manual, user: @user, started_at: 3.hours.ago, completed_at: 2.hours.ago)
+    sign_in @user
+
+    assert_no_difference "TimeLog.count" do
+      post api_time_logs_path,
+        params: { mode: "manual", title: Faker::Lorem.sentence, started_at: 150.minutes.ago, completed_at: 90.minutes.ago },
+        as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_equal TimeLog::OVERLAP_ERROR, response.parsed_body["error"]
+  end
+
+  def test_that_update_rejects_a_move_onto_another_session
+    freeze_time
+    create(:time_log, :manual, user: @user, started_at: 3.hours.ago, completed_at: 2.hours.ago)
+    time_log = create(:time_log, :manual, user: @user, started_at: 6.hours.ago, completed_at: 5.hours.ago)
+    sign_in @user
+
+    patch api_time_log_path(time_log), params: { started_at: 150.minutes.ago, completed_at: 90.minutes.ago }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal TimeLog::OVERLAP_ERROR, response.parsed_body["error"]
+    assert_equal 6.hours.ago, time_log.reload.started_at
   end
 
   def test_that_update_returns_401_when_signed_out

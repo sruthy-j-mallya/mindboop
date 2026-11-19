@@ -50,6 +50,7 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => {
     taskId: crypto.randomUUID(),
     title: null,
     taskTitle: null,
+    isTaskDeleted: false,
     mode: "timer",
     timerPreset: 25,
     bufferMinutes: 0,

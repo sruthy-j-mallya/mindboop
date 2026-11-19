@@ -26,7 +26,7 @@ module Api
 
     private
       def set_time_log
-        @time_log = TimeLog.active.includes(:task).find(params[:id])
+        @time_log = TimeLog.kept.includes(:task).find(params[:id])
         authorize @time_log
       end
 

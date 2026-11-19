@@ -9,10 +9,8 @@ class TimeLog < ApplicationRecord
   MAX_TITLE_LENGTH = 255
   # A session shorter than this is too short to log: it can only be discarded, not completed or bailed out of.
   MIN_LOGGED_MINUTES = 2
+  OVERLAP_ERROR = "This overlaps another session. You can only do one thing at a time.".freeze
 
-  # Deleting a task keeps its time logs in the database, but hides them along with the task. Logs saved with only a
-  # title have no task to hide them.
-  scope :active, -> { kept.left_joins(:task).where(tasks: { discarded_at: nil }) }
   scope :in_progress, -> { where(completed_at: nil) }
   # Logs that overlap `from...to`. A running log reaches up to now.
   scope :overlapping, ->(from, to) {
@@ -48,7 +46,11 @@ class TimeLog < ApplicationRecord
   validate :session_can_be_extended, on: :extend
   validate :session_is_finished, on: :reschedule
   validate :times_fit_logging_window, on: %i[ log reschedule ]
+  # A custom context replaces :create, so a manual log (saved on :log) needs listing on its own.
+  validate :does_not_overlap_another_session, on: %i[ create log reschedule ]
   validate :long_enough_to_log, on: :end
+
+  around_save :refuse_overlap_found_by_database
 
   # A new time log always starts running now, so its timing fields never come from the client.
   def start
@@ -85,6 +87,14 @@ class TimeLog < ApplicationRecord
     )
     save!(context: :end)
     end_current_break(now)
+  end
+
+  # Ends a session for good without finishing its task, as when the task is deleted: the time so far is logged, or the
+  # session is discarded when it's too short to log.
+  def stop!
+    return discard! if elapsed_seconds_at(Time.current) < MIN_LOGGED_MINUTES.minutes.to_i
+
+    complete!
   end
 
   def bail_out!(discard_overrun: false)
@@ -179,6 +189,27 @@ class TimeLog < ApplicationRecord
       return if accumulated_elapsed_seconds >= MIN_LOGGED_MINUTES.minutes.to_i
 
       errors.add(:base, "Focus for at least #{MIN_LOGGED_MINUTES} minutes to log a session. Discard it instead.")
+    end
+
+    # A user does one thing at a time, so no two of their sessions share a moment. Sessions may touch end to start. A
+    # running session has no end yet: it reaches on past now, so nothing can start or be logged after its start. A
+    # deleted task's logs still count: that work was done. Times already refused aren't checked.
+    def does_not_overlap_another_session
+      return if errors.any? || user.nil? || !started_at?
+
+      others = user.time_logs.kept.where.not(id:)
+        .where("time_logs.completed_at IS NULL OR time_logs.completed_at > ?", started_at)
+      others = others.where(started_at: ...completed_at) if completed_at?
+      errors.add(:base, OVERLAP_ERROR) if others.exists?
+    end
+
+    # Two requests at once can both pass the validation; the database constraint then refuses the second. It's reported
+    # like the validation, so the client gets the same 422.
+    def refuse_overlap_found_by_database
+      yield
+    rescue ActiveRecord::ExclusionViolation
+      errors.add(:base, OVERLAP_ERROR)
+      raise ActiveRecord::RecordInvalid, self
     end
 
     def session_can_be_extended

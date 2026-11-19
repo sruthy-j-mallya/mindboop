@@ -14,6 +14,7 @@ const TIME_LOG: TimeLog = {
   taskId: TASK_ID,
   title: null,
   taskTitle: null,
+  isTaskDeleted: false,
   mode: "timer",
   timerPreset: 15,
   bufferMinutes: 0,
