@@ -2,12 +2,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ToolbarProps, View } from "react-big-calendar";
 
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { VIEW_OPTIONS } from "./constants";
 import type { CalendarEvent } from "./types";
 
-// Replaces react-big-calendar's toolbar with the app's buttons and tabs.
+// Replaces react-big-calendar's toolbar with the app's buttons and a view picker.
 const Toolbar = ({ label, view, onNavigate, onView }: ToolbarProps<CalendarEvent>) => {
   const handleToday = () => onNavigate("TODAY");
   const handlePrevious = () => onNavigate("PREV");
@@ -17,31 +18,40 @@ const Toolbar = ({ label, view, onNavigate, onView }: ToolbarProps<CalendarEvent
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
+      <h2 aria-live="polite" className="text-lg font-semibold">
+        {label}
+      </h2>
       <div className="flex items-center gap-2">
-        <Button size="sm" type="button" variant="outline" onClick={handleToday}>
-          Today
-        </Button>
-        <div className="flex items-center">
-          <Button aria-label="Previous" size="icon-sm" type="button" variant="ghost" onClick={handlePrevious}>
+        <ButtonGroup aria-label="Navigate dates">
+          <Button
+            aria-label="Previous"
+            size="icon-sm"
+            type="button"
+            variant="outline"
+            onClick={handlePrevious}
+          >
             <ChevronLeft />
           </Button>
-          <Button aria-label="Next" size="icon-sm" type="button" variant="ghost" onClick={handleNext}>
+          <Button size="sm" type="button" variant="outline" onClick={handleToday}>
+            Today
+          </Button>
+          <Button aria-label="Next" size="icon-sm" type="button" variant="outline" onClick={handleNext}>
             <ChevronRight />
           </Button>
-        </div>
-        <h2 aria-live="polite" className="text-lg font-semibold">
-          {label}
-        </h2>
+        </ButtonGroup>
+        <Select value={view} onValueChange={handleViewChange}>
+          <SelectTrigger aria-label="Calendar view" className="w-28" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end" position="popper">
+            {VIEW_OPTIONS.map(({ value, label: viewLabel }) => (
+              <SelectItem key={value} value={value}>
+                {viewLabel}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-      <Tabs value={view} onValueChange={handleViewChange}>
-        <TabsList aria-label="Calendar view">
-          {VIEW_OPTIONS.map(({ value, label: viewLabel }) => (
-            <TabsTrigger key={value} value={value}>
-              {viewLabel}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
     </div>
   );
 };

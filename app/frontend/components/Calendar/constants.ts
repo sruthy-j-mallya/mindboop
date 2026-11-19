@@ -23,7 +23,7 @@ export const CALENDAR_VIEWS = {
 
 export const DEFAULT_VIEW = CALENDAR_VIEWS.WEEK;
 
-// The toolbar's view tabs, in order.
+// The toolbar's view picker options, in order.
 export const VIEW_OPTIONS = [
   { value: CALENDAR_VIEWS.DAY, label: "Day" },
   { value: CALENDAR_VIEWS.MULTI_DAY, label: "3 days" },

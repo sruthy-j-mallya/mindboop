@@ -48,6 +48,11 @@ const TIME_LOG: TimeLog = {
   updatedAt: "2026-11-05T10:00:00.000Z",
 };
 
+const chooseView = async (view: string) => {
+  await userEvent.click(screen.getByRole("combobox", { name: "Calendar view" }));
+  await userEvent.click(screen.getByRole("option", { name: view }));
+};
+
 describe("Calendar", () => {
   afterEach(() => vi.restoreAllMocks());
 
@@ -56,7 +61,7 @@ describe("Calendar", () => {
       .spyOn(calendarEventsApi, "fetchList")
       .mockResolvedValue({ tasks: [TASK], timeLogs: [TIME_LOG] });
     renderWithProviders(<Calendar />);
-    await userEvent.click(screen.getByRole("tab", { name: "Month" }));
+    await chooseView("Month");
 
     const task = await screen.findByTitle("Plan the week");
     expect(task.closest(".rbc-event")).toHaveClass("calendar-event-task");
@@ -67,7 +72,7 @@ describe("Calendar", () => {
   it("opens a task for editing when it's clicked", async () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [TASK], timeLogs: [] });
     renderWithProviders(<Calendar />);
-    await userEvent.click(screen.getByRole("tab", { name: "Month" }));
+    await chooseView("Month");
 
     await userEvent.click(await screen.findByTitle("Plan the week"));
 
@@ -79,16 +84,16 @@ describe("Calendar", () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
     renderWithProviders(<Calendar />);
 
-    await userEvent.click(screen.getByRole("tab", { name: "Year" }));
+    await chooseView("Year");
 
     expect(screen.getByRole("region", { name: /^January / })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Year" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("combobox", { name: "Calendar view" })).toHaveTextContent("Year");
   });
 
   it("pages through months when the month view is scrolled, one page per gesture", async () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
     renderWithProviders(<Calendar />);
-    await userEvent.click(screen.getByRole("tab", { name: "Month" }));
+    await chooseView("Month");
     const grid = screen.getByRole("table");
 
     fireEvent.wheel(grid, { deltaY: 100 });
@@ -106,7 +111,7 @@ describe("Calendar", () => {
   ])("pages through years when the year view is scrolled %s", async (_, wheel, step) => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
     renderWithProviders(<Calendar />);
-    await userEvent.click(screen.getByRole("tab", { name: "Year" }));
+    await chooseView("Year");
     const thisYear = new Date().getFullYear();
 
     fireEvent.wheel(screen.getByRole("region", { name: `January ${thisYear}` }), wheel);
@@ -117,7 +122,7 @@ describe("Calendar", () => {
   it("pages back a month when the month view is scrolled sideways", async () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
     renderWithProviders(<Calendar />);
-    await userEvent.click(screen.getByRole("tab", { name: "Month" }));
+    await chooseView("Month");
 
     fireEvent.wheel(screen.getByRole("table"), { deltaX: -100 });
 

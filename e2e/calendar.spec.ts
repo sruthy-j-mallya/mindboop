@@ -12,6 +12,13 @@ const signUp = async (page: Page) => {
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 };
 
+const chooseView = async (page: Page, view: string) => {
+  await page.getByRole("combobox", { name: "Calendar view" }).click();
+  await page.getByRole("option", { name: view, exact: true }).click();
+  // The open menu blocks pointer events on the page, so raw mouse clicks wait for it to close.
+  await expect(page.getByRole("listbox")).toBeHidden();
+};
+
 // react-big-calendar's time slots have no accessible names, so the grid is reached through its own classes: the
 // first quarter hour of the given hour in the (single) day column.
 const hourSlot = (page: Page, hour: number) =>
@@ -40,7 +47,7 @@ const waitForTaskSave = (page: Page) =>
 test("add, edit and move a task from the calendar", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
-  await page.getByRole("tab", { name: "Day", exact: true }).click();
+  await chooseView(page, "Day");
   await page.getByRole("button", { name: "Next" }).click();
 
   await clickSlot(page, 10);
@@ -84,7 +91,7 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
   await saved;
 
   await page.reload();
-  await page.getByRole("tab", { name: "Day", exact: true }).click();
+  await chooseView(page, "Day");
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.locator(".calendar-event-task", { hasText: "Plan the month" })).toContainText("12:00 PM");
 });
@@ -108,7 +115,7 @@ const dragEdge = async (page: Page, event: Locator, edge: "top" | "bottom", hour
 test("stretch a task from its start and its end", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
-  await page.getByRole("tab", { name: "Day", exact: true }).click();
+  await chooseView(page, "Day");
   await page.getByRole("button", { name: "Next" }).click();
 
   await clickSlot(page, 10);
@@ -127,7 +134,7 @@ test("stretch a task from its start and its end", async ({ page }) => {
   await expect(event).toContainText("9:00 AM – 12:00 PM");
 
   await page.reload();
-  await page.getByRole("tab", { name: "Day", exact: true }).click();
+  await chooseView(page, "Day");
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.locator(".calendar-event-task", { hasText: "Deep work" })).toContainText(
     "9:00 AM – 12:00 PM",
@@ -137,7 +144,7 @@ test("stretch a task from its start and its end", async ({ page }) => {
 test("log time in the last 24 hours with only a title", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
-  await page.getByRole("tab", { name: "Day", exact: true }).click();
+  await chooseView(page, "Day");
 
   const now = new Date();
   const start = startOfHour(subHours(now, 2));
@@ -155,11 +162,11 @@ test("log time in the last 24 hours with only a title", async ({ page }) => {
 test("the year view drills down to a day", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
-  await page.getByRole("tab", { name: "Year", exact: true }).click();
+  await chooseView(page, "Year");
 
   await expect(page.getByRole("region", { name: /^January / })).toBeVisible();
   await page.getByRole("button", { name: /, 1 January / }).click();
-  await expect(page.getByRole("tab", { name: "Day", exact: true, selected: true })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Calendar view" })).toHaveText("Day");
 });
 
 test("scrolling sideways pages through dates, and up and down through months", async ({ page }) => {
@@ -176,7 +183,7 @@ test("scrolling sideways pages through dates, and up and down through months", a
   await page.mouse.wheel(200, 0);
   await expect(title).not.toHaveText(thisWeek ?? "");
 
-  await page.getByRole("tab", { name: "Month" }).click();
+  await chooseView(page, "Month");
   const thisMonth = await title.textContent();
   await page.locator(".rbc-month-view").hover();
   await page.mouse.wheel(0, 200);
