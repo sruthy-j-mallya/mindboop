@@ -25,11 +25,11 @@ import type { SchedulePayload } from "@/components/commons/SchedulePicker/types"
 
 import {
   CALENDAR_VIEWS,
+  DEFAULT_MULTI_DAY_COUNT,
   DEFAULT_TASK_MINUTES,
   EVENT_KINDS,
   INITIAL_WHEEL_GESTURE,
   MOVE_ERRORS,
-  MULTI_DAY_COUNT,
   SELECTION_ERRORS,
   SLOT_MINUTES,
   TIME_LOG_WINDOW_HOURS,
@@ -56,19 +56,25 @@ import type {
 
 const MILLISECONDS_PER_MINUTE = 60_000;
 
-export const getMultiDayRange = (date: Date): TimeRange => {
+// `dayCount` days from the chosen one.
+export const getMultiDayRange = (date: Date, dayCount: number): TimeRange => {
   const start = startOfDay(date);
 
-  return { start, end: addDays(start, MULTI_DAY_COUNT) };
+  return { start, end: addDays(start, dayCount) };
 };
 
-// The days a view shows, as a half-open range: what the Calendar asks the API for.
-export const getVisibleRange = (view: CalendarView, date: Date): TimeRange => {
+// The days a view shows, as a half-open range: what the Calendar asks the API for. `dayCount` is how many days the
+// multi-day view shows.
+export const getVisibleRange = (
+  view: CalendarView,
+  date: Date,
+  dayCount = DEFAULT_MULTI_DAY_COUNT,
+): TimeRange => {
   switch (view) {
     case CALENDAR_VIEWS.DAY:
       return { start: startOfDay(date), end: addDays(startOfDay(date), 1) };
     case CALENDAR_VIEWS.MULTI_DAY:
-      return getMultiDayRange(date);
+      return getMultiDayRange(date, dayCount);
     case CALENDAR_VIEWS.WEEK: {
       const start = startOfWeek(date, WEEK_OPTIONS);
 
@@ -85,12 +91,17 @@ export const getVisibleRange = (view: CalendarView, date: Date): TimeRange => {
 };
 
 // The date a view lands on a page (`step` of 1 or -1) away, as its Previous and Next buttons go.
-export const shiftDate = (view: CalendarView, date: Date, step: number) => {
+export const shiftDate = (
+  view: CalendarView,
+  date: Date,
+  step: number,
+  dayCount = DEFAULT_MULTI_DAY_COUNT,
+) => {
   switch (view) {
     case CALENDAR_VIEWS.DAY:
       return addDays(date, step);
     case CALENDAR_VIEWS.MULTI_DAY:
-      return addDays(date, step * MULTI_DAY_COUNT);
+      return addDays(date, step * dayCount);
     case CALENDAR_VIEWS.WEEK:
       return addWeeks(date, step);
     case CALENDAR_VIEWS.MONTH:

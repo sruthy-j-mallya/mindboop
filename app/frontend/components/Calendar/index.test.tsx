@@ -1,6 +1,6 @@
 import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { addMonths, format, startOfHour, subHours } from "date-fns";
+import { addDays, addMonths, format, startOfDay, startOfHour, subHours } from "date-fns";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import calendarEventsApi from "@/apis/calendar_events";
@@ -88,6 +88,30 @@ describe("Calendar", () => {
 
     expect(screen.getByRole("region", { name: /^January / })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Calendar view" })).toHaveTextContent("Year");
+  });
+
+  it("shows and pages the chosen number of days in the multi-day view", async () => {
+    const fetchList = vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    renderWithProviders(<Calendar />);
+    expect(screen.queryByRole("combobox", { name: "Number of days" })).not.toBeInTheDocument();
+    await chooseView("Multi-day");
+    expect(screen.getAllByRole("columnheader")).toHaveLength(3);
+
+    await userEvent.click(screen.getByRole("combobox", { name: "Number of days" }));
+    await userEvent.click(screen.getByRole("option", { name: "5 days" }));
+
+    expect(screen.getAllByRole("columnheader")).toHaveLength(5);
+    const today = startOfDay(new Date());
+    expect(fetchList).toHaveBeenLastCalledWith({
+      from: today.toISOString(),
+      to: addDays(today, 5).toISOString(),
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(fetchList).toHaveBeenLastCalledWith({
+      from: addDays(today, 5).toISOString(),
+      to: addDays(today, 10).toISOString(),
+    });
   });
 
   it("pages through months when the month view is scrolled, one page per gesture", async () => {

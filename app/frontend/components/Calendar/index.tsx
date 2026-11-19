@@ -5,7 +5,7 @@ import "@/styles/calendar.css";
 import { type SyntheticEvent, useMemo, useRef, useState } from "react";
 
 import { startOfDay, subHours } from "date-fns";
-import type { SlotInfo, View, ViewsProps } from "react-big-calendar";
+import type { SlotInfo, ToolbarProps, View, ViewsProps } from "react-big-calendar";
 import { toast } from "sonner";
 
 import { useCalendarEvents } from "@/hooks/reactQuery/useCalendarEventsApi";
@@ -13,6 +13,7 @@ import useCurrentTime from "@/hooks/useCurrentTime";
 
 import {
   CALENDAR_VIEWS,
+  DEFAULT_MULTI_DAY_COUNT,
   DEFAULT_VIEW,
   EVENT_CLASS_NAMES,
   EVENT_KINDS,
@@ -53,8 +54,6 @@ const VIEWS = {
   [CALENDAR_VIEWS.YEAR]: YearView,
 } as unknown as ViewsProps<CalendarEvent>;
 
-const COMPONENTS = { toolbar: Toolbar };
-
 const getEventProps = ({ kind }: CalendarEvent) => ({
   className: kind === EVENT_KINDS.TASK ? EVENT_CLASS_NAMES.TASK : EVENT_CLASS_NAMES.TIME_LOG,
 });
@@ -65,15 +64,16 @@ const getEventProps = ({ kind }: CalendarEvent) => ({
 const Calendar = () => {
   const [view, setView] = useState<CalendarView>(DEFAULT_VIEW);
   const [date, setDate] = useState(() => new Date());
+  const [dayCount, setDayCount] = useState<number>(DEFAULT_MULTI_DAY_COUNT);
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [scrollToTime] = useState(() => subHours(new Date(), SCROLL_BACK_HOURS));
   const calendarRef = useRef<HTMLDivElement>(null);
   const now = useCurrentTime(true, NOW_REFRESH_INTERVAL);
   const params = useMemo(() => {
-    const { start, end } = getVisibleRange(view, date);
+    const { start, end } = getVisibleRange(view, date, dayCount);
 
     return { from: start.toISOString(), to: end.toISOString() };
-  }, [view, date]);
+  }, [view, date, dayCount]);
   const { data: { tasks = [], timeLogs = [] } = {}, error } = useCalendarEvents(params);
   const { movedTimes, handleEventDrop, handleEventResize } = useEventMoves(view === CALENDAR_VIEWS.MONTH);
   const events = useMemo(
@@ -81,9 +81,19 @@ const Calendar = () => {
     [tasks, timeLogs, now, movedTimes],
   );
 
+  // react-big-calendar only hands its toolbar its own props, so the day count goes in through a wrapper.
+  const components = useMemo(
+    () => ({
+      toolbar: (toolbarProps: ToolbarProps<CalendarEvent>) => (
+        <Toolbar {...toolbarProps} dayCount={dayCount} onDayCountChange={setDayCount} />
+      ),
+    }),
+    [dayCount],
+  );
+
   const handleView = (nextView: View) => setView(nextView as CalendarView);
 
-  const handleWheelStep = (step: number) => setDate((current) => shiftDate(view, current, step));
+  const handleWheelStep = (step: number) => setDate((current) => shiftDate(view, current, step, dayCount));
   useWheelPaging(calendarRef, view, handleWheelStep);
 
   const handleClosePopover = () => setPopover(null);
@@ -130,13 +140,14 @@ const Calendar = () => {
           popup
           resizable
           selectable="ignoreEvents"
-          components={COMPONENTS}
+          components={components}
           culture="en-US"
           date={date}
           dayPropGetter={getDayProps}
           draggableAccessor="isEditable"
           eventPropGetter={getEventProps}
           events={events}
+          length={dayCount}
           localizer={LOCALIZER}
           resizableAccessor="isEditable"
           scrollToTime={scrollToTime}

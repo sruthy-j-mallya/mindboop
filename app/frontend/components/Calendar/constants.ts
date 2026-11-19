@@ -26,14 +26,16 @@ export const DEFAULT_VIEW = CALENDAR_VIEWS.WEEK;
 // The toolbar's view picker options, in order.
 export const VIEW_OPTIONS = [
   { value: CALENDAR_VIEWS.DAY, label: "Day" },
-  { value: CALENDAR_VIEWS.MULTI_DAY, label: "3 days" },
+  { value: CALENDAR_VIEWS.MULTI_DAY, label: "Multi-day" },
   { value: CALENDAR_VIEWS.WEEK, label: "Week" },
   { value: CALENDAR_VIEWS.MONTH, label: "Month" },
   { value: CALENDAR_VIEWS.YEAR, label: "Year" },
 ] as const;
 
-// How many days the multi-day view shows.
-export const MULTI_DAY_COUNT = 3;
+// How many days the multi-day view shows, and the counts its day picker offers. One day is the day view, and seven
+// the week view.
+export const DEFAULT_MULTI_DAY_COUNT = 3;
+export const MULTI_DAY_COUNT_OPTIONS = [2, 3, 4, 5, 6] as const;
 
 // The time grid snaps to quarter hours, with a line every hour.
 export const SLOT_MINUTES = 15;

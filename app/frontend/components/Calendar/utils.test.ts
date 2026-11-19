@@ -69,6 +69,10 @@ describe("getVisibleRange", () => {
     expect(getVisibleRange("multiDay", at(12, 15))).toEqual({ start: at(12), end: at(15) });
   });
 
+  it("covers the chosen number of days in the multi-day view", () => {
+    expect(getVisibleRange("multiDay", at(12, 15), 5)).toEqual({ start: at(12), end: at(17) });
+  });
+
   it("covers the whole weeks a month touches", () => {
     expect(getVisibleRange("month", at(12))).toEqual({
       start: new Date(2026, 9, 26),
@@ -91,6 +95,10 @@ describe("shiftDate", () => {
     expect(shiftDate(CALENDAR_VIEWS.WEEK, at(12), 1)).toEqual(at(19));
     expect(shiftDate(CALENDAR_VIEWS.MONTH, at(12), -1)).toEqual(new Date(2026, 9, 12));
     expect(shiftDate(CALENDAR_VIEWS.YEAR, at(12), 1)).toEqual(new Date(2027, 10, 12));
+  });
+
+  it("pages the multi-day view by its number of days", () => {
+    expect(shiftDate(CALENDAR_VIEWS.MULTI_DAY, at(12), 1, 5)).toEqual(at(17));
   });
 });
 

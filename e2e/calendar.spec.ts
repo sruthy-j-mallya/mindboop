@@ -169,6 +169,19 @@ test("the year view drills down to a day", async ({ page }) => {
   await expect(page.getByRole("combobox", { name: "Calendar view" })).toHaveText("Day");
 });
 
+test("the multi-day view shows the chosen number of days", async ({ page }) => {
+  await signUp(page);
+  await page.getByRole("link", { name: "Calendar" }).click();
+  await chooseView(page, "Multi-day");
+  await expect(page.getByRole("columnheader")).toHaveCount(3);
+
+  await page.getByRole("combobox", { name: "Number of days" }).click();
+  await page.getByRole("option", { name: "5 days", exact: true }).click();
+
+  await expect(page.getByRole("columnheader")).toHaveCount(5);
+  await expect(page.getByRole("combobox", { name: "Number of days" })).toHaveText("5 days");
+});
+
 test("scrolling sideways pages through dates, and up and down through months", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
