@@ -2,7 +2,7 @@ import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
 import AnchoredPopover from "../AnchoredPopover";
 import type { AnchorRect } from "../types";
-import { EDIT_POPOVER_CLASS_NAME } from "./constants";
+import { SHOW_POPOVER_CLASS_NAME } from "./constants";
 import ReadOnlyDetails from "./ReadOnlyDetails";
 
 type ShowProps = { anchor: AnchorRect; taskId: string; onClose: () => void };
@@ -15,7 +15,7 @@ const Show = ({ anchor, taskId, onClose }: ShowProps) => {
   return (
     <AnchoredPopover
       anchor={anchor}
-      className={EDIT_POPOVER_CLASS_NAME}
+      className={SHOW_POPOVER_CLASS_NAME}
       label="Task details"
       onDismiss={onClose}
     >
