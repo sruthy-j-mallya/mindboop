@@ -86,7 +86,7 @@ describe("Calendar", () => {
 
     await chooseView("Year");
 
-    expect(screen.getByRole("region", { name: /^January / })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: `January ${new Date().getFullYear()}` })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "Calendar view" })).toHaveTextContent("Year");
   });
 
@@ -129,18 +129,48 @@ describe("Calendar", () => {
     );
   });
 
-  it.each([
-    ["up and down", { deltaY: 100 }, 1],
-    ["sideways", { deltaX: -100 }, -1],
-  ])("pages through years when the year view is scrolled %s", async (_, wheel, step) => {
+  it("pages back a year when the year view is scrolled sideways", async () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
     renderWithProviders(<Calendar />);
     await chooseView("Year");
     const thisYear = new Date().getFullYear();
 
-    fireEvent.wheel(screen.getByRole("region", { name: `January ${thisYear}` }), wheel);
+    fireEvent.wheel(screen.getByRole("region", { name: `January ${thisYear}` }), { deltaX: -100 });
 
-    expect(screen.getByRole("region", { name: `January ${thisYear + step}` })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(String(thisYear - 1));
+  });
+
+  it("scrolls on into the next year, which the title follows", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    renderWithProviders(<Calendar />);
+    await chooseView("Year");
+    const nextYear = new Date().getFullYear() + 1;
+    // Every month before next January has scrolled up past the top.
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const month = this.getAttribute("data-month");
+      const bottom = month && month < `${nextYear}-01` ? -10 : 100;
+
+      return { top: 0, bottom } as DOMRect;
+    });
+
+    fireEvent.scroll(
+      screen.getByRole("region", { name: `January ${nextYear}` }).closest(".overflow-y-auto")!,
+    );
+
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(String(nextYear));
+    expect(screen.getByRole("region", { name: `December ${nextYear + 1}` })).toBeInTheDocument();
+  });
+
+  it("brings this month into view when the year view goes to Today", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    renderWithProviders(<Calendar />);
+    await chooseView("Year");
+    const thisMonth = screen.getByRole("region", { name: format(new Date(), "MMMM yyyy") });
+    const scrollIntoView = vi.spyOn(thisMonth, "scrollIntoView");
+
+    await userEvent.click(screen.getByRole("button", { name: "Today" }));
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
   });
 
   it("pages back a month when the month view is scrolled sideways", async () => {

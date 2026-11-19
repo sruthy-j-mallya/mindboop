@@ -51,13 +51,13 @@ class Api::CalendarEventsControllerTest < ActionDispatch::IntegrationTest
     get api_calendar_events_path, params: { from: @to.iso8601, to: @from.iso8601 }
 
     assert_response :unprocessable_content
-    assert_equal "Pick a range of up to 400 days, with from before to.", response.parsed_body["error"]
+    assert_equal "Pick a range of up to 1100 days, with from before to.", response.parsed_body["error"]
   end
 
-  def test_that_a_range_over_400_days_is_rejected
+  def test_that_a_range_over_1100_days_is_rejected
     sign_in @user
 
-    get api_calendar_events_path, params: { from: @from.iso8601, to: (@from + 401.days).iso8601 }
+    get api_calendar_events_path, params: { from: @from.iso8601, to: (@from + 1101.days).iso8601 }
 
     assert_response :unprocessable_content
   end

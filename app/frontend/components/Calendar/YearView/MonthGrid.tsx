@@ -5,6 +5,7 @@ import {
   endOfWeek,
   format,
   isSameMonth,
+  isThisMonth,
   isToday,
   startOfMonth,
   startOfWeek,
@@ -12,7 +13,7 @@ import {
 
 import { WEEK_OPTIONS } from "../constants";
 import type { DayCounts } from "./types";
-import { getDayLabel, toDayKey } from "./utils";
+import { getDayLabel, toDayKey, toMonthKey } from "./utils";
 
 type MonthGridProps = { month: Date; counts: Map<string, DayCounts>; onSelectDay: (day: Date) => void };
 
@@ -27,8 +28,13 @@ const MonthGrid = ({ month, counts, onSelectDay }: MonthGridProps) => {
   });
 
   return (
-    <section aria-label={format(month, "MMMM yyyy")} className="flex flex-col gap-2">
-      <h3 className="px-1 text-sm font-semibold">{format(month, "MMMM")}</h3>
+    <section
+      aria-label={format(month, "MMMM yyyy")}
+      className="flex flex-col gap-2"
+      data-current-month={isThisMonth(month) || undefined}
+      data-month={toMonthKey(month)}
+    >
+      <h4 className="px-1 text-sm font-semibold">{format(month, "MMMM")}</h4>
       <div className="grid grid-cols-7 gap-0.5 text-center text-xs">
         {WEEKDAYS.map((weekday, index) => (
           <span key={index} aria-hidden className="py-1 text-muted-foreground">

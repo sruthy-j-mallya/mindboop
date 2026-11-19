@@ -77,6 +77,12 @@ export const WHEEL_DELTA_MODE_PIXELS = [1, 16, 800] as const;
 // The "+N more" popup scrolls on its own.
 export const OVERLAY_SELECTOR = ".rbc-overlay";
 
+// The year view scrolls on without end: it shows this many years either side of the one in view, and moves along as
+// it's scrolled.
+export const YEAR_VIEW_BUFFER_YEARS = 1;
+// The month today falls in, which the year view scrolls to when it opens or goes to Today.
+export const CURRENT_MONTH_SELECTOR = "[data-current-month]";
+
 export const EVENT_KINDS = { TASK: "task", TIME_LOG: "timeLog" } as const;
 
 export const EVENT_CLASS_NAMES = {

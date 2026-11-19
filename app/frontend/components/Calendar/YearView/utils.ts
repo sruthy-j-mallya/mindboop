@@ -1,12 +1,31 @@
-import { eachDayOfInterval, format, startOfDay, subMilliseconds } from "date-fns";
+import { addYears, eachDayOfInterval, format, startOfDay, startOfYear, subMilliseconds } from "date-fns";
 
-import { EVENT_KINDS } from "../constants";
+import { EVENT_KINDS, YEAR_VIEW_BUFFER_YEARS } from "../constants";
 import type { CalendarEvent } from "../types";
 import type { DayCounts } from "./types";
 
 export const DAY_KEY_FORMAT = "yyyy-MM-dd";
+export const MONTH_KEY_FORMAT = "yyyy-MM";
+export const MONTH_SELECTOR = "[data-month]";
 
 export const toDayKey = (date: Date) => format(date, DAY_KEY_FORMAT);
+
+export const toMonthKey = (date: Date) => format(date, MONTH_KEY_FORMAT);
+
+// The first day of each year the year view shows: the one in view, and its neighbours.
+export const getYearWindow = (date: Date) =>
+  Array.from({ length: YEAR_VIEW_BUFFER_YEARS * 2 + 1 }, (_, index) =>
+    addYears(startOfYear(date), index - YEAR_VIEW_BUFFER_YEARS),
+  );
+
+// The first month still showing below the top of the scroller (the months run in order, top to bottom).
+export const getTopMonth = (scroller: Element) => {
+  const { top } = scroller.getBoundingClientRect();
+
+  return [...scroller.querySelectorAll<HTMLElement>(MONTH_SELECTOR)].find(
+    (month) => month.getBoundingClientRect().bottom > top,
+  );
+};
 
 // Every day an event touches (its end is exclusive), counted by kind.
 export const getDayCounts = (events: CalendarEvent[]) => {

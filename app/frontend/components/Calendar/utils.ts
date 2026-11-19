@@ -39,6 +39,7 @@ import {
   WHEEL_NEW_SWIPE_MIN_SPEED,
   WHEEL_NEW_SWIPE_RATIO,
   WHEEL_PAGE_DISTANCE,
+  YEAR_VIEW_BUFFER_YEARS,
 } from "./constants";
 import type {
   AnchorRect,
@@ -86,7 +87,10 @@ export const getVisibleRange = (
         end: addDays(startOfDay(endOfWeek(endOfMonth(date), WEEK_OPTIONS)), 1),
       };
     default:
-      return { start: startOfYear(date), end: addYears(startOfYear(date), 1) };
+      return {
+        start: addYears(startOfYear(date), -YEAR_VIEW_BUFFER_YEARS),
+        end: addYears(startOfYear(date), YEAR_VIEW_BUFFER_YEARS + 1),
+      };
   }
 };
 
@@ -120,11 +124,11 @@ export const toWheelDelta = ({ deltaX, deltaY, deltaMode, shiftKey }: WheelInput
 };
 
 // How far a wheel movement pages the calendar (negative is back), or 0 when it's the grid's to scroll. Sideways
-// movement pages every view; the month and year views page up and down too.
+// movement pages every view; the month view pages up and down too. (The year view scrolls up and down on its own.)
 export const getPagingDistance = (view: CalendarView, { x, y }: WheelDelta) => {
   if (Math.abs(x) > Math.abs(y)) return x;
 
-  return view === CALENDAR_VIEWS.MONTH || view === CALENDAR_VIEWS.YEAR ? y : 0;
+  return view === CALENDAR_VIEWS.MONTH ? y : 0;
 };
 
 // A trackpad's momentum only slows down; a finger swiping again speeds the events back up.

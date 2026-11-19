@@ -277,7 +277,7 @@ finished session can be moved."). Other fields are ignored.
 - `time_logs`: the user's undeleted time logs overlapping the range (a running one reaches up to now), oldest first, in the
   time log shape above.
 
-`from` must be before `to`, at most 400 days apart; anything else, or a missing or unparsable time, gets a 422.
+`from` must be before `to`, at most 1100 days apart (the year view asks for three years); anything else, or a missing or unparsable time, gets a 422.
 
 ## User preference
 

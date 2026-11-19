@@ -60,7 +60,7 @@ const getEventProps = ({ kind }: CalendarEvent) => ({
 
 // Past time logs and upcoming tasks on one grid. Clicking or dragging across empty time adds a task from now on, or
 // logs time in the last 24 hours; tasks open for editing on click, and both move and resize by dragging. Scrolling
-// sideways pages through dates, as does scrolling up and down in the month and year views.
+// sideways pages through dates, as does scrolling up and down in the month view.
 const Calendar = () => {
   const [view, setView] = useState<CalendarView>(DEFAULT_VIEW);
   const [date, setDate] = useState(() => new Date());

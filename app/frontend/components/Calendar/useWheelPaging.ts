@@ -5,7 +5,7 @@ import type { CalendarView } from "./types";
 import { getPagingDistance, stepWheelGesture, toWheelDelta } from "./utils";
 
 // Pages the calendar (`onStep(1)` forward, `onStep(-1)` back) as it's scrolled sideways, or up and down in the month
-// and year views: one page per swipe, however hard, and a page for each swipe, however quick (see `stepWheelGesture`).
+// view: one page per swipe, however hard, and a page for each swipe, however quick (see `stepWheelGesture`).
 const useWheelPaging = (
   ref: RefObject<HTMLElement | null>,
   view: CalendarView,

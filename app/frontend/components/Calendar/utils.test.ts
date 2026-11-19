@@ -80,10 +80,10 @@ describe("getVisibleRange", () => {
     });
   });
 
-  it("covers the year", () => {
+  it("covers the year and one either side, which the year view scrolls through", () => {
     expect(getVisibleRange("year", at(12))).toEqual({
-      start: new Date(2026, 0, 1),
-      end: new Date(2027, 0, 1),
+      start: new Date(2025, 0, 1),
+      end: new Date(2028, 0, 1),
     });
   });
 });
@@ -122,10 +122,10 @@ describe("toWheelDelta", () => {
 });
 
 describe("getPagingDistance", () => {
-  it("pages sideways in every view, and up and down only in the month and year views", () => {
+  it("pages sideways in every view, and up and down only in the month view", () => {
     expect(getPagingDistance(CALENDAR_VIEWS.WEEK, { x: 30, y: 10 })).toBe(30);
     expect(getPagingDistance(CALENDAR_VIEWS.DAY, { x: 10, y: 30 })).toBe(0);
-    expect(getPagingDistance(CALENDAR_VIEWS.YEAR, { x: 0, y: 30 })).toBe(30);
+    expect(getPagingDistance(CALENDAR_VIEWS.YEAR, { x: 0, y: 30 })).toBe(0);
     expect(getPagingDistance(CALENDAR_VIEWS.YEAR, { x: -30, y: 0 })).toBe(-30);
     expect(getPagingDistance(CALENDAR_VIEWS.MONTH, { x: 0, y: -30 })).toBe(-30);
   });

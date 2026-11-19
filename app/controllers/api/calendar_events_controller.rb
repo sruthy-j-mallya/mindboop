@@ -1,8 +1,8 @@
 module Api
   # What the Calendar shows between `from` and `to`: the open tasks scheduled then and the time logged then. Not paged,
-  # so the range is capped instead.
+  # so the range is capped instead: at three years, as the year view shows the year in view and one either side.
   class CalendarEventsController < BaseController
-    MAX_RANGE = 400.days
+    MAX_RANGE_DAYS = 1100
 
     before_action :set_range
 
@@ -17,9 +17,9 @@ module Api
       def set_range
         @from = parse_time(params[:from])
         @to = parse_time(params[:to])
-        return if @from && @to && @from < @to && @to - @from <= MAX_RANGE
+        return if @from && @to && @from < @to && @to - @from <= MAX_RANGE_DAYS.days
 
-        render json: { error: "Pick a range of up to 400 days, with from before to." }, status: :unprocessable_content
+        render json: { error: "Pick a range of up to #{MAX_RANGE_DAYS} days, with from before to." }, status: :unprocessable_content
       end
 
       def parse_time(value)
