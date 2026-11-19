@@ -1,70 +1,33 @@
-import { useState } from "react";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-
-import type { ApiError } from "@/apis/axios";
 import type { Task } from "@/apis/types";
-import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
-import type { Draft } from "@/components/commons/Steps/types";
-import TaskSteps from "@/components/commons/TaskSteps";
-import { useTask, useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
+import TaskDetails from "@/components/commons/TaskDetails";
+import { useTask } from "@/hooks/reactQuery/useTasksApi";
 
 import AnchoredPopover from "../AnchoredPopover";
 import type { AnchorRect } from "../types";
-import { POPOVER_CLASS_NAME, TASK_VALIDATION_SCHEMA, type TaskFormValues } from "./constants";
-import TaskForm from "./TaskForm";
-import { buildUpdatePayload, toFormValues } from "./utils";
+import { EDIT_POPOVER_CLASS_NAME } from "./constants";
 
 type EditProps = { anchor: AnchorRect; task: Task; onClose: () => void };
 
-// A scheduled task, opened from the grid. Steps save as they change, like everywhere else; the title, schedule,
-// estimate and description save when the popover is left.
+// A scheduled task, opened from the grid: the Inbox pane in a popover, with the same controls. Everything saves as it
+// changes; completing or deleting the task closes the popover.
 const Edit = ({ anchor, task: calendarTask, onClose }: EditProps) => {
-  const [stepDraft, setStepDraft] = useState<Draft | null>(null);
-  // Read through the task's own query, so step changes (saved one at a time) show at once.
+  // Read through the task's own query, so each change (saved one at a time) shows at once.
   const { data: task = calendarTask } = useTask(calendarTask.id, { initialData: calendarTask });
-  const { mutate: updateTask } = useUpdateTask();
-  const {
-    control,
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<TaskFormValues>({
-    defaultValues: toFormValues(calendarTask),
-    resolver: zodResolver(TASK_VALIDATION_SCHEMA),
-  });
 
-  const handleAddStep = () => setStepDraft((draft) => draft ?? NEW_STEP_DRAFT);
-
-  const handleUpdateFailed = (error: ApiError) => toast.error(error.message);
-
-  const handleSave = (values: TaskFormValues) => {
-    const payload = buildUpdatePayload(task, values);
-    if (payload) updateTask(payload, { onError: handleUpdateFailed });
+  // The title saves when its field loses focus, so a title still being typed is blurred into saving before closing.
+  const handleDismiss = () => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     onClose();
   };
-
-  // An invalid edit (an emptied title) keeps the popover open, with the error under the field.
-  const handleDismiss = handleSubmit(handleSave);
 
   return (
     <AnchoredPopover
       anchor={anchor}
-      className={POPOVER_CLASS_NAME}
+      className={EDIT_POPOVER_CLASS_NAME}
       label="Edit task"
       onDismiss={handleDismiss}
     >
-      <TaskForm
-        control={control}
-        errors={errors}
-        register={register}
-        showAddStep={task.checklistItems.length === 0 && !stepDraft}
-        steps={<TaskSteps draft={stepDraft} task={task} onDraftChange={setStepDraft} />}
-        onAddStep={handleAddStep}
-        onSubmit={handleDismiss}
-      />
+      <TaskDetails isCompact task={task} onRemoved={onClose} />
     </AnchoredPopover>
   );
 };

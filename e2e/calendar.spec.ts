@@ -69,8 +69,13 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
   await event.click();
   const editTask = page.getByRole("dialog", { name: "Edit task" });
   await expect(editTask.getByRole("checkbox", { name: "List the goals" })).toBeVisible();
-  await editTask.getByRole("textbox", { name: "Title" }).fill("Plan the month");
-  await editTask.getByRole("textbox", { name: "Title" }).press("Enter");
+  const title = editTask.getByRole("textbox", { name: "Task title" });
+  await title.fill("Plan the month");
+  // Enter saves the title in place, as in the Inbox pane; leaving the popover closes it.
+  const renameSaved = waitForTaskSave(page);
+  await title.press("Enter");
+  await renameSaved;
+  await page.keyboard.press("Escape");
   await expect(editTask).toBeHidden();
   const renamed = page.locator(".calendar-event-task", { hasText: "Plan the month" });
   await expect(renamed).toBeVisible();

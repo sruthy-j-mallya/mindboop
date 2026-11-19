@@ -27,3 +27,8 @@ export const INITIAL_FORM_VALUES: Omit<TaskFormValues, "schedule"> = {
 
 export const POPOVER_CLASS_NAME =
   "flex max-h-(--radix-popover-content-available-height) w-[30rem] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto p-4";
+
+// A saved task's popover keeps one size whatever the task holds: long step lists and breadcrumbs scroll inside it, and
+// a short task leaves the room to its description.
+export const EDIT_POPOVER_CLASS_NAME =
+  "flex h-[32rem] max-h-(--radix-popover-content-available-height) w-[30rem] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto rounded-xl p-4";

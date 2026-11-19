@@ -13,7 +13,7 @@ type TaskFormProps = {
   control: Control<TaskFormValues>;
   register: UseFormRegister<TaskFormValues>;
   errors: FieldErrors<TaskFormValues>;
-  // The steps list: the form's own for a new task, the saved ones for an existing task.
+  // The steps list, kept in the form until the task is created.
   steps: ReactNode;
   showAddStep: boolean;
   onAddStep: () => void;
@@ -21,8 +21,8 @@ type TaskFormProps = {
   onSubmit: () => void;
 };
 
-// The Inbox pane's layout in a popover: the schedule and estimate above the title, then the steps and the description.
-// Shared by the new and edit popovers, which each decide how to save.
+// A new task's form, laid out like the Inbox pane: the schedule and estimate above the title, then the steps and the
+// description. Saved only once the popover is left, since there's no task to save to until then.
 const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, onSubmit }: TaskFormProps) => {
   // The schedule and estimate pickers have forms of their own, whose submits bubble up here through their portals.
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {

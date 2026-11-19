@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 
 import DeleteTaskDialog from "./DeleteTaskDialog";
 
-type DeleteTaskButtonProps = { task: Task };
+type DeleteTaskButtonProps = { task: Task; onDeleted?: () => void };
 
 // Asks before deleting from the pane, where the button sits among the task's own controls.
-const DeleteTaskButton = ({ task }: DeleteTaskButtonProps) => {
+const DeleteTaskButton = ({ task, onDeleted }: DeleteTaskButtonProps) => {
   const [showDialog, setShowDialog] = useState(false);
 
   const handleOpen = () => setShowDialog(true);
@@ -29,7 +29,7 @@ const DeleteTaskButton = ({ task }: DeleteTaskButtonProps) => {
       >
         <Trash2 />
       </Button>
-      {showDialog && <DeleteTaskDialog task={task} onClose={handleClose} />}
+      {showDialog && <DeleteTaskDialog task={task} onClose={handleClose} onDeleted={onDeleted} />}
     </>
   );
 };

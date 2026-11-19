@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { cn } from "cn";
+
 import type { Task } from "@/apis/types";
 import Breadcrumbs from "@/components/commons/Breadcrumbs";
 import DueDatePicker from "@/components/commons/DueDatePicker";
@@ -9,21 +11,28 @@ import type { Draft } from "@/components/commons/Steps/types";
 import TaskDescription from "@/components/commons/TaskDescription";
 import TaskEstimatePicker from "@/components/commons/TaskEstimatePicker";
 import TaskSteps from "@/components/commons/TaskSteps";
+import TitleInput from "@/components/commons/TitleInput";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import useCompleteTask from "@/hooks/useCompleteTask";
+import useRenameTask from "@/hooks/useRenameTask";
 
-import TitleInput from "../TitleInput";
-import useCompleteTask from "../useCompleteTask";
-import useRenameTask from "../useRenameTask";
 import DeleteTaskButton from "./DeleteTaskButton";
 import StartTaskButton from "./StartTaskButton";
 
-type DetailsProps = { task: Task };
+type TaskDetailsProps = {
+  task: Task;
+  // Tighter spacing and a smaller title, for a popover rather than a full pane.
+  isCompact?: boolean;
+  // The task left this view, completed or deleted. The Inbox pane closes itself; a popover passes its close here.
+  onRemoved?: () => void;
+};
 
-// Rendered with `key={task.id}`, so an open step row doesn't carry over to the next task picked.
-const Details = ({ task }: DetailsProps) => {
+// A task's full view, as the Inbox pane and the Calendar's popover show it. Everything saves as it changes. Rendered with
+// `key={task.id}`, so an open step row doesn't carry over to the next task picked.
+const TaskDetails = ({ task, isCompact = false, onRemoved }: TaskDetailsProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
-  const { completeTask, isCompleting, error: completeError } = useCompleteTask(task.id);
+  const { completeTask, isCompleting, error: completeError } = useCompleteTask(task.id, onRemoved);
   const { title, renameTask, error: renameError } = useRenameTask(task);
   const error = completeError ?? renameError;
 
@@ -31,14 +40,14 @@ const Details = ({ task }: DetailsProps) => {
   const handleAddStep = () => setStepDraft((draft) => draft ?? NEW_STEP_DRAFT);
 
   return (
-    <article className="flex flex-1 flex-col gap-8">
+    <article className={cn("flex flex-1 flex-col", isCompact ? "gap-5" : "gap-8")}>
       {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
-      <div className="flex flex-col gap-2">
+      <div className={cn("flex flex-col", isCompact ? "gap-1" : "gap-2")}>
         {/* The complete checkbox, the due date and the estimate sit in the top-left corner, above the title; the add-step,
             delete and start buttons in the top right. */}
-        <header className="flex flex-col gap-3">
-          <div className="flex min-h-8 items-start justify-between gap-4">
-            <div className="flex min-h-8 items-start gap-3">
+        <header className={cn("flex flex-col", isCompact ? "gap-1.5" : "gap-3")}>
+          <div className={cn("flex min-h-8 items-start justify-between", isCompact ? "gap-2" : "gap-4")}>
+            <div className={cn("flex min-h-8 items-start", isCompact ? "gap-2" : "gap-3")}>
               <Checkbox
                 aria-label="Mark as complete"
                 checked={isCompleting}
@@ -49,17 +58,17 @@ const Details = ({ task }: DetailsProps) => {
               <Separator className="mt-2 data-[orientation=vertical]:h-4" orientation="vertical" />
               <div className="flex flex-wrap items-start gap-1">
                 <DueDatePicker task={task} />
-                <TaskEstimatePicker task={task} />
+                <TaskEstimatePicker isCompact={isCompact} task={task} />
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
-              <DeleteTaskButton task={task} />
-              <StartTaskButton task={task} />
+              <DeleteTaskButton task={task} onDeleted={onRemoved} />
+              <StartTaskButton isIconOnly={isCompact} task={task} />
             </div>
           </div>
           {/* The heading keeps the title as its name; the field inside it edits the title in place. */}
-          <h2 aria-label={title} className="flex text-xl font-semibold">
+          <h2 aria-label={title} className={cn("flex font-semibold", isCompact ? "text-lg" : "text-xl")}>
             <TitleInput
               className="-mx-2 w-full rounded-md px-2 py-0.5 transition-colors hover:bg-muted focus:bg-muted"
               label="Task title"
@@ -82,4 +91,4 @@ const Details = ({ task }: DetailsProps) => {
   );
 };
 
-export default Details;
+export default TaskDetails;

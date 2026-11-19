@@ -1,13 +1,18 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { addDays, addMonths, format, startOfDay, startOfHour, subHours } from "date-fns";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import calendarEventsApi from "@/apis/calendar_events";
+import currentTimeLogsApi from "@/apis/current_time_logs";
+import tasksApi from "@/apis/tasks";
 import type { Task, TimeLog } from "@/apis/types";
+import userPreferencesApi from "@/apis/user_preferences";
 import { renderWithProviders } from "@/test/utils";
 
 import Calendar from ".";
+
+vi.mock("@/utils/completionSound");
 
 const startsAt = startOfHour(new Date(Date.now() + 2 * 60 * 60_000));
 
@@ -72,15 +77,65 @@ describe("Calendar", () => {
     expect(fetchList).toHaveBeenLastCalledWith({ from: expect.any(String), to: expect.any(String) });
   });
 
-  it("opens a task for editing when it's clicked", async () => {
-    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [TASK], timeLogs: [] });
+  // A task opens in the Inbox pane's view, so the pane's own data is stubbed too.
+  const openTask = async (task: Task = TASK) => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [task], timeLogs: [] });
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
+      userPreference: { theme: "system", completionSound: "bell", breakAlarmSound: "classic" },
+    });
     renderWithProviders(<Calendar />);
     await chooseView("Month");
-
     await userEvent.click(await screen.findByTitle("Plan the week"));
 
-    const dialog = await screen.findByRole("dialog", { name: "Edit task" });
-    expect(within(dialog).getByRole("textbox", { name: "Title" })).toHaveValue("Plan the week");
+    return screen.findByRole("dialog", { name: "Edit task" });
+  };
+
+  it("opens a task in the Inbox pane's view, with all its controls, when it's clicked", async () => {
+    const dialog = await openTask();
+
+    expect(within(dialog).getByRole("textbox", { name: "Task title" })).toHaveValue("Plan the week");
+    expect(within(dialog).getByRole("checkbox", { name: "Mark as complete" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "30 min" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Add step" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Delete task" })).toBeInTheDocument();
+    expect(await within(dialog).findByRole("button", { name: "Start" })).toBeEnabled();
+  });
+
+  it("shows an unset estimate as just its icon, which still opens the picker", async () => {
+    const dialog = await openTask({ ...TASK, estimatedMinutes: null });
+
+    const estimate = within(dialog).getByRole("button", { name: "Estimate" });
+    expect(estimate).not.toHaveTextContent("Estimate");
+
+    // The tooltip shares the button with the picker, which still opens on click.
+    await userEvent.click(estimate);
+    expect(await screen.findByLabelText("Hours")).toBeInTheDocument();
+  });
+
+  it("closes the task's popover once the task is completed", async () => {
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: { ...TASK, isCompleted: true } });
+    const dialog = await openTask();
+
+    await userEvent.click(within(dialog).getByRole("checkbox", { name: "Mark as complete" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({ id: "task-1", isCompleted: true }, expect.anything()),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Edit task" })).not.toBeInTheDocument());
+  });
+
+  it("closes the task's popover once the task is deleted", async () => {
+    const destroy = vi.spyOn(tasksApi, "destroy").mockResolvedValue(undefined as never);
+    const dialog = await openTask();
+
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
+    const confirmation = await screen.findByRole("dialog", { name: "Delete this task?" });
+    await userEvent.click(within(confirmation).getByRole("button", { name: "Delete task" }));
+
+    await waitFor(() => expect(destroy).toHaveBeenCalledWith("task-1", expect.anything()));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Edit task" })).not.toBeInTheDocument());
   });
 
   it("switches between the views", async () => {

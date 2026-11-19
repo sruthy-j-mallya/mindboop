@@ -1,11 +1,10 @@
 import { ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router";
 
+import TaskDetails from "@/components/commons/TaskDetails";
 import { Button } from "@/components/ui/button";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 import routes from "@/routes";
-
-import Details from "./Details";
 
 const TaskPane = () => {
   const { taskId = "" } = useParams();
@@ -25,7 +24,7 @@ const TaskPane = () => {
           {error?.message}
         </p>
       )}
-      {task && <Details key={task.id} task={task} />}
+      {task && <TaskDetails key={task.id} task={task} />}
     </div>
   );
 };
