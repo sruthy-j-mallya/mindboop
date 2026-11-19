@@ -98,7 +98,7 @@ export const SLOT_CLASS_NAMES = { PAST: "calendar-slot-past", LOCKED: "calendar-
 
 export const MOVE_ERRORS = {
   TASK_IN_PAST: "Tasks can only move to now or later.",
-  TIME_LOG_OUTSIDE_WINDOW: `Time logs can only sit within the last ${TIME_LOG_WINDOW_HOURS} hours.`,
+  TIME_LOG_OUTSIDE_WINDOW: `Can't move this time log there. Time logs can only be edited within the last ${TIME_LOG_WINDOW_HOURS} hours.`,
   TIME_LOG_ALL_DAY: "A time log needs a start and an end time.",
 } as const;
 
