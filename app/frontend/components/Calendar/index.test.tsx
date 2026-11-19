@@ -116,8 +116,7 @@ describe("Calendar", () => {
     expect(within(dialog).getByRole("textbox", { name: "Task title" })).toHaveValue("Plan the week");
     expect(within(dialog).getByRole("checkbox", { name: "Mark as complete" })).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "30 min" })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Add step" })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Delete task" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "More actions" })).toBeInTheDocument();
     expect(await within(dialog).findByRole("button", { name: "Start" })).toBeEnabled();
   });
 
@@ -226,7 +225,8 @@ describe("Calendar", () => {
     const destroy = vi.spyOn(tasksApi, "destroy").mockResolvedValue(undefined as never);
     const dialog = await openTask();
 
-    await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
     const confirmation = await screen.findByRole("dialog", { name: "Delete this task?" });
     await userEvent.click(within(confirmation).getByRole("button", { name: "Delete task" }));
 

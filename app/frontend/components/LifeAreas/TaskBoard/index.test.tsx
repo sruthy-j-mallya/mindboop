@@ -297,7 +297,8 @@ describe("Inbox", () => {
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
     expect(await screen.findByRole("heading", { name: "Cancel the gym" })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Delete task" }));
+    await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
     const dialog = await screen.findByRole("dialog", { name: "Delete this task?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
 
@@ -362,6 +363,33 @@ describe("Inbox", () => {
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
 
+  it("starts the first step from the pane's menu, with the new row focused", async () => {
+    const task = buildTask({ title: "Plan the trip" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Add step" }));
+
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "New step" })).toHaveFocus());
+  });
+
+  it("leaves adding a step out of the pane's menu once the task has steps", async () => {
+    const task = buildTask({
+      title: "Plan the trip",
+      checklistItems: [{ id: crypto.randomUUID(), title: "Book flights", isCompleted: false }],
+    });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+
+    expect(screen.getByRole("menuitem", { name: "Delete task" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Add step" })).not.toBeInTheDocument();
+  });
+
   it("keeps the task when deleting is cancelled", async () => {
     const task = buildTask({ title: "Cancel the gym" });
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
@@ -369,7 +397,8 @@ describe("Inbox", () => {
     const destroy = vi.spyOn(tasksApi, "destroy");
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "Delete task" }));
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
     await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -384,7 +413,8 @@ describe("Inbox", () => {
     vi.spyOn(tasksApi, "destroy").mockRejectedValue(new ApiError(403, "Not allowed"));
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "Delete task" }));
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
     const dialog = await screen.findByRole("dialog", { name: "Delete this task?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
 
