@@ -1,5 +1,5 @@
-import { CalendarDays, Inbox, LogOut, Settings, SquareParking, Timer, Zap } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { Boxes, CalendarDays, LogOut, Settings, SquareParking, Timer, Zap } from "lucide-react";
+import { Link, useLocation, useMatch } from "react-router";
 
 import {
   Sidebar,
@@ -22,6 +22,9 @@ const AppSidebar = () => {
 
   const handleLogout = () => logout();
   const handleNavigate = () => setOpenMobile(false);
+  // The areas of life and the Inbox share one page, with a sidebar of their own to switch between them.
+  const isInboxActive = !!useMatch({ path: routes.inbox.index, end: false });
+  const isLifeAreaActive = !!useMatch({ path: routes.lifeAreas.index, end: false });
 
   return (
     <Sidebar collapsible="icon">
@@ -38,10 +41,14 @@ const AppSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith(routes.inbox.index)} tooltip="Inbox">
+                <SidebarMenuButton
+                  asChild
+                  isActive={isInboxActive || isLifeAreaActive}
+                  tooltip="Areas of life"
+                >
                   <Link to={routes.inbox.index} onClick={handleNavigate}>
-                    <Inbox />
-                    <span>Inbox</span>
+                    <Boxes />
+                    <span>Areas of life</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

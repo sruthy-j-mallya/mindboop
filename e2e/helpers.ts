@@ -28,8 +28,12 @@ export const backdateSession = (email: string, seconds: number) =>
   });
 
 // Opens a new step row, types each step followed by Enter (which opens the next row), then closes the last empty row.
+// In a task's pane "Add step" is a menu item, so open the "More actions" menu first.
 export const addSteps = async (page: Page, steps: string[]) => {
-  await page.getByRole("button", { name: "Add step" }).click();
+  await page
+    .getByRole("button", { name: "Add step" })
+    .or(page.getByRole("menuitem", { name: "Add step" }))
+    .click();
   const input = page.getByRole("textbox", { name: "New step" });
 
   for (const step of steps) {

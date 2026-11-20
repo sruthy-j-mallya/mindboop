@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
+import lifeAreasApi from "@/apis/life_areas";
 import taskRestorationsApi from "@/apis/task_restorations";
 import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
@@ -14,9 +15,10 @@ import timeLogCompletionsApi from "@/apis/time_log_completions";
 import timeLogsApi from "@/apis/time_logs";
 import type { Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
-import Inbox from "@/components/Inbox";
-import NoTaskSelected from "@/components/Inbox/NoTaskSelected";
-import TaskPane from "@/components/Inbox/TaskPane";
+import LifeAreas from "@/components/LifeAreas";
+import TaskBoard from "@/components/LifeAreas/TaskBoard";
+import NoTaskSelected from "@/components/LifeAreas/TaskBoard/NoTaskSelected";
+import TaskPane from "@/components/LifeAreas/TaskBoard/TaskPane";
 import { Toaster } from "@/components/ui/sonner";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
@@ -34,6 +36,7 @@ const buildTask = (overrides: Partial<Task> = {}): Task => ({
   isCompleted: false,
   startsAt: null,
   endsAt: null,
+  lifeAreaId: null,
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
   checklistItems: [],
@@ -50,6 +53,7 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => {
     taskId: crypto.randomUUID(),
     title: null,
     taskTitle: null,
+    lifeAreaId: null,
     isTaskDeleted: false,
     mode: "timer",
     timerPreset: 25,
@@ -80,9 +84,15 @@ const renderInbox = (initialPath: string = routes.inbox.index) =>
   renderWithProviders(
     <>
       <Routes>
-        <Route element={<Inbox />} path={routes.inbox.index}>
-          <Route index element={<NoTaskSelected />} />
-          <Route element={<TaskPane />} path={routes.inbox.show} />
+        <Route element={<LifeAreas />}>
+          <Route element={<TaskBoard />} path={routes.inbox.index}>
+            <Route index element={<NoTaskSelected />} />
+            <Route element={<TaskPane />} path={routes.inbox.show} />
+          </Route>
+          <Route element={<TaskBoard />} path={routes.lifeAreas.show}>
+            <Route index element={<NoTaskSelected />} />
+            <Route element={<TaskPane />} path={routes.lifeAreas.task} />
+          </Route>
         </Route>
         <Route element={<TimerPage />} path={routes.timer} />
       </Routes>
@@ -102,6 +112,7 @@ describe("Inbox", () => {
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
   });
 
   it("lists only incomplete tasks", async () => {
@@ -113,7 +124,7 @@ describe("Inbox", () => {
 
     expect(await screen.findByRole("textbox", { name: "First" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Second" })).toBeInTheDocument();
-    expect(fetchList).toHaveBeenCalledWith({ isCompleted: false, page: 1 });
+    expect(fetchList).toHaveBeenCalledWith({ isCompleted: false, isInInbox: true, page: 1 });
   });
 
   it("says so when there are no tasks", async () => {
@@ -136,7 +147,9 @@ describe("Inbox", () => {
 
     await userEvent.type(input, "  Call the bank {Enter}");
 
-    await waitFor(() => expect(create).toHaveBeenCalledWith({ title: "Call the bank" }, expect.anything()));
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith({ title: "Call the bank", lifeAreaId: null }, expect.anything()),
+    );
     expect(await screen.findByRole("textbox", { name: "Call the bank" })).toBeInTheDocument();
     expect(input).toHaveValue("");
   });
@@ -284,7 +297,8 @@ describe("Inbox", () => {
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
     expect(await screen.findByRole("heading", { name: "Cancel the gym" })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Delete task" }));
+    await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
     const dialog = await screen.findByRole("dialog", { name: "Delete this task?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
 
@@ -349,6 +363,33 @@ describe("Inbox", () => {
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
 
+  it("starts the first step from the pane's menu, with the new row focused", async () => {
+    const task = buildTask({ title: "Plan the trip" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Add step" }));
+
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "New step" })).toHaveFocus());
+  });
+
+  it("leaves adding a step out of the pane's menu once the task has steps", async () => {
+    const task = buildTask({
+      title: "Plan the trip",
+      checklistItems: [{ id: crypto.randomUUID(), title: "Book flights", isCompleted: false }],
+    });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+
+    expect(screen.getByRole("menuitem", { name: "Delete task" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Add step" })).not.toBeInTheDocument();
+  });
+
   it("keeps the task when deleting is cancelled", async () => {
     const task = buildTask({ title: "Cancel the gym" });
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
@@ -356,7 +397,8 @@ describe("Inbox", () => {
     const destroy = vi.spyOn(tasksApi, "destroy");
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "Delete task" }));
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
     await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -371,7 +413,8 @@ describe("Inbox", () => {
     vi.spyOn(tasksApi, "destroy").mockRejectedValue(new ApiError(403, "Not allowed"));
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "Delete task" }));
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
     const dialog = await screen.findByRole("dialog", { name: "Delete this task?" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
 
@@ -585,7 +628,9 @@ describe("Inbox", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: /Today 9:00am/ }));
+    // The list row shows the date too; this is the pane's.
+    const pane = await screen.findByRole("article");
+    await userEvent.click(within(pane).getByRole("button", { name: /Today 9:00am/ }));
     await userEvent.click(screen.getByRole("tab", { name: "Duration" }));
     const endTime = screen.getByRole("combobox", { name: "End time" });
     expect(endTime).toHaveValue("10:00 AM");

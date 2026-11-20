@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import currentTimeLogsApi from "@/apis/current_time_logs";
+import lifeAreasApi from "@/apis/life_areas";
 import sessionsApi from "@/apis/sessions";
 import type { TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
@@ -19,11 +20,14 @@ vi.mock("@/components/commons/Ambience/utils", async (importOriginal) => ({
 
 const STARTED_AT = "2026-11-05T10:00:00.000Z";
 
+const LIFE_AREA_ID = "8d0f2b6e-4c1a-4e3b-9f7d-1a2b3c4d5e6f";
+
 const TIME_LOG: TimeLog = {
   id: "5b7c9e14-2a3d-4f60-8e1b-6c4d2f0a9b37",
   taskId: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23",
   title: null,
   taskTitle: null,
+  lifeAreaId: null,
   isTaskDeleted: false,
   mode: "timer",
   timerPreset: 25,
@@ -86,13 +90,13 @@ describe("AppLayout", () => {
 
     expect(content.getAllByRole("link").map((link) => link.textContent)).toEqual([
       "Quick start",
-      "Inbox",
+      "Areas of life",
       "Calendar",
       "Timer",
       "Parking lot",
     ]);
     expect(content.getByRole("link", { name: "Quick start" })).toHaveAttribute("href", routes.root);
-    expect(content.getByRole("link", { name: "Inbox" })).toHaveAttribute("href", routes.inbox.index);
+    expect(content.getByRole("link", { name: "Areas of life" })).toHaveAttribute("href", routes.inbox.index);
     expect(content.getByRole("link", { name: "Calendar" })).toHaveAttribute("href", routes.calendar);
     expect(content.getByRole("link", { name: "Timer" })).toHaveAttribute("href", routes.timer);
     expect(content.getByRole("link", { name: "Parking lot" })).toHaveAttribute("href", routes.parkingLot);
@@ -155,7 +159,38 @@ describe("AppLayout", () => {
       vi.useRealTimers();
       // Not unstubAllGlobals, which would also drop the setup file's matchMedia stub.
       vi.clearAllMocks();
-      useAmbienceStore.setState({ soundId: "none" });
+      useAmbienceStore.setState({ soundId: "none", lifeAreaSoundTimeLogId: null });
+    });
+
+    it("starts a session on a task in an area of life with the area's sound, once", async () => {
+      useAmbienceStore.setState({ soundId: "rain" });
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({
+        timeLog: { ...TIME_LOG, lifeAreaId: LIFE_AREA_ID },
+      });
+      vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
+        lifeAreas: [
+          {
+            id: LIFE_AREA_ID,
+            name: "Work",
+            color: "indigo",
+            icon: "briefcase",
+            defaultSound: "piano",
+            createdAt: STARTED_AT,
+            updatedAt: STARTED_AT,
+          },
+        ],
+      });
+      renderWithProviders(<AppLayout />, undefined, routes.inbox.index);
+
+      expect(await screen.findByRole("region", { name: "Current session" })).toBeInTheDocument();
+      await act(() => Promise.resolve());
+      expect(useAmbienceStore.getState().soundId).toBe("piano");
+      expect(playSound).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), "piano");
+
+      // A sound picked during the session stays: the area's applies only as it starts.
+      act(() => useAmbienceStore.getState().setSoundId("waves"));
+      act(() => useAmbienceStore.getState().applyLifeAreaSound(TIME_LOG.id, "piano"));
+      expect(useAmbienceStore.getState().soundId).toBe("waves");
     });
 
     it("floats a mini timer away from the Timer page, leading back to it and hiding there", async () => {

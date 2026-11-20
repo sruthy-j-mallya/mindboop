@@ -33,20 +33,19 @@ const addTasks = async (page: Page, titles: string[]) => {
 test("add tasks to the Inbox, open one, and complete it", async ({ page }) => {
   await signUp(page);
 
-  await page.getByRole("link", { name: "Inbox" }).click();
+  await page.getByRole("link", { name: "Areas of life" }).click();
   await expect(page).toHaveURL("/inbox");
   await expect(page.getByText("Your Inbox is empty")).toBeVisible();
 
-  const input = page.getByRole("textbox", { name: "New task" });
-  await input.fill("Water the plants");
-  await input.press("Enter");
-  await input.fill("Renew passport");
-  await input.press("Enter");
+  // Each save lands before the next is typed, so "newest" is the order they were added in.
+  await addTasks(page, ["Water the plants", "Renew passport"]);
 
-  await expectTasks(page, ["Water the plants", "Renew passport"]);
+  // Newest first, as neither has a date.
+  await expectTasks(page, ["Renew passport", "Water the plants"]);
 
   await page.getByRole("textbox", { name: "Renew passport" }).click();
   await expect(page.getByRole("heading", { name: "Renew passport" })).toBeVisible();
+  await page.getByRole("button", { name: "More actions" }).click();
   await addSteps(page, ["Book an appointment"]);
   await expect(page.getByRole("list", { name: "Steps" })).toHaveText("Book an appointment");
 
@@ -71,13 +70,15 @@ test("delete a task from its pane", async ({ page }) => {
   await addTasks(page, ["Cancel the gym", "Sort the mail"]);
 
   await page.getByRole("textbox", { name: "Cancel the gym" }).click();
-  await page.getByRole("button", { name: "Delete task" }).click();
+  await page.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Delete task" }).click();
   const dialog = page.getByRole("dialog", { name: "Delete this task?" });
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByRole("heading", { name: "Cancel the gym" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Delete task" }).click();
+  await page.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Delete task" }).click();
   await dialog.getByRole("button", { name: "Delete task" }).click();
   await expect(page).toHaveURL("/inbox");
   await expectTasks(page, ["Sort the mail"]);
@@ -92,7 +93,7 @@ test("delete a task from its row and undo it", async ({ page }) => {
   await page.goto("/inbox");
   await addTasks(page, ["Cancel the gym", "Sort the mail"]);
 
-  await expectTasks(page, ["Cancel the gym", "Sort the mail"]);
+  await expectTasks(page, ["Sort the mail", "Cancel the gym"]);
 
   await page.getByRole("textbox", { name: "Cancel the gym" }).hover();
   await page.getByRole("button", { name: "Delete Cancel the gym" }).click();
@@ -100,10 +101,10 @@ test("delete a task from its row and undo it", async ({ page }) => {
   await expect(page.getByText("Deleted “Cancel the gym”")).toBeVisible();
 
   await page.getByRole("button", { name: "Undo" }).click();
-  await expectTasks(page, ["Cancel the gym", "Sort the mail"]);
+  await expectTasks(page, ["Sort the mail", "Cancel the gym"]);
 
   await page.reload();
-  await expectTasks(page, ["Cancel the gym", "Sort the mail"]);
+  await expectTasks(page, ["Sort the mail", "Cancel the gym"]);
 });
 
 test("rename a task in its row", async ({ page }) => {

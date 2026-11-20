@@ -5,11 +5,11 @@ import { cn } from "cn";
 import type { Task } from "@/apis/types";
 import Breadcrumbs from "@/components/commons/Breadcrumbs";
 import DueDatePicker from "@/components/commons/DueDatePicker";
-import AddStepButton from "@/components/commons/Steps/AddStepButton";
 import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
 import type { Draft } from "@/components/commons/Steps/types";
 import TaskDescription from "@/components/commons/TaskDescription";
 import TaskEstimatePicker from "@/components/commons/TaskEstimatePicker";
+import TaskLifeAreaPicker from "@/components/commons/TaskLifeAreaPicker";
 import TaskSteps from "@/components/commons/TaskSteps";
 import TitleInput from "@/components/commons/TitleInput";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,8 +17,8 @@ import { Separator } from "@/components/ui/separator";
 import useCompleteTask from "@/hooks/useCompleteTask";
 import useRenameTask from "@/hooks/useRenameTask";
 
-import DeleteTaskButton from "./DeleteTaskButton";
 import StartTaskButton from "./StartTaskButton";
+import TaskActionsMenu from "./TaskActionsMenu";
 
 type TaskDetailsProps = {
   task: Task;
@@ -43,8 +43,8 @@ const TaskDetails = ({ task, isCompact = false, onRemoved }: TaskDetailsProps) =
     <article className={cn("flex flex-1 flex-col", isCompact ? "gap-5" : "gap-8")}>
       {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
       <div className={cn("flex flex-col", isCompact ? "gap-1" : "gap-2")}>
-        {/* The complete checkbox, the due date and the estimate sit in the top-left corner, above the title; the add-step,
-            delete and start buttons in the top right. */}
+        {/* The complete checkbox, the due date, the estimate and the area of life sit in the top-left corner, above the title; the start
+            button and a menu holding the rarer actions (add step, delete) in the top right. */}
         <header className={cn("flex flex-col", isCompact ? "gap-1.5" : "gap-3")}>
           <div className={cn("flex min-h-8 items-start justify-between", isCompact ? "gap-2" : "gap-4")}>
             <div className={cn("flex min-h-8 items-start", isCompact ? "gap-2" : "gap-3")}>
@@ -59,11 +59,11 @@ const TaskDetails = ({ task, isCompact = false, onRemoved }: TaskDetailsProps) =
               <div className="flex flex-wrap items-start gap-1">
                 <DueDatePicker task={task} />
                 <TaskEstimatePicker isCompact={isCompact} task={task} />
+                <TaskLifeAreaPicker isCompact={isCompact} task={task} />
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
-              <DeleteTaskButton task={task} onDeleted={onRemoved} />
+              <TaskActionsMenu task={task} onAddStep={handleAddStep} onDeleted={onRemoved} />
               <StartTaskButton isIconOnly={isCompact} task={task} />
             </div>
           </div>

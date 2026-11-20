@@ -12,9 +12,10 @@ import {
   SELECTION_ERRORS,
   VIEW_STORAGE_KEY,
 } from "./constants";
-import type { CalendarEvent, CalendarView, WheelInput } from "./types";
+import type { CalendarEvent, CalendarView, TimeLogEvent, WheelInput } from "./types";
 import {
   getCurrentSlotStart,
+  getEventProps,
   getMovedTaskSchedule,
   getMoveError,
   getPagingDistance,
@@ -25,6 +26,7 @@ import {
   shiftDate,
   stepWheelGesture,
   toCalendarEvents,
+  toLifeAreaColors,
   toTaskTimes,
   toWheelDelta,
 } from "./utils";
@@ -44,6 +46,7 @@ const buildTask = (overrides: Partial<Task> = {}): Task => ({
   isCompleted: false,
   startsAt: at(13, 9).toISOString(),
   endsAt: null,
+  lifeAreaId: null,
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
   checklistItems: [],
@@ -56,6 +59,7 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => ({
   taskId: null,
   title: "Answer emails",
   taskTitle: null,
+  lifeAreaId: null,
   isTaskDeleted: false,
   mode: "manual",
   timerPreset: null,
@@ -256,6 +260,44 @@ describe("toTaskTimes", () => {
     });
 
     expect(toTaskTimes(task)).toEqual({ start: at(13), end: at(16), allDay: true });
+  });
+});
+
+describe("getEventProps", () => {
+  const lifeAreaColors = toLifeAreaColors([
+    {
+      id: "area-1",
+      name: "Work",
+      color: "teal",
+      icon: "briefcase",
+      defaultSound: "none",
+      createdAt: new Date(NOW).toISOString(),
+      updatedAt: new Date(NOW).toISOString(),
+    },
+  ]);
+  const [timeLogEvent, taskEvent] = toCalendarEvents(
+    { tasks: [buildTask({ lifeAreaId: "area-1" })], timeLogs: [buildTimeLog({ lifeAreaId: "area-1" })] },
+    NOW,
+    {},
+  );
+
+  it("colours tasks and time logs by their area of life", () => {
+    expect(getEventProps(taskEvent, lifeAreaColors)).toEqual({
+      className: "calendar-event-task calendar-event-area",
+      style: { "--area-color": "#0f766e" },
+    });
+    expect(getEventProps(timeLogEvent, lifeAreaColors)).toEqual({
+      className: "calendar-event-time-log calendar-event-area",
+      style: { "--area-color": "#0f766e" },
+    });
+  });
+
+  it("leaves events in no area (or an unknown one) in the default colours", () => {
+    expect(getEventProps(taskEvent, new Map())).toEqual({ className: "calendar-event-task" });
+    const eventInNoArea: TimeLogEvent = { ...(timeLogEvent as TimeLogEvent), timeLog: buildTimeLog() };
+    expect(getEventProps(eventInNoArea, lifeAreaColors)).toEqual({
+      className: "calendar-event-time-log",
+    });
   });
 });
 

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 
 import type { TaskFormValues } from "./constants";
 import EstimateField from "./EstimateField";
+import LifeAreaField from "./LifeAreaField";
 import ScheduleField from "./ScheduleField";
 
 type TaskFormProps = {
@@ -21,7 +22,7 @@ type TaskFormProps = {
   onSubmit: () => void;
 };
 
-// A new task's form, laid out like the Inbox pane: the schedule and estimate above the title, then the steps and the
+// A new task's form, laid out like the Inbox pane: the schedule, estimate and area of life above the title, then the steps and the
 // description. Saved only once the popover is left, since there's no task to save to until then.
 const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, onSubmit }: TaskFormProps) => {
   // The schedule and estimate pickers have forms of their own, whose submits bubble up here through their portals.
@@ -37,6 +38,7 @@ const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, on
           <div className="-ml-2 flex flex-wrap items-start gap-1">
             <ScheduleField control={control} />
             <EstimateField control={control} />
+            <LifeAreaField control={control} />
           </div>
           {showAddStep && <AddStepButton onClick={onAddStep} />}
         </div>

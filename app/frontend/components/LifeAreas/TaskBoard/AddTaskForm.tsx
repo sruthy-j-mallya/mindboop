@@ -2,15 +2,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 
+import type { LifeArea } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCreateTask } from "@/hooks/reactQuery/useTasksApi";
 
+import { INBOX_NAME } from "../constants";
 import { INITIAL_FORM_VALUES, TASK_VALIDATION_SCHEMA, type TaskFormValues } from "./constants";
 
-// Adds a task by its title. The input clears as soon as it's sent, so the next one can be typed straight away (and
+type AddTaskFormProps = { lifeArea?: LifeArea };
+
+// Adds a task by its title, to the area shown (or the Inbox). The input clears as soon as it's sent, so the next one can be typed straight away (and
 // sent while the last is still saving). A failed one comes back into the input if it's still empty.
-const AddTaskForm = () => {
+const AddTaskForm = ({ lifeArea }: AddTaskFormProps) => {
   const { mutate: createTask, error } = useCreateTask();
   const {
     register,
@@ -25,6 +29,7 @@ const AddTaskForm = () => {
     resolver: zodResolver(TASK_VALIDATION_SCHEMA),
   });
   const errorMessage = errors.title?.message ?? error?.message;
+  const listName = lifeArea?.name ?? `your ${INBOX_NAME}`;
 
   const handleBlur = () => clearErrors("title");
 
@@ -33,7 +38,7 @@ const AddTaskForm = () => {
     const handleError = () => {
       if (!getValues("title")) setValue("title", title);
     };
-    createTask({ title }, { onError: handleError });
+    createTask({ title, lifeAreaId: lifeArea?.id ?? null }, { onError: handleError });
   };
 
   return (
@@ -44,7 +49,7 @@ const AddTaskForm = () => {
           aria-invalid={!!errors.title}
           aria-label="New task"
           autoComplete="off"
-          placeholder="Add a task to your Inbox"
+          placeholder={`Add a task to ${listName}`}
           {...register("title", { onBlur: handleBlur })}
         />
         <Button aria-label="Add task" size="icon" type="submit">

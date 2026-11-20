@@ -32,7 +32,7 @@ Every error response has one shape:
 | POST   | `/api/registration`                       | `token`, `password`, `password_confirmation`                                 | 201 `{ user }`, sets cookie   |
 | POST   | `/api/passwords`                          | `email_address`                                                              | 202 `{ message }`             |
 | PATCH  | `/api/passwords/:token`                   | `password`, `password_confirmation`                                          | 204, signs out everywhere     |
-| GET    | `/api/tasks`                              | `page`, `is_completed`, `search_term` (optional)                             | 200 `{ tasks, … }`            |
+| GET    | `/api/tasks`                              | `page`, `is_completed`, `search_term`, `is_in_inbox`, `life_area_id` (opt.)  | 200 `{ tasks, … }`            |
 | GET    | `/api/tasks/:id`                          | –                                                                            | 200 `{ task }`                |
 | POST   | `/api/tasks`                              | Task fields (`title` required)                                               | 201 `{ task }`                |
 | PATCH  | `/api/tasks/:id`                          | Task fields                                                                  | 200 `{ task }`                |
@@ -41,6 +41,10 @@ Every error response has one shape:
 | POST   | `/api/tasks/:task_id/checklist_items`     | `title`, `is_completed`, `position` (optional)                               | 201 `{ task }`                |
 | PATCH  | `/api/tasks/:task_id/checklist_items/:id` | `title`, `is_completed`, `position` (all optional)                           | 200 `{ task }`                |
 | DELETE | `/api/tasks/:task_id/checklist_items/:id` | –                                                                            | 200 `{ task }`, soft delete   |
+| GET    | `/api/life_areas`                         | –                                                                            | 200 `{ life_areas }`          |
+| POST   | `/api/life_areas`                         | `name`, `color`, `icon`, `default_sound` (optional)                          | 201 `{ life_area }`           |
+| PATCH  | `/api/life_areas/:id`                     | `name`, `color`, `icon`, `default_sound` (any)                               | 200 `{ life_area }`           |
+| DELETE | `/api/life_areas/:id`                     | –                                                                            | 204, tasks go to the Inbox    |
 | POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                                    | 201 `{ task, time_log }`      |
 | POST   | `/api/time_logs`                          | `task_id`, Time log fields                                                   | 201 `{ time_log }`            |
 | PATCH  | `/api/time_logs/:id`                      | `started_at`, `completed_at`                                                 | 200 `{ time_log }`            |
@@ -70,7 +74,7 @@ Every error response has one shape:
 ## Tasks
 
 Tasks belong to the signed-in user. `GET /api/tasks` lists only their undeleted tasks, soonest `starts_at` first
-with undated tasks last; ties go to the oldest task. Another user's task gets a 403. A deleted or unknown task gets a 404.
+with undated tasks last; ties go to the newest task. Another user's task gets a 403. A deleted or unknown task gets a 404.
 
 `DELETE /api/tasks/:id` soft deletes the task. Its time logs stay: work done before the delete still counts, and they
 stay on the Calendar. A session still running on it ends at that moment, the way a completion ends it but without
@@ -82,15 +86,21 @@ A session that ended when the task was deleted stays ended.
 The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
 pages. A missing or invalid `page` returns the first page, and a page past the end returns an empty `tasks`.
 
-`is_completed=false` lists only incomplete tasks (the Inbox), and `is_completed=true` only completed ones. Leaving it out
-lists every task.
+`is_completed=false` lists only incomplete tasks (the Inbox and area lists), and `is_completed=true` only completed ones.
+Leaving it out lists every task.
+
+`is_in_inbox=true` lists only tasks in no area of life (the Inbox), and `life_area_id` only the tasks in that area. Both
+combine with the other filters and paging; leaving them out lists tasks from every area.
 
 `search_term` lists only tasks whose title contains it, ignoring case and surrounding spaces (`%` and `_` match
-literally). A blank one is ignored. It combines with `is_completed` and paging (the Timer's task picker, and the
-Calendar's time log popover to link a task).
+literally). A blank one is ignored. It combines with the other filters and paging (the Inbox and area lists' search, the
+Timer's task picker, and the Calendar's time log popover to link a task).
 
 The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
-`starts_at` and `ends_at`.
+`starts_at`, `ends_at` and `life_area_id`.
+
+`life_area_id` puts the task in one of the user's areas of life; `null` puts it back in the Inbox. Another user's area, or
+an unknown one, gets a 422 ("Life area must exist").
 
 `estimated_minutes` is a whole number from 1 to 1,440 (24 hours), or `null` for no estimate; send `null` to clear it.
 Anything else gets a 422.
@@ -105,7 +115,7 @@ with days but no times; the client then sends the start of each day in the user'
 and a blank description is saved as `null`. The API stores it as given; the client renders it through the editor's schema,
 which leaves out anything the editor can't write, such as raw HTML.
 
-`task` also includes `id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, in
+`task` also includes `id`, `life_area_id`, `created_at`, `updated_at` and `checklist_items`, each `{ id, title, is_completed }`, in
 position order (`app/views/api/tasks/_task.json.jbuilder`). Checklist items are soft-deleted (Discard), and discarded
 items are left out. It also includes `breadcrumbs`, each `{ id, completed_description, restart_description, created_at }`,
 newest first: the notes left each time a session on the task was bailed out of.
@@ -113,6 +123,25 @@ newest first: the notes left each time a session on the task was bailed out of.
 `POST /api/tasks` also accepts `checklist_items_attributes`, an array of `{ title, is_completed }` (`title` required), and
 creates the items with the task, positioned in array order. If any item is invalid, the request gets a 422 and nothing
 is saved. `PATCH /api/tasks/:id` ignores them; change items one at a time through the checklist item endpoints.
+
+## Life areas
+
+Areas of life (Work, Health, …) group a user's tasks; a task in none is in the Inbox. `GET /api/life_areas` lists the
+signed-in user's areas, oldest first, unpaged, as `{ life_areas }`. Another user's area gets a 403, and an unknown one a 404.
+
+Each `life_area` is `{ id, name, color, icon, default_sound, created_at, updated_at }`
+(`app/views/api/life_areas/_life_area.json.jbuilder`).
+
+- `name` is required, up to 40 characters, with runs of spaces squished. It's unique per user, ignoring case
+  ("Name has already been taken").
+- `color` is one of `rose`, `orange`, `amber`, `lime`, `emerald`, `teal`, `sky`, `indigo`, `violet`, `slate`.
+- `icon` is one of `LifeArea::ICONS` (lucide icon names such as `briefcase`, `heart`, `house`, `heart-pulse`).
+- `default_sound` is one of the Ambience sounds (`none`, `clock`, `bells`, `piano`, `harp`, `flute`, `rain`, `waves`,
+  `wind`, `morning`, `campfire`, `night`) and defaults to `none`. A session on one of the area's tasks starts with that
+  background sound; `none` keeps the one picked last.
+
+Anything else gets a 422. `DELETE /api/life_areas/:id` removes the area for good; its tasks (deleted ones included) go
+back to the Inbox.
 
 ## Checklist items
 
@@ -211,7 +240,7 @@ A `timer` or `stopwatch` log starts running at once: the server sets `started_at
 are ignored.
 
 `time_log` also includes `id`, `task_id` (`null` for a log with only a title), `title`, `task_title` (its task's title, or
-`null`), `is_task_deleted` (whether its task was deleted), `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
+`null`), `life_area_id` (its task's area of life, or `null`), `is_task_deleted` (whether its task was deleted), `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
 `{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise
 (`app/views/api/time_logs/_time_log.json.jbuilder`).
 

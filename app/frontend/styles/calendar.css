@@ -244,3 +244,28 @@ html:has(.calendar) body {
 .calendar .rbc-timeslot-group {
   min-height: 3.5rem;
 }
+
+/*
+ * Events in an area of life take its colour (`--area-color`, set inline): tasks solid, time logs see-through with a
+ * dashed edge, as without one. The area colours are deep enough for white text in both themes.
+ */
+.calendar .rbc-event.calendar-event-task.calendar-event-area,
+.calendar .rbc-day-slot .rbc-event.calendar-event-task.calendar-event-area {
+  border-color: var(--area-color);
+  background: var(--area-color);
+  color: #ffffff;
+}
+
+.calendar .rbc-event.calendar-event-task.calendar-event-area.rbc-selected {
+  background: color-mix(in oklab, var(--area-color) 80%, #ffffff);
+}
+
+.calendar .rbc-event.calendar-event-time-log.calendar-event-area,
+.calendar .rbc-day-slot .rbc-event.calendar-event-time-log.calendar-event-area {
+  border-color: color-mix(in oklab, var(--area-color) 60%, transparent);
+  background: color-mix(in oklab, var(--area-color) 16%, transparent);
+}
+
+.calendar .rbc-event.calendar-event-time-log.calendar-event-area.rbc-selected {
+  background: color-mix(in oklab, var(--area-color) 26%, transparent);
+}

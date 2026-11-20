@@ -134,4 +134,27 @@ class TaskTest < ActiveSupport::TestCase
     assert time_log.reload.kept?
     assert_equal 1.hour.ago.to_i, time_log.completed_at.to_i
   end
+
+  def test_that_a_task_can_be_in_one_of_its_users_areas
+    task = create(:task)
+    task.life_area = create(:life_area, user: task.user)
+
+    assert task.valid?
+  end
+
+  def test_that_a_task_cannot_be_in_another_users_area
+    task = create(:task)
+    task.life_area = create(:life_area)
+
+    assert_not task.valid?
+    assert_includes task.errors[:life_area], "must exist"
+  end
+
+  def test_that_a_task_cannot_be_in_an_unknown_area
+    task = create(:task)
+    task.life_area_id = SecureRandom.uuid
+
+    assert_not task.valid?
+    assert_includes task.errors[:life_area], "must exist"
+  end
 end

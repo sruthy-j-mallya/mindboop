@@ -11,7 +11,7 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Inbox" }).click();
+  await page.getByRole("link", { name: "Areas of life" }).click();
   const input = page.getByRole("textbox", { name: "New task" });
   await input.fill("Renew passport");
   await input.press("Enter");
