@@ -11,6 +11,8 @@ test("confirm email, sign up, sign out and sign back in", async ({ page }) => {
 
   await page.getByRole("link", { name: "Create an account" }).click();
   await expect(page).toHaveURL(/\/signup$/);
+  // The URL changes before the sign-up form replaces the sign-in one; filling earlier types into the sign-in form.
+  await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
   await page.getByLabel("Email").fill(email);
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText("Check your email")).toBeVisible();

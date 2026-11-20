@@ -329,15 +329,15 @@ describe("QuickStart", () => {
     expect(screen.queryByText(TITLE_ERROR)).not.toBeInTheDocument();
   });
 
-  it("saves an edit when focus leaves the input", async () => {
+  it("puts the cursor after the step text, and saves the edit when focus leaves the input", async () => {
     renderWithProviders(<QuickStart />);
     await addStep("Outline");
 
     await userEvent.click(screen.getByRole("button", { name: "Edit Outline" }));
-    await userEvent.keyboard("Draft");
+    await userEvent.keyboard(" draft");
     await userEvent.click(screen.getByRole("textbox", { name: "Task" }));
 
-    expect(screen.getByRole("checkbox", { name: "Draft" })).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: "Outline draft" })).toBeVisible();
     expect(screen.getByRole("textbox", { name: "Task" })).toHaveFocus();
   });
 
@@ -384,11 +384,11 @@ describe("QuickStart", () => {
     await addStep("Second");
 
     await userEvent.click(screen.getByRole("button", { name: "Edit Second" }));
-    await userEvent.keyboard("Edited{Enter}");
+    await userEvent.keyboard(" edited{Enter}");
     await addStep("Third");
     await userEvent.click(screen.getByRole("button", { name: "Remove First" }));
 
-    expect(listedSteps()).toEqual(["Edited", "Third"]);
+    expect(listedSteps()).toEqual(["Second edited", "Third"]);
   });
 
   it("selects one timer at a time, starting from the first preset", async () => {

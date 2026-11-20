@@ -9,6 +9,7 @@ class TimeLogs::BailerServiceTest < ActiveSupport::TestCase
       task: @task,
       mode: "timer",
       timer_preset: 25,
+      started_at: 5.minutes.ago,
       is_running: true,
       current_run_started_at: 3.minutes.ago
     )

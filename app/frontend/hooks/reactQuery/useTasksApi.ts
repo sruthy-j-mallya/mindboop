@@ -1,4 +1,5 @@
 import {
+  type QueryClient,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -36,6 +37,13 @@ export const useTask = (id: string, options?: Omit<UseQueryOptions<Task>, "query
     ...options,
   });
 
+// Lists and the Calendar both show tasks, so a change to one refreshes both.
+const invalidateTaskLists = (queryClient: QueryClient) =>
+  Promise.all([
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS }),
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
+  ]);
+
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
@@ -43,7 +51,7 @@ export const useCreateTask = () => {
     mutationFn: tasksApi.create,
     onSuccess: ({ task }) => {
       queryClient.setQueryData(QUERY_KEYS.TASKS.DETAIL(task.id), task);
-      return queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS });
+      return invalidateTaskLists(queryClient);
     },
   });
 };
@@ -55,7 +63,7 @@ export const useUpdateTask = () => {
     mutationFn: tasksApi.update,
     onSuccess: ({ task }) => {
       queryClient.setQueryData(QUERY_KEYS.TASKS.DETAIL(task.id), task);
-      return queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS });
+      return invalidateTaskLists(queryClient);
     },
   });
 };
@@ -69,7 +77,7 @@ export const useDeleteTask = () => {
       queryClient.removeQueries({ queryKey: QUERY_KEYS.TASKS.DETAIL(id) });
       // A deleted task's time log can't stay the current one.
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS }),
+        invalidateTaskLists(queryClient),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
       ]);
     },

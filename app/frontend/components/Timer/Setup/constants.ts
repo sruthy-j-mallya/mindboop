@@ -1,12 +1,12 @@
-import type { TaskFilters, TimeLogMode } from "@/apis/types";
+import type { StartableTimeLogMode, TaskFilters } from "@/apis/types";
 import { DISCARD_BELOW_MINUTES } from "@/constants";
 
-export const MODES: { value: TimeLogMode; label: string }[] = [
+export const MODES: { value: StartableTimeLogMode; label: string }[] = [
   { value: "stopwatch", label: "Stopwatch" },
   { value: "timer", label: "Timer" },
 ];
 
-export const DEFAULT_MODE: TimeLogMode = "timer";
+export const DEFAULT_MODE: StartableTimeLogMode = "timer";
 
 export const DEFAULT_TIMER_MINUTES = 5;
 // A shorter timer could never be logged, only discarded. Keep in sync with the timer_preset validation on TimeLog.

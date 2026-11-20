@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router";
 
+import Calendar from "@/components/Calendar";
 import AppLayout from "@/components/commons/AppLayout";
 import PrivateRoute from "@/components/commons/PrivateRoute";
 import CompleteSignup from "@/components/CompleteSignup";
@@ -27,6 +28,7 @@ const Main = () => (
         </Route>
         <Route element={<Timer />} path={routes.timer} />
         <Route element={<ParkingLot />} path={routes.parkingLot} />
+        <Route element={<Calendar />} path={routes.calendar} />
         <Route element={<Settings />} path={routes.settings} />
       </Route>
     </Route>

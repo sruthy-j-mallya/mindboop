@@ -1,4 +1,5 @@
 import type {
+  CalendarEventsParams,
   ParkingLotItemFilters,
   ParkingLotItemListParams,
   TaskFilters,
@@ -27,4 +28,9 @@ export const QUERY_KEYS = {
     CURRENT: ["timeLogs", "current"],
   },
   USER_PREFERENCE: ["userPreference"],
+  CALENDAR_EVENTS: {
+    // Every range loaded so far; task and time log mutations refresh them all.
+    ALL: ["calendarEvents"],
+    LIST: (params: CalendarEventsParams) => ["calendarEvents", params],
+  },
 } as const;

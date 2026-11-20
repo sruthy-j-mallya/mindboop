@@ -8,8 +8,21 @@ export const useCreateTimeLog = () => {
 
   return useMutation({
     mutationFn: timeLogsApi.create,
-    // Seeded so the Timer page doesn't flash the previous session while it refetches.
-    onSuccess: ({ timeLog }) => queryClient.setQueryData(QUERY_KEYS.TIME_LOGS.CURRENT, timeLog),
+    onSuccess: ({ timeLog }) => {
+      // Seeded so the Timer page doesn't flash the previous session while it refetches. A logged session is already
+      // over, so it never becomes the current one.
+      if (!timeLog.completedAt) queryClient.setQueryData(QUERY_KEYS.TIME_LOGS.CURRENT, timeLog);
+      return queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL });
+    },
+  });
+};
+
+export const useUpdateTimeLog = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: timeLogsApi.update,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
   });
 };
 
@@ -18,6 +31,10 @@ export const useDeleteTimeLog = () => {
 
   return useMutation({
     mutationFn: timeLogsApi.destroy,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
+      ]),
   });
 };

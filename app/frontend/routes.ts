@@ -4,6 +4,7 @@ const routes = {
   settings: "/settings",
   timer: "/timer",
   parkingLot: "/parking-lot",
+  calendar: "/calendar",
   inbox: {
     index: "/inbox",
     show: "/inbox/:taskId",

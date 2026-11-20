@@ -25,9 +25,14 @@ vi.mock("@/utils/completionSound");
 
 const STARTED_AT = "2026-11-05T10:00:00.000Z";
 
+const TASK_ID = "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23";
+
 const TIME_LOG: TimeLog = {
   id: "5b7c9e14-2a3d-4f60-8e1b-6c4d2f0a9b37",
-  taskId: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23",
+  taskId: TASK_ID,
+  title: null,
+  taskTitle: null,
+  isTaskDeleted: false,
   mode: "timer",
   timerPreset: 25,
   bufferMinutes: 0,
@@ -46,7 +51,7 @@ const TIME_LOG: TimeLog = {
 const TIME_LOG_AT_TWO_MINUTES: TimeLog = { ...TIME_LOG, accumulatedElapsedSeconds: 83 };
 
 const TASK: Task = {
-  id: TIME_LOG.taskId,
+  id: TASK_ID,
   title: "Draft permission",
   description: null,
   estimatedMinutes: 25,

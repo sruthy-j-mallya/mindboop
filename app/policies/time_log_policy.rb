@@ -17,12 +17,13 @@ class TimeLogPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.joins(:task).where(tasks: { user_id: user.id })
+      scope.where(user:)
     end
   end
 
   private
+    # A log's task, when it has one, must be the user's too.
     def owner?
-      record.task.user_id == user.id
+      record.user_id == user.id && (record.task.nil? || record.task.user_id == user.id)
     end
 end

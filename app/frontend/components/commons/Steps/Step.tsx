@@ -9,6 +9,7 @@ import { GripVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
+import { STEP_TEXT_CLASS_NAME } from "./constants";
 import EditStep from "./EditStep";
 import type { StepItem, StepsProps } from "./types";
 
@@ -81,7 +82,10 @@ const Step = ({ id, text, isDone, onRename, onToggle, onRemove, onInsertBelow }:
         <Button
           ref={textButtonRef}
           aria-label={`Edit ${text}`}
-          className="h-auto min-h-8 min-w-0 flex-1 cursor-text justify-start border border-transparent px-3 py-1 text-left font-normal break-words whitespace-normal"
+          className={cn(
+            STEP_TEXT_CLASS_NAME,
+            "h-auto cursor-text justify-start text-left font-normal whitespace-normal",
+          )}
           type="button"
           variant="ghost"
           onClick={() => setIsEditing(true)}

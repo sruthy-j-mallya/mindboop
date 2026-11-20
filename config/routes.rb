@@ -9,13 +9,14 @@ Rails.application.routes.draw do
       resource :restoration, only: :create, controller: "task_restorations"
     end
     resources :quick_starts, only: :create
-    resources :time_logs, only: %i[ create destroy ] do
+    resources :time_logs, only: %i[ create update destroy ] do
       resource :completion, only: :create, controller: "time_log_completions"
       resource :extension, only: :create, controller: "time_log_extensions"
       resource :bail_out, only: :create, controller: "time_log_bail_outs"
       resource :break, only: %i[ create update ]
     end
     resource :current_time_log, only: :show
+    resources :calendar_events, only: :index
     resource :user_preference, only: %i[ show update ]
     resource :curiosity_time, only: %i[ show create update destroy ]
     resources :parking_lot_items, only: %i[ index create update destroy ] do

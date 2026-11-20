@@ -27,7 +27,7 @@ class BreakTest < ActiveSupport::TestCase
   end
 
   def test_that_a_completed_time_log_cannot_get_a_break
-    break_record = build(:break, time_log: create(:time_log, completed_at: Time.current))
+    break_record = build(:break, time_log: create(:time_log, started_at: 1.minute.ago, completed_at: Time.current))
 
     assert break_record.invalid?
     assert_includes break_record.errors.full_messages, "This session is already finished."

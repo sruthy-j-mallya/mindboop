@@ -3,11 +3,11 @@ import { useState } from "react";
 import type { Task } from "@/apis/types";
 import Breadcrumbs from "@/components/commons/Breadcrumbs";
 import DueDatePicker from "@/components/commons/DueDatePicker";
-import EstimatePicker from "@/components/commons/EstimatePicker";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
 import { NEW_STEP_DRAFT } from "@/components/commons/Steps/constants";
 import type { Draft } from "@/components/commons/Steps/types";
 import TaskDescription from "@/components/commons/TaskDescription";
+import TaskEstimatePicker from "@/components/commons/TaskEstimatePicker";
 import TaskSteps from "@/components/commons/TaskSteps";
 
 type TaskDetailsProps = { task: Task };
@@ -29,7 +29,7 @@ const TaskDetails = ({ task }: TaskDetailsProps) => {
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-start gap-1">
             <DueDatePicker task={task} />
-            <EstimatePicker task={task} />
+            <TaskEstimatePicker task={task} />
           </div>
           {task.checklistItems.length === 0 && <AddStepButton onClick={handleAddStep} />}
         </div>
