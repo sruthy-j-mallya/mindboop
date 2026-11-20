@@ -169,8 +169,10 @@ test("the year view drills down to a day", async ({ page }) => {
   await page.getByRole("link", { name: "Calendar" }).click();
   await chooseView(page, "Year");
 
-  await expect(page.getByRole("region", { name: /^January / })).toBeVisible();
-  await page.getByRole("button", { name: /, 1 January / }).click();
+  // The year view also renders the years either side, so pick this year's January.
+  const january = page.getByRole("region", { name: `January ${new Date().getFullYear()}` });
+  await expect(january).toBeVisible();
+  await january.getByRole("button", { name: /, 1 January / }).click();
   await expect(page.getByRole("combobox", { name: "Calendar view" })).toHaveText("Day");
 });
 
