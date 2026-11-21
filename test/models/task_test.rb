@@ -101,4 +101,37 @@ class TaskTest < ActiveSupport::TestCase
       end
     end
   end
+
+  def test_that_deleting_a_task_logs_its_running_session
+    freeze_time
+    time_log = create(:time_log, task: @task, started_at: 10.minutes.ago, is_running: true,
+      current_run_started_at: 10.minutes.ago)
+
+    @task.discard!
+
+    time_log.reload
+    assert time_log.kept?
+    assert_not time_log.is_running?
+    assert_equal Time.current, time_log.completed_at
+    assert_equal 10.minutes.to_i, time_log.accumulated_elapsed_seconds
+    assert_not @task.reload.is_completed?
+  end
+
+  def test_that_deleting_a_task_discards_a_running_session_too_short_to_log
+    time_log = create(:time_log, task: @task, started_at: 1.minute.ago, is_running: true,
+      current_run_started_at: 1.minute.ago)
+
+    @task.discard!
+
+    assert time_log.reload.discarded?
+  end
+
+  def test_that_deleting_a_task_keeps_its_finished_time_logs
+    time_log = create(:time_log, task: @task, started_at: 2.hours.ago, completed_at: 1.hour.ago)
+
+    @task.discard!
+
+    assert time_log.reload.kept?
+    assert_equal 1.hour.ago.to_i, time_log.completed_at.to_i
+  end
 end

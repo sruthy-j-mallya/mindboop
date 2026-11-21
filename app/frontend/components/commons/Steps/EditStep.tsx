@@ -1,6 +1,6 @@
 import { type KeyboardEvent, useRef, useState } from "react";
 
-import { Input } from "@/components/ui/input";
+import StepTextarea from "./StepTextarea";
 
 type EditStepProps = {
   text: string;
@@ -21,7 +21,7 @@ const EditStep = ({ text, onSave, onDismiss, onContinue }: EditStepProps) => {
     onSave(draft.trim());
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Escape") onDismiss();
     if (event.key !== "Enter") return;
 
@@ -32,15 +32,13 @@ const EditStep = ({ text, onSave, onDismiss, onContinue }: EditStepProps) => {
   };
 
   return (
-    <Input
+    <StepTextarea
       autoFocus
       aria-label="Step text"
-      autoComplete="off"
-      className="h-8 flex-1"
       value={draft}
       onBlur={handleSave}
-      onChange={(event) => setDraft(event.target.value)}
-      onFocus={(event) => event.target.select()}
+      onValueChange={setDraft}
+      onFocus={({ target }) => target.setSelectionRange(target.value.length, target.value.length)}
       onKeyDown={handleKeyDown}
     />
   );

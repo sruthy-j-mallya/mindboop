@@ -5,10 +5,11 @@ import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import routes from "@/routes";
 import { playCompletionSound } from "@/utils/completionSound";
 
-// Completes a task from its list row or its pane. A completed task leaves the Inbox, so its pane closes with it.
+// Completes a task from its list row or its pane. A completed task leaves the Inbox, so its pane closes with it; a pane
+// shown elsewhere (the Calendar's popover) closes through `onCompleted`.
 // `isCompleting` stays true after the save, until the refreshed list drops the task. The chime plays with the click, as
 // the checkbox ticks, since the row may be gone by the time the save's callbacks would run.
-const useCompleteTask = (id: string) => {
+const useCompleteTask = (id: string, onCompleted?: () => void) => {
   const navigate = useNavigate();
   const isSelected = useMatch(routes.inbox.show)?.params.taskId === id;
   const { data: preference } = useUserPreference();
@@ -16,6 +17,7 @@ const useCompleteTask = (id: string) => {
 
   const handleCompleted = () => {
     if (isSelected) navigate(routes.inbox.index);
+    onCompleted?.();
   };
 
   const completeTask = () => {

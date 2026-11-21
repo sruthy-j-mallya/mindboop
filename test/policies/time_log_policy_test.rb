@@ -26,4 +26,17 @@ class TimeLogPolicyTest < ActiveSupport::TestCase
   def test_that_scope_returns_only_time_logs_of_the_users_tasks
     assert_equal [ @time_log ], TimeLogPolicy::Scope.new(@user, TimeLog).resolve.to_a
   end
+
+  def test_that_the_owner_can_manage_a_time_log_without_a_task
+    time_log = create(:time_log, :manual, user: @user)
+
+    assert TimeLogPolicy.new(@user, time_log).update?
+    assert_not TimeLogPolicy.new(create(:user), time_log).update?
+  end
+
+  def test_that_a_time_log_cannot_link_another_users_task
+    time_log = build(:time_log, :manual, user: @user, task: create(:task))
+
+    assert_not TimeLogPolicy.new(@user, time_log).create?
+  end
 end

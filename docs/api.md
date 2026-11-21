@@ -23,45 +23,48 @@ Every error response has one shape:
 
 ## Endpoints
 
-| Method | Path                                      | Body                                                                         | Success                       |
-| ------ | ----------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------- |
-| GET    | `/api/session`                            | –                                                                            | 200 `{ user }`                |
-| POST   | `/api/session`                            | `email_address`, `password`                                                  | 201 `{ user }`, sets cookie   |
-| DELETE | `/api/session`                            | –                                                                            | 204                           |
-| POST   | `/api/email_confirmations`                | `email_address`                                                              | 202 `{ message }`             |
-| POST   | `/api/registration`                       | `token`, `password`, `password_confirmation`                                 | 201 `{ user }`, sets cookie   |
-| POST   | `/api/passwords`                          | `email_address`                                                              | 202 `{ message }`             |
-| PATCH  | `/api/passwords/:token`                   | `password`, `password_confirmation`                                          | 204, signs out everywhere     |
-| GET    | `/api/tasks`                              | `page`, `is_completed`, `search_term` (optional)                             | 200 `{ tasks, … }`            |
-| GET    | `/api/tasks/:id`                          | –                                                                            | 200 `{ task }`                |
-| POST   | `/api/tasks`                              | Task fields (`title` required)                                               | 201 `{ task }`                |
-| PATCH  | `/api/tasks/:id`                          | Task fields                                                                  | 200 `{ task }`                |
-| DELETE | `/api/tasks/:id`                          | –                                                                            | 204, soft delete              |
-| POST   | `/api/tasks/:task_id/restoration`         | –                                                                            | 201 `{ task }`, undoes delete |
-| POST   | `/api/tasks/:task_id/checklist_items`     | `title`, `is_completed`, `position` (optional)                               | 201 `{ task }`                |
-| PATCH  | `/api/tasks/:task_id/checklist_items/:id` | `title`, `is_completed`, `position` (all optional)                           | 200 `{ task }`                |
-| DELETE | `/api/tasks/:task_id/checklist_items/:id` | –                                                                            | 200 `{ task }`, soft delete   |
-| POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                                    | 201 `{ task, time_log }`      |
-| POST   | `/api/time_logs`                          | `task_id`, Time log fields                                                   | 201 `{ time_log }`            |
-| DELETE | `/api/time_logs/:id`                      | –                                                                            | 204, soft delete              |
-| POST   | `/api/time_logs/:time_log_id/completion`  | `discard_overrun` (optional)                                                 | 201 `{ time_log }`            |
-| POST   | `/api/time_logs/:time_log_id/extension`   | `minutes`                                                                    | 201 `{ time_log }`            |
-| POST   | `/api/time_logs/:time_log_id/bail_out`    | `restart_description`, `completed_description`, `discard_overrun` (optional) | 201 `{ time_log }`            |
-| POST   | `/api/time_logs/:time_log_id/break`       | `intention`, `duration_minutes`                                              | 201 `{ time_log }`            |
-| PATCH  | `/api/time_logs/:time_log_id/break`       | –                                                                            | 200 `{ time_log }`            |
-| GET    | `/api/current_time_log`                   | –                                                                            | 200 `{ time_log }` or `null`  |
-| GET    | `/api/user_preference`                    | –                                                                            | 200 `{ user_preference }`     |
-| PATCH  | `/api/user_preference`                    | `theme`, `completion_sound`, `break_alarm_sound` (any)                       | 200 `{ user_preference }`     |
-| GET    | `/api/parking_lot_items`                  | `page`, `status`, `time_log_id` query params (optional)                      | 200 list (see below)          |
-| POST   | `/api/parking_lot_items`                  | `content`, `time_log_id` (optional)                                          | 201 `{ parking_lot_item }`    |
-| PATCH  | `/api/parking_lot_items/:id`              | `content`, `status` (both optional)                                          | 200 `{ parking_lot_item }`    |
-| DELETE | `/api/parking_lot_items/:id`              | –                                                                            | 204, soft delete              |
-| POST   | `/api/parking_lot_items/:id/conversion`   | Task schedule fields (optional)                                              | 201, adds a task              |
-| POST   | `/api/parking_lot_items/:id/restoration`  | –                                                                            | 201, undoes discard           |
-| GET    | `/api/curiosity_time`                     | –                                                                            | 200 `{ parking_lot_item }`    |
-| POST   | `/api/curiosity_time`                     | `parking_lot_item_id`                                                        | 201 `{ parking_lot_item }`    |
-| PATCH  | `/api/curiosity_time`                     | –                                                                            | 200, adds more time once      |
-| DELETE | `/api/curiosity_time`                     | –                                                                            | 200 `{ parking_lot_item }`    |
+| Method | Path                                      | Body                                                                         | Success                           |
+| ------ | ----------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------- |
+| GET    | `/api/session`                            | –                                                                            | 200 `{ user }`                    |
+| POST   | `/api/session`                            | `email_address`, `password`                                                  | 201 `{ user }`, sets cookie       |
+| DELETE | `/api/session`                            | –                                                                            | 204                               |
+| POST   | `/api/email_confirmations`                | `email_address`                                                              | 202 `{ message }`                 |
+| POST   | `/api/registration`                       | `token`, `password`, `password_confirmation`                                 | 201 `{ user }`, sets cookie       |
+| POST   | `/api/passwords`                          | `email_address`                                                              | 202 `{ message }`                 |
+| PATCH  | `/api/passwords/:token`                   | `password`, `password_confirmation`                                          | 204, signs out everywhere         |
+| GET    | `/api/tasks`                              | `page`, `is_completed`, `search_term` (optional)                             | 200 `{ tasks, … }`                |
+| GET    | `/api/tasks/:id`                          | –                                                                            | 200 `{ task }`                    |
+| POST   | `/api/tasks`                              | Task fields (`title` required)                                               | 201 `{ task }`                    |
+| PATCH  | `/api/tasks/:id`                          | Task fields                                                                  | 200 `{ task }`                    |
+| DELETE | `/api/tasks/:id`                          | –                                                                            | 204, soft delete                  |
+| POST   | `/api/tasks/:task_id/restoration`         | –                                                                            | 201 `{ task }`, undoes delete     |
+| POST   | `/api/tasks/:task_id/checklist_items`     | `title`, `is_completed`, `position` (optional)                               | 201 `{ task }`                    |
+| PATCH  | `/api/tasks/:task_id/checklist_items/:id` | `title`, `is_completed`, `position` (all optional)                           | 200 `{ task }`                    |
+| DELETE | `/api/tasks/:task_id/checklist_items/:id` | –                                                                            | 200 `{ task }`, soft delete       |
+| POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                                    | 201 `{ task, time_log }`          |
+| POST   | `/api/time_logs`                          | `task_id`, Time log fields                                                   | 201 `{ time_log }`                |
+| PATCH  | `/api/time_logs/:id`                      | `started_at`, `completed_at`                                                 | 200 `{ time_log }`                |
+| DELETE | `/api/time_logs/:id`                      | –                                                                            | 204, soft delete                  |
+| POST   | `/api/time_logs/:time_log_id/restoration` | –                                                                            | 201 `{ time_log }`, undoes delete |
+| POST   | `/api/time_logs/:time_log_id/completion`  | `discard_overrun` (optional)                                                 | 201 `{ time_log }`                |
+| POST   | `/api/time_logs/:time_log_id/extension`   | `minutes`                                                                    | 201 `{ time_log }`                |
+| POST   | `/api/time_logs/:time_log_id/bail_out`    | `restart_description`, `completed_description`, `discard_overrun` (optional) | 201 `{ time_log }`                |
+| POST   | `/api/time_logs/:time_log_id/break`       | `intention`, `duration_minutes`                                              | 201 `{ time_log }`                |
+| PATCH  | `/api/time_logs/:time_log_id/break`       | –                                                                            | 200 `{ time_log }`                |
+| GET    | `/api/current_time_log`                   | –                                                                            | 200 `{ time_log }` or `null`      |
+| GET    | `/api/calendar_events`                    | `from`, `to` query params (ISO 8601)                                         | 200 `{ tasks, time_logs }`        |
+| GET    | `/api/user_preference`                    | –                                                                            | 200 `{ user_preference }`         |
+| PATCH  | `/api/user_preference`                    | `theme`, `completion_sound`, `break_alarm_sound` (any)                       | 200 `{ user_preference }`         |
+| GET    | `/api/parking_lot_items`                  | `page`, `status`, `time_log_id` query params (optional)                      | 200 list (see below)              |
+| POST   | `/api/parking_lot_items`                  | `content`, `time_log_id` (optional)                                          | 201 `{ parking_lot_item }`        |
+| PATCH  | `/api/parking_lot_items/:id`              | `content`, `status` (both optional)                                          | 200 `{ parking_lot_item }`        |
+| DELETE | `/api/parking_lot_items/:id`              | –                                                                            | 204, soft delete                  |
+| POST   | `/api/parking_lot_items/:id/conversion`   | Task schedule fields (optional)                                              | 201, adds a task                  |
+| POST   | `/api/parking_lot_items/:id/restoration`  | –                                                                            | 201, undoes discard               |
+| GET    | `/api/curiosity_time`                     | –                                                                            | 200 `{ parking_lot_item }`        |
+| POST   | `/api/curiosity_time`                     | `parking_lot_item_id`                                                        | 201 `{ parking_lot_item }`        |
+| PATCH  | `/api/curiosity_time`                     | –                                                                            | 200, adds more time once          |
+| DELETE | `/api/curiosity_time`                     | –                                                                            | 200 `{ parking_lot_item }`        |
 
 `user` is `{ id, email_address }` (`app/views/api/users/_user.json.jbuilder`). All ids are UUIDs.
 
@@ -70,7 +73,12 @@ Every error response has one shape:
 Tasks belong to the signed-in user. `GET /api/tasks` lists only their undeleted tasks, soonest `starts_at` first
 with undated tasks last; ties go to the oldest task. Another user's task gets a 403. A deleted or unknown task gets a 404.
 
+`DELETE /api/tasks/:id` soft deletes the task. Its time logs stay: work done before the delete still counts, and they
+stay on the Calendar. A session still running on it ends at that moment, the way a completion ends it but without
+completing the task. One with under 2 minutes of focus is discarded instead.
+
 `POST /api/tasks/:task_id/restoration` brings back a deleted task (the Inbox's Undo). A task that isn't deleted gets a 404.
+A session that ended when the task was deleted stays ended.
 
 The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
 pages. A missing or invalid `page` returns the first page, and a page past the end returns an empty `tasks`.
@@ -79,7 +87,8 @@ pages. A missing or invalid `page` returns the first page, and a page past the e
 lists every task.
 
 `search_term` lists only tasks whose title contains it, ignoring case and surrounding spaces (`%` and `_` match
-literally). A blank one is ignored. It combines with `is_completed` and paging (the Timer's task picker).
+literally). A blank one is ignored. It combines with `is_completed` and paging (the Timer's task picker, and the
+Calendar's time log popover to link a task).
 
 The writable task fields are `title`, `description`, `estimated_minutes`, `is_duration`, `is_all_day`, `is_completed`,
 `starts_at` and `ends_at`.
@@ -172,21 +181,38 @@ set. Every response is `{ parking_lot_item }`: the item, or `null` when none is 
 
 ## Time logs
 
-A time log belongs to a task, and through it to the task's owner. Another user's time log gets a 403. A deleted or
-unknown time log gets a 404, and so does a time log whose task was deleted.
+A time log belongs to a user, and usually to one of their tasks. Only a `manual` log (time logged afterwards from the
+Calendar) can go without a task; it then has a `title` of its own. Another user's time log gets a 403. A deleted or
+unknown time log gets a 404. A time log whose task was deleted is still listed, moved and deleted like any other, but
+no new log can be started or logged on that task.
 
 `POST /api/time_logs` accepts these fields:
 
-| Field          | Notes                                                                       |
-| -------------- | --------------------------------------------------------------------------- |
-| `mode`         | Required, `timer` or `stopwatch`                                            |
-| `timer_preset` | Optional, whole number of minutes, at least 2 (the least a session can log) |
+| Field          | Notes                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| `mode`         | Required, `timer`, `stopwatch` or `manual`                                                       |
+| `timer_preset` | Optional, whole number of minutes, at least 2 (the least a session can log; `timer`/`stopwatch`) |
+| `title`        | `manual` only: required without a `task_id`, up to 255 characters                                |
+| `started_at`   | `manual` only, required: no more than 24 hours ago                                               |
+| `completed_at` | `manual` only, required: after `started_at`, and not in the future                               |
 
-A new time log starts running at once: the server sets `started_at` and `current_run_started_at` to the current time,
+A `manual` log is saved finished: `is_running` is `false`, and `accumulated_elapsed_seconds` is the time from
+`started_at` to `completed_at`. Its times allow 5 minutes of clock drift. A log that breaks these rules gets a 422.
+`task_id` is optional for it; when given, the same task rules apply as for any other log.
+
+A user does one thing at a time, so their time logs can't overlap. Creating a log (of any mode), or moving one with
+`PATCH /api/time_logs/:id`, gets a 422 (`"This overlaps another session. You can only do one thing at a time."`) when
+its span shares any moment with another of their time logs. Logs may touch, one ending as the next starts. A running log
+has no end yet, so it blocks everything after its start: end it before starting another, or logging time after its
+start. Deleted logs don't count, but the logs of a deleted task do. A database constraint
+(`time_logs_no_overlap`) backs this up, so two requests at once can't both get in. `POST /api/quick_starts` follows the same rule.
+
+A `timer` or `stopwatch` log starts running at once: the server sets `started_at` and `current_run_started_at` to the current time,
 `is_running` to `true`, `accumulated_elapsed_seconds` to 0 and `completed_at` to `null`. Any of these sent by the client
 are ignored.
 
-`time_log` also includes `id`, `task_id`, `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
+`time_log` also includes `id`, `task_id` (`null` for a log with only a title), `title`, `task_title` (its task's title, or
+`null`), `is_task_deleted` (whether its task was deleted), `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
 `{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise
 (`app/views/api/time_logs/_time_log.json.jbuilder`).
 
@@ -248,7 +274,29 @@ log also ends its break. Another user's time log gets a 403, and a deleted or un
 `GET /api/current_time_log` returns the signed-in user's most recently started time log that isn't completed or deleted.
 With no such log, it returns 200 with `{ "time_log": null }`.
 
-`POST /api/time_logs` requires a `task_id`. A missing, unknown or deleted task gets a 404, and another user's task gets a 403.
+`POST /api/time_logs` requires a `task_id`, except for a `manual` log. A missing, unknown or deleted task gets a 404, and
+another user's task gets a 403.
+
+`PATCH /api/time_logs/:id` moves a finished session, as when it's dragged on the Calendar. It takes `started_at` and
+`completed_at`, with the same rules as a `manual` log (no more than 24 hours ago, not in the future, the end after the
+start), and sets `accumulated_elapsed_seconds` to the new span. A session that hasn't finished gets a 422 ("Only a
+finished session can be moved."). Other fields are ignored.
+
+`DELETE /api/time_logs/:id` soft deletes a session: the Timer's discard, or the Calendar's delete for one logged by
+mistake. `POST /api/time_logs/:time_log_id/restoration` brings back a deleted finished session (the Calendar's Undo). A
+session that isn't deleted, or was deleted while still running, gets a 404. One whose time another session has taken
+since gets the overlap 422.
+
+## Calendar events
+
+`GET /api/calendar_events?from=…&to=…` returns what the Calendar shows between two ISO 8601 times, unpaged:
+
+- `tasks`: the user's undeleted, incomplete tasks scheduled in the range: those starting before `to` and ending (`ends_at`,
+  or a day after `starts_at` for a task with only a date) at or after `from`. Soonest first, in the task shape above.
+- `time_logs`: the user's undeleted time logs overlapping the range (a running one reaches up to now), oldest first, in the
+  time log shape above.
+
+`from` must be before `to`, at most 1100 days apart (the year view asks for three years); anything else, or a missing or unparsable time, gets a 422.
 
 ## User preference
 

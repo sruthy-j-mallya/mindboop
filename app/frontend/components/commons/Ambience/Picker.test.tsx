@@ -20,6 +20,9 @@ const STARTED_AT = "2026-11-05T10:00:00.000Z";
 const TIME_LOG: TimeLog = {
   id: "5b7c9e14-2a3d-4f60-8e1b-6c4d2f0a9b37",
   taskId: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23",
+  title: null,
+  taskTitle: null,
+  isTaskDeleted: false,
   mode: "timer",
   timerPreset: 25,
   bufferMinutes: 0,

@@ -6,15 +6,15 @@ import type { Task } from "@/apis/types";
 import ScheduleLabel from "@/components/commons/ScheduleLabel";
 import SchedulePicker from "@/components/commons/SchedulePicker";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
+import TitleInput from "@/components/commons/TitleInput";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
+import useCompleteTask from "@/hooks/useCompleteTask";
+import useDeleteTaskWithUndo from "@/hooks/useDeleteTaskWithUndo";
+import useRenameTask from "@/hooks/useRenameTask";
 import routes from "@/routes";
 
-import TitleInput from "../TitleInput";
-import useCompleteTask from "../useCompleteTask";
-import useDeleteTaskWithUndo from "../useDeleteTaskWithUndo";
-import useRenameTask from "../useRenameTask";
 import { NARROW_LAYOUT_QUERY } from "./constants";
 
 type TaskRowProps = { task: Task };

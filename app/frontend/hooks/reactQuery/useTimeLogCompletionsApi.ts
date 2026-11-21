@@ -9,11 +9,12 @@ export const useCompleteTimeLog = () => {
   return useMutation({
     mutationFn: timeLogCompletionsApi.create,
     onSuccess: ({ timeLog }) => {
-      // Completing a time log also marks its task as done.
+      // Completing a time log also marks its task as done. A session on the Timer always has a task.
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.DETAIL(timeLog.taskId) }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.DETAIL(timeLog.taskId ?? "") }),
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.LISTS }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
       ]);
     },
   });

@@ -1,5 +1,7 @@
-json.extract! time_log, :id, :task_id, :mode, :timer_preset, :buffer_minutes, :accumulated_elapsed_seconds, :is_running,
-  :current_run_started_at, :started_at, :completed_at, :created_at, :updated_at
+json.extract! time_log, :id, :task_id, :title, :mode, :timer_preset, :buffer_minutes, :accumulated_elapsed_seconds,
+  :is_running, :current_run_started_at, :started_at, :completed_at, :created_at, :updated_at
+json.task_title time_log.task&.title
+json.is_task_deleted !!time_log.task&.discarded?
 json.is_finished_early time_log.finished_early?
 if time_log.current_break
   json.current_break do

@@ -1,14 +1,13 @@
 import type { Task } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import useDeleteTaskWithUndo from "@/hooks/useDeleteTaskWithUndo";
 
-import useDeleteTaskWithUndo from "../useDeleteTaskWithUndo";
-
-type DeleteTaskDialogProps = { task: Task; onClose: () => void };
+type DeleteTaskDialogProps = { task: Task; onClose: () => void; onDeleted?: () => void };
 
 // Deleting closes the pane, and the dialog with it; a toast then offers to undo.
-const DeleteTaskDialog = ({ task, onClose }: DeleteTaskDialogProps) => {
-  const { deleteTask, isDeleting, error } = useDeleteTaskWithUndo(task);
+const DeleteTaskDialog = ({ task, onClose, onDeleted }: DeleteTaskDialogProps) => {
+  const { deleteTask, isDeleting, error } = useDeleteTaskWithUndo(task, onDeleted);
 
   return (
     <Dialog open onOpenChange={onClose}>
