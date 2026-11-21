@@ -23,7 +23,9 @@ const TaskSuggestions = ({ searchTerm, onSelect }: TaskSuggestionsProps) => {
 
   return (
     <section aria-label="Matching tasks" className="flex flex-col gap-1">
-      <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">Or link a task</p>
+      <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        Or link an existing task
+      </p>
       <ul className="flex flex-col">
         {suggestions.map((task) => (
           <li key={task.id}>

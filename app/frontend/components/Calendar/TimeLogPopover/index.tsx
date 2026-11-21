@@ -85,16 +85,20 @@ const TimeLogPopover = ({ anchor, range, onClose }: TimeLogPopoverProps) => {
           <>
             <Input
               autoFocus
-              aria-describedby={errors.title ? "time-log-title-error" : undefined}
+              aria-describedby={errors.title ? "time-log-title-error" : "time-log-title-hint"}
               aria-invalid={!!errors.title}
               aria-label="What did you work on?"
               autoComplete="off"
-              placeholder="What did you work on?"
+              placeholder="Describe it, or search your tasks"
               {...register("title")}
             />
-            {errors.title && (
+            {errors.title ? (
               <p className="text-sm text-destructive" id="time-log-title-error" role="alert">
                 {errors.title.message}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground" id="time-log-title-hint">
+                Log it as typed, or pick a matching task to link the time to it.
               </p>
             )}
             <TaskSuggestions searchTerm={title} onSelect={handleSelectTask} />
