@@ -22,11 +22,11 @@ const TaskSuggestions = ({ searchTerm, onSelect }: TaskSuggestionsProps) => {
   if (suggestions.length === 0) return null;
 
   return (
-    <section aria-label="Matching tasks" className="flex flex-col gap-1">
+    <section aria-label="Matching tasks" className="flex min-h-0 flex-col gap-1">
       <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
         Or link an existing task
       </p>
-      <ul className="flex flex-col">
+      <ul className="flex min-h-0 flex-col overflow-y-auto">
         {suggestions.map((task) => (
           <li key={task.id}>
             <Button

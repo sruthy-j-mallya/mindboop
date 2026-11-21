@@ -1,13 +1,17 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { addDays, addMonths, format, startOfDay, startOfHour, subHours } from "date-fns";
+import { toast } from "sonner";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import calendarEventsApi from "@/apis/calendar_events";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import tasksApi from "@/apis/tasks";
+import timeLogRestorationsApi from "@/apis/time_log_restorations";
+import timeLogsApi from "@/apis/time_logs";
 import type { Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
+import { Toaster } from "@/components/ui/sonner";
 import { renderWithProviders } from "@/test/utils";
 
 import Calendar from ".";
@@ -63,6 +67,8 @@ describe("Calendar", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     localStorage.clear();
+    // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
+    toast.dismiss();
   });
 
   it("shows the visible range's tasks and time logs, each in its own style", async () => {
@@ -142,7 +148,7 @@ describe("Calendar", () => {
     await chooseView("Month");
     await userEvent.click(await screen.findByTitle("Answer emails"));
 
-    const dialog = await screen.findByRole("dialog", { name: "Task details" });
+    const dialog = await screen.findByRole("dialog", { name: "Logged time" });
     expect(await within(dialog).findByRole("heading", { name: "Plan the week" })).toBeInTheDocument();
     expect(show).toHaveBeenCalledWith("task-1");
     expect(within(dialog).getByRole("checkbox", { name: "Completed" })).toBeChecked();
@@ -150,19 +156,23 @@ describe("Calendar", () => {
     expect(within(dialog).getByRole("checkbox", { name: "List the meetings" })).toBeDisabled();
     expect(within(dialog).getByText("30 min")).toBeInTheDocument();
     expect(within(dialog).queryByRole("textbox")).not.toBeInTheDocument();
-    expect(within(dialog).queryByRole("button")).not.toBeInTheDocument();
+    expect(within(dialog).getAllByRole("button")).toHaveLength(1);
+    expect(within(dialog).getByRole("button", { name: "Delete time log" })).toBeInTheDocument();
   });
 
-  it("opens nothing for a time log without a task", async () => {
+  it("shows the title of a time log without a task", async () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [TIME_LOG] });
+    const show = vi.spyOn(tasksApi, "show");
     renderWithProviders(<Calendar />);
     await chooseView("Month");
     await userEvent.click(await screen.findByTitle("Answer emails"));
 
-    expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", { name: "Logged time" });
+    expect(within(dialog).getByRole("heading", { name: "Answer emails" })).toBeInTheDocument();
+    expect(show).not.toHaveBeenCalled();
   });
 
-  it("opens nothing for a time log whose task was deleted", async () => {
+  it("shows the title of a time log whose task was deleted, without fetching the task", async () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({
       tasks: [],
       timeLogs: [
@@ -174,8 +184,49 @@ describe("Calendar", () => {
     await chooseView("Month");
     await userEvent.click(await screen.findByTitle("Plan the week"));
 
-    expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", { name: "Logged time" });
+    expect(within(dialog).getByRole("heading", { name: "Plan the week" })).toBeInTheDocument();
     expect(show).not.toHaveBeenCalled();
+  });
+
+  it("deletes a time log and offers to undo it", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [TIME_LOG] });
+    const destroy = vi.spyOn(timeLogsApi, "destroy").mockResolvedValue(undefined as never);
+    const restore = vi.spyOn(timeLogRestorationsApi, "create").mockResolvedValue({ timeLog: TIME_LOG });
+    renderWithProviders(
+      <>
+        <Calendar />
+        <Toaster />
+      </>,
+    );
+    await chooseView("Month");
+    await userEvent.click(await screen.findByTitle("Answer emails"));
+    const dialog = await screen.findByRole("dialog", { name: "Logged time" });
+
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete time log" }));
+
+    expect(destroy).toHaveBeenCalledWith("log-1", expect.anything());
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Logged time" })).not.toBeInTheDocument(),
+    );
+    expect(await screen.findByText("Deleted “Answer emails”")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+
+    await waitFor(() => expect(restore).toHaveBeenCalledWith("log-1", expect.anything()));
+  });
+
+  it("offers no delete for a session that is still running", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({
+      tasks: [],
+      timeLogs: [{ ...TIME_LOG, isRunning: true, completedAt: null }],
+    });
+    renderWithProviders(<Calendar />);
+    await chooseView("Month");
+    await userEvent.click(await screen.findByTitle("Answer emails"));
+
+    const dialog = await screen.findByRole("dialog", { name: "Logged time" });
+    expect(within(dialog).queryByRole("button", { name: "Delete time log" })).not.toBeInTheDocument();
   });
 
   it("closes the task's popover once the task is deleted", async () => {

@@ -15,3 +15,7 @@ export const INITIAL_FORM_VALUES: TimeLogFormValues = { title: "", task: null };
 
 // How many matching tasks are offered while typing.
 export const TASK_SUGGESTION_LIMIT = 5;
+
+// A logged session can't grow while it's open, so its popover hugs the content and only caps at a saved task's size.
+export const SHOW_POPOVER_CLASS_NAME =
+  "flex max-h-[min(32rem,var(--radix-popover-content-available-height))] w-[30rem] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto rounded-xl p-4";

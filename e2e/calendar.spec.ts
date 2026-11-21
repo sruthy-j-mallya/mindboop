@@ -146,7 +146,7 @@ test("stretch a task from its start and its end", async ({ page }) => {
   );
 });
 
-test("log time in the last 24 hours with only a title", async ({ page }) => {
+test("log time in the last 24 hours with only a title, then delete it", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
   await chooseView(page, "Day");
@@ -161,7 +161,18 @@ test("log time in the last 24 hours with only a title", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(logTime).toBeHidden();
 
-  await expect(page.locator(".calendar-event-time-log", { hasText: "Answer emails" })).toBeVisible();
+  const timeLog = page.locator(".calendar-event-time-log", { hasText: "Answer emails" });
+  await expect(timeLog).toBeVisible();
+
+  // Deleting a log made by mistake, then undoing it.
+  await timeLog.click();
+  await page
+    .getByRole("dialog", { name: "Logged time" })
+    .getByRole("button", { name: "Delete time log" })
+    .click();
+  await expect(timeLog).toBeHidden();
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(timeLog).toBeVisible();
 });
 
 test("the year view drills down to a day", async ({ page }) => {

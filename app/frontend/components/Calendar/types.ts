@@ -24,7 +24,7 @@ export type AnchorRect = { top: number; left: number; width: number; height: num
 export type PopoverState =
   | { kind: "newTask"; anchor: AnchorRect; schedule: Schedule }
   | { kind: "editTask"; anchor: AnchorRect; task: Task }
-  | { kind: "showTask"; anchor: AnchorRect; taskId: string }
+  | { kind: "showTimeLog"; anchor: AnchorRect; event: TimeLogEvent }
   | { kind: "newTimeLog"; anchor: AnchorRect; range: TimeRange };
 
 // What a click or drag on empty grid asks for: a task from now on, a time log in the last 24 hours.

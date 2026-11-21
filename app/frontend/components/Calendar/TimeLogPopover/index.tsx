@@ -56,11 +56,12 @@ const TimeLogPopover = ({ anchor, range, onClose }: TimeLogPopoverProps) => {
   return (
     <AnchoredPopover
       anchor={anchor}
+      isTopPinned
       className="flex w-80 flex-col gap-3 p-4"
       label="Log time"
       onDismiss={handleDismiss}
     >
-      <form noValidate className="flex flex-col gap-3" onSubmit={handleFormSubmit}>
+      <form noValidate className="flex min-h-0 flex-col gap-3" onSubmit={handleFormSubmit}>
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="size-4" />
           {formatTimeRange(range)}
