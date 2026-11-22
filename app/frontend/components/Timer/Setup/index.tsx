@@ -67,9 +67,7 @@ const Setup = () => {
   return (
     <SessionCard details={details}>
       <header className="grid gap-2">
-        <h1 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Start a session
-        </h1>
+        <h1 className="sr-only">Start a session</h1>
         <TaskSearch value={pickedTask ?? task} onChange={setPickedTask} />
         {taskError && (
           <p className="text-sm text-destructive" role="alert">

@@ -1019,7 +1019,6 @@ describe("Timer", () => {
       renderTimer(PAUSED_TIME_LOG);
 
       expect(await screen.findByRole("timer")).toHaveTextContent("24:23");
-      expect(screen.getByText("Paused")).toBeVisible();
       expect(screen.getByText("back in 04:30")).toBeVisible();
       expect(screen.getByRole("button", { name: "Pause" })).toBeDisabled();
       expect(screen.getByRole("button", { name: "Extend" })).toBeDisabled();
@@ -1051,7 +1050,7 @@ describe("Timer", () => {
 
       await userEvent.click(await screen.findByRole("button", { name: "I'm back" }));
 
-      expect(await screen.findByText("Focusing on")).toBeVisible();
+      expect(await screen.findByRole("button", { name: "Pause" })).toBeEnabled();
       expect(update).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
       expect(screen.queryByRole("button", { name: "I'm back" })).not.toBeInTheDocument();
     });
@@ -1063,7 +1062,7 @@ describe("Timer", () => {
       await userEvent.click(await screen.findByRole("button", { name: "I'm back" }));
 
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
-      expect(screen.getByText("Paused")).toBeVisible();
+      expect(screen.getByRole("button", { name: "I'm back" })).toBeVisible();
     });
   });
 

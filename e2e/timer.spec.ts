@@ -176,7 +176,6 @@ test.describe("pausing", () => {
 
     await page.getByRole("button", { name: "I'm back" }).click();
 
-    await expect(page.getByText("Focusing on")).toBeVisible();
     await expect(page.getByRole("button", { name: "Pause" })).toBeEnabled();
     await expect(page.getByRole("timer")).not.toHaveText(pausedTime!);
   });

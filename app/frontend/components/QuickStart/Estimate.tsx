@@ -33,7 +33,7 @@ const Estimate = ({ control }: EstimateProps) => {
   return (
     <Card>
       <CardContent className="flex flex-col gap-4">
-        <p id="estimate-label" className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <p className="sr-only" id="estimate-label">
           Estimate
         </p>
         <div aria-labelledby="estimate-label" className="flex gap-2" role="group">

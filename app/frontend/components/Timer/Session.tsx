@@ -94,9 +94,6 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
       >
         <header className="flex items-start justify-between gap-4">
           <div className="grid gap-1">
-            <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              {isOnBreak ? "Paused" : "Focusing on"}
-            </p>
             <h1 className="text-2xl font-semibold wrap-anywhere">{task?.title ?? timeLog.routineTitle}</h1>
           </div>
           <AmbiencePicker />

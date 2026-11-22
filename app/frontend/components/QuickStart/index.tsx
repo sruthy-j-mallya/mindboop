@@ -64,10 +64,7 @@ const QuickStart = () => {
       className="mx-auto grid w-full max-w-5xl flex-1 grid-rows-[auto_1fr_auto] gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]"
       onSubmit={handleSubmit(handleBeginSession)}
     >
-      <header className="grid gap-2 lg:col-span-2">
-        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Start with intention
-        </p>
+      <header className="lg:col-span-2">
         <h1 className="sr-only">What do you want to get done?</h1>
       </header>
       {/* The card stretches to the bottom of the page, and the description takes the room left in it. */}

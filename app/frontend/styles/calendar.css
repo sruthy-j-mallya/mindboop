@@ -47,8 +47,6 @@ html:has(.calendar) body {
   color: var(--muted-foreground);
   font-size: 0.75rem;
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 .calendar .rbc-header + .rbc-header,

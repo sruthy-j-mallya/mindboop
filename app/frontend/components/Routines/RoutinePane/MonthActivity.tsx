@@ -94,7 +94,7 @@ const MonthActivity = ({ routine }: MonthActivityProps) => {
               </span>
               <span
                 className={cn(
-                  "flex size-8 items-center justify-center",
+                  "flex size-8 items-center justify-center rounded-full",
                   isDone ? "bg-(--area-color) text-white" : "bg-muted",
                 )}
               >

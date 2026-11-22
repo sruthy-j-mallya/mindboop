@@ -10,10 +10,7 @@ const Breadcrumbs = ({ breadcrumbs }: BreadcrumbsProps) => {
 
   return (
     <section aria-labelledby="breadcrumbs-heading" className="flex flex-col gap-4">
-      <h3
-        id="breadcrumbs-heading"
-        className="text-xs font-medium tracking-wider text-muted-foreground uppercase"
-      >
+      <h3 className="sr-only" id="breadcrumbs-heading">
         Breadcrumbs
       </h3>
       <ol className="flex flex-col">

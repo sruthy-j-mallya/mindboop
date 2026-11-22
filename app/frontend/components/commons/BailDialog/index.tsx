@@ -10,7 +10,7 @@ import { useBailOutTimeLog } from "@/hooks/reactQuery/useTimeLogBailOutsApi";
 
 import { BREADCRUMB_VALIDATION_SCHEMA, type BreadcrumbFormValues, INITIAL_FORM_VALUES } from "./constants";
 
-const LABEL_CLASS_NAME = "font-normal tracking-wider text-muted-foreground uppercase";
+const LABEL_CLASS_NAME = "font-normal text-muted-foreground";
 
 // `onBailedOut` runs once the session is saved, and defaults to closing; `onClose` alone is for dismissing.
 type BailDialogProps = EndTimeLogOptions & {
