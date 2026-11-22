@@ -66,8 +66,8 @@ const MonthGrid = ({ month, counts, weekStartsOn, onSelectDay }: MonthGridProps)
             >
               {format(day, "d")}
               <span aria-hidden className="flex h-1 gap-0.5">
-                {!!dayCounts?.tasks && <span className="size-1 rounded-full bg-current" />}
-                {!!dayCounts?.timeLogs && <span className="size-1 rounded-full bg-current opacity-40" />}
+                {!!dayCounts?.tasks && <span className="size-1 bg-current" />}
+                {!!dayCounts?.timeLogs && <span className="size-1 bg-current opacity-40" />}
               </span>
             </button>
           );

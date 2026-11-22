@@ -45,7 +45,6 @@ const SoundSetting = <Id extends string>({
       </Select>
       <Button
         aria-label={`Play ${label.toLowerCase()} sound`}
-        className="rounded-full"
         disabled={isPreviewDisabled}
         size="icon"
         type="button"

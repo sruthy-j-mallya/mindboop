@@ -21,14 +21,11 @@ const Breadcrumbs = ({ breadcrumbs }: BreadcrumbsProps) => {
           <li key={id} className="relative flex gap-4 pb-6 last:pb-0">
             {/* The rail runs from this dot down to the next one, so it stops at the oldest breadcrumb. */}
             {index < breadcrumbs.length - 1 && (
-              <span
-                aria-hidden
-                className="absolute top-4 bottom-0 left-[7px] w-0.5 rounded-full bg-brand-yellow/50"
-              />
+              <span aria-hidden className="absolute top-4 bottom-0 left-[7px] w-0.5 bg-brand-yellow/50" />
             )}
             <span
               aria-hidden
-              className="relative mt-0.5 size-4 shrink-0 rounded-full border-4 border-background bg-brand-yellow ring-2 ring-brand-yellow"
+              className="relative mt-0.5 size-4 shrink-0 border-4 border-background bg-brand-yellow ring-2 ring-brand-yellow"
             />
             <div className="flex min-w-0 flex-col items-start gap-2">
               <time

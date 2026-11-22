@@ -11,7 +11,7 @@ const OverrunToggle = ({ seconds, isIncluded, onToggle }: OverrunToggleProps) =>
   <>
     <Button
       aria-label={isIncluded ? "Remove the extra time from the log" : "Add the extra time to the log"}
-      className="rounded-full tabular-nums"
+      className="tabular-nums"
       size="sm"
       title={isIncluded ? "Remove the extra time from the log" : "Add the extra time to the log"}
       type="button"

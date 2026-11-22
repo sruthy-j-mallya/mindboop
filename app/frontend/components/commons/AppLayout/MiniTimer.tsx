@@ -18,12 +18,12 @@ const MiniTimer = ({ timeLog }: MiniTimerProps) => {
   return (
     <section
       aria-label="Current session"
-      className="fixed right-4 bottom-4 z-40 flex items-center gap-2 rounded-full border bg-background py-1.5 pr-1.5 pl-4 shadow-lg"
+      className="fixed right-4 bottom-4 z-40 flex items-center gap-2 border bg-background py-1.5 pr-1.5 pl-4 shadow-lg"
     >
       <p className="text-lg font-medium tabular-nums" role="timer">
         {formatRemainingTime(seconds)}
       </p>
-      <Button asChild className="rounded-full" size="icon-sm" variant="secondary">
+      <Button asChild size="icon-sm" variant="secondary">
         <Link aria-label="Back to timer" title="Back to timer" to={routes.timer}>
           <Maximize2 />
         </Link>

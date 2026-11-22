@@ -8,10 +8,15 @@
 @theme inline {
   --font-sans: var(--font-family-sans);
   --font-display: var(--font-family-display);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  /* Square corners everywhere: every radius step resolves to --radius (0). */
+  --radius-xs: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
   --color-brand-coral: var(--brand-coral);
   --color-brand-coral-light: var(--brand-coral-light);
   --color-brand-coral-dark: var(--brand-coral-dark);

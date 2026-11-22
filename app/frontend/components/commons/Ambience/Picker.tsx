@@ -26,7 +26,7 @@ const Picker = () => {
       <PopoverTrigger asChild>
         <Button
           aria-label={`Background sound: ${selectedSound.label}`}
-          className={cn("shrink-0 rounded-full", soundId !== NO_SOUND && "text-primary")}
+          className={cn("shrink-0", soundId !== NO_SOUND && "text-primary")}
           size="icon"
           type="button"
           variant="ghost"
@@ -49,7 +49,7 @@ const Picker = () => {
               >
                 <span
                   className={cn(
-                    "flex size-11 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-accent",
+                    "flex size-11 items-center justify-center bg-muted transition-colors group-hover:bg-accent",
                     isSelected && "bg-primary text-primary-foreground group-hover:bg-primary",
                   )}
                 >

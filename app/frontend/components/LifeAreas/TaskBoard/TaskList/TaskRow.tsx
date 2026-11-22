@@ -84,7 +84,7 @@ const TaskRow = ({ task }: TaskRowProps) => {
           <SchedulePicker align="end" schedule={task} onSave={handleScheduleSave}>
             {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
             <Button
-              className="h-6 shrink-0 gap-1 rounded-full border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 max-sm:hidden dark:bg-background dark:hover:bg-background"
+              className="h-6 shrink-0 gap-1 border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 max-sm:hidden dark:bg-background dark:hover:bg-background"
               size="sm"
               type="button"
               variant="outline"
