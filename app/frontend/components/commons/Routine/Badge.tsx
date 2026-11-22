@@ -14,7 +14,7 @@ const RoutineBadge = ({ color, icon, className, iconClassName }: RoutineBadgePro
   return (
     <span
       aria-hidden
-      className={cn("area-tint flex size-10 shrink-0 items-center justify-center rounded-full", className)}
+      className={cn("area-tint flex size-10 shrink-0 items-center justify-center", className)}
       style={toAreaColorStyle(color)}
     >
       <Icon className={cn("size-5", iconClassName)} />

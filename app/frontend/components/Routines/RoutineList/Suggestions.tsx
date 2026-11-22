@@ -65,7 +65,7 @@ const Suggestions = () => {
               <button
                 aria-pressed={isPicked}
                 className={cn(
-                  "flex items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-sm transition-colors outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50",
+                  "flex items-center gap-2 border py-1 pr-3 pl-1 text-sm transition-colors outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50",
                   isPicked && "border-primary bg-primary/10 hover:bg-primary/15",
                 )}
                 disabled={isAdding}
@@ -73,7 +73,7 @@ const Suggestions = () => {
                 onClick={() => handleToggle(title)}
               >
                 {isPicked ? (
-                  <span className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <span className="flex size-7 items-center justify-center bg-primary text-primary-foreground">
                     <Check className="size-4" />
                   </span>
                 ) : (

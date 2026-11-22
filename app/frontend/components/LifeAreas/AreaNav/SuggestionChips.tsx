@@ -39,7 +39,7 @@ const SuggestionChips = ({ lifeAreas }: SuggestionChipsProps) => {
           <li key={name}>
             <button
               aria-label={`Add ${name}`}
-              className="area-tint flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-[filter] outline-none hover:brightness-95 focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 dark:hover:brightness-125"
+              className="area-tint flex items-center gap-1.5 px-3 py-1 text-sm font-medium transition-[filter] outline-none hover:brightness-95 focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 dark:hover:brightness-125"
               disabled={isPending}
               style={toAreaColorStyle(color)}
               title={sound ? `${name}, with ${sound.label.toLowerCase()} sounds` : name}

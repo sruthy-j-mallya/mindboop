@@ -27,7 +27,7 @@ const WeekdayPicker = ({ value, isMultiple, onChange }: WeekdayPickerProps) => {
             aria-label={label}
             aria-pressed={isPicked}
             className={cn(
-              "flex size-9 items-center justify-center rounded-full text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+              "flex size-9 items-center justify-center text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
               isPicked ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-accent",
             )}
             title={label}

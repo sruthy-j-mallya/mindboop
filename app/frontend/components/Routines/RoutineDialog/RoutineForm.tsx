@@ -32,7 +32,7 @@ type RoutineFormProps = {
 const COLOR_OPTIONS = LIFE_AREA_COLORS.map(({ id, label, value }) => ({
   value: id,
   label,
-  content: <span className="size-5 rounded-full" style={{ background: value }} />,
+  content: <span className="size-5" style={{ background: value }} />,
 }));
 
 const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({

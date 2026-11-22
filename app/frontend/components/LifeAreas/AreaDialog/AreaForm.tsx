@@ -25,7 +25,7 @@ type AreaFormProps = {
 const COLOR_OPTIONS = LIFE_AREA_COLORS.map(({ id, label, value }) => ({
   value: id,
   label,
-  content: <span className="size-5 rounded-full" style={{ background: value }} />,
+  content: <span className="size-5" style={{ background: value }} />,
 }));
 
 // An area without a sound of its own leaves the one playing as it is.

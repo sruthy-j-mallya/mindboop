@@ -26,16 +26,16 @@ const ReminderField = ({ control, register, errors }: ReminderFieldProps) => {
       <p className="-mt-1 text-sm text-muted-foreground">
         A gentle nudge while Mindboop is open. Skipping it is fine.
       </p>
-      <div className="flex w-fit rounded-full bg-muted p-1">
+      <div className="flex w-fit bg-muted p-1">
         {REMINDER_FREQUENCIES.map(({ id, label }) => (
           <label key={id} className="relative">
             <input
               {...register("reminderFrequency", { onChange: handleFrequencyChange })}
-              className="peer absolute inset-0 cursor-pointer appearance-none rounded-full opacity-0"
+              className="peer absolute inset-0 cursor-pointer appearance-none opacity-0"
               type="radio"
               value={id}
             />
-            <span className="block rounded-full px-3 py-1 text-sm transition-colors peer-checked:bg-background peer-checked:shadow-sm peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50">
+            <span className="block px-3 py-1 text-sm transition-colors peer-checked:bg-background peer-checked:shadow-sm peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50">
               {label}
             </span>
           </label>

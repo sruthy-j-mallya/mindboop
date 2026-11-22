@@ -21,7 +21,7 @@ const StartRoutineButton = ({ routine, hasLabel = false }: StartRoutineButtonPro
   return (
     <Button
       aria-label={hasLabel ? undefined : `${label}: ${routine.title}`}
-      className="shrink-0 rounded-full"
+      className="shrink-0"
       disabled={isStarting}
       size={hasLabel ? "sm" : "icon-sm"}
       title={hasLabel ? undefined : label}

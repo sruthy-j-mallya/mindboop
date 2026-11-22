@@ -22,11 +22,11 @@ const ChoiceField = ({ legend, hint, options, registration }: ChoiceFieldProps) 
           <input
             {...registration}
             aria-label={label}
-            className="peer absolute inset-0 cursor-pointer appearance-none rounded-full opacity-0"
+            className="peer absolute inset-0 cursor-pointer appearance-none opacity-0"
             type="radio"
             value={value}
           />
-          <span className="flex size-9 items-center justify-center rounded-full border-2 border-transparent bg-muted transition-colors peer-checked:border-primary peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50 hover:bg-accent">
+          <span className="flex size-9 items-center justify-center border-2 border-transparent bg-muted transition-colors peer-checked:border-primary peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50 hover:bg-accent">
             {content}
           </span>
         </label>
