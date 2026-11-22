@@ -34,7 +34,12 @@ const advance = (milliseconds: number) => act(() => vi.advanceTimersByTimeAsync(
 const renderAlarm = async (parkingLotItem: ParkingLotItem | null) => {
   vi.spyOn(curiosityTimesApi, "show").mockResolvedValue({ parkingLotItem });
   vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
-    userPreference: { theme: "system", completionSound: "rising", breakAlarmSound: "marimba" },
+    userPreference: {
+      theme: "system",
+      completionSound: "rising",
+      breakAlarmSound: "marimba",
+      weekStartsOn: 1,
+    },
   });
   renderWithProviders(<CuriosityAlarm />);
   await advance(0);

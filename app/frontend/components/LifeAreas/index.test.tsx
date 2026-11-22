@@ -82,7 +82,12 @@ describe("LifeAreas", () => {
     vi.restoreAllMocks();
     toast.dismiss();
     vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
-      userPreference: { theme: "system", completionSound: "bell", breakAlarmSound: "classic" },
+      userPreference: {
+        theme: "system",
+        completionSound: "bell",
+        breakAlarmSound: "classic",
+        weekStartsOn: 1,
+      },
     });
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([]));

@@ -13,7 +13,12 @@ import { playCompletionSound } from "@/utils/completionSound";
 vi.mock("@/utils/completionSound");
 vi.mock("@/utils/alarmSound");
 
-const PREFERENCE: UserPreference = { theme: "system", completionSound: "rising", breakAlarmSound: "classic" };
+const PREFERENCE: UserPreference = {
+  theme: "system",
+  completionSound: "rising",
+  breakAlarmSound: "classic",
+  weekStartsOn: 1,
+};
 
 const renderSettings = (preference: Partial<UserPreference> = {}) => {
   vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
@@ -55,6 +60,17 @@ describe("Settings", () => {
 
     expect(userPreferencesApi.update).toHaveBeenCalledWith({ theme: "dark" }, expect.anything());
     expect(screen.getByRole("combobox", { name: "Theme" })).toHaveTextContent("Dark");
+  });
+
+  it("shows and saves the day the week starts on", async () => {
+    renderSettings({ weekStartsOn: 6 });
+
+    expect(await screen.findByRole("combobox", { name: "Week starts on" })).toHaveTextContent("Saturday");
+
+    await choose("Week starts on", "Sunday");
+
+    expect(userPreferencesApi.update).toHaveBeenCalledWith({ weekStartsOn: 0 }, expect.anything());
+    expect(screen.getByRole("combobox", { name: "Week starts on" })).toHaveTextContent("Sunday");
   });
 
   it("plays and saves the chosen completion sound", async () => {

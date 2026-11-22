@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Calendar } from "@/components/ui/calendar";
+import useWeekStartsOn from "@/hooks/useWeekStartsOn";
 
 import { CALENDAR_CLASS_NAME, CALENDAR_CLASS_NAMES } from "./constants";
 import TimePicker from "./TimePicker";
@@ -12,6 +13,7 @@ type DateTabProps = { draft: ScheduleDraft; onChange: (draft: ScheduleDraft) => 
 // A single day, with an optional time. Without a time the task is due all day.
 const DateTab = ({ draft, onChange }: DateTabProps) => {
   const [month, setMonth] = useState(draft.startsAt);
+  const weekStartsOn = useWeekStartsOn();
 
   // Picking an outside day (from the next or last month) turns the calendar to that month.
   const handleSelectDay = (day: Date) => {
@@ -31,7 +33,7 @@ const DateTab = ({ draft, onChange }: DateTabProps) => {
         mode="single"
         month={month}
         selected={draft.startsAt}
-        weekStartsOn={1}
+        weekStartsOn={weekStartsOn}
         onMonthChange={setMonth}
         onSelect={handleSelectDay}
       />

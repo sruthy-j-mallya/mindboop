@@ -195,9 +195,13 @@ html:has(.calendar) body {
   font-size: 0.75rem;
 }
 
+/*
+ * Hide the resize grip lines the library shows on hover. The icons stay laid out (they give the side handles their
+ * width and carry the resize cursor), just with see-through borders, so edges can still be dragged.
+ */
 .calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-icon,
 .calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ew-icon {
-  border-color: currentColor;
+  border-color: transparent;
 }
 
 /*

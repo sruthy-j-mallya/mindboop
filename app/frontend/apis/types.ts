@@ -1,3 +1,5 @@
+import type { Day } from "date-fns";
+
 import type { SoundId } from "@/components/commons/Ambience/types";
 import type { LifeAreaColorId, LifeAreaIconId } from "@/components/commons/LifeArea/types";
 import type { RoutineIconId } from "@/components/commons/Routine/types";
@@ -174,10 +176,14 @@ export type DeleteChecklistItemPayload = { taskId: string; id: string };
 
 export type Theme = "system" | "light" | "dark";
 
+// The day the Calendar's weeks start on: 0 is Sunday and 6 Saturday, as date-fns numbers them.
+export type WeekStartsOn = Day;
+
 export type UserPreference = {
   theme: Theme;
   completionSound: CompletionSoundId;
   breakAlarmSound: AlarmSoundId;
+  weekStartsOn: WeekStartsOn;
 };
 
 export type UserPreferenceResponse = { userPreference: UserPreference };

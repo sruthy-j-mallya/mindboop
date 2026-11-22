@@ -109,7 +109,12 @@ describe("Inbox", () => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
     vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
-      userPreference: { theme: "system", completionSound: "bell", breakAlarmSound: "classic" },
+      userPreference: {
+        theme: "system",
+        completionSound: "bell",
+        breakAlarmSound: "classic",
+        weekStartsOn: 1,
+      },
     });
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
