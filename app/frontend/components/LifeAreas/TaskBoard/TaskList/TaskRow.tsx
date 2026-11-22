@@ -82,12 +82,12 @@ const TaskRow = ({ task }: TaskRowProps) => {
         {/* Opens the same picker as the pane. Hidden on phones to leave the title room; the pane still shows it. */}
         {task.startsAt && (
           <SchedulePicker align="end" schedule={task} onSave={handleScheduleSave}>
-            {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
+            {/* Plain text with a calendar icon; the ghost hover background shows it is clickable. */}
             <Button
-              className="h-6 shrink-0 gap-1 border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 max-sm:hidden dark:bg-background dark:hover:bg-background"
+              className="h-6 shrink-0 gap-1 px-2 text-xs font-normal has-[>svg]:px-2 max-sm:hidden"
               size="sm"
               type="button"
-              variant="outline"
+              variant="ghost"
             >
               <CalendarDays className="size-3.5 text-muted-foreground" />
               <span className="sr-only">Due date of {title}:</span> <ScheduleLabel schedule={task} />

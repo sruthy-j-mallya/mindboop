@@ -43,9 +43,12 @@ const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
       <PopoverTrigger asChild>
         <Button
           aria-label={label}
-          className={cn("justify-start bg-input-background px-3 font-normal whitespace-nowrap", className)}
+          className={cn(
+            "h-auto justify-start px-0 font-normal whitespace-nowrap underline-offset-4 hover:bg-transparent hover:underline has-[>svg]:px-0 dark:hover:bg-transparent",
+            className,
+          )}
           type="button"
-          variant="outline"
+          variant="ghost"
         >
           {format(value, isSameYear(value, new Date()) ? DATE_LABEL_FORMAT : OTHER_YEAR_DATE_LABEL_FORMAT)}
         </Button>

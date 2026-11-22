@@ -177,7 +177,7 @@ const TimePicker = ({
               "tabular-nums",
               isRow
                 ? "h-auto min-w-0 flex-1 border-0 bg-transparent px-0 py-0 shadow-none focus-visible:ring-0 dark:bg-transparent"
-                : "w-28",
+                : "h-auto w-20 cursor-pointer border-0 bg-transparent px-0 py-0 underline-offset-4 shadow-none hover:underline focus-visible:underline focus-visible:ring-0 dark:bg-transparent",
               isRow && value && "text-primary",
             )}
             placeholder={placeholder}
@@ -207,7 +207,7 @@ const TimePicker = ({
       </PopoverAnchor>
       <PopoverContent
         align="start"
-        className="w-(--radix-popover-trigger-width) p-1"
+        className="w-auto min-w-(--radix-popover-trigger-width) p-1"
         onCloseAutoFocus={preventAutoFocus}
         onInteractOutside={handleInteractOutside}
         onMouseDown={handleListMouseDown}
@@ -228,7 +228,7 @@ const TimePicker = ({
               <li
                 aria-selected={isSelected}
                 className={cn(
-                  "flex cursor-default items-center justify-between rounded-sm px-2 py-1.5 text-sm tabular-nums select-none",
+                  "flex cursor-default items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-sm whitespace-nowrap tabular-nums select-none",
                   isActive && "bg-accent text-accent-foreground",
                   isSelected && "text-primary",
                 )}

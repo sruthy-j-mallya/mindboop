@@ -10,13 +10,8 @@ const RichTextEditor = lazy(() => import("./Editor"));
 // Same footprint as the editor (its toolbar starts hidden, and it fills a flex parent), so the form doesn't jump when
 // it loads.
 const EditorPlaceholder = () => (
-  <div
-    aria-busy="true"
-    aria-label="Loading editor"
-    className="flex-1 rounded-md border border-input shadow-xs"
-    role="status"
-  >
-    <div className="grid min-h-28 content-start gap-2 px-3 py-3">
+  <div aria-busy="true" aria-label="Loading editor" className="flex-1" role="status">
+    <div className="grid min-h-28 content-start gap-2 py-3">
       <Skeleton className="h-3 w-2/3" />
       <Skeleton className="h-3 w-1/2" />
     </div>
