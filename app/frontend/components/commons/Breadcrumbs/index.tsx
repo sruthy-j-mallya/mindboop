@@ -22,7 +22,7 @@ const Breadcrumbs = ({ breadcrumbs }: BreadcrumbsProps) => {
             )}
             <span
               aria-hidden
-              className="relative mt-0.5 size-4 shrink-0 border-4 border-background bg-brand-yellow ring-2 ring-brand-yellow"
+              className="relative mt-0.5 size-4 shrink-0 rounded-full border-4 border-background bg-brand-yellow ring-2 ring-brand-yellow"
             />
             <div className="flex min-w-0 flex-col items-start gap-2">
               <time
