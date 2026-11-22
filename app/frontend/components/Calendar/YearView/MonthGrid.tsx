@@ -11,21 +11,27 @@ import {
   startOfWeek,
 } from "date-fns";
 
-import { WEEK_OPTIONS } from "../constants";
+import type { WeekStartsOn } from "@/apis/types";
+
 import type { DayCounts } from "./types";
 import { getDayLabel, toDayKey, toMonthKey } from "./utils";
 
-type MonthGridProps = { month: Date; counts: Map<string, DayCounts>; onSelectDay: (day: Date) => void };
+type MonthGridProps = {
+  month: Date;
+  counts: Map<string, DayCounts>;
+  weekStartsOn: WeekStartsOn;
+  onSelectDay: (day: Date) => void;
+};
 
-const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
-
-// One month of the year view. A day with tasks gets a solid dot and one with logged time a faded one; picking a day
-// opens it in the day view.
-const MonthGrid = ({ month, counts, onSelectDay }: MonthGridProps) => {
+// One month of the year view, its weeks starting on `weekStartsOn`. A day with tasks gets a solid dot and one with
+// logged time a faded one; picking a day opens it in the day view.
+const MonthGrid = ({ month, counts, weekStartsOn, onSelectDay }: MonthGridProps) => {
   const days = eachDayOfInterval({
-    start: startOfWeek(startOfMonth(month), WEEK_OPTIONS),
-    end: endOfWeek(endOfMonth(month), WEEK_OPTIONS),
+    start: startOfWeek(startOfMonth(month), { weekStartsOn }),
+    end: endOfWeek(endOfMonth(month), { weekStartsOn }),
   });
+  // The first week's days give the weekday headings in order ("M", "T", … from Monday).
+  const weekdays = days.slice(0, 7).map((day) => format(day, "EEEEE"));
 
   return (
     <section
@@ -36,7 +42,7 @@ const MonthGrid = ({ month, counts, onSelectDay }: MonthGridProps) => {
     >
       <h4 className="px-1 text-sm font-semibold">{format(month, "MMMM")}</h4>
       <div className="grid grid-cols-7 gap-0.5 text-center text-xs">
-        {WEEKDAYS.map((weekday, index) => (
+        {weekdays.map((weekday, index) => (
           <span key={index} aria-hidden className="py-1 text-muted-foreground">
             {weekday}
           </span>

@@ -26,7 +26,12 @@ class Api::UserPreferencesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     assert_equal(
-      { "theme" => "system", "completion_sound" => "rising", "break_alarm_sound" => "classic" },
+      {
+        "theme" => "system",
+        "completion_sound" => "rising",
+        "break_alarm_sound" => "classic",
+        "week_starts_on" => 1
+      },
       response.parsed_body["user_preference"]
     )
   end
@@ -66,6 +71,26 @@ class Api::UserPreferencesControllerTest < ActionDispatch::IntegrationTest
     preference = @user.reload.preference
     assert_equal "chimes", preference.break_alarm_sound
     assert_equal "dark", preference.theme
+  end
+
+  def test_that_update_changes_the_day_the_week_starts_on
+    sign_in @user
+
+    patch api_user_preference_path, params: { week_starts_on: 0 }, as: :json
+
+    assert_response :ok
+    assert_equal 0, response.parsed_body["user_preference"]["week_starts_on"]
+    assert_equal 0, @user.reload.preference.week_starts_on
+  end
+
+  def test_that_update_rejects_a_week_start_outside_the_week
+    sign_in @user
+
+    patch api_user_preference_path, params: { week_starts_on: 7 }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Week starts on must be in 0..6", response.parsed_body["error"]
+    assert_nil @user.reload.preference
   end
 
   def test_that_update_rejects_an_unknown_sound

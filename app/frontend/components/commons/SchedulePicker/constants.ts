@@ -12,8 +12,10 @@ export const DURATION_TAB = "duration";
 // A new timed slot starts at the next full hour today, or at 9am on any other day, and lasts an hour.
 export const DEFAULT_START_HOUR = 9;
 
-// How a day reads in the Duration tab's date fields ("14 Nov 2026"), short enough to sit beside a time.
-export const DATE_LABEL_FORMAT = "d MMM yyyy";
+// How a day reads in the Duration tab's date fields: "14 Nov" this year, "14 Nov 2027" in any other.
+export const DATE_LABEL_FORMAT = "d MMM";
+
+export const OTHER_YEAR_DATE_LABEL_FORMAT = "d MMM yyyy";
 
 export const TIME_INPUT_FORMAT = "HH:mm";
 

@@ -28,12 +28,19 @@ const hourSlot = (page: Page, hour: number) =>
     .locator(".rbc-time-slot")
     .first();
 
-// The events layer sits over the slots, so a click goes to the slot's spot on screen rather than to the element.
-const clickSlot = async (page: Page, hour: number) => {
+// The day view opens scrolled to an hour before now, so a slot may be out of view. Dragging over a slot out of view
+// makes the calendar scroll under the pointer, and the drop lands on the wrong slot. Scroll it into view first.
+const visibleHourSlot = async (page: Page, hour: number) => {
   const slot = hourSlot(page, hour);
   await slot.scrollIntoViewIfNeeded();
   const box = await slot.boundingBox();
   if (!box) throw new Error("The slot should be on screen");
+  return box;
+};
+
+// The events layer sits over the slots, so a click goes to the slot's spot on screen rather than to the element.
+const clickSlot = async (page: Page, hour: number) => {
+  const box = await visibleHourSlot(page, hour);
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 };
 
@@ -81,9 +88,9 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
   await expect(renamed).toBeVisible();
 
   // Dragged two hours later, by its middle: its top and bottom edges are resize handles.
+  const to = await visibleHourSlot(page, 12);
   const from = await renamed.boundingBox();
-  const to = await hourSlot(page, 12).boundingBox();
-  if (!from || !to) throw new Error("The event and the slot should be on screen");
+  if (!from) throw new Error("The event should be on screen");
   const x = from.x + from.width / 2;
   const grabOffset = from.height / 2;
   await page.mouse.move(x, from.y + grabOffset);
@@ -103,10 +110,10 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
 
 // Presses the middle of the event's top or bottom resize handle and drags it to the given slot.
 const dragEdge = async (page: Page, event: Locator, edge: "top" | "bottom", hour: number) => {
+  const to = await visibleHourSlot(page, hour);
   const handles = event.locator(".rbc-addons-dnd-resize-ns-anchor");
   const from = await (edge === "top" ? handles.first() : handles.last()).boundingBox();
-  const to = await hourSlot(page, hour).boundingBox();
-  if (!from || !to) throw new Error("The handle and the slot should be on screen");
+  if (!from) throw new Error("The handle should be on screen");
   const x = from.x + from.width / 2;
   await page.mouse.move(x, from.y + from.height / 2);
   await page.mouse.down();
@@ -146,7 +153,7 @@ test("stretch a task from its start and its end", async ({ page }) => {
   );
 });
 
-test("log time in the last 24 hours with only a title", async ({ page }) => {
+test("log time in the last 24 hours with only a title, then delete it", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
   await chooseView(page, "Day");
@@ -161,7 +168,18 @@ test("log time in the last 24 hours with only a title", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(logTime).toBeHidden();
 
-  await expect(page.locator(".calendar-event-time-log", { hasText: "Answer emails" })).toBeVisible();
+  const timeLog = page.locator(".calendar-event-time-log", { hasText: "Answer emails" });
+  await expect(timeLog).toBeVisible();
+
+  // Deleting a log made by mistake, then undoing it.
+  await timeLog.click();
+  await page
+    .getByRole("dialog", { name: "Logged time" })
+    .getByRole("button", { name: "Delete time log" })
+    .click();
+  await expect(timeLog).toBeHidden();
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(timeLog).toBeVisible();
 });
 
 test("the year view drills down to a day", async ({ page }) => {
@@ -169,8 +187,10 @@ test("the year view drills down to a day", async ({ page }) => {
   await page.getByRole("link", { name: "Calendar" }).click();
   await chooseView(page, "Year");
 
-  await expect(page.getByRole("region", { name: /^January / })).toBeVisible();
-  await page.getByRole("button", { name: /, 1 January / }).click();
+  // The year view also renders the years either side, so pick this year's January.
+  const january = page.getByRole("region", { name: `January ${new Date().getFullYear()}` });
+  await expect(january).toBeVisible();
+  await january.getByRole("button", { name: /, 1 January / }).click();
   await expect(page.getByRole("combobox", { name: "Calendar view" })).toHaveText("Day");
 });
 

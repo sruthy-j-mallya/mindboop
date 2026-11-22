@@ -8,8 +8,10 @@ import { startOfDay, subHours } from "date-fns";
 import type { SlotInfo, ToolbarProps, View, ViewsProps } from "react-big-calendar";
 import { toast } from "sonner";
 
+import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
 import { useCalendarEvents } from "@/hooks/reactQuery/useCalendarEventsApi";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
+import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
 import { writeStorage } from "@/utils/storage";
 
@@ -17,7 +19,6 @@ import {
   CALENDAR_VIEWS,
   DAY_COUNT_STORAGE_KEY,
   EVENT_KINDS,
-  LOCALIZER,
   NOW_REFRESH_INTERVAL,
   SCROLL_BACK_HOURS,
   SLOT_CLASS_NAMES,
@@ -29,8 +30,8 @@ import DragAndDropCalendar from "./DragAndDropCalendar";
 import MultiDayView from "./MultiDayView";
 import EditTaskPopover from "./TaskPopover/Edit";
 import NewTaskPopover from "./TaskPopover/New";
-import ShowTaskPopover from "./TaskPopover/Show";
 import TimeLogPopover from "./TimeLogPopover";
+import ShowTimeLogPopover from "./TimeLogPopover/Show";
 import Toolbar from "./Toolbar";
 import type { CalendarEvent, CalendarView, PopoverState } from "./types";
 import useEventMoves from "./useEventMoves";
@@ -39,6 +40,7 @@ import {
   eventToAnchorRect,
   getCurrentSlotStart,
   getEventProps,
+  getLocalizer,
   getLogWindowStart,
   getSelectionIntent,
   getVisibleRange,
@@ -61,9 +63,9 @@ const VIEWS = {
 } as unknown as ViewsProps<CalendarEvent>;
 
 // Past time logs and upcoming tasks on one grid, in their area of life's colour. Clicking or dragging across empty time adds a task from now on, or
-// logs time in the last 24 hours; tasks open for editing on click, time logs show their task read only, and both move and
-// resize by dragging. Scrolling
-// sideways pages through dates, as does scrolling up and down in the month view.
+// logs time in the last 24 hours; tasks open for editing on click, time logs show their task read only (and can be
+// deleted), and both move and resize by dragging. Scrolling sideways pages through dates, as does scrolling up and down
+// in the month view. Weeks start on the day picked in Settings, so the grid waits for that before showing.
 const Calendar = () => {
   const [view, setView] = useState<CalendarView>(readStoredView);
   const [date, setDate] = useState(() => new Date());
@@ -72,12 +74,17 @@ const Calendar = () => {
   const [scrollToTime] = useState(() => subHours(new Date(), SCROLL_BACK_HOURS));
   const calendarRef = useRef<HTMLDivElement>(null);
   const now = useCurrentTime(true, NOW_REFRESH_INTERVAL);
+  const { data: preference, isPending: isPreferencePending } = useUserPreference();
+  const weekStartsOn = preference?.weekStartsOn ?? DEFAULT_WEEK_STARTS_ON;
+  const localizer = useMemo(() => getLocalizer(weekStartsOn), [weekStartsOn]);
   const params = useMemo(() => {
-    const { start, end } = getVisibleRange(view, date, dayCount);
+    const { start, end } = getVisibleRange(view, date, dayCount, weekStartsOn);
 
     return { from: start.toISOString(), to: end.toISOString() };
-  }, [view, date, dayCount]);
-  const { data: { tasks = [], timeLogs = [] } = {}, error } = useCalendarEvents(params);
+  }, [view, date, dayCount, weekStartsOn]);
+  const { data: { tasks = [], timeLogs = [] } = {}, error } = useCalendarEvents(params, {
+    enabled: !isPreferencePending,
+  });
   const { data: lifeAreas } = useLifeAreas();
   const lifeAreaColors = useMemo(() => toLifeAreaColors(lifeAreas ?? []), [lifeAreas]);
   const { movedTimes, handleEventDrop, handleEventResize } = useEventMoves(view === CALENDAR_VIEWS.MONTH);
@@ -127,16 +134,11 @@ const Calendar = () => {
     else if (intent.error) toast.error(intent.error);
   };
 
-  // A time log shows its task read only; one logged without a task, or whose task was deleted, has nothing to show.
+  // A time log shows when it ran and its task read only, and can be deleted once finished.
   const handleSelectEvent = (event: CalendarEvent, domEvent: SyntheticEvent<HTMLElement>) => {
     const anchor = eventToAnchorRect(domEvent);
-    if (event.kind === EVENT_KINDS.TASK) {
-      setPopover({ kind: "editTask", anchor, task: event.task });
-      return;
-    }
-
-    const { taskId, isTaskDeleted } = event.timeLog;
-    if (taskId && !isTaskDeleted) setPopover({ kind: "showTask", anchor, taskId });
+    if (event.kind === EVENT_KINDS.TASK) setPopover({ kind: "editTask", anchor, task: event.task });
+    else setPopover({ kind: "showTimeLog", anchor, event });
   };
 
   // Past time is shaded, and time beyond the 24 hours that can be logged more so.
@@ -156,35 +158,38 @@ const Calendar = () => {
           {error.message}
         </p>
       )}
+      {/* The wrapper stays mounted while the preference loads, so useWheelPaging finds it on the first render. */}
       <div ref={calendarRef} className="calendar h-[calc(100svh-5rem)] min-h-[36rem]">
-        <DragAndDropCalendar
-          popup
-          resizable
-          selectable="ignoreEvents"
-          components={components}
-          culture="en-US"
-          date={date}
-          dayPropGetter={getDayProps}
-          draggableAccessor="isEditable"
-          eventPropGetter={getAreaEventProps}
-          events={events}
-          length={dayCount}
-          localizer={LOCALIZER}
-          resizableAccessor="isEditable"
-          scrollToTime={scrollToTime}
-          slotPropGetter={getSlotProps}
-          step={SLOT_MINUTES}
-          timeslots={SLOTS_PER_HOUR}
-          tooltipAccessor="title"
-          view={view as View}
-          views={VIEWS}
-          onEventDrop={handleEventDrop}
-          onEventResize={handleEventResize}
-          onNavigate={setDate}
-          onSelectEvent={handleSelectEvent}
-          onSelectSlot={handleSelectSlot}
-          onView={handleView}
-        />
+        {!isPreferencePending && (
+          <DragAndDropCalendar
+            popup
+            resizable
+            selectable="ignoreEvents"
+            components={components}
+            culture="en-US"
+            date={date}
+            dayPropGetter={getDayProps}
+            draggableAccessor="isEditable"
+            eventPropGetter={getAreaEventProps}
+            events={events}
+            length={dayCount}
+            localizer={localizer}
+            resizableAccessor="isEditable"
+            scrollToTime={scrollToTime}
+            slotPropGetter={getSlotProps}
+            step={SLOT_MINUTES}
+            timeslots={SLOTS_PER_HOUR}
+            tooltipAccessor="title"
+            view={view as View}
+            views={VIEWS}
+            onEventDrop={handleEventDrop}
+            onEventResize={handleEventResize}
+            onNavigate={setDate}
+            onSelectEvent={handleSelectEvent}
+            onSelectSlot={handleSelectSlot}
+            onView={handleView}
+          />
+        )}
       </div>
       {popover?.kind === "newTask" && (
         <NewTaskPopover anchor={popover.anchor} schedule={popover.schedule} onClose={handleClosePopover} />
@@ -192,8 +197,8 @@ const Calendar = () => {
       {popover?.kind === "editTask" && (
         <EditTaskPopover anchor={popover.anchor} task={popover.task} onClose={handleClosePopover} />
       )}
-      {popover?.kind === "showTask" && (
-        <ShowTaskPopover anchor={popover.anchor} taskId={popover.taskId} onClose={handleClosePopover} />
+      {popover?.kind === "showTimeLog" && (
+        <ShowTimeLogPopover anchor={popover.anchor} event={popover.event} onClose={handleClosePopover} />
       )}
       {popover?.kind === "newTimeLog" && (
         <TimeLogPopover anchor={popover.anchor} range={popover.range} onClose={handleClosePopover} />

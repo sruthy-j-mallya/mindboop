@@ -1,13 +1,19 @@
 import { useState } from "react";
 
 import { cn } from "cn";
-import { format } from "date-fns";
+import { format, isSameYear } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import useWeekStartsOn from "@/hooks/useWeekStartsOn";
 
-import { CALENDAR_CLASS_NAME, CALENDAR_CLASS_NAMES, DATE_LABEL_FORMAT } from "./constants";
+import {
+  CALENDAR_CLASS_NAME,
+  CALENDAR_CLASS_NAMES,
+  DATE_LABEL_FORMAT,
+  OTHER_YEAR_DATE_LABEL_FORMAT,
+} from "./constants";
 
 type DatePickerProps = {
   label: string;
@@ -20,6 +26,7 @@ type DatePickerProps = {
 const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [month, setMonth] = useState(value);
+  const weekStartsOn = useWeekStartsOn();
 
   const handleOpenChange = (isOpening: boolean) => {
     if (isOpening) setMonth(value);
@@ -36,11 +43,11 @@ const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
       <PopoverTrigger asChild>
         <Button
           aria-label={label}
-          className={cn("min-w-0 shrink justify-start bg-input-background px-3 font-normal", className)}
+          className={cn("justify-start bg-input-background px-3 font-normal whitespace-nowrap", className)}
           type="button"
           variant="outline"
         >
-          <span className="truncate">{format(value, DATE_LABEL_FORMAT)}</span>
+          {format(value, isSameYear(value, new Date()) ? DATE_LABEL_FORMAT : OTHER_YEAR_DATE_LABEL_FORMAT)}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-3">
@@ -51,7 +58,7 @@ const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
           mode="single"
           month={month}
           selected={value}
-          weekStartsOn={1}
+          weekStartsOn={weekStartsOn}
           onMonthChange={setMonth}
           onSelect={handleSelectDay}
         />

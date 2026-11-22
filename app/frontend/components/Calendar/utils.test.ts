@@ -104,6 +104,17 @@ describe("getVisibleRange", () => {
     expect(getVisibleRange("week", at(12, 15))).toEqual({ start: at(9), end: at(16) });
   });
 
+  it("covers the week from the day it starts on", () => {
+    expect(getVisibleRange("week", at(12, 15), DEFAULT_MULTI_DAY_COUNT, 0)).toEqual({
+      start: at(8),
+      end: at(15),
+    });
+    expect(getVisibleRange("week", at(12, 15), DEFAULT_MULTI_DAY_COUNT, 6)).toEqual({
+      start: at(7),
+      end: at(14),
+    });
+  });
+
   it("covers three days from the chosen one", () => {
     expect(getVisibleRange("multiDay", at(12, 15))).toEqual({ start: at(12), end: at(15) });
   });
@@ -116,6 +127,13 @@ describe("getVisibleRange", () => {
     expect(getVisibleRange("month", at(12))).toEqual({
       start: new Date(2026, 9, 26),
       end: new Date(2026, 11, 7),
+    });
+  });
+
+  it("covers the whole weeks a month touches from the day weeks start on", () => {
+    expect(getVisibleRange("month", at(12), DEFAULT_MULTI_DAY_COUNT, 0)).toEqual({
+      start: new Date(2026, 10, 1),
+      end: new Date(2026, 11, 6),
     });
   });
 

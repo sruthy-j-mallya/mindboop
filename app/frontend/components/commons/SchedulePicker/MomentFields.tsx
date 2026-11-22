@@ -13,7 +13,7 @@ type MomentFieldsProps = {
 // A labelled date picker, plus a time input unless the duration is all day. A cleared time is ignored.
 const MomentFields = ({ label, value, hasTime, onDayChange, onTimeChange }: MomentFieldsProps) => {
   return (
-    <div className="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2 text-sm">
+    <div className="grid grid-cols-[3rem_1fr_auto] items-center gap-2 text-sm">
       <span>{label}</span>
       <DatePicker
         className={hasTime ? undefined : "col-span-2"}

@@ -47,7 +47,7 @@ class TimeLog < ApplicationRecord
   validate :session_is_finished, on: :reschedule
   validate :times_fit_logging_window, on: %i[ log reschedule ]
   # A custom context replaces :create, so a manual log (saved on :log) needs listing on its own.
-  validate :does_not_overlap_another_session, on: %i[ create log reschedule ]
+  validate :does_not_overlap_another_session, on: %i[ create log reschedule restore ]
   validate :long_enough_to_log, on: :end
 
   around_save :refuse_overlap_found_by_database
@@ -70,6 +70,15 @@ class TimeLog < ApplicationRecord
       assign_attributes(started_at:, completed_at:)
       self.accumulated_elapsed_seconds = logged_seconds
       save!(context: :reschedule)
+    end
+  end
+
+  # Brings back a deleted session, as when its delete is undone. Refused (RecordInvalid) when another session has taken
+  # its time since.
+  def restore!
+    with_lock do
+      self.discarded_at = nil
+      save!(context: :restore)
     end
   end
 

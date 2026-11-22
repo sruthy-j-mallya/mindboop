@@ -14,6 +14,7 @@ Rails.application.routes.draw do
       resource :completion, only: :create, controller: "time_log_completions"
       resource :extension, only: :create, controller: "time_log_extensions"
       resource :bail_out, only: :create, controller: "time_log_bail_outs"
+      resource :restoration, only: :create, controller: "time_log_restorations"
       resource :break, only: %i[ create update ]
     end
     resource :current_time_log, only: :show

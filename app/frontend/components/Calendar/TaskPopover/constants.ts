@@ -35,7 +35,3 @@ export const POPOVER_CLASS_NAME =
 // a short task leaves the room to its description.
 export const EDIT_POPOVER_CLASS_NAME =
   "flex h-[32rem] max-h-(--radix-popover-content-available-height) w-[30rem] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto rounded-xl p-4";
-
-// A time log's task can't grow while it's open, so its popover hugs the content and only caps at the saved task's size.
-export const SHOW_POPOVER_CLASS_NAME =
-  "flex max-h-[min(32rem,var(--radix-popover-content-available-height))] w-[30rem] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto rounded-xl p-4";
