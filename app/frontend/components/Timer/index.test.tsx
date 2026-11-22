@@ -102,7 +102,12 @@ const renderTimer = (
   vi.spyOn(parkingLotItemsApi, "fetchList").mockResolvedValue(parkingLotListOf(parkingLotItems));
   vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
   vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
-    userPreference: { theme: "system", completionSound: "glass", breakAlarmSound: "classic" },
+    userPreference: {
+      theme: "system",
+      completionSound: "glass",
+      breakAlarmSound: "classic",
+      weekStartsOn: 1,
+    },
   });
   renderWithProviders(<Timer />, undefined, initialPath);
 };

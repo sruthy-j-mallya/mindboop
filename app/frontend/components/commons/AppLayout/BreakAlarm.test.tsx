@@ -19,7 +19,12 @@ vi.mock("@/utils/notifications");
 const NOW = new Date("2026-11-06T10:00:00.000Z").getTime();
 const ONE_MINUTE = 60_000;
 const TASK_ID = "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23";
-const PREFERENCE: UserPreference = { theme: "system", completionSound: "rising", breakAlarmSound: "chimes" };
+const PREFERENCE: UserPreference = {
+  theme: "system",
+  completionSound: "rising",
+  breakAlarmSound: "chimes",
+  weekStartsOn: 1,
+};
 
 // The preference loads with the app, before any break, so it's already cached here.
 const buildQueryClient = () => {

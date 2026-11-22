@@ -3,6 +3,8 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { eachMonthOfInterval, endOfYear, format, getYear, isThisYear, setYear, startOfYear } from "date-fns";
 import type { NavigateAction } from "react-big-calendar";
 
+import useWeekStartsOn from "@/hooks/useWeekStartsOn";
+
 import { CALENDAR_VIEWS, CURRENT_MONTH_SELECTOR } from "../constants";
 import type { CalendarEvent } from "../types";
 import { getVisibleRange, shiftDate } from "../utils";
@@ -26,6 +28,7 @@ const YearView = ({ date, events, onDrillDown, onNavigate }: YearViewProps) => {
   const anchor = useRef<ScrollAnchor | null>(null);
   const years = getYearWindow(date);
   const counts = useMemo(() => getDayCounts(events), [events]);
+  const weekStartsOn = useWeekStartsOn();
 
   // Scrolled to another year: keep the same month where it was. Opened or paged by the toolbar: show this month if
   // it's this year (Today), or the year from its January.
@@ -78,6 +81,7 @@ const YearView = ({ date, events, onDrillDown, onNavigate }: YearViewProps) => {
                 key={month.toISOString()}
                 counts={counts}
                 month={month}
+                weekStartsOn={weekStartsOn}
                 onSelectDay={handleSelectDay}
               />
             ))}

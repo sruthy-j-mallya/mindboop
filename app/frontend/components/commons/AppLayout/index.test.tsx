@@ -53,7 +53,12 @@ describe("AppLayout", () => {
     localStorage.clear();
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
     vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
-      userPreference: { theme: "system", completionSound: "rising", breakAlarmSound: "classic" },
+      userPreference: {
+        theme: "system",
+        completionSound: "rising",
+        breakAlarmSound: "classic",
+        weekStartsOn: 1,
+      },
     });
   });
 
@@ -61,7 +66,12 @@ describe("AppLayout", () => {
 
   it("applies the user's saved theme", async () => {
     vi.mocked(userPreferencesApi.show).mockResolvedValue({
-      userPreference: { theme: "dark", completionSound: "rising", breakAlarmSound: "classic" },
+      userPreference: {
+        theme: "dark",
+        completionSound: "rising",
+        breakAlarmSound: "classic",
+        weekStartsOn: 1,
+      },
     });
 
     renderWithProviders(<AppLayout />);

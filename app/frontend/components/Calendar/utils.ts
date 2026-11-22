@@ -6,9 +6,12 @@ import {
   addYears,
   endOfMonth,
   endOfWeek,
+  format,
+  getDay,
   isSameDay,
   max,
   min,
+  parse,
   parseISO,
   startOfDay,
   startOfMonth,
@@ -17,11 +20,14 @@ import {
   subHours,
   subMilliseconds,
 } from "date-fns";
+import { enUS } from "date-fns/locale";
 import type { SyntheticEvent } from "react";
+import { dateFnsLocalizer } from "react-big-calendar";
 
-import type { Task, TimeLog } from "@/apis/types";
+import type { Task, TimeLog, WeekStartsOn } from "@/apis/types";
 import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
+import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
 import { readStorage } from "@/utils/storage";
 
 import {
@@ -39,7 +45,6 @@ import {
   TIME_LOG_WINDOW_HOURS,
   VIEW_OPTIONS,
   VIEW_STORAGE_KEY,
-  WEEK_OPTIONS,
   WHEEL_DELTA_MODE_PIXELS,
   WHEEL_GESTURE_GAP,
   WHEEL_NEW_SWIPE_MIN_SPEED,
@@ -84,27 +89,41 @@ export const getMultiDayRange = (date: Date, dayCount: number): TimeRange => {
   return { start, end: addDays(start, dayCount) };
 };
 
+// react-big-calendar's date handling, with weeks starting on `weekStartsOn`. Its week and month views, and the days
+// it pages by, all follow this.
+export const getLocalizer = (weekStartsOn: WeekStartsOn) =>
+  dateFnsLocalizer({
+    format,
+    parse,
+    startOfWeek: (date: Date) => startOfWeek(date, { weekStartsOn }),
+    getDay,
+    locales: { "en-US": enUS },
+  });
+
 // The days a view shows, as a half-open range: what the Calendar asks the API for. `dayCount` is how many days the
-// multi-day view shows.
+// multi-day view shows, and `weekStartsOn` the day the week and month views' weeks start on.
 export const getVisibleRange = (
   view: CalendarView,
   date: Date,
   dayCount = DEFAULT_MULTI_DAY_COUNT,
+  weekStartsOn = DEFAULT_WEEK_STARTS_ON,
 ): TimeRange => {
+  const weekOptions = { weekStartsOn };
+
   switch (view) {
     case CALENDAR_VIEWS.DAY:
       return { start: startOfDay(date), end: addDays(startOfDay(date), 1) };
     case CALENDAR_VIEWS.MULTI_DAY:
       return getMultiDayRange(date, dayCount);
     case CALENDAR_VIEWS.WEEK: {
-      const start = startOfWeek(date, WEEK_OPTIONS);
+      const start = startOfWeek(date, weekOptions);
 
       return { start, end: addDays(start, 7) };
     }
     case CALENDAR_VIEWS.MONTH:
       return {
-        start: startOfWeek(startOfMonth(date), WEEK_OPTIONS),
-        end: addDays(startOfDay(endOfWeek(endOfMonth(date), WEEK_OPTIONS)), 1),
+        start: startOfWeek(startOfMonth(date), weekOptions),
+        end: addDays(startOfDay(endOfWeek(endOfMonth(date), weekOptions)), 1),
       };
     default:
       return {

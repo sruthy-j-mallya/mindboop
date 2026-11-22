@@ -1,18 +1,3 @@
-import { format, getDay, parse, startOfWeek } from "date-fns";
-import { enUS } from "date-fns/locale";
-import { dateFnsLocalizer } from "react-big-calendar";
-
-// Weeks start on Monday, as in the date picker and the Inbox.
-export const WEEK_OPTIONS = { weekStartsOn: 1 } as const;
-
-export const LOCALIZER = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: (date: Date) => startOfWeek(date, WEEK_OPTIONS),
-  getDay,
-  locales: { "en-US": enUS },
-});
-
 export const CALENDAR_VIEWS = {
   DAY: "day",
   MULTI_DAY: "multiDay",

@@ -1,3 +1,5 @@
+import type { WeekStartsOn } from "@/apis/types";
+
 export const API_BASE_PATH = "/api";
 
 // Keep in sync with the length validation on User#password.
@@ -19,3 +21,7 @@ export const TASK_ESTIMATE_MAX_MINUTES = 1440; // 24 hours
 
 // Long enough to notice a slip and reach for Undo.
 export const UNDO_TOAST_DURATION = 8_000; // 8 seconds
+
+// Weeks (in the Calendar and the date pickers) start on the day picked in Settings, and on Monday until it has loaded
+// or if it can't. Keep in sync with the `user_preferences.week_starts_on` column default.
+export const DEFAULT_WEEK_STARTS_ON: WeekStartsOn = 1;

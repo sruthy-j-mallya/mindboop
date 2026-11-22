@@ -1,15 +1,15 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { addDays, addMonths, format, startOfDay, startOfHour, subHours } from "date-fns";
+import { addDays, addMonths, format, startOfDay, startOfHour, startOfWeek, subHours } from "date-fns";
 import { toast } from "sonner";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import calendarEventsApi from "@/apis/calendar_events";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import tasksApi from "@/apis/tasks";
 import timeLogRestorationsApi from "@/apis/time_log_restorations";
 import timeLogsApi from "@/apis/time_logs";
-import type { Task, TimeLog } from "@/apis/types";
+import type { Task, TimeLog, UserPreference } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import { Toaster } from "@/components/ui/sonner";
 import { renderWithProviders } from "@/test/utils";
@@ -58,12 +58,24 @@ const TIME_LOG: TimeLog = {
   updatedAt: "2026-11-05T10:00:00.000Z",
 };
 
+const PREFERENCE: UserPreference = {
+  theme: "system",
+  completionSound: "bell",
+  breakAlarmSound: "classic",
+  weekStartsOn: 1,
+};
+
 const chooseView = async (view: string) => {
-  await userEvent.click(screen.getByRole("combobox", { name: "Calendar view" }));
+  await userEvent.click(await screen.findByRole("combobox", { name: "Calendar view" }));
   await userEvent.click(screen.getByRole("option", { name: view }));
 };
 
 describe("Calendar", () => {
+  // Weeks start on the saved day, so the grid waits for the preference.
+  beforeEach(() => {
+    vi.spyOn(userPreferencesApi, "show").mockResolvedValue({ userPreference: PREFERENCE });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     localStorage.clear();
@@ -84,14 +96,28 @@ describe("Calendar", () => {
     expect(fetchList).toHaveBeenLastCalledWith({ from: expect.any(String), to: expect.any(String) });
   });
 
+  it("starts the week on the day picked in Settings", async () => {
+    vi.mocked(userPreferencesApi.show).mockResolvedValue({
+      userPreference: { ...PREFERENCE, weekStartsOn: 0 },
+    });
+    const fetchList = vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
+    renderWithProviders(<Calendar />);
+
+    await waitFor(() =>
+      expect(fetchList).toHaveBeenCalledWith({
+        from: startOfWeek(new Date(), { weekStartsOn: 0 }).toISOString(),
+        to: expect.any(String),
+      }),
+    );
+    expect(fetchList).toHaveBeenCalledTimes(1);
+    expect(document.querySelector(".rbc-time-header .rbc-header")).toHaveTextContent("Sun");
+  });
+
   // A task opens in the Inbox pane's view, so the pane's own data is stubbed too.
   const openTask = async (task: Task = TASK) => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [task], timeLogs: [] });
     vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
-    vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
-      userPreference: { theme: "system", completionSound: "bell", breakAlarmSound: "classic" },
-    });
     renderWithProviders(<Calendar />);
     await chooseView("Month");
     await userEvent.click(await screen.findByTitle("Plan the week"));
@@ -285,7 +311,7 @@ describe("Calendar", () => {
 
     renderWithProviders(<Calendar />);
 
-    expect(screen.getByRole("combobox", { name: "Calendar view" })).toHaveTextContent("Multi-day");
+    expect(await screen.findByRole("combobox", { name: "Calendar view" })).toHaveTextContent("Multi-day");
     expect(screen.getAllByRole("columnheader")).toHaveLength(4);
   });
 
@@ -363,7 +389,7 @@ describe("Calendar", () => {
   it("pages back a week when scrolled sideways, but leaves scrolling up and down to the grid", async () => {
     vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({ tasks: [], timeLogs: [] });
     renderWithProviders(<Calendar />);
-    const title = screen.getByRole("heading", { level: 2 });
+    const title = await screen.findByRole("heading", { level: 2 });
     const thisWeek = title.textContent;
 
     fireEvent.wheel(title, { deltaY: 100 });

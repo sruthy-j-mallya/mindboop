@@ -54,7 +54,7 @@ Every error response has one shape:
 | GET    | `/api/current_time_log`                   | –                                                                            | 200 `{ time_log }` or `null`      |
 | GET    | `/api/calendar_events`                    | `from`, `to` query params (ISO 8601)                                         | 200 `{ tasks, time_logs }`        |
 | GET    | `/api/user_preference`                    | –                                                                            | 200 `{ user_preference }`         |
-| PATCH  | `/api/user_preference`                    | `theme`, `completion_sound`, `break_alarm_sound` (any)                       | 200 `{ user_preference }`         |
+| PATCH  | `/api/user_preference`                    | `theme`, `completion_sound`, `break_alarm_sound`, `week_starts_on` (any)     | 200 `{ user_preference }`         |
 | GET    | `/api/parking_lot_items`                  | `page`, `status`, `time_log_id` query params (optional)                      | 200 list (see below)              |
 | POST   | `/api/parking_lot_items`                  | `content`, `time_log_id` (optional)                                          | 201 `{ parking_lot_item }`        |
 | PATCH  | `/api/parking_lot_items/:id`              | `content`, `status` (both optional)                                          | 200 `{ parking_lot_item }`        |
@@ -301,13 +301,14 @@ since gets the overlap 422.
 ## User preference
 
 The signed-in user's settings, one per account (`UserPreference`), returned as
-`{ theme, completion_sound, break_alarm_sound }`.
+`{ theme, completion_sound, break_alarm_sound, week_starts_on }`.
 
 | Field               | Values                                                                                     | Default   |
 | ------------------- | ------------------------------------------------------------------------------------------ | --------- |
 | `theme`             | `system` (follow the device), `light`, `dark`                                              | `system`  |
 | `completion_sound`  | `rising`, `crisp`, `wood`, `soft`, `glass`, `triple`, `tick_ding`, `bell`, `chime`, `none` | `rising`  |
 | `break_alarm_sound` | `classic`, `digital`, `chimes`, `marimba`, `bell`                                          | `classic` |
+| `week_starts_on`    | `0` (Sunday) to `6` (Saturday): the day the Calendar's weeks start on                      | `1`       |
 
 - `GET` returns the defaults until the user first changes something; no row is saved by reading.
 - `PATCH` changes only the fields it's given, saving the row on the first change. An unknown value gets a 422 and
