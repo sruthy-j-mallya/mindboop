@@ -3,7 +3,7 @@ module Api
     before_action :set_time_log, only: %i[ update destroy ]
 
     def create
-      @time_log = TimeLog.new(time_log_params.merge(user: Current.user, task: find_task))
+      @time_log = TimeLog.new(time_log_params.merge(user: Current.user, task: task))
       authorize @time_log
       if @time_log.manual?
         @time_log.log!
@@ -31,7 +31,7 @@ module Api
       end
 
       # A manual log can be saved with only a title; every other log runs on a task.
-      def find_task
+      def task
         return if params[:task_id].blank? && params[:mode] == "manual"
 
         Task.kept.find(params[:task_id])
