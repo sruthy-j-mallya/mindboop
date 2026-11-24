@@ -2,6 +2,9 @@
 # A deleted (discarded) area keeps its completed and deleted tasks.
 class LifeArea < ApplicationRecord
   include Discard::Model
+  include Positionable
+
+  positioned_within :user_id
 
   MAX_NAME_LENGTH = 40
   # Keys into the client's palette (`components/commons/LifeArea/constants.ts`).
@@ -11,9 +14,6 @@ class LifeArea < ApplicationRecord
     .flat_map { |category| category["emojis"].pluck("emoji") }.freeze
   # The Ambience sounds (`components/commons/Ambience/constants.ts`); "none" leaves the sound as it was.
   SOUNDS = %w[ none clock bells piano harp flute rain waves wind morning campfire night ].freeze
-
-  # The order the areas sidebar lists them in: the oldest first, so a new one goes at the bottom.
-  scope :in_created_order, -> { order(:created_at, :id) }
 
   normalizes :name, with: ->(name) { name.squish }
 

@@ -5,7 +5,7 @@ module Api
     # Not paged: a user keeps a handful of areas, and the sidebar shows them all. Deleted ones are listed too, as
     # completed tasks and time logs still show theirs.
     def index
-      @life_areas = policy_scope(LifeArea).in_created_order
+      @life_areas = policy_scope(LifeArea).in_position_order
     end
 
     def create
@@ -15,7 +15,10 @@ module Api
     end
 
     def update
-      @life_area.update!(life_area_params)
+      LifeArea.transaction do
+        @life_area.update!(life_area_params)
+        @life_area.move_to!(params[:position]) if params.key?(:position)
+      end
       render :show
     end
 

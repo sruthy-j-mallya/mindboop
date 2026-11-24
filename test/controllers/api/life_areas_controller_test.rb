@@ -14,14 +14,15 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
-  def test_that_index_returns_only_the_users_areas_oldest_first
+  def test_that_index_returns_only_the_users_areas_in_order
     newer = create(:life_area, user: @user)
+    newer.move_to!(0)
     sign_in @user
 
     get api_life_areas_path
 
     assert_response :ok
-    assert_equal [ @life_area.id, newer.id ], response.parsed_body["life_areas"].pluck("id")
+    assert_equal [ newer.id, @life_area.id ], response.parsed_body["life_areas"].pluck("id")
     assert_equal %w[ id name color emoji default_sound is_deleted created_at updated_at ].sort,
       response.parsed_body["life_areas"].first.keys.sort
   end
@@ -82,6 +83,37 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     assert_equal [ @name, "rose", "night" ], @life_area.reload.values_at(:name, :color, :default_sound)
+  end
+
+  def test_that_update_moves_the_area_and_saves_its_fields
+    newer = create(:life_area, user: @user)
+    sign_in @user
+
+    assert_no_changes -> { @other_life_area.reload.position } do
+      patch api_life_area_path(newer), params: { name: @name, position: 0 }, as: :json
+    end
+
+    assert_response :ok
+    assert_equal @name, newer.reload.name
+    assert_equal [ newer, @life_area ], @user.life_areas.in_position_order.to_a
+  end
+
+  def test_that_update_saves_nothing_with_an_invalid_position
+    sign_in @user
+
+    patch api_life_area_path(@life_area), params: { name: @name, position: -1 }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Position must be a whole number of 0 or more", response.parsed_body["error"]
+    assert_not_equal @name, @life_area.reload.name
+  end
+
+  def test_that_update_returns_403_when_moving_another_users_area
+    sign_in @user
+
+    patch api_life_area_path(@other_life_area), params: { position: 0 }, as: :json
+
+    assert_response :forbidden
   end
 
   def test_that_update_rejects_an_unknown_color

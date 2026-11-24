@@ -44,7 +44,7 @@ Every error response has one shape:
 | GET    | `/api/task_counts`                        | –                                                                            | 200 `{ task_counts }`             |
 | GET    | `/api/life_areas`                         | –                                                                            | 200 `{ life_areas }`              |
 | POST   | `/api/life_areas`                         | `name`, `color`, `emoji`, `default_sound` (optional)                         | 201 `{ life_area }`               |
-| PATCH  | `/api/life_areas/:id`                     | `name`, `color`, `emoji`, `default_sound` (any)                              | 200 `{ life_area }`               |
+| PATCH  | `/api/life_areas/:id`                     | `name`, `color`, `emoji`, `default_sound`, `position` (any)                  | 200 `{ life_area }`               |
 | DELETE | `/api/life_areas/:id`                     | `tasks_life_area_id` query param (optional)                                  | 204, soft delete                  |
 | POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                                    | 201 `{ task, time_log }`          |
 | POST   | `/api/time_logs`                          | `task_id`, Time log fields                                                   | 201 `{ time_log }`                |
@@ -133,7 +133,7 @@ is saved. `PATCH /api/tasks/:id` ignores them; change items one at a time throug
 ## Life areas
 
 Areas of life (Work, Health, …) group a user's tasks; a task in none is in the Inbox. `GET /api/life_areas` lists the
-signed-in user's areas, oldest first, unpaged, as `{ life_areas }`, deleted ones (`is_deleted`) too: completed tasks and
+signed-in user's areas, in the user's order, unpaged, as `{ life_areas }`, deleted ones (`is_deleted`) too: completed tasks and
 time logs still show theirs. Another user's area gets a 403, and an unknown one a 404.
 
 Each `life_area` is `{ id, name, color, emoji, default_sound, is_deleted, created_at, updated_at }`
@@ -149,6 +149,10 @@ Each `life_area` is `{ id, name, color, emoji, default_sound, is_deleted, create
   background sound; `none` keeps the one picked last.
 
 Anything else gets a 422.
+
+A new area goes last. `PATCH` with `position` moves the area to that index (0-based) among the user's undeleted areas; one
+past the end goes last. Anything but a whole number of 0 or more gets a 422 and nothing is saved. `position` isn't
+returned: the list's order is the order.
 
 `DELETE /api/life_areas/:id` soft-deletes the area (Discard). Its uncompleted tasks move to the area in
 `tasks_life_area_id`, or to the Inbox without one; completed and deleted tasks stay with it. If that isn't another of the

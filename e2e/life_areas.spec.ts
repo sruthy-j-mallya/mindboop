@@ -115,3 +115,55 @@ test("add areas from the suggestions, move a task into it, search and edit it", 
   await expect(page).toHaveURL("/inbox");
   await expect(page.getByRole("textbox", { name: "Plan the sprint" })).toBeVisible();
 });
+
+test("reorder areas by dragging and by keyboard, also in the narrow layout", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("link", { name: "Areas of life" }).click();
+  const nav = page.getByRole("navigation", { name: "Areas of life" });
+  for (const name of ["Work", "Health", "Leisure"]) await nav.getByRole("button", { name }).click();
+  await nav.getByRole("button", { name: "Add 3 areas" }).click();
+  const areaLink = (name: string) => nav.getByRole("link", { name });
+  const expectOrder = (names: string[]) => expect(nav.getByRole("link")).toContainText(["Inbox", ...names]);
+  await expectOrder(["Work", "Health", "Leisure"]);
+
+  const dragArea = async (name: string, target: string) => {
+    await areaLink(name).hover();
+    const saved = page.waitForResponse((response) => response.request().method() === "PATCH");
+    await drag(page, nav.getByRole("button", { name: `Reorder ${name}` }), areaLink(target));
+    expect((await saved).ok()).toBe(true);
+  };
+
+  await dragArea("Leisure", "Work");
+  await expectOrder(["Leisure", "Work", "Health"]);
+  await page.reload();
+  await expectOrder(["Leisure", "Work", "Health"]);
+
+  const announcement = page.getByRole("status").filter({ hasText: "Leisure" });
+  await nav.getByRole("button", { name: "Reorder Leisure" }).focus();
+  await page.keyboard.press("Space");
+  await expect(announcement).toContainText("Picked up Leisure");
+  // dnd-kit listens for keys a moment after the pick up, so the arrow is pressed until it's heard.
+  await expect(async () => {
+    await page.keyboard.press("ArrowDown");
+    await expect(announcement).toContainText("Leisure moved over Work.", { timeout: 300 });
+  }).toPass();
+  const saved = page.waitForResponse((response) => response.request().method() === "PATCH");
+  await page.keyboard.press("Space");
+  expect((await saved).ok()).toBe(true);
+  await expectOrder(["Work", "Leisure", "Health"]);
+
+  // A task can still be dropped on an area, and an area opened.
+  await addTask(page, "Plan the sprint");
+  await page.getByRole("textbox", { name: "Plan the sprint" }).hover();
+  await drag(page, page.getByRole("button", { name: "Move Plan the sprint" }), areaLink("Health"));
+  await expect(page.getByText("Moved “Plan the sprint” to Health")).toBeVisible();
+  await areaLink("Health").click();
+  await expect(page.getByRole("textbox", { name: "Plan the sprint" })).toBeVisible();
+
+  await page.setViewportSize({ width: 800, height: 800 });
+  await dragArea("Health", "Work");
+  await expectOrder(["Health", "Work", "Leisure"]);
+  await page.reload();
+  await expectOrder(["Health", "Work", "Leisure"]);
+});

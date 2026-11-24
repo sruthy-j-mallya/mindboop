@@ -20,8 +20,8 @@ import useDeleteTaskWithUndo from "@/hooks/useDeleteTaskWithUndo";
 import useRenameTask from "@/hooks/useRenameTask";
 import { getTaskPath } from "@/utils";
 
+import { DRAG_TYPES, NARROW_LAYOUT_QUERY } from "../../constants";
 import type { DragData } from "../../types";
-import { NARROW_LAYOUT_QUERY } from "./constants";
 
 type TaskRowProps = { task: Task };
 
@@ -35,7 +35,7 @@ const TaskRow = ({ task }: TaskRowProps) => {
   const { mutate: updateTask, error: scheduleError } = useUpdateTask();
   const { title, renameTask, error: renameError } = useRenameTask(task);
   const error = completeError ?? deleteError ?? scheduleError ?? renameError;
-  const dragData: DragData = { task };
+  const dragData: DragData = { type: DRAG_TYPES.TASK, task };
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id, data: dragData });
 
   const handleScheduleSave = (schedule: SchedulePayload) => updateTask({ id, ...schedule });

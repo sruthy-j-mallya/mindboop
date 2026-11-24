@@ -256,7 +256,11 @@ export type LifeAreaResponse = { lifeArea: LifeArea };
 
 export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "emoji" | "defaultSound">;
 
-export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> & Pick<LifeArea, "id">;
+// `position` is the index the area lands on among the undeleted ones.
+export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> &
+  Pick<LifeArea, "id"> & { position?: number };
+
+export type MoveLifeAreaPayload = Pick<LifeArea, "id"> & { position: number };
 
 // `tasksLifeAreaId` is the area its uncompleted tasks move to; without one, they go to the Inbox.
 export type DeleteLifeAreaPayload = Pick<LifeArea, "id"> & { tasksLifeAreaId?: string };

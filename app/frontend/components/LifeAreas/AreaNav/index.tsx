@@ -1,26 +1,32 @@
 import { useState } from "react";
 
-import { Inbox, Plus } from "lucide-react";
+import {
+  horizontalListSortingStrategy,
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useTaskCounts } from "@/hooks/reactQuery/useTaskCountsApi";
-import routes from "@/routes";
+import useMediaQuery from "@/hooks/useMediaQuery";
 
 import NewAreaDialog from "../AreaDialog/New";
-import { INBOX_DROP_ID, INBOX_TARGET } from "../constants";
+import { NARROW_LAYOUT_QUERY } from "../constants";
 import { getTasksCount } from "../utils";
 import AreaItem from "./AreaItem";
-import NavItem from "./NavItem";
+import InboxItem from "./InboxItem";
 import SuggestionPicker from "./SuggestionPicker";
 
-// The Inbox, then the areas, oldest first, to switch between and drop tasks on (and to edit or delete, from an area's
-// right-click menu). A column on wide screens; on narrow ones the areas are a row that scrolls sideways. Until there are
+// The Inbox, then the areas in the user's order (changed by dragging), to switch between and drop tasks on (and to edit
+// or delete, from an area's right-click menu). A column on wide screens; on narrow ones the areas are a row that scrolls sideways. Until there are
 // areas, suggestions to pick from take their place.
 const AreaNav = () => {
   const [isAdding, setIsAdding] = useState(false);
   const { data: lifeAreas = [], isPending, error } = useLifeAreas();
   const { data: taskCounts = [] } = useTaskCounts();
+  const isNarrow = useMediaQuery(NARROW_LAYOUT_QUERY);
   const isEmpty = !isPending && !error && lifeAreas.length === 0;
 
   const handleAdd = () => setIsAdding(true);
@@ -32,13 +38,7 @@ const AreaNav = () => {
       className="flex shrink-0 flex-col gap-3 border-b px-4 pb-4 lg:w-60 lg:overflow-y-auto lg:border-r lg:border-b-0"
     >
       <ul className="-mx-1 px-1 py-0.5">
-        <NavItem
-          icon={<Inbox className="size-4 text-muted-foreground" />}
-          id={INBOX_DROP_ID}
-          target={INBOX_TARGET}
-          tasksCount={getTasksCount(taskCounts, null)}
-          to={routes.inbox.index}
-        />
+        <InboxItem tasksCount={getTasksCount(taskCounts, null)} />
       </ul>
       <div className="flex min-h-8 items-center justify-between gap-2">
         <h2 className="text-sm font-medium text-muted-foreground">Areas of life</h2>
@@ -49,15 +49,20 @@ const AreaNav = () => {
         )}
       </div>
       {lifeAreas.length > 0 && (
-        <ul className="-mx-1 flex gap-1 overflow-x-auto px-1 py-0.5 lg:flex-col lg:overflow-visible">
-          {lifeAreas.map((lifeArea) => (
-            <AreaItem
-              key={lifeArea.id}
-              lifeArea={lifeArea}
-              tasksCount={getTasksCount(taskCounts, lifeArea.id)}
-            />
-          ))}
-        </ul>
+        <SortableContext
+          items={lifeAreas}
+          strategy={isNarrow ? horizontalListSortingStrategy : verticalListSortingStrategy}
+        >
+          <ul className="-mx-1 flex gap-1 overflow-x-auto px-1 py-0.5 lg:flex-col lg:overflow-visible">
+            {lifeAreas.map((lifeArea) => (
+              <AreaItem
+                key={lifeArea.id}
+                lifeArea={lifeArea}
+                tasksCount={getTasksCount(taskCounts, lifeArea.id)}
+              />
+            ))}
+          </ul>
+        </SortableContext>
       )}
       {error && (
         <p className="text-sm text-destructive" role="alert">

@@ -328,6 +328,17 @@ describe("LifeAreas", () => {
     expect(await screen.findByRole("textbox", { name: "Call the bank" })).toBeInTheDocument();
   });
 
+  it("has a handle to reorder each area, but not the Inbox", async () => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
+      lifeAreas: [buildLifeArea(), buildLifeArea({ name: "Health" })],
+    });
+    renderLifeAreas();
+
+    expect(await screen.findByRole("button", { name: "Reorder Work" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reorder Health" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reorder Inbox" })).not.toBeInTheDocument();
+  });
+
   it("edits an area from its right-click menu in the sidebar", async () => {
     const lifeArea = buildLifeArea();
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });

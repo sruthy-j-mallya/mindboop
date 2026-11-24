@@ -70,9 +70,57 @@ class LifeAreaTest < ActiveSupport::TestCase
     assert create(:life_area, user: @life_area.user, name: @life_area.name).persisted?
   end
 
-  def test_that_areas_are_listed_oldest_first
+  def test_that_a_new_area_goes_last_within_its_user
     newer = create(:life_area, user: @life_area.user)
 
-    assert_equal [ @life_area, newer ], @life_area.user.life_areas.in_created_order.to_a
+    assert_equal [ 0, 1 ], [ @life_area, newer ].map(&:position)
+    assert_equal 0, create(:life_area).position
   end
+
+  def test_that_a_new_area_goes_after_a_deleted_one
+    @life_area.discard!
+
+    assert_equal 1, create(:life_area, user: @life_area.user).position
+  end
+
+  def test_that_move_to_moves_an_area_up_and_down
+    second, third = create_list(:life_area, 2, user: @life_area.user)
+
+    third.move_to!(0)
+
+    assert_equal [ third, @life_area, second ], ordered_areas
+
+    third.move_to!(1)
+
+    assert_equal [ @life_area, third, second ], ordered_areas
+  end
+
+  def test_that_move_to_clamps_an_index_past_the_end
+    second = create(:life_area, user: @life_area.user)
+
+    @life_area.move_to!(10)
+
+    assert_equal [ second, @life_area ], ordered_areas
+  end
+
+  def test_that_move_to_skips_deleted_areas
+    deleted, third, fourth = create_list(:life_area, 3, user: @life_area.user)
+    deleted.discard!
+
+    fourth.move_to!(1)
+
+    assert_equal [ @life_area, fourth, third ], ordered_areas
+    assert_equal 1, deleted.reload.position
+  end
+
+  def test_that_move_to_rejects_an_invalid_index
+    [ -1, "first", nil ].each do |index|
+      assert_raises(ActiveRecord::RecordInvalid) { @life_area.move_to!(index) }
+    end
+  end
+
+  private
+    def ordered_areas
+      @life_area.user.life_areas.kept.in_position_order.to_a
+    end
 end

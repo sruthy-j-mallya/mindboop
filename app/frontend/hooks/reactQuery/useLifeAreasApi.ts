@@ -7,8 +7,10 @@ import {
 } from "@tanstack/react-query";
 
 import lifeAreasApi from "@/apis/life_areas";
-import type { CreateLifeAreaPayload, LifeArea } from "@/apis/types";
+import type { CreateLifeAreaPayload, LifeArea, MoveLifeAreaPayload } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
+
+const MOVE_LIFE_AREA_MUTATION_KEY = ["lifeAreas", "move"];
 
 // Deleted areas too, to show (as on the Calendar) the one a completed task or a time log is in.
 export const useAllLifeAreas = (options?: Omit<UseQueryOptions<LifeArea[]>, "queryKey" | "queryFn">) =>
@@ -56,6 +58,45 @@ export const useUpdateLifeArea = () => {
   const queryClient = useQueryClient();
 
   return useMutation({ mutationFn: lifeAreasApi.update, onSuccess: () => invalidateLifeAreas(queryClient) });
+};
+
+// The position counts undeleted areas only, so the deleted ones go after them.
+const applyMove = (lifeAreas: LifeArea[], { id, position }: MoveLifeAreaPayload) => {
+  const kept = selectKept(lifeAreas);
+  const moved = kept.find((lifeArea) => lifeArea.id === id);
+  if (!moved) return lifeAreas;
+
+  const rest = kept.filter((lifeArea) => lifeArea.id !== id);
+
+  return [...rest.toSpliced(position, 0, moved), ...lifeAreas.filter(({ isDeleted }) => isDeleted)];
+};
+
+// A move shows at once, as a dragged area would otherwise jump back until the server answers, and rolls back if it
+// fails. Moves reach the server one at a time (`scope`), in the order made; the last one to finish refreshes the list.
+export const useMoveLifeArea = () => {
+  const queryClient = useQueryClient();
+  const queryKey = QUERY_KEYS.LIFE_AREAS.LIST;
+
+  return useMutation({
+    mutationKey: MOVE_LIFE_AREA_MUTATION_KEY,
+    scope: { id: "moveLifeArea" },
+    mutationFn: (payload: MoveLifeAreaPayload) => lifeAreasApi.update(payload),
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousLifeAreas = queryClient.getQueryData<LifeArea[]>(queryKey);
+      if (previousLifeAreas) queryClient.setQueryData(queryKey, applyMove(previousLifeAreas, payload));
+
+      return { previousLifeAreas };
+    },
+    onError: (_error, _payload, context) => {
+      if (context?.previousLifeAreas) queryClient.setQueryData(queryKey, context.previousLifeAreas);
+    },
+    onSettled: () => {
+      if (queryClient.isMutating({ mutationKey: MOVE_LIFE_AREA_MUTATION_KEY }) > 1) return undefined;
+
+      return invalidateLifeAreas(queryClient);
+    },
+  });
 };
 
 // The area's uncompleted tasks move to another area or the Inbox, so every task query and the Calendar refresh too. The refresh isn't
