@@ -10,15 +10,15 @@ import NewAreaDialog from "../AreaDialog/New";
 import { INBOX_DROP_ID, INBOX_NAME } from "../constants";
 import AreaItem from "./AreaItem";
 import NavItem from "./NavItem";
-import SuggestionChips from "./SuggestionChips";
-import Suggestions from "./Suggestions";
+import SuggestionPicker from "./SuggestionPicker";
 
-// The Inbox and the areas, oldest first, to switch between and drop tasks on (and to edit or delete, from an area's
-// right-click menu). A column on wide screens, a row that
-// scrolls sideways on narrow ones. Until there are areas, the suggestions show here too.
+// The Inbox, then the areas, oldest first, to switch between and drop tasks on (and to edit or delete, from an area's
+// right-click menu). A column on wide screens; on narrow ones the areas are a row that scrolls sideways. Until there are
+// areas, suggestions to pick from take their place.
 const AreaNav = () => {
   const [isAdding, setIsAdding] = useState(false);
   const { data: lifeAreas = [], isPending, error } = useLifeAreas();
+  const isEmpty = !isPending && !error && lifeAreas.length === 0;
 
   const handleAdd = () => setIsAdding(true);
   const handleCloseAdd = () => setIsAdding(false);
@@ -28,37 +28,45 @@ const AreaNav = () => {
       aria-label="Areas of life"
       className="flex shrink-0 flex-col gap-3 border-b px-4 pb-4 lg:w-60 lg:overflow-y-auto lg:border-r lg:border-b-0"
     >
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-medium text-muted-foreground">Areas of life</h2>
-        <div className="flex items-center">
-          <Suggestions lifeAreas={lifeAreas} />
-          <Button aria-label="Add an area" size="icon-sm" type="button" variant="ghost" onClick={handleAdd}>
-            <Plus />
-          </Button>
-        </div>
-      </div>
-      <ul className="-mx-1 flex gap-1 overflow-x-auto px-1 py-0.5 lg:flex-col lg:overflow-visible">
+      <ul className="-mx-1 px-1 py-0.5">
         <NavItem
           icon={<Inbox className="size-4 text-muted-foreground" />}
           id={INBOX_DROP_ID}
           target={{ lifeAreaId: null, name: INBOX_NAME }}
           to={routes.inbox.index}
         />
-        {lifeAreas.map((lifeArea) => (
-          <AreaItem key={lifeArea.id} lifeArea={lifeArea} />
-        ))}
       </ul>
+      <div className="flex min-h-8 items-center justify-between gap-2">
+        <h2 className="text-sm font-medium text-muted-foreground">Areas of life</h2>
+        {!isEmpty && (
+          <Button aria-label="Add an area" size="icon-sm" type="button" variant="ghost" onClick={handleAdd}>
+            <Plus />
+          </Button>
+        )}
+      </div>
+      {lifeAreas.length > 0 && (
+        <ul className="-mx-1 flex gap-1 overflow-x-auto px-1 py-0.5 lg:flex-col lg:overflow-visible">
+          {lifeAreas.map((lifeArea) => (
+            <AreaItem key={lifeArea.id} lifeArea={lifeArea} />
+          ))}
+        </ul>
+      )}
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error.message}
         </p>
       )}
-      {!isPending && !error && lifeAreas.length === 0 && (
+      {isEmpty && (
         <div className="flex flex-col gap-3 rounded-lg border border-dashed p-3">
           <p className="text-sm text-muted-foreground">
-            Group your tasks by the parts of your life. Pick one to start:
+            Group your tasks by the parts of your life. Pick a few to start with, or add your own.
           </p>
-          <SuggestionChips lifeAreas={lifeAreas} />
+          <SuggestionPicker>
+            <Button size="sm" type="button" variant="outline" onClick={handleAdd}>
+              <Plus />
+              Add your own
+            </Button>
+          </SuggestionPicker>
         </div>
       )}
       {isAdding && <NewAreaDialog onClose={handleCloseAdd} />}

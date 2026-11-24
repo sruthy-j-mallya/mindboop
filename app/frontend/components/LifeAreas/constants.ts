@@ -1,7 +1,6 @@
 import type { CreateLifeAreaPayload } from "@/apis/types";
 
-// Offered (behind the bulb, and in the sidebar until there are areas) to start with. One picked is added as it is and
-// can be edited after; ones already added, by name, aren't offered again.
+// Offered in the sidebar until there are areas. The ones picked are added as they are and can be edited after.
 export const LIFE_AREA_SUGGESTIONS: CreateLifeAreaPayload[] = [
   { name: "Work", color: "indigo", emoji: "💼", defaultSound: "rain" },
   { name: "Health", color: "emerald", emoji: "🩺", defaultSound: "waves" },

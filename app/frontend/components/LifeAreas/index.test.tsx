@@ -93,9 +93,10 @@ describe("LifeAreas", () => {
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([]));
   });
 
-  it("lists the Inbox and the areas, and suggests areas until there are some", async () => {
+  it("suggests areas until there are some, adding all those picked at once", async () => {
+    const health = buildLifeArea({ name: "Health" });
     const fetchList = vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
-    const create = vi.spyOn(lifeAreasApi, "create").mockResolvedValue({ lifeArea: buildLifeArea() });
+    const create = vi.spyOn(lifeAreasApi, "create").mockResolvedValue({ lifeArea: health });
     renderLifeAreas();
 
     const nav = screen.getByRole("navigation", { name: "Areas of life" });
@@ -103,44 +104,52 @@ describe("LifeAreas", () => {
     const suggestions = await within(nav).findByRole("list", { name: "Suggested areas" });
     expect(
       within(suggestions)
-        .getAllByRole("button")
+        .getAllByRole("button", { pressed: false })
         .map((chip) => chip.getAttribute("aria-label")),
-    ).toEqual([
-      "Add Work",
-      "Add Health",
-      "Add Relationships",
-      "Add Household",
-      "Add Leisure",
-      "Add Learning",
-      "Add Finances",
-    ]);
+    ).toEqual(["Work", "Health", "Relationships", "Household", "Leisure", "Learning", "Finances"]);
+    expect(within(nav).getByRole("button", { name: "Add areas" })).toBeDisabled();
+    expect(within(nav).queryByRole("button", { name: "Add an area" })).not.toBeInTheDocument();
 
-    fetchList.mockResolvedValue({ lifeAreas: [buildLifeArea()] });
-    await userEvent.click(within(suggestions).getByRole("button", { name: "Add Work" }));
+    for (const name of ["Health", "Work", "Leisure", "Leisure"]) {
+      await userEvent.click(within(suggestions).getByRole("button", { name }));
+    }
+    expect(within(suggestions).getByRole("button", { name: "Work", pressed: true })).toBeInTheDocument();
+    expect(within(suggestions).getByRole("button", { name: "Leisure", pressed: false })).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
 
-    expect(create).toHaveBeenCalledWith(
-      { name: "Work", color: "indigo", emoji: "💼", defaultSound: "rain" },
-      expect.anything(),
-    );
+    fetchList.mockResolvedValue({ lifeAreas: [buildLifeArea(), health] });
+    await userEvent.click(within(nav).getByRole("button", { name: "Add 2 areas" }));
+
     expect(await within(nav).findByRole("link", { name: "Work" })).toBeInTheDocument();
+    expect(create.mock.calls.map(([payload]) => payload)).toEqual([
+      { name: "Work", color: "indigo", emoji: "💼", defaultSound: "rain" },
+      { name: "Health", color: "emerald", emoji: "🩺", defaultSound: "waves" },
+    ]);
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Inbox", expect.stringContaining("Work"), expect.stringContaining("Health")]);
     expect(within(nav).queryByRole("list", { name: "Suggested areas" })).not.toBeInTheDocument();
+    expect(within(nav).getByRole("button", { name: "Add an area" })).toBeInTheDocument();
+    expect(within(nav).queryByRole("button", { name: "Suggested areas" })).not.toBeInTheDocument();
   });
 
-  it("offers only the suggestions not added yet behind the bulb", async () => {
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
-      lifeAreas: [buildLifeArea({ name: "work" }), buildLifeArea({ name: "Health" })],
-    });
+  it("lists the areas added before one that fails, and shows its error", async () => {
+    const fetchList = vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
+    vi.spyOn(lifeAreasApi, "create")
+      .mockResolvedValueOnce({ lifeArea: buildLifeArea() })
+      .mockRejectedValueOnce(new ApiError(500, "Something went wrong"));
     renderLifeAreas();
 
-    await userEvent.click(await screen.findByRole("button", { name: "Suggested areas" }));
+    const nav = screen.getByRole("navigation", { name: "Areas of life" });
+    await userEvent.click(await within(nav).findByRole("button", { name: "Work" }));
+    await userEvent.click(within(nav).getByRole("button", { name: "Health" }));
+    fetchList.mockResolvedValue({ lifeAreas: [buildLifeArea()] });
+    await userEvent.click(within(nav).getByRole("button", { name: "Add 2 areas" }));
 
-    const suggestions = await screen.findByRole("list", { name: "Suggested areas" });
-    const names = within(suggestions)
-      .getAllByRole("button")
-      .map((chip) => chip.getAttribute("aria-label"));
-    expect(names).not.toContain("Add Work");
-    expect(names).not.toContain("Add Health");
-    expect(names).toContain("Add Leisure");
+    expect(await within(nav).findByRole("link", { name: "Work" })).toBeInTheDocument();
+    expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
   });
 
   it("adds an area from the dialog and opens it", async () => {
@@ -149,7 +158,7 @@ describe("LifeAreas", () => {
     const create = vi.spyOn(lifeAreasApi, "create").mockResolvedValue({ lifeArea });
     renderLifeAreas();
 
-    await userEvent.click(screen.getByRole("button", { name: "Add an area" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Add your own" }));
     const dialog = screen.getByRole("dialog", { name: "New area of life" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Add area" }));
     expect(within(dialog).getByText("Give the area a name")).toBeInTheDocument();
@@ -179,7 +188,7 @@ describe("LifeAreas", () => {
     vi.spyOn(lifeAreasApi, "create").mockRejectedValue(new ApiError(422, "Name has already been taken"));
     renderLifeAreas();
 
-    await userEvent.click(screen.getByRole("button", { name: "Add an area" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Add your own" }));
     const dialog = screen.getByRole("dialog", { name: "New area of life" });
     await userEvent.type(within(dialog).getByRole("textbox", { name: "Name" }), "Work");
     await userEvent.click(within(dialog).getByRole("button", { name: "Add area" }));

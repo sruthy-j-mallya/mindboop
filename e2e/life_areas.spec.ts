@@ -30,15 +30,18 @@ const drag = async (page: Page, from: Locator, to: Locator) => {
   await page.mouse.up();
 };
 
-test("add an area from a suggestion, move a task into it, search and edit it", async ({ page }) => {
+test("add areas from the suggestions, move a task into it, search and edit it", async ({ page }) => {
   await signUp(page);
 
   await page.getByRole("link", { name: "Areas of life" }).click();
   await expect(page).toHaveURL("/inbox");
   const nav = page.getByRole("navigation", { name: "Areas of life" });
-  await nav.getByRole("button", { name: "Add Work" }).click();
+  await nav.getByRole("button", { name: "Work" }).click();
+  await nav.getByRole("button", { name: "Health" }).click();
+  await nav.getByRole("button", { name: "Add 2 areas" }).click();
   const work = nav.getByRole("link", { name: "Work" });
   await expect(work).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Health" })).toBeVisible();
 
   await addTask(page, "Plan the sprint");
   await addTask(page, "Water the plants");

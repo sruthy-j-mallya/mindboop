@@ -1,5 +1,5 @@
-import type { LifeArea } from "@/apis/types";
+export const getAddAreasLabel = (count: number) => {
+  if (count === 0) return "Add areas";
 
-// Whether an area already has this name, ignoring case as the server does.
-export const isNameTaken = (lifeAreas: LifeArea[], name: string) =>
-  lifeAreas.some((lifeArea) => lifeArea.name.toLowerCase() === name.toLowerCase());
+  return count === 1 ? "Add 1 area" : `Add ${count} areas`;
+};

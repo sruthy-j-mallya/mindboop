@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 
 import lifeAreasApi from "@/apis/life_areas";
-import type { LifeArea } from "@/apis/types";
+import type { CreateLifeAreaPayload, LifeArea } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 
 // Every area at once: the sidebar lists them all, and the Calendar colours tasks by them.
@@ -25,6 +25,25 @@ export const useCreateLifeArea = () => {
   const queryClient = useQueryClient();
 
   return useMutation({ mutationFn: lifeAreasApi.create, onSuccess: () => invalidateLifeAreas(queryClient) });
+};
+
+// One at a time, so they're listed (oldest first) in the order given.
+const createInOrder = async (payloads: CreateLifeAreaPayload[]) => {
+  for (const payload of payloads) await lifeAreasApi.create(payload);
+};
+
+// Adds several areas. If one fails, those before it were still added, so the list refreshes then too. That refresh isn't
+// waited for: it can unmount the caller, which has the error to show first.
+export const useCreateLifeAreas = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createInOrder,
+    onSuccess: () => invalidateLifeAreas(queryClient),
+    onError: () => {
+      void invalidateLifeAreas(queryClient);
+    },
+  });
 };
 
 export const useUpdateLifeArea = () => {
