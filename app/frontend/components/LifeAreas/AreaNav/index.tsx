@@ -4,10 +4,12 @@ import { Inbox, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
+import { useTaskCounts } from "@/hooks/reactQuery/useTaskCountsApi";
 import routes from "@/routes";
 
 import NewAreaDialog from "../AreaDialog/New";
 import { INBOX_DROP_ID, INBOX_NAME } from "../constants";
+import { getTasksCount } from "../utils";
 import AreaItem from "./AreaItem";
 import NavItem from "./NavItem";
 import SuggestionPicker from "./SuggestionPicker";
@@ -18,6 +20,7 @@ import SuggestionPicker from "./SuggestionPicker";
 const AreaNav = () => {
   const [isAdding, setIsAdding] = useState(false);
   const { data: lifeAreas = [], isPending, error } = useLifeAreas();
+  const { data: taskCounts = [] } = useTaskCounts();
   const isEmpty = !isPending && !error && lifeAreas.length === 0;
 
   const handleAdd = () => setIsAdding(true);
@@ -33,6 +36,7 @@ const AreaNav = () => {
           icon={<Inbox className="size-4 text-muted-foreground" />}
           id={INBOX_DROP_ID}
           target={{ lifeAreaId: null, name: INBOX_NAME }}
+          tasksCount={getTasksCount(taskCounts, null)}
           to={routes.inbox.index}
         />
       </ul>
@@ -47,7 +51,11 @@ const AreaNav = () => {
       {lifeAreas.length > 0 && (
         <ul className="-mx-1 flex gap-1 overflow-x-auto px-1 py-0.5 lg:flex-col lg:overflow-visible">
           {lifeAreas.map((lifeArea) => (
-            <AreaItem key={lifeArea.id} lifeArea={lifeArea} />
+            <AreaItem
+              key={lifeArea.id}
+              lifeArea={lifeArea}
+              tasksCount={getTasksCount(taskCounts, lifeArea.id)}
+            />
           ))}
         </ul>
       )}

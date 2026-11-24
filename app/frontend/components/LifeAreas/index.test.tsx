@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
+import taskCountsApi from "@/apis/task_counts";
 import tasksApi from "@/apis/tasks";
 import type { LifeArea, Task } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
@@ -90,6 +91,7 @@ describe("LifeAreas", () => {
       },
     });
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(taskCountsApi, "fetchList").mockResolvedValue({ taskCounts: [] });
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([]));
   });
 
@@ -215,6 +217,31 @@ describe("LifeAreas", () => {
       { title: "Review the PRs", lifeAreaId: lifeArea.id },
       expect.anything(),
     );
+  });
+
+  it("shows how many tasks are in the Inbox and each area, and refreshes the counts when one is added", async () => {
+    const work = buildLifeArea();
+    const health = buildLifeArea({ name: "Health" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work, health] });
+    vi.spyOn(tasksApi, "create").mockResolvedValue({ task: buildTask() });
+    const fetchCounts = vi.spyOn(taskCountsApi, "fetchList").mockResolvedValue({
+      taskCounts: [
+        { lifeAreaId: null, tasksCount: 1 },
+        { lifeAreaId: work.id, tasksCount: 12 },
+      ],
+    });
+    renderLifeAreas();
+
+    const inbox = screen.getByRole("link", { name: "Inbox" });
+    await waitFor(() => expect(inbox).toHaveAccessibleDescription("1 task"));
+    expect(within(inbox).getByText("1")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Work" })).toHaveAccessibleDescription("12 tasks");
+    expect(screen.getByRole("link", { name: "Health" })).not.toHaveAccessibleDescription();
+
+    fetchCounts.mockResolvedValue({ taskCounts: [{ lifeAreaId: null, tasksCount: 2 }] });
+    await userEvent.type(screen.getByRole("textbox", { name: "New task" }), "Call the bank{Enter}");
+
+    await waitFor(() => expect(inbox).toHaveAccessibleDescription("2 tasks"));
   });
 
   it("says so when an area has no tasks", async () => {

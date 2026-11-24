@@ -41,6 +41,7 @@ Every error response has one shape:
 | POST   | `/api/tasks/:task_id/checklist_items`     | `title`, `is_completed`, `position` (optional)                               | 201 `{ task }`                    |
 | PATCH  | `/api/tasks/:task_id/checklist_items/:id` | `title`, `is_completed`, `position` (all optional)                           | 200 `{ task }`                    |
 | DELETE | `/api/tasks/:task_id/checklist_items/:id` | –                                                                            | 200 `{ task }`, soft delete       |
+| GET    | `/api/task_counts`                        | –                                                                            | 200 `{ task_counts }`             |
 | GET    | `/api/life_areas`                         | –                                                                            | 200 `{ life_areas }`              |
 | POST   | `/api/life_areas`                         | `name`, `color`, `emoji`, `default_sound` (optional)                         | 201 `{ life_area }`               |
 | PATCH  | `/api/life_areas/:id`                     | `name`, `color`, `emoji`, `default_sound` (any)                              | 200 `{ life_area }`               |
@@ -86,6 +87,10 @@ A session that ended when the task was deleted stays ended.
 
 The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
 pages. A missing or invalid `page` returns the first page, and a page past the end returns an empty `tasks`.
+
+`GET /api/task_counts` counts the signed-in user's undeleted, incomplete tasks by area of life, as
+`{ task_counts: [{ life_area_id, tasks_count }] }`. A `null` `life_area_id` is the Inbox; an area (or Inbox) with no such
+tasks is left out.
 
 `is_completed=false` lists only incomplete tasks (the Inbox and area lists), and `is_completed=true` only completed ones.
 Leaving it out lists every task.

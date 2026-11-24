@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
+import taskCountsApi from "@/apis/task_counts";
 import taskRestorationsApi from "@/apis/task_restorations";
 import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
@@ -117,6 +118,7 @@ describe("Inbox", () => {
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(taskCountsApi, "fetchList").mockResolvedValue({ taskCounts: [] });
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
   });
 

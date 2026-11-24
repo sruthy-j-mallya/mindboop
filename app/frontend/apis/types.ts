@@ -62,6 +62,11 @@ export type TaskListResponse = { tasks: Task[]; tasksCount: number; page: number
 
 export type TaskResponse = { task: Task };
 
+// The tasks left to do in an area of life, or in the Inbox (`lifeAreaId` is null). Those with none are left out.
+export type TaskCount = { lifeAreaId: string | null; tasksCount: number };
+
+export type TaskCountListResponse = { taskCounts: TaskCount[] };
+
 type TaskFields = Pick<Task, "title"> &
   Partial<
     Pick<

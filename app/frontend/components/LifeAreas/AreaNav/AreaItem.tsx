@@ -11,14 +11,14 @@ import DeleteAreaDialog from "../AreaDialog/Delete";
 import EditAreaDialog from "../AreaDialog/Edit";
 import NavItem from "./NavItem";
 
-type AreaItemProps = { lifeArea: LifeArea };
+type AreaItemProps = { lifeArea: LifeArea; tasksCount: number };
 
 const DIALOGS = { EDIT: "edit", DELETE: "delete" } as const;
 
 type Dialog = (typeof DIALOGS)[keyof typeof DIALOGS];
 
 // An area in the sidebar. A right click (or a long press) opens a menu to edit or delete it.
-const AreaItem = ({ lifeArea }: AreaItemProps) => {
+const AreaItem = ({ lifeArea, tasksCount }: AreaItemProps) => {
   const { id, name, color, emoji } = lifeArea;
   const [dialog, setDialog] = useState<Dialog | null>(null);
 
@@ -32,6 +32,7 @@ const AreaItem = ({ lifeArea }: AreaItemProps) => {
         icon={<LifeAreaBadge className="size-5 text-xs" color={color} emoji={emoji} />}
         id={id}
         target={{ lifeAreaId: id, name }}
+        tasksCount={tasksCount}
         to={getTaskListPath(id)}
         menu={
           <ContextMenuContent aria-label={`${name} actions`} className="w-40">
