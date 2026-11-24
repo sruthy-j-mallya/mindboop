@@ -306,10 +306,10 @@ With no such log, it returns 200 with `{ "time_log": null }`.
 `POST /api/time_logs` requires a `task_id`, except for a `manual` log. A missing, unknown or deleted task gets a 404, and
 another user's task gets a 403.
 
-`PATCH /api/time_logs/:id` moves a finished session, as when it's dragged on the Calendar. It takes `started_at` and
-`completed_at`, with the same rules as a `manual` log (no more than 24 hours ago, not in the future, the end after the
-start), and sets `accumulated_elapsed_seconds` to the new span. A session that hasn't finished gets a 422 ("Only a
-finished session can be moved."). Other fields are ignored.
+`PATCH /api/time_logs/:id` moves a `manual` log, as when it's dragged on the Calendar. It takes `started_at` and
+`completed_at`, with the same rules as logging one (no more than 24 hours ago, not in the future, the end after the
+start), and sets `accumulated_elapsed_seconds` to the new span. A `timer` or `stopwatch` log, finished or running, gets a
+422 ("Only a manually logged session can be moved."). Other fields are ignored.
 
 `DELETE /api/time_logs/:id` soft deletes a session: the Timer's discard, or the Calendar's delete for one logged by
 mistake. `POST /api/time_logs/:time_log_id/restoration` brings back a deleted finished session (the Calendar's Undo). A

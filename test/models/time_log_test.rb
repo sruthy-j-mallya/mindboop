@@ -90,6 +90,17 @@ class TimeLogTest < ActiveSupport::TestCase
     end
   end
 
+  def test_that_reschedule_rejects_a_finished_stopwatch_session
+    freeze_time
+    @time_log.update!(started_at: 4.hours.ago, completed_at: 3.hours.ago)
+
+    error = assert_raises(ActiveRecord::RecordInvalid) do
+      @time_log.reschedule!(started_at: 2.hours.ago, completed_at: 1.hour.ago)
+    end
+    assert_includes error.record.errors[:base], "Only a manually logged session can be moved."
+    assert_equal 4.hours.ago, @time_log.reload.started_at
+  end
+
   def test_that_a_session_cannot_start_while_another_is_running
     time_log = build(:time_log, task: create(:task, user: @time_log.user))
     time_log.start

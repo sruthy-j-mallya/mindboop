@@ -44,7 +44,7 @@ class TimeLog < ApplicationRecord
     numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: MAX_BUFFER_MINUTES }
   validates :extension_minutes, numericality: { only_integer: true, greater_than: 0 }, on: :extend
   validate :session_can_be_extended, on: :extend
-  validate :session_is_finished, on: :reschedule
+  validate :session_can_be_moved, on: :reschedule
   validate :times_fit_logging_window, on: %i[ log reschedule ]
   # A custom context replaces :create, so a manual log (saved on :log) needs listing on its own.
   validate :does_not_overlap_another_session, on: %i[ create log reschedule restore ]
@@ -64,7 +64,8 @@ class TimeLog < ApplicationRecord
     save!(context: :log)
   end
 
-  # Moves a finished session to new times, as when it's dragged on the Calendar. The new span counts as time worked.
+  # Moves a manual log to new times, as when it's dragged on the Calendar. The new span counts as time worked. A timer or
+  # stopwatch log records time the app measured, so it can't be moved.
   def reschedule!(started_at:, completed_at:)
     with_lock do
       assign_attributes(started_at:, completed_at:)
@@ -175,8 +176,9 @@ class TimeLog < ApplicationRecord
       [ (completed_at - started_at).floor, 0 ].max
     end
 
-    def session_is_finished
-      errors.add(:base, "Only a finished session can be moved.") if completed_at_in_database.nil?
+    # A manual log is always finished, so this also refuses a running session.
+    def session_can_be_moved
+      errors.add(:base, "Only a manually logged session can be moved.") unless manual?
     end
 
     def times_fit_logging_window
