@@ -287,7 +287,7 @@ describe("getEventProps", () => {
       id: "area-1",
       name: "Work",
       color: "teal",
-      icon: "briefcase",
+      emoji: "💼",
       defaultSound: "none",
       createdAt: new Date(NOW).toISOString(),
       updatedAt: new Date(NOW).toISOString(),

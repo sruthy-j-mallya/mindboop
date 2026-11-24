@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import type { ApiError } from "@/apis/axios";
 import type { CreateLifeAreaPayload, LifeArea } from "@/apis/types";
 import { SOUNDS } from "@/components/commons/Ambience/constants";
-import { findLifeAreaIcon, toAreaColorStyle } from "@/components/commons/LifeArea/utils";
+import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
 import { useCreateLifeArea } from "@/hooks/reactQuery/useLifeAreasApi";
 
 import { LIFE_AREA_SUGGESTIONS } from "../constants";
@@ -11,7 +11,7 @@ import { isNameTaken } from "../utils";
 
 type SuggestionChipsProps = { lifeAreas: LifeArea[] };
 
-// The suggested areas not added yet, as chips in each one's colour: its icon, its name and its background sound. Picking
+// The suggested areas not added yet, as chips in each one's colour: its emoji, its name and its background sound. Picking
 // one adds it.
 const SuggestionChips = ({ lifeAreas }: SuggestionChipsProps) => {
   const { mutate: createLifeArea, isPending } = useCreateLifeArea();
@@ -29,9 +29,7 @@ const SuggestionChips = ({ lifeAreas }: SuggestionChipsProps) => {
   return (
     <ul aria-label="Suggested areas" className="flex flex-wrap gap-2">
       {suggestions.map((suggestion) => {
-        const { name, color, icon, defaultSound } = suggestion;
-        const lifeAreaIcon = findLifeAreaIcon(icon);
-        const Icon = lifeAreaIcon.icon;
+        const { name, color, emoji, defaultSound } = suggestion;
         const sound = SOUNDS.find(({ id }) => id === defaultSound);
         const SoundIcon = sound?.icon;
 
@@ -46,7 +44,7 @@ const SuggestionChips = ({ lifeAreas }: SuggestionChipsProps) => {
               type="button"
               onClick={() => handleAdd(suggestion)}
             >
-              <Icon className="size-3.5" />
+              <span aria-hidden>{emoji}</span>
               {name}
               {SoundIcon && <SoundIcon className="size-3.5 opacity-70" />}
             </button>

@@ -43,9 +43,9 @@ const LifeAreaPicker = ({ lifeAreaId, onSave, isCompact = false }: LifeAreaPicke
         >
           {lifeArea ? (
             <LifeAreaBadge
-              className="size-4 rounded [&_svg]:size-3"
+              className="size-4 rounded text-[0.625rem]"
               color={lifeArea.color}
-              icon={lifeArea.icon}
+              emoji={lifeArea.emoji}
             />
           ) : (
             <Inbox />
@@ -61,10 +61,10 @@ const LifeAreaPicker = ({ lifeAreaId, onSave, isCompact = false }: LifeAreaPicke
             label={INBOX_LABEL}
             onPick={() => handlePick(null)}
           />
-          {lifeAreas.map(({ id, name, color, icon }) => (
+          {lifeAreas.map(({ id, name, color, emoji }) => (
             <Option
               key={id}
-              icon={<LifeAreaBadge className="size-5" color={color} icon={icon} />}
+              icon={<LifeAreaBadge className="size-5 text-xs" color={color} emoji={emoji} />}
               isSelected={id === lifeAreaId}
               label={name}
               onPick={() => handlePick(id)}

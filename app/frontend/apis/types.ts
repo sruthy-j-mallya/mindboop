@@ -1,7 +1,7 @@
 import type { Day } from "date-fns";
 
 import type { SoundId } from "@/components/commons/Ambience/types";
-import type { LifeAreaColorId, LifeAreaIconId } from "@/components/commons/LifeArea/types";
+import type { LifeAreaColorId } from "@/components/commons/LifeArea/types";
 import type { AlarmSoundId } from "@/utils/alarmSound/types";
 import type { CompletionSoundId } from "@/utils/completionSound/types";
 
@@ -237,7 +237,7 @@ export type LifeArea = {
   id: string;
   name: string;
   color: LifeAreaColorId;
-  icon: LifeAreaIconId;
+  emoji: string;
   defaultSound: SoundId;
   createdAt: string;
   updatedAt: string;
@@ -247,6 +247,6 @@ export type LifeAreaListResponse = { lifeAreas: LifeArea[] };
 
 export type LifeAreaResponse = { lifeArea: LifeArea };
 
-export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "icon" | "defaultSound">;
+export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "emoji" | "defaultSound">;
 
 export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> & Pick<LifeArea, "id">;

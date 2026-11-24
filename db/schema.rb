@@ -60,7 +60,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
     t.uuid "user_id", null: false
     t.string "name", null: false
     t.string "color", null: false
-    t.string "icon", null: false
+    t.string "emoji", null: false
     t.string "default_sound", default: "none", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

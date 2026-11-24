@@ -24,7 +24,7 @@ const buildLifeArea = (overrides: Partial<LifeArea> = {}): LifeArea => ({
   id: crypto.randomUUID(),
   name: "Work",
   color: "indigo",
-  icon: "briefcase",
+  emoji: "💼",
   defaultSound: "rain",
   createdAt: CREATED_AT,
   updatedAt: CREATED_AT,
@@ -119,7 +119,7 @@ describe("LifeAreas", () => {
     await userEvent.click(within(suggestions).getByRole("button", { name: "Add Work" }));
 
     expect(create).toHaveBeenCalledWith(
-      { name: "Work", color: "indigo", icon: "briefcase", defaultSound: "rain" },
+      { name: "Work", color: "indigo", emoji: "💼", defaultSound: "rain" },
       expect.anything(),
     );
     expect(await within(nav).findByRole("link", { name: "Work" })).toBeInTheDocument();
@@ -144,7 +144,7 @@ describe("LifeAreas", () => {
   });
 
   it("adds an area from the dialog and opens it", async () => {
-    const lifeArea = buildLifeArea({ name: "Garden", color: "lime", icon: "sprout", defaultSound: "wind" });
+    const lifeArea = buildLifeArea({ name: "Garden", color: "lime", emoji: "🌱", defaultSound: "wind" });
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
     const create = vi.spyOn(lifeAreasApi, "create").mockResolvedValue({ lifeArea });
     renderLifeAreas();
@@ -157,13 +157,16 @@ describe("LifeAreas", () => {
 
     await userEvent.type(within(dialog).getByRole("textbox", { name: "Name" }), "  Garden ");
     await userEvent.click(within(dialog).getByRole("radio", { name: "Lime" }));
-    await userEvent.click(within(dialog).getByRole("radio", { name: "Sprout" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Emoji: sparkles" }));
+    await userEvent.type(screen.getByRole("searchbox", { name: "Search emojis" }), "seedling");
+    await userEvent.click(await screen.findByRole("gridcell", { name: "seedling" }));
+    expect(within(dialog).getByRole("button", { name: "Emoji: seedling" })).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole("radio", { name: "Wind" }));
     vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [lifeArea] });
     await userEvent.click(within(dialog).getByRole("button", { name: "Add area" }));
 
     expect(create).toHaveBeenCalledWith(
-      { name: "Garden", color: "lime", icon: "sprout", defaultSound: "wind" },
+      { name: "Garden", color: "lime", emoji: "🌱", defaultSound: "wind" },
       expect.anything(),
     );
     await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(areaPath(lifeArea.id)));
@@ -272,7 +275,7 @@ describe("LifeAreas", () => {
     await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
     const dialog = screen.getByRole("dialog", { name: "Edit Work" });
     expect(within(dialog).getByRole("radio", { name: "Indigo" })).toBeChecked();
-    expect(within(dialog).getByRole("radio", { name: "Briefcase" })).toBeChecked();
+    expect(within(dialog).getByRole("button", { name: "Emoji: briefcase" })).toBeInTheDocument();
     expect(within(dialog).getByRole("radio", { name: "Rain" })).toBeChecked();
 
     const name = within(dialog).getByRole("textbox", { name: "Name" });
@@ -282,7 +285,7 @@ describe("LifeAreas", () => {
     await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
     expect(update).toHaveBeenCalledWith(
-      { id: lifeArea.id, name: "Career", color: "indigo", icon: "briefcase", defaultSound: "none" },
+      { id: lifeArea.id, name: "Career", color: "indigo", emoji: "💼", defaultSound: "none" },
       expect.anything(),
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

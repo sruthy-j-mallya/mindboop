@@ -183,7 +183,7 @@ describe("AppLayout", () => {
             id: LIFE_AREA_ID,
             name: "Work",
             color: "indigo",
-            icon: "briefcase",
+            emoji: "💼",
             defaultSound: "piano",
             createdAt: STARTED_AT,
             updatedAt: STARTED_AT,

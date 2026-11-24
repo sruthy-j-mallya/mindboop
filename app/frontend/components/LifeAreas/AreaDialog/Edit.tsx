@@ -13,7 +13,7 @@ type EditAreaDialogProps = { lifeArea: LifeArea; onClose: () => void };
 
 // Changes an area, or deletes it after a second click. Its tasks then go back to the Inbox.
 const EditAreaDialog = ({ lifeArea, onClose }: EditAreaDialogProps) => {
-  const { id, name, color, icon, defaultSound } = lifeArea;
+  const { id, name, color, emoji, defaultSound } = lifeArea;
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const { mutate: updateLifeArea, isPending: isUpdating, error: updateError } = useUpdateLifeArea();
   const { deleteArea, isDeleting, error: deleteError } = useDeleteArea(lifeArea, onClose);
@@ -35,12 +35,12 @@ const EditAreaDialog = ({ lifeArea, onClose }: EditAreaDialogProps) => {
           <DialogDescription>
             {isConfirmingDelete
               ? "Deleting the area moves its tasks back to the Inbox."
-              : "Change the area’s name, colour, icon or background sound."}
+              : "Change the area’s name, colour, emoji or background sound."}
           </DialogDescription>
         </DialogHeader>
         <AreaForm
           error={error?.message}
-          initialValues={{ name, color, icon, defaultSound }}
+          initialValues={{ name, color, emoji, defaultSound }}
           isSubmitting={isUpdating || isDeleting}
           submitLabel="Save"
           onSubmit={handleSubmit}

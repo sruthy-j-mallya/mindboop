@@ -7,13 +7,13 @@ import { NO_SOUND, SOUNDS } from "@/components/commons/Ambience/constants";
 import type { SoundId } from "@/components/commons/Ambience/types";
 import useAmbience from "@/components/commons/Ambience/useAmbience";
 import FormField from "@/components/commons/FormField";
-import { LIFE_AREA_COLORS, LIFE_AREA_ICONS } from "@/components/commons/LifeArea/constants";
-import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
+import { LIFE_AREA_COLORS } from "@/components/commons/LifeArea/constants";
 import { Button } from "@/components/ui/button";
 import useAmbienceStore from "@/stores/useAmbienceStore";
 
 import ChoiceField from "./ChoiceField";
 import { LIFE_AREA_VALIDATION_SCHEMA, type LifeAreaFormValues } from "./constants";
+import EmojiField from "./EmojiField";
 
 type AreaFormProps = {
   initialValues: LifeAreaFormValues;
@@ -38,7 +38,7 @@ const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({
   content: <Icon className="size-4" />,
 }));
 
-// The add and edit dialogs' form: a name, a colour, an icon (shown in the colour picked) and the background sound.
+// The add and edit dialogs' form: a name, a colour, an emoji (shown on the colour picked) and the background sound.
 // Picking a sound previews it at the app's volume until another is picked or the dialog closes.
 const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, children }: AreaFormProps) => {
   const {
@@ -57,19 +57,13 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
   const handleSoundChange = (event: ChangeEvent<HTMLInputElement>) =>
     setPreviewSoundId(event.target.value as SoundId);
 
-  const colorStyle = toAreaColorStyle(useWatch({ control, name: "color" }));
-  const iconOptions = LIFE_AREA_ICONS.map(({ id, label, icon: Icon }) => ({
-    value: id,
-    label,
-    style: colorStyle,
-    content: <Icon className="size-4 text-(--area-color)" />,
-  }));
+  const color = useWatch({ control, name: "color" });
 
   return (
     <form noValidate className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
       <FormField autoComplete="off" error={errors.name?.message} label="Name" {...register("name")} />
       <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
-      <ChoiceField legend="Icon" options={iconOptions} registration={register("icon")} />
+      <EmojiField color={color} control={control} />
       <ChoiceField
         hint="Plays when you start a session on one of the area’s tasks."
         legend="Background sound"

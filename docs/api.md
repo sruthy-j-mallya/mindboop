@@ -42,8 +42,8 @@ Every error response has one shape:
 | PATCH  | `/api/tasks/:task_id/checklist_items/:id` | `title`, `is_completed`, `position` (all optional)                           | 200 `{ task }`                    |
 | DELETE | `/api/tasks/:task_id/checklist_items/:id` | –                                                                            | 200 `{ task }`, soft delete       |
 | GET    | `/api/life_areas`                         | –                                                                            | 200 `{ life_areas }`              |
-| POST   | `/api/life_areas`                         | `name`, `color`, `icon`, `default_sound` (optional)                          | 201 `{ life_area }`               |
-| PATCH  | `/api/life_areas/:id`                     | `name`, `color`, `icon`, `default_sound` (any)                               | 200 `{ life_area }`               |
+| POST   | `/api/life_areas`                         | `name`, `color`, `emoji`, `default_sound` (optional)                         | 201 `{ life_area }`               |
+| PATCH  | `/api/life_areas/:id`                     | `name`, `color`, `emoji`, `default_sound` (any)                              | 200 `{ life_area }`               |
 | DELETE | `/api/life_areas/:id`                     | –                                                                            | 204, tasks go to the Inbox        |
 | POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                                    | 201 `{ task, time_log }`          |
 | POST   | `/api/time_logs`                          | `task_id`, Time log fields                                                   | 201 `{ time_log }`                |
@@ -130,13 +130,14 @@ is saved. `PATCH /api/tasks/:id` ignores them; change items one at a time throug
 Areas of life (Work, Health, …) group a user's tasks; a task in none is in the Inbox. `GET /api/life_areas` lists the
 signed-in user's areas, oldest first, unpaged, as `{ life_areas }`. Another user's area gets a 403, and an unknown one a 404.
 
-Each `life_area` is `{ id, name, color, icon, default_sound, created_at, updated_at }`
+Each `life_area` is `{ id, name, color, emoji, default_sound, created_at, updated_at }`
 (`app/views/api/life_areas/_life_area.json.jbuilder`).
 
 - `name` is required, up to 40 characters, with runs of spaces squished. It's unique per user, ignoring case
   ("Name has already been taken").
 - `color` is one of `rose`, `orange`, `amber`, `lime`, `emerald`, `teal`, `sky`, `indigo`, `violet`, `slate`.
-- `icon` is one of `LifeArea::ICONS` (lucide icon names such as `briefcase`, `heart`, `house`, `heart-pulse`).
+- `emoji` is one of `LifeArea::EMOJIS` (the emoji itself, such as `💼`), listed by category in
+  `app/frontend/components/commons/LifeArea/emojis.json`.
 - `default_sound` is one of the Ambience sounds (`none`, `clock`, `bells`, `piano`, `harp`, `flute`, `rain`, `waves`,
   `wind`, `morning`, `campfire`, `night`) and defaults to `none`. A session on one of the area's tasks starts with that
   background sound; `none` keeps the one picked last.

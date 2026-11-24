@@ -63,11 +63,32 @@ test("add an area from a suggestion, move a task into it, search and edit it", a
   const dialog = page.getByRole("dialog", { name: "Edit Work" });
   await dialog.getByRole("textbox", { name: "Name" }).fill("Career");
   await dialog.getByRole("radio", { name: "Teal" }).check();
+  await dialog.getByRole("button", { name: "Emoji: briefcase" }).click();
+  const picker = page.getByRole("dialog", { name: "Pick an emoji" });
+  const search = picker.getByRole("searchbox", { name: "Search emojis" });
+  await expect(search).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(picker).toBeHidden();
+  await expect(dialog).toBeVisible();
+
+  // The list scrolls inside the dialog, down to the last category.
+  await dialog.getByRole("button", { name: "Emoji: briefcase" }).click();
+  await picker.getByRole("gridcell", { name: "rocket" }).hover();
+  await page.mouse.wheel(0, 10_000);
+  await expect(picker.getByRole("gridcell", { name: "motorcycle" })).toBeVisible();
+  await search.fill("pets");
+  await expect(picker.getByRole("gridcell", { name: "dog face" })).toBeVisible();
+  await search.fill("rocket");
+  await expect(picker.getByRole("gridcell", { name: "dog face" })).toBeHidden();
+  await search.press("Enter");
+  await expect(picker).toBeHidden();
+  await expect(dialog.getByRole("button", { name: "Emoji: rocket" })).toBeVisible();
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("heading", { name: "Career" })).toBeVisible();
 
   await page.reload();
   await expect(page.getByRole("heading", { name: "Career" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Career" })).toContainText("🚀");
   await expect(page.getByRole("textbox", { name: "Review the PRs" })).toBeVisible();
 
   // Moving the open task from its pane takes the pane along to the Inbox.

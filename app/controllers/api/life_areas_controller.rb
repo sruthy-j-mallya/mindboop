@@ -31,7 +31,7 @@ module Api
       end
 
       def life_area_params
-        params.permit(:name, :color, :icon, :default_sound)
+        params.permit(:name, :color, :emoji, :default_sound)
       end
   end
 end

@@ -3,6 +3,8 @@
 Status: done
 Date: 2026-11-19
 
+Icons were replaced by emojis in `040-life-area-emojis.md`.
+
 ## Goal
 
 Group tasks by areas of life (Work, Health, …). Tasks in no area stay in the Inbox. Areas get a colour, an icon and a

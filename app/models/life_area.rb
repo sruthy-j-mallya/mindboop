@@ -1,12 +1,11 @@
 # A part of the user's life (Work, Health, …) that groups their tasks. Tasks without one are in the Inbox.
 class LifeArea < ApplicationRecord
   MAX_NAME_LENGTH = 40
-  # Keys into the client's palette and icon set (`components/commons/LifeArea/constants.ts`).
+  # Keys into the client's palette (`components/commons/LifeArea/constants.ts`).
   COLORS = %w[ rose orange amber lime emerald teal sky indigo violet slate ].freeze
-  ICONS = %w[
-    briefcase heart users house dumbbell heart-pulse gamepad-2 palette book-open sprout wallet plane music coffee
-    brain sparkles paw-print baby laptop smile
-  ].freeze
+  # The emojis on offer, by category: the same file the client's picker lists.
+  EMOJIS = JSON.parse(Rails.root.join("app/frontend/components/commons/LifeArea/emojis.json").read)
+    .flat_map { |category| category["emojis"].pluck("emoji") }.freeze
   # The Ambience sounds (`components/commons/Ambience/constants.ts`); "none" leaves the sound as it was.
   SOUNDS = %w[ none clock bells piano harp flute rain waves wind morning campfire night ].freeze
 
@@ -22,6 +21,6 @@ class LifeArea < ApplicationRecord
   validates :name, presence: true, length: { maximum: MAX_NAME_LENGTH },
     uniqueness: { scope: :user_id, case_sensitive: false }
   validates :color, inclusion: { in: COLORS }
-  validates :icon, inclusion: { in: ICONS }
+  validates :emoji, inclusion: { in: EMOJIS }
   validates :default_sound, inclusion: { in: SOUNDS }
 end

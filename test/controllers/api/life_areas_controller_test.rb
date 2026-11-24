@@ -22,7 +22,7 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     assert_equal [ @life_area.id, newer.id ], response.parsed_body["life_areas"].pluck("id")
-    assert_equal %w[ id name color icon default_sound created_at updated_at ].sort,
+    assert_equal %w[ id name color emoji default_sound created_at updated_at ].sort,
       response.parsed_body["life_areas"].first.keys.sort
   end
 
@@ -30,19 +30,19 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
 
     assert_difference "@user.life_areas.count", 1 do
-      post api_life_areas_path, params: { name: @name, color: "teal", icon: "house", default_sound: "rain" }, as: :json
+      post api_life_areas_path, params: { name: @name, color: "teal", emoji: "🏠", default_sound: "rain" }, as: :json
     end
 
     assert_response :created
     body = response.parsed_body["life_area"]
-    assert_equal [ @name, "teal", "house", "rain" ], body.values_at("name", "color", "icon", "default_sound")
+    assert_equal [ @name, "teal", "🏠", "rain" ], body.values_at("name", "color", "emoji", "default_sound")
   end
 
   def test_that_create_rejects_a_duplicate_name
     sign_in @user
 
     assert_no_difference "LifeArea.count" do
-      post api_life_areas_path, params: { name: @life_area.name.downcase, color: "teal", icon: "house" }, as: :json
+      post api_life_areas_path, params: { name: @life_area.name.downcase, color: "teal", emoji: "🏠" }, as: :json
     end
 
     assert_response :unprocessable_content
@@ -52,7 +52,7 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
   def test_that_create_cannot_assign_the_area_to_another_user
     sign_in @user
 
-    post api_life_areas_path, params: { name: @name, color: "teal", icon: "house", user_id: @other_life_area.user_id },
+    post api_life_areas_path, params: { name: @name, color: "teal", emoji: "🏠", user_id: @other_life_area.user_id },
       as: :json
 
     assert_response :created
@@ -60,7 +60,7 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_that_create_returns_401_when_signed_out
-    post api_life_areas_path, params: { name: @name, color: "teal", icon: "house" }, as: :json
+    post api_life_areas_path, params: { name: @name, color: "teal", emoji: "🏠" }, as: :json
 
     assert_response :unauthorized
   end
@@ -81,6 +81,15 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_equal "Color is not included in the list", response.parsed_body["error"]
+  end
+
+  def test_that_update_rejects_an_emoji_outside_the_list
+    sign_in @user
+
+    patch api_life_area_path(@life_area), params: { emoji: "💀" }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Emoji is not included in the list", response.parsed_body["error"]
   end
 
   def test_that_update_returns_401_when_signed_out

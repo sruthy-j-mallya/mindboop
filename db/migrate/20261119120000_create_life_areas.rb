@@ -4,7 +4,7 @@ class CreateLifeAreas < ActiveRecord::Migration[8.1]
       t.references :user, null: false, foreign_key: true, type: :uuid
       t.string :name, null: false
       t.string :color, null: false
-      t.string :icon, null: false
+      t.string :emoji, null: false
       # The background sound a session on one of the area's tasks starts with ("none" keeps the one picked last).
       t.string :default_sound, null: false, default: "none"
 

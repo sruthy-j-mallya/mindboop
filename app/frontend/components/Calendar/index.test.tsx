@@ -77,7 +77,7 @@ const LIFE_AREA: LifeArea = {
   id: "area-1",
   name: "Work",
   color: "teal",
-  icon: "briefcase",
+  emoji: "💼",
   defaultSound: "none",
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",

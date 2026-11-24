@@ -33,11 +33,31 @@ class LifeAreaTest < ActiveSupport::TestCase
     assert other_users.valid?
   end
 
-  def test_that_color_icon_and_sound_must_be_known
-    @life_area.assign_attributes(color: "plaid", icon: "rocket-ship", default_sound: "thunder")
+  def test_that_color_emoji_and_sound_must_be_known
+    @life_area.assign_attributes(color: "plaid", emoji: "briefcase", default_sound: "thunder")
 
     assert_not @life_area.valid?
-    assert_equal %i[ color icon default_sound ], @life_area.errors.attribute_names
+    assert_equal %i[ color emoji default_sound ], @life_area.errors.attribute_names
+  end
+
+  def test_that_emojis_outside_the_list_and_several_emojis_are_rejected
+    [ nil, "", "💀", "💼💼", "💼\n" ].each do |emoji|
+      @life_area.emoji = emoji
+
+      assert_not @life_area.valid?, "#{emoji.inspect} should be invalid"
+    end
+  end
+
+  def test_that_listed_emojis_of_several_code_points_are_kept_whole
+    [ "💼", "❤️", "🧑‍💻" ].each do |emoji|
+      @life_area.update!(emoji:)
+
+      assert_equal emoji, @life_area.reload.emoji
+    end
+  end
+
+  def test_that_each_emoji_is_listed_once
+    assert_equal LifeArea::EMOJIS.uniq, LifeArea::EMOJIS
   end
 
   def test_that_the_default_sound_is_none
