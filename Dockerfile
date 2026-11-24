@@ -9,7 +9,7 @@
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version, NODE_VERSION matches mise.toml
 # and PNPM_VERSION matches packageManager in package.json
-ARG RUBY_VERSION=4.0.9
+ARG RUBY_VERSION=4.0.10
 ARG NODE_VERSION=26
 ARG PNPM_VERSION=12.9.1
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base

@@ -8,7 +8,8 @@ type RunningSessionProps = { timeLog: TimeLog };
 
 // The session on the clock: its task and how far along it is, ticking while it runs.
 const RunningSession = ({ timeLog }: RunningSessionProps) => {
-  const { data: task } = useTask(timeLog.taskId);
+  // A running session always has a task: only a manual log, which never runs, can go without one.
+  const { data: task } = useTask(timeLog.taskId ?? "");
   const currentTime = useCurrentTime(timeLog.isRunning);
 
   return (

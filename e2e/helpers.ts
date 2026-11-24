@@ -14,7 +14,7 @@ export const signupTokenFor = (email: string) =>
 const BACKDATE_SESSION = `
   user = User.find_by!(email_address: ARGV[0])
   seconds = Integer(ARGV[1])
-  TimeLog.active.in_progress.joins(:task).where(tasks: { user_id: user.id }).find_each do |time_log|
+  TimeLog.kept.in_progress.joins(:task).where(tasks: { user_id: user.id }).find_each do |time_log|
     time_log.update!(
       started_at: time_log.started_at - seconds,
       current_run_started_at: time_log.current_run_started_at && time_log.current_run_started_at - seconds

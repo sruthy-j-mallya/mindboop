@@ -1,0 +1,246 @@
+/*
+ * react-big-calendar, themed with the design tokens (so dark mode follows them too). Imported by Calendar/index.tsx
+ * after the library's own stylesheet, and scoped under `.calendar` so these rules win on specificity.
+ */
+
+/*
+ * Scrolling sideways pages the calendar (useWheelPaging), so while it's on the page a swipe mustn't go back or
+ * forward in the browser's history. Cancelling the wheel events doesn't stop that gesture on macOS; this does.
+ */
+html:has(.calendar),
+html:has(.calendar) body {
+  overscroll-behavior-x: none;
+}
+
+.calendar .rbc-calendar {
+  color: var(--foreground);
+  font-family: inherit;
+}
+
+.calendar .rbc-month-view,
+.calendar .rbc-time-view {
+  overflow: hidden;
+  border-color: var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+/*
+ * The time grid still scrolls, just without a visible scrollbar. The library pads the header by the scrollbar's
+ * width (an inline margin) when the grid overflows; with no scrollbar that would misalign the columns.
+ */
+.calendar .rbc-time-content {
+  scrollbar-width: none;
+}
+
+.calendar .rbc-time-content::-webkit-scrollbar {
+  display: none;
+}
+
+.calendar .rbc-time-header.rbc-overflowing {
+  margin-right: 0 !important;
+}
+
+.calendar .rbc-header {
+  padding: 0.5rem 0.25rem;
+  border-color: var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.calendar .rbc-header + .rbc-header,
+.calendar .rbc-day-bg + .rbc-day-bg,
+.calendar .rbc-month-row + .rbc-month-row,
+.calendar .rbc-time-header-content,
+.calendar .rbc-time-header.rbc-overflowing,
+.calendar .rbc-time-content,
+.calendar .rbc-time-content > * + * > *,
+.calendar .rbc-timeslot-group,
+.calendar .rbc-day-slot .rbc-time-slot,
+.calendar .rbc-time-header-gutter,
+.calendar .rbc-allday-cell .rbc-day-bg {
+  border-color: var(--border);
+}
+
+/* Only hour lines: hide the quarter-hour lines between slots. */
+.calendar .rbc-day-slot .rbc-time-slot {
+  border-top-color: transparent;
+}
+
+.calendar .rbc-label {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.calendar .rbc-off-range-bg {
+  background: var(--muted);
+}
+
+.calendar .rbc-off-range,
+.calendar .rbc-off-range .rbc-button-link {
+  color: var(--muted-foreground);
+}
+
+.calendar .rbc-today {
+  background: color-mix(in oklab, var(--accent) 70%, transparent);
+}
+
+.calendar .rbc-date-cell {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.calendar .rbc-date-cell.rbc-now {
+  color: var(--primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.calendar .rbc-current-time-indicator {
+  height: 2px;
+  background: var(--brand-coral-dark);
+}
+
+/* Past time: shaded. Beyond the 24 hours time can be logged for, slots refuse selection. */
+.calendar .calendar-slot-past {
+  background: var(--muted);
+}
+
+.calendar .calendar-slot-locked {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+
+.calendar .rbc-slot-selection,
+.calendar .rbc-selected-cell {
+  background: color-mix(in oklab, var(--primary) 18%, transparent);
+  color: var(--foreground);
+}
+
+/* Events. Tasks are solid; time logs are see-through, behind a blur, with a dashed edge. */
+.calendar .rbc-event,
+.calendar .rbc-day-slot .rbc-event {
+  padding: 2px 6px;
+  border-radius: calc(var(--radius) - 4px);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+.calendar .rbc-event:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.calendar .rbc-event.calendar-event-task,
+.calendar .rbc-day-slot .rbc-event.calendar-event-task {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.calendar .rbc-event.calendar-event-task.rbc-selected {
+  background: var(--brand-purple-light);
+}
+
+.calendar .rbc-event.calendar-event-time-log,
+.calendar .rbc-day-slot .rbc-event.calendar-event-time-log {
+  border: 1px dashed color-mix(in oklab, var(--primary) 45%, transparent);
+  background: color-mix(in oklab, var(--primary) 14%, transparent);
+  color: var(--foreground);
+  backdrop-filter: blur(6px);
+}
+
+.calendar .rbc-event.calendar-event-time-log.rbc-selected {
+  background: color-mix(in oklab, var(--primary) 24%, transparent);
+}
+
+.calendar .rbc-event-label {
+  opacity: 0.8;
+}
+
+/*
+ * In the time grid the title comes first and keeps its room; the time range goes under it and shrinks away when the
+ * event is too short for both. The library's `column wrap` put the title beside the label instead, cut off.
+ */
+.calendar .rbc-day-slot .rbc-event {
+  flex-flow: column nowrap;
+}
+
+/* Editable events wrap the label and title in the drag-and-drop addon's resize box, so it lays them out instead. */
+.calendar .rbc-day-slot .rbc-addons-dnd-resizable {
+  display: flex;
+  flex-flow: column nowrap;
+  overflow: hidden;
+}
+
+.calendar .rbc-day-slot .rbc-event-content {
+  order: -1;
+  flex: none;
+  height: auto;
+  line-height: inherit;
+}
+
+.calendar .rbc-day-slot .rbc-event-label {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-width: 100%;
+  padding-right: 0;
+}
+
+.calendar .rbc-show-more {
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.75rem;
+}
+
+/*
+ * Hide the resize grip lines the library shows on hover. The icons stay laid out (they give the side handles their
+ * width and carry the resize cursor), just with see-through borders, so edges can still be dragged.
+ */
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-icon,
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ew-icon {
+  border-color: transparent;
+}
+
+/*
+ * The library's resize handles are 3px strips inside the event's padding, and the time label covers the top one, so a
+ * press there moved the event instead. Make each edge a grab zone that reaches the event's border and sits above the
+ * label and title.
+ */
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-anchor {
+  z-index: 1;
+  height: 6px;
+  cursor: ns-resize;
+}
+
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-anchor:first-child {
+  top: -2px;
+}
+
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-anchor:last-child {
+  bottom: -2px;
+}
+
+.calendar .rbc-addons-dnd .rbc-addons-dnd-resize-ns-anchor .rbc-addons-dnd-resize-ns-icon {
+  margin-top: 1px;
+}
+
+/* The "+N more" popup is portaled into the calendar, so it's still under `.calendar`. */
+.calendar .rbc-overlay {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.25);
+}
+
+.calendar .rbc-overlay-header {
+  border-color: var(--border);
+}
+
+/* Roomier hours than the library's 40px, so a quarter hour is easy to hit. */
+.calendar .rbc-timeslot-group {
+  min-height: 3.5rem;
+}

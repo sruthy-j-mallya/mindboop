@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
 
   create_table "achievements", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -251,7 +252,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
   end
 
   create_table "time_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "task_id", null: false
+    t.uuid "task_id"
     t.string "mode", null: false
     t.integer "timer_preset"
     t.integer "accumulated_elapsed_seconds", default: 0, null: false
@@ -264,8 +265,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
     t.datetime "updated_at", null: false
     t.integer "buffer_minutes", default: 0, null: false
     t.boolean "is_bailed_out", default: false, null: false
+    t.uuid "user_id", null: false
+    t.string "title"
     t.index ["discarded_at"], name: "index_time_logs_on_discarded_at"
     t.index ["task_id"], name: "index_time_logs_on_task_id"
+    t.index ["user_id", "started_at"], name: "index_time_logs_on_user_id_and_started_at"
+    t.exclusion_constraint "user_id WITH =, tsrange(started_at, completed_at) WITH &&", where: "discarded_at IS NULL", using: :gist, name: "time_logs_no_overlap"
   end
 
   create_table "user_preferences", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -275,6 +280,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
     t.string "break_alarm_sound", default: "classic", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "week_starts_on", default: 1, null: false
     t.index ["user_id"], name: "index_user_preferences_on_user_id", unique: true
   end
 
@@ -304,5 +310,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_120000) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "tasks", "users"
   add_foreign_key "time_logs", "tasks"
+  add_foreign_key "time_logs", "users"
   add_foreign_key "user_preferences", "users"
 end

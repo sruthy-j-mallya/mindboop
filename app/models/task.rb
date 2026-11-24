@@ -6,6 +6,11 @@ class Task < ApplicationRecord
 
   # Soonest due first, undated tasks last; ties go to the oldest task.
   scope :by_due_date, -> { order(arel_table[:starts_at].asc.nulls_last, :created_at, :id) }
+  # Scheduled tasks that overlap `from...to`. A task with only a date reaches a day past it, which covers the estimate the
+  # Calendar draws it with.
+  scope :scheduled_between, ->(from, to) {
+    where(starts_at: ...to).where("COALESCE(tasks.ends_at, tasks.starts_at + INTERVAL '1 day') >= ?", from)
+  }
 
   # The description is Markdown written in the rich-text editor; an empty editor saves as nil.
   normalizes :description, with: ->(description) { description.strip.presence }
@@ -33,4 +38,13 @@ class Task < ApplicationRecord
   validates :ends_at, presence: true, if: :is_duration
   validates :ends_at, absence: true, unless: :is_duration
   validates :ends_at, comparison: { greater_than_or_equal_to: :starts_at }, if: -> { starts_at? && ends_at? }
+
+  before_discard :stop_running_session
+
+  private
+    # Work done on a task still counts once it's deleted, but no more can be done on it, so a running session ends here.
+    # Restoring the task doesn't restart it.
+    def stop_running_session
+      time_logs.kept.in_progress.each(&:stop!)
+    end
 end

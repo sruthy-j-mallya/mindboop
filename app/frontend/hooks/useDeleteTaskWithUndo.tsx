@@ -10,9 +10,9 @@ import { useDeleteTask } from "@/hooks/reactQuery/useTasksApi";
 import routes from "@/routes";
 
 // Deletes a task from its list row or its pane, then offers to undo it in a toast. A deleted task leaves the Inbox, so
-// its pane closes with it. `isDeleting` stays true after the delete, until the refreshed list drops the task.
+// its pane closes with it; a pane shown elsewhere (the Calendar's popover) closes through `onDeleted`. `isDeleting` stays true after the delete, until the refreshed list drops the task.
 // The promises (mutateAsync) settle even once the row has unmounted, which mutate's callbacks wouldn't.
-const useDeleteTaskWithUndo = ({ id, title }: Pick<Task, "id" | "title">) => {
+const useDeleteTaskWithUndo = ({ id, title }: Pick<Task, "id" | "title">, onDeleted?: () => void) => {
   const navigate = useNavigate();
   const isSelected = useMatch(routes.inbox.show)?.params.taskId === id;
   const { mutateAsync: deleteTask, isPending, isSuccess, error } = useDeleteTask();
@@ -24,6 +24,7 @@ const useDeleteTaskWithUndo = ({ id, title }: Pick<Task, "id" | "title">) => {
 
   const handleDeleted = () => {
     if (isSelected) navigate(routes.inbox.index);
+    onDeleted?.();
     toast(`Deleted “${title}”`, {
       action: { label: <UndoLabel />, onClick: handleUndo },
       duration: UNDO_TOAST_DURATION,

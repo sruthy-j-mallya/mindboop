@@ -48,6 +48,9 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => {
   return {
     id: crypto.randomUUID(),
     taskId: crypto.randomUUID(),
+    title: null,
+    taskTitle: null,
+    isTaskDeleted: false,
     mode: "timer",
     timerPreset: 25,
     bufferMinutes: 0,
@@ -94,7 +97,12 @@ describe("Inbox", () => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
     vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
-      userPreference: { theme: "system", completionSound: "bell", breakAlarmSound: "classic" },
+      userPreference: {
+        theme: "system",
+        completionSound: "bell",
+        breakAlarmSound: "classic",
+        weekStartsOn: 1,
+      },
     });
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();

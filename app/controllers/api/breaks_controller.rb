@@ -14,7 +14,7 @@ module Api
 
     private
       def set_time_log
-        @time_log = TimeLog.active.find(params[:time_log_id])
+        @time_log = TimeLog.kept.find(params[:time_log_id])
         authorize @time_log, :update?
       end
 

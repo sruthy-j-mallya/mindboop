@@ -1,13 +1,18 @@
 import http from "@/apis/axios";
-import type { CreateTimeLogPayload, TimeLogResponse } from "@/apis/types";
+import type { CreateTimeLogPayload, TimeLogResponse, UpdateTimeLogPayload } from "@/apis/types";
 
 const TIME_LOGS_URL = "/time_logs";
+
+const timeLogURL = (id: string) => `${TIME_LOGS_URL}/${encodeURIComponent(id)}`;
 
 const create = (payload: CreateTimeLogPayload) =>
   http.post<TimeLogResponse>(TIME_LOGS_URL, payload).then(({ data }) => data);
 
-const destroy = (id: string) => http.delete(`${TIME_LOGS_URL}/${encodeURIComponent(id)}`);
+const update = ({ id, ...payload }: UpdateTimeLogPayload) =>
+  http.patch<TimeLogResponse>(timeLogURL(id), payload).then(({ data }) => data);
 
-const timeLogsApi = { create, destroy };
+const destroy = (id: string) => http.delete(timeLogURL(id));
+
+const timeLogsApi = { create, update, destroy };
 
 export default timeLogsApi;

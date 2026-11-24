@@ -1,16 +1,12 @@
-import { useState } from "react";
+import { type ReactElement, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Hourglass } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-import type { Task } from "@/apis/types";
 import FormField from "@/components/commons/FormField";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MINUTES_PER_HOUR } from "@/constants";
-import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
-import { formatMinutes } from "@/utils";
 
 import {
   ESTIMATE_MAX_HOURS,
@@ -20,14 +16,19 @@ import {
 } from "./constants";
 import { toFormValues, toTotalMinutes } from "./utils";
 
-type EstimatePickerProps = { task: Task };
+type EstimatePickerProps = {
+  estimatedMinutes: number | null;
+  // The button that opens the popover.
+  children: ReactElement;
+  onSave: (estimatedMinutes: number | null) => void;
+};
 
 const ERROR_ID = "estimate-error";
 
-// Sets how long a task should take. Hours and minutes add up to the estimate; nothing is saved until OK. Clear removes the estimate.
-const EstimatePicker = ({ task }: EstimatePickerProps) => {
+// Sets how long a task should take. Hours and minutes add up to the estimate; nothing is saved until OK. Clear removes
+// the estimate. The caller saves and shows any error, as with SchedulePicker.
+const EstimatePicker = ({ estimatedMinutes, children, onSave }: EstimatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { mutate: updateTask, error } = useUpdateTask();
   const {
     register,
     handleSubmit,
@@ -40,12 +41,12 @@ const EstimatePicker = ({ task }: EstimatePickerProps) => {
   const fieldError = errors.hours?.message ?? errors.minutes?.message;
 
   const handleOpenChange = (isOpening: boolean) => {
-    if (isOpening) reset(toFormValues(task.estimatedMinutes));
+    if (isOpening) reset(toFormValues(estimatedMinutes));
     setIsOpen(isOpening);
   };
 
-  const saveEstimate = (estimatedMinutes: number | null) => {
-    updateTask({ id: task.id, estimatedMinutes });
+  const saveEstimate = (minutes: number | null) => {
+    onSave(minutes);
     setIsOpen(false);
   };
 
@@ -54,60 +55,48 @@ const EstimatePicker = ({ task }: EstimatePickerProps) => {
   const handleSave = (formValues: EstimateFormValues) => saveEstimate(toTotalMinutes(formValues));
 
   return (
-    <div className="flex flex-col gap-1">
-      <Popover open={isOpen} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
-          <Button className="text-muted-foreground" size="sm" type="button" variant="ghost">
-            <Hourglass />
-            {task.estimatedMinutes ? formatMinutes(task.estimatedMinutes) : "Estimate"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" aria-label="Estimate" className="w-72 p-3">
-          <form noValidate className="flex flex-col gap-3" onSubmit={handleSubmit(handleSave)}>
-            <div className="flex flex-col gap-2">
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  {...register("hours")}
-                  aria-describedby={errors.hours ? ERROR_ID : undefined}
-                  aria-invalid={!!errors.hours}
-                  label="Hours"
-                  max={ESTIMATE_MAX_HOURS}
-                  min={0}
-                  placeholder="0"
-                  type="number"
-                />
-                <FormField
-                  {...register("minutes")}
-                  aria-describedby={errors.minutes ? ERROR_ID : undefined}
-                  aria-invalid={!!errors.minutes}
-                  label="Minutes"
-                  max={MINUTES_PER_HOUR - 1}
-                  min={0}
-                  placeholder="0"
-                  type="number"
-                />
-              </div>
-              {fieldError && (
-                <p className="text-sm text-destructive" id={ERROR_ID}>
-                  {fieldError}
-                </p>
-              )}
-            </div>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent align="start" aria-label="Estimate" className="w-72 p-3">
+        <form noValidate className="flex flex-col gap-3" onSubmit={handleSubmit(handleSave)}>
+          <div className="flex flex-col gap-2">
             <div className="grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={handleClear}>
-                Clear
-              </Button>
-              <Button type="submit">OK</Button>
+              <FormField
+                {...register("hours")}
+                aria-describedby={errors.hours ? ERROR_ID : undefined}
+                aria-invalid={!!errors.hours}
+                label="Hours"
+                max={ESTIMATE_MAX_HOURS}
+                min={0}
+                placeholder="0"
+                type="number"
+              />
+              <FormField
+                {...register("minutes")}
+                aria-describedby={errors.minutes ? ERROR_ID : undefined}
+                aria-invalid={!!errors.minutes}
+                label="Minutes"
+                max={MINUTES_PER_HOUR - 1}
+                min={0}
+                placeholder="0"
+                type="number"
+              />
             </div>
-          </form>
-        </PopoverContent>
-      </Popover>
-      {error && (
-        <p className="text-sm text-destructive" role="alert">
-          {error.message}
-        </p>
-      )}
-    </div>
+            {fieldError && (
+              <p className="text-sm text-destructive" id={ERROR_ID}>
+                {fieldError}
+              </p>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={handleClear}>
+              Clear
+            </Button>
+            <Button type="submit">OK</Button>
+          </div>
+        </form>
+      </PopoverContent>
+    </Popover>
   );
 };
 

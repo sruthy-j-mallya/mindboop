@@ -4,7 +4,8 @@ import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+
+import StepTextarea from "./StepTextarea";
 
 type DraftStepProps = {
   onSave: (text: string) => void;
@@ -33,7 +34,7 @@ const DraftStep = ({ onSave, onSaveAndContinue, onDiscard }: DraftStepProps) => 
   };
 
   // Enter starts another step below instead of submitting the surrounding form.
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Escape") close(onDiscard);
     if (event.key !== "Enter") return;
 
@@ -51,14 +52,12 @@ const DraftStep = ({ onSave, onSaveAndContinue, onDiscard }: DraftStepProps) => 
       {/* Holds the drag handle's place, so the new row lines up with the saved ones. */}
       <span aria-hidden className="-mr-1 w-4 shrink-0" />
       <Checkbox disabled aria-hidden className="border-muted-foreground/50" tabIndex={-1} />
-      <Input
+      <StepTextarea
         autoFocus
         aria-label="New step"
-        autoComplete="off"
-        className="h-8 flex-1"
         placeholder="Add a step"
         value={draft}
-        onChange={(event) => setDraft(event.target.value)}
+        onValueChange={setDraft}
         onKeyDown={handleKeyDown}
       />
       <Button

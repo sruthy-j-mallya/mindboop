@@ -1,4 +1,4 @@
-import { Inbox, LogOut, Settings, SquareParking, Timer, Zap } from "lucide-react";
+import { CalendarDays, Inbox, LogOut, Settings, SquareParking, Timer, Zap } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import {
@@ -42,6 +42,14 @@ const AppSidebar = () => {
                   <Link to={routes.inbox.index} onClick={handleNavigate}>
                     <Inbox />
                     <span>Inbox</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === routes.calendar} tooltip="Calendar">
+                  <Link to={routes.calendar} onClick={handleNavigate}>
+                    <CalendarDays />
+                    <span>Calendar</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

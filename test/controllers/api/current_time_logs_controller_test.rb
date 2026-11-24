@@ -12,16 +12,15 @@ class Api::CurrentTimeLogsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
-  def test_that_show_returns_the_most_recently_started_time_log
-    create(:time_log, task: @task, started_at: 2.hours.ago)
-    latest = create(:time_log, task: @task, started_at: 1.hour.ago)
-    create(:time_log, task: @task, started_at: 3.hours.ago)
+  def test_that_show_returns_the_running_time_log
+    create(:time_log, task: @task, started_at: 3.hours.ago, completed_at: 2.hours.ago)
+    running = create(:time_log, task: @task, started_at: 1.hour.ago)
     sign_in @user
 
     get api_current_time_log_path
 
     assert_response :ok
-    assert_equal latest.id, response.parsed_body["time_log"]["id"]
+    assert_equal running.id, response.parsed_body["time_log"]["id"]
   end
 
   def test_that_show_returns_null_when_there_is_no_time_log
@@ -35,9 +34,10 @@ class Api::CurrentTimeLogsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_that_show_skips_completed_and_deleted_time_logs
-    create(:time_log, task: @task, completed_at: Time.current)
+    create(:time_log, task: @task, started_at: 1.hour.ago, completed_at: Time.current)
     create(:time_log, task: @task, discarded_at: Time.current)
-    create(:time_log, task: create(:task, user: @user, discarded_at: Time.current))
+    create(:time_log, task: deleted_task = create(:task, user: @user))
+    deleted_task.discard!
     sign_in @user
 
     get api_current_time_log_path

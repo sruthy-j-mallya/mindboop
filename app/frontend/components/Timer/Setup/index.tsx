@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Play } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 
-import type { Task, TimeLogMode } from "@/apis/types";
+import type { StartableTimeLogMode, Task } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
@@ -28,7 +28,7 @@ const Setup = () => {
   const [preselectedTaskId] = useState(() => (location.state as TimerLocationState)?.taskId);
   const [pickedTask, setPickedTask] = useState<Task>();
   const taskId = pickedTask?.id ?? preselectedTaskId;
-  const [mode, setMode] = useState<TimeLogMode>(DEFAULT_MODE);
+  const [mode, setMode] = useState<StartableTimeLogMode>(DEFAULT_MODE);
   const [timerMinutes, setTimerMinutes] = useState(DEFAULT_TIMER_MINUTES);
   const [presetTaskId, setPresetTaskId] = useState<string>();
   const { data: task, error: taskError } = useTask(taskId ?? "", { enabled: !!taskId });

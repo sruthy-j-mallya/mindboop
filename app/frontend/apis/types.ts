@@ -1,3 +1,5 @@
+import type { Day } from "date-fns";
+
 import type { AlarmSoundId } from "@/utils/alarmSound/types";
 import type { CompletionSoundId } from "@/utils/completionSound/types";
 
@@ -41,6 +43,7 @@ export type Task = {
   breadcrumbs: Breadcrumb[];
 };
 
+// `searchTerm` matches any part of a title, ignoring case.
 export type TaskFilters = { isCompleted?: boolean; searchTerm?: string };
 
 export type TaskListParams = TaskFilters & { page?: number };
@@ -63,13 +66,22 @@ export type CreateTaskPayload = TaskFields & { checklistItemsAttributes?: Checkl
 
 export type UpdateTaskPayload = Partial<TaskFields> & Pick<Task, "id">;
 
-export type TimeLogMode = "timer" | "stopwatch";
+// The modes a session can be started in, on the Timer.
+export type StartableTimeLogMode = "timer" | "stopwatch";
+
+// A manual log is a session saved after the fact, from the Calendar; it never runs.
+export type TimeLogMode = StartableTimeLogMode | "manual";
 
 export type Break = { id: string; intention: string; durationMinutes: number; endsAt: string };
 
+// Only a manual log can go without a task; it then has a `title` of its own. `taskTitle` is its task's title.
 export type TimeLog = {
   id: string;
-  taskId: string;
+  taskId: string | null;
+  title: string | null;
+  taskTitle: string | null;
+  // The work still counts once its task is deleted, but the task can't be opened.
+  isTaskDeleted: boolean;
   mode: TimeLogMode;
   timerPreset: number | null;
   bufferMinutes: number;
@@ -86,7 +98,25 @@ export type TimeLog = {
 
 export type TimeLogResponse = { timeLog: TimeLog };
 
-export type CreateTimeLogPayload = Pick<TimeLog, "taskId" | "mode"> & Partial<Pick<TimeLog, "timerPreset">>;
+export type StartTimeLogPayload = {
+  taskId: string;
+  mode: StartableTimeLogMode;
+  timerPreset?: number | null;
+};
+
+// A session that already happened, linked to a task or saved with only a title.
+export type LogTimePayload = { mode: "manual"; startedAt: string; completedAt: string } & (
+  { taskId: string; title?: never } | { title: string; taskId?: never }
+);
+
+export type CreateTimeLogPayload = StartTimeLogPayload | LogTimePayload;
+
+// Moves a finished session, as when it's dragged on the Calendar.
+export type UpdateTimeLogPayload = Pick<TimeLog, "id" | "startedAt"> & { completedAt: string };
+
+export type CalendarEventsParams = { from: string; to: string };
+
+export type CalendarEventsResponse = { tasks: Task[]; timeLogs: TimeLog[] };
 
 export type CreateQuickStartPayload = Pick<CreateTaskPayload, "title" | "checklistItemsAttributes"> &
   Partial<Pick<Task, "description">> & { estimatedMinutes: number };
@@ -123,10 +153,14 @@ export type DeleteChecklistItemPayload = { taskId: string; id: string };
 
 export type Theme = "system" | "light" | "dark";
 
+// The day the Calendar's weeks start on: 0 is Sunday and 6 Saturday, as date-fns numbers them.
+export type WeekStartsOn = Day;
+
 export type UserPreference = {
   theme: Theme;
   completionSound: CompletionSoundId;
   breakAlarmSound: AlarmSoundId;
+  weekStartsOn: WeekStartsOn;
 };
 
 export type UserPreferenceResponse = { userPreference: UserPreference };

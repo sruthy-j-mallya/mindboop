@@ -18,7 +18,7 @@ module Tasks
         scope.where(is_completed: ActiveModel::Type::Boolean.new.cast(@filters[:is_completed]))
       end
 
-      # The Timer's task picker searches by title, matching any part of it and ignoring case.
+      # The Timer's task picker and the Calendar's time log popover search by title, matching any part of it and ignoring case.
       def filter_by_search_term(scope)
         return scope if @filters[:search_term].blank?
 

@@ -1,7 +1,8 @@
-import type { Theme } from "@/apis/types";
+import type { Theme, WeekStartsOn } from "@/apis/types";
 import { useUpdateUserPreference, useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 
 import Appearance from "./Appearance";
+import CalendarSettings from "./CalendarSettings";
 import Sounds from "./Sounds";
 
 const Settings = () => {
@@ -10,6 +11,7 @@ const Settings = () => {
   const error = loadError ?? saveError;
 
   const handleThemeChange = (theme: Theme) => updatePreference({ theme });
+  const handleWeekStartsOnChange = (weekStartsOn: WeekStartsOn) => updatePreference({ weekStartsOn });
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-4">
@@ -23,6 +25,7 @@ const Settings = () => {
         <>
           <Appearance theme={preference.theme} onChange={handleThemeChange} />
           <Sounds preference={preference} onChange={updatePreference} />
+          <CalendarSettings weekStartsOn={preference.weekStartsOn} onChange={handleWeekStartsOnChange} />
         </>
       )}
     </div>
