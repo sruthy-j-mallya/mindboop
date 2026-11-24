@@ -93,7 +93,7 @@ const TaskDetails = ({ task, isCompact = false, isOnTimer = false, onRemoved }: 
                 onAddStep={handleAddStep}
                 onDeleted={onRemoved}
               />
-              {!isOnTimer && <StartTaskButton isIconOnly={isCompact} task={task} />}
+              {!isOnTimer && <StartTaskButton task={task} />}
             </div>
           </div>
           {/* Lined up with the title's text. */}

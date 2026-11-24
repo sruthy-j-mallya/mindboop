@@ -29,7 +29,7 @@ row wraps. The Timer and two of the Calendar's popovers have their own versions 
 
 | Screen | Checkbox | Title | Details line | `⋯` | Start |
 | --- | --- | --- | --- | --- | --- |
-| Areas of life / Inbox pane | Yes | Editable | Yes | Yes | Labelled |
+| Areas of life / Inbox pane | Yes | Editable | Yes | Yes | Icon only |
 | Calendar, scheduled task | Yes | Editable | Yes | Yes | Icon only |
 | Calendar, new task | No | Field, first | All controls always shown, below the title | No | No |
 | Calendar, logged session | Read only | Read only | Plain text, set ones only; gains the area | No | No |
