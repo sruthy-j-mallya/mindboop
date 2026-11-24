@@ -144,6 +144,7 @@ describe("Timer", () => {
           color: "teal",
           emoji: "💼",
           defaultSound: "none",
+          isDeleted: false,
           createdAt: STARTED_AT,
           updatedAt: STARTED_AT,
         },

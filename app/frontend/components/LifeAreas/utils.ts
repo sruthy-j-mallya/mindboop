@@ -1,5 +1,10 @@
 import type { TaskCount } from "@/apis/types";
 
+import { INBOX_DROP_ID } from "./constants";
+import type { DropTarget } from "./types";
+
+export const getTargetId = ({ lifeAreaId }: DropTarget) => lifeAreaId ?? INBOX_DROP_ID;
+
 // The count for an area, or for the Inbox (null).
 export const getTasksCount = (taskCounts: TaskCount[], lifeAreaId: string | null) =>
   taskCounts.find((taskCount) => taskCount.lifeAreaId === lifeAreaId)?.tasksCount ?? 0;

@@ -7,7 +7,7 @@ import LifeAreaBadge from "@/components/commons/LifeArea/Badge";
 import LazyRichTextViewer from "@/components/commons/RichText/LazyViewer";
 import { formatSchedule } from "@/components/commons/ScheduleLabel/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
+import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
 import { formatMinutes } from "@/utils";
 
@@ -29,7 +29,7 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
   } = task;
   // Read once: "today" or "tomorrow" only needs to be right for as long as the popover is open.
   const now = useCurrentTime(false);
-  const { data: lifeAreas = [] } = useLifeAreas();
+  const { data: lifeAreas = [] } = useAllLifeAreas();
   const lifeArea = lifeAreas.find(({ id }) => id === lifeAreaId);
   const schedule = formatSchedule(task, now);
 

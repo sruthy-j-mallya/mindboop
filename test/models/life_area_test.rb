@@ -64,14 +64,10 @@ class LifeAreaTest < ActiveSupport::TestCase
     assert_equal "none", @life_area.default_sound
   end
 
-  def test_that_destroying_an_area_sends_its_tasks_to_the_inbox
-    task = create(:task, user: @life_area.user, life_area: @life_area)
-    deleted_task = create(:task, user: @life_area.user, life_area: @life_area, discarded_at: Time.current)
+  def test_that_a_deleted_areas_name_can_be_used_again
+    @life_area.discard!
 
-    @life_area.destroy!
-
-    assert_nil task.reload.life_area_id
-    assert_nil deleted_task.reload.life_area_id
+    assert create(:life_area, user: @life_area.user, name: @life_area.name).persisted?
   end
 
   def test_that_areas_are_listed_oldest_first

@@ -27,6 +27,7 @@ const buildLifeArea = (overrides: Partial<LifeArea> = {}): LifeArea => ({
   color: "indigo",
   emoji: "💼",
   defaultSound: "rain",
+  isDeleted: false,
   createdAt: CREATED_AT,
   updatedAt: CREATED_AT,
   ...overrides,
@@ -244,6 +245,32 @@ describe("LifeAreas", () => {
     await waitFor(() => expect(inbox).toHaveAccessibleDescription("2 tasks"));
   });
 
+  it("leaves deleted areas out of the sidebar, and leads back to the Inbox from one", async () => {
+    const deleted = buildLifeArea({ isDeleted: true });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
+      lifeAreas: [deleted, buildLifeArea({ name: "Health" })],
+    });
+    renderLifeAreas(areaPath(deleted.id));
+
+    expect(await screen.findByRole("link", { name: "Health" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Work" })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index));
+  });
+
+  it("still shows a deleted area on a completed task in it, without offering it", async () => {
+    const deleted = buildLifeArea({ isDeleted: true });
+    const task = buildTask({ isCompleted: true, lifeAreaId: deleted.id });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [deleted] });
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderLifeAreas(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Area of life: Work" }));
+
+    const picker = await screen.findByRole("dialog", { name: "Areas of life" });
+    expect(within(picker).getByRole("button", { name: "Inbox" })).toHaveAttribute("aria-pressed", "false");
+    expect(within(picker).queryByRole("button", { name: "Work" })).not.toBeInTheDocument();
+  });
+
   it("says so when an area has no tasks", async () => {
     const lifeArea = buildLifeArea({ name: "Health" });
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
@@ -327,54 +354,115 @@ describe("LifeAreas", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("deletes an area after a second click and goes back to the Inbox", async () => {
-    const lifeArea = buildLifeArea();
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
+  const openDeleteDialog = async (name: string) => {
+    fireEvent.contextMenu(await screen.findByRole("link", { name }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+
+    return screen.getByRole("dialog", { name: `Delete ${name}?` });
+  };
+
+  const clickDelete = async (dialog: HTMLElement) => {
+    const button = within(dialog).getByRole("button", { name: "Delete area" });
+    await waitFor(() => expect(button).toBeEnabled());
+    await userEvent.click(button);
+  };
+
+  it("asks which list to move a deleted area's tasks to, and opens it", async () => {
+    const work = buildLifeArea();
+    const health = buildLifeArea({ name: "Health" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work, health] });
+    const fetchTasks = vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([buildTask()]));
     const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
-    renderLifeAreas(areaPath(lifeArea.id));
+    renderLifeAreas(areaPath(work.id));
 
     fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
     await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
-    const dialog = screen.getByRole("dialog", { name: "Edit Work" });
-    await userEvent.click(within(dialog).getByRole("button", { name: "Delete area" }));
+    await userEvent.click(
+      within(screen.getByRole("dialog", { name: "Edit Work" })).getByRole("button", { name: "Delete area" }),
+    );
+    const dialog = screen.getByRole("dialog", { name: "Delete Work?" });
     expect(destroy).not.toHaveBeenCalled();
-    expect(
-      within(dialog).getByText("Deleting the area moves its tasks back to the Inbox."),
-    ).toBeInTheDocument();
+    const picker = await within(dialog).findByRole("combobox", { name: "Move tasks to" });
+    expect(fetchTasks).toHaveBeenCalledWith({ isCompleted: false, lifeAreaId: work.id });
+    expect(picker).toHaveTextContent("Inbox");
+    await userEvent.click(picker);
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Inbox", "Health"]);
+    await userEvent.click(screen.getByRole("option", { name: "Health" }));
 
-    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [] });
-    await userEvent.click(within(dialog).getByRole("button", { name: "Delete area and move tasks" }));
+    vi.mocked(lifeAreasApi.fetchList).mockImplementation(async () => {
+      // A refresh takes a moment, as over a network; the router moves to the new list before it's in.
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(destroy).toHaveBeenCalledWith(lifeArea.id, expect.anything());
-    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index));
-    expect(await screen.findByText("Deleted Work. Its tasks are back in the Inbox.")).toBeInTheDocument();
+      return { lifeAreas: [health] };
+    });
+    await clickDelete(dialog);
+
+    expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: health.id }, expect.anything());
+    expect(await screen.findByText("Deleted Work and moved its tasks to Health")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(areaPath(health.id)));
   });
 
-  it("deletes an area from its right-click menu, staying on the list in view", async () => {
-    const lifeArea = buildLifeArea();
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
+  it("moves a deleted area's tasks to the Inbox when that's picked, staying on the list in view", async () => {
+    const work = buildLifeArea();
+    const health = buildLifeArea({ name: "Health" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work, health] });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([buildTask()]));
     const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
-    renderLifeAreas();
+    renderLifeAreas(areaPath(health.id));
 
-    fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
-    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
-    const dialog = screen.getByRole("dialog", { name: "Delete Work?" });
-    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    const cancelled = await openDeleteDialog("Work");
+    await userEvent.click(within(cancelled).getByRole("button", { name: "Cancel" }));
     expect(destroy).not.toHaveBeenCalled();
 
-    fireEvent.contextMenu(screen.getByRole("link", { name: "Work" }));
-    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
-    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [] });
-    await userEvent.click(
-      within(screen.getByRole("dialog", { name: "Delete Work?" })).getByRole("button", {
-        name: "Delete area",
-      }),
-    );
+    const dialog = await openDeleteDialog("Work");
+    await within(dialog).findByRole("combobox", { name: "Move tasks to" });
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [health] });
+    await clickDelete(dialog);
 
-    expect(destroy).toHaveBeenCalledWith(lifeArea.id, expect.anything());
-    expect(await screen.findByText("Deleted Work. Its tasks are back in the Inbox.")).toBeInTheDocument();
-    expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index);
+    expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: undefined }, expect.anything());
+    expect(await screen.findByText("Deleted Work and moved its tasks to Inbox")).toBeInTheDocument();
+    expect(screen.getByTestId("path")).toHaveTextContent(areaPath(health.id));
     await waitFor(() => expect(screen.queryByRole("link", { name: "Work" })).not.toBeInTheDocument());
+  });
+
+  it("says a deleted area's tasks go to the Inbox when there's no other area", async () => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [buildLifeArea()] });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([buildTask()]));
+    renderLifeAreas();
+
+    const dialog = await openDeleteDialog("Work");
+
+    expect(await within(dialog).findByText("Its uncompleted tasks move to the Inbox.")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
+  });
+
+  it("deletes an empty area without asking where its tasks go", async () => {
+    const work = buildLifeArea();
+    const health = buildLifeArea({ name: "Health" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work, health] });
+    const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
+    renderLifeAreas(areaPath(work.id));
+
+    const dialog = await openDeleteDialog("Work");
+    expect(await within(dialog).findByText("It has no uncompleted tasks.")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [health] });
+    await clickDelete(dialog);
+
+    expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: undefined }, expect.anything());
+    expect(await screen.findByText("Deleted Work")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index));
+  });
+
+  it("shows the server's error when deleting an area fails", async () => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [buildLifeArea()] });
+    vi.spyOn(lifeAreasApi, "destroy").mockRejectedValue(new ApiError(404, "Record not found."));
+    renderLifeAreas();
+
+    const dialog = await openDeleteDialog("Work");
+    await clickDelete(dialog);
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Record not found.");
   });
 
   it("moves the open task to another area from its pane, which follows it", async () => {

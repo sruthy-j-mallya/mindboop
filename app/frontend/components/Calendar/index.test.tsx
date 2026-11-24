@@ -79,6 +79,7 @@ const LIFE_AREA: LifeArea = {
   color: "teal",
   emoji: "💼",
   defaultSound: "none",
+  isDeleted: false,
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
 };

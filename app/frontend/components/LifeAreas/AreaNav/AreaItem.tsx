@@ -47,7 +47,9 @@ const AreaItem = ({ lifeArea, tasksCount }: AreaItemProps) => {
           </ContextMenuContent>
         }
       />
-      {dialog === DIALOGS.EDIT && <EditAreaDialog lifeArea={lifeArea} onClose={handleClose} />}
+      {dialog === DIALOGS.EDIT && (
+        <EditAreaDialog lifeArea={lifeArea} onClose={handleClose} onDelete={handleDelete} />
+      )}
       {dialog === DIALOGS.DELETE && <DeleteAreaDialog lifeArea={lifeArea} onClose={handleClose} />}
     </>
   );

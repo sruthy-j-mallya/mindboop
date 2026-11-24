@@ -101,16 +101,17 @@ test("add areas from the suggestions, move a task into it, search and edit it", 
   await expect(page).toHaveURL(/\/inbox\/[\w-]+$/);
   await expect(page.getByRole("heading", { name: "Plan the sprint" })).toBeVisible();
 
-  // Deleting the area from its right-click menu sends its tasks back to the Inbox.
+  // Deleting the area from its right-click menu moves its tasks to the list picked.
   await nav.getByRole("link", { name: "Career" }).click({ button: "right" });
   await page.getByRole("menuitem", { name: "Delete" }).click();
-  await page
-    .getByRole("dialog", { name: "Delete Career?" })
-    .getByRole("button", { name: "Delete area" })
-    .click();
+  const deleteDialog = page.getByRole("dialog", { name: "Delete Career?" });
+  await deleteDialog.getByRole("combobox", { name: "Move tasks to" }).click();
+  await page.getByRole("option", { name: "Health" }).click();
+  await deleteDialog.getByRole("button", { name: "Delete area" }).click();
   await expect(nav.getByRole("link", { name: "Career" })).toBeHidden();
+  await nav.getByRole("link", { name: "Health" }).click();
+  await expect(page.getByRole("textbox", { name: "Review the PRs" })).toBeVisible();
   await page.getByRole("link", { name: "Areas of life" }).click();
   await expect(page).toHaveURL("/inbox");
   await expect(page.getByRole("textbox", { name: "Plan the sprint" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Review the PRs" })).toBeVisible();
 });

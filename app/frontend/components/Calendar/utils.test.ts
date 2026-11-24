@@ -289,6 +289,7 @@ describe("getEventProps", () => {
       color: "teal",
       emoji: "💼",
       defaultSound: "none",
+      isDeleted: false,
       createdAt: new Date(NOW).toISOString(),
       updatedAt: new Date(NOW).toISOString(),
     },

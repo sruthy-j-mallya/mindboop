@@ -3,7 +3,8 @@
 Status: done
 Date: 2026-11-19
 
-Icons were replaced by emojis in `040-life-area-emojis.md`.
+Icons were replaced by emojis in `040-life-area-emojis.md`. Deleting an area asks where its tasks go since
+`044-delete-life-area.md`.
 
 ## Goal
 

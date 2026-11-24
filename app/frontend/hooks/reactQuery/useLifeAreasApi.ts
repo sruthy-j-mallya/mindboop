@@ -10,13 +10,19 @@ import lifeAreasApi from "@/apis/life_areas";
 import type { CreateLifeAreaPayload, LifeArea } from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 
-// Every area at once: the sidebar lists them all, and the Calendar colours tasks by them.
-export const useLifeAreas = (options?: Omit<UseQueryOptions<LifeArea[]>, "queryKey" | "queryFn">) =>
+// Deleted areas too, to show (as on the Calendar) the one a completed task or a time log is in.
+export const useAllLifeAreas = (options?: Omit<UseQueryOptions<LifeArea[]>, "queryKey" | "queryFn">) =>
   useQuery({
     queryKey: QUERY_KEYS.LIFE_AREAS.LIST,
     queryFn: async () => (await lifeAreasApi.fetchList()).lifeAreas,
     ...options,
   });
+
+const selectKept = (lifeAreas: LifeArea[]) => lifeAreas.filter(({ isDeleted }) => !isDeleted);
+
+// Every area there is to list, open or pick.
+export const useLifeAreas = (options?: Omit<UseQueryOptions<LifeArea[]>, "queryKey" | "queryFn">) =>
+  useAllLifeAreas({ select: selectKept, ...options });
 
 const invalidateLifeAreas = (queryClient: QueryClient) =>
   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LIFE_AREAS.LIST });
@@ -52,18 +58,18 @@ export const useUpdateLifeArea = () => {
   return useMutation({ mutationFn: lifeAreasApi.update, onSuccess: () => invalidateLifeAreas(queryClient) });
 };
 
-// The area's tasks go back to the Inbox, so every task query and the Calendar refresh too.
+// The area's uncompleted tasks move to another area or the Inbox, so every task query and the Calendar refresh too. The refresh isn't
+// waited for: the caller has to leave the deleted area's page before its list is found gone.
 export const useDeleteLifeArea = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: lifeAreasApi.destroy,
-    onSuccess: () =>
-      Promise.all([
-        invalidateLifeAreas(queryClient),
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.ALL }),
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL }),
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT }),
-      ]),
+    onSuccess: () => {
+      void invalidateLifeAreas(queryClient);
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TASKS.ALL });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CALENDAR_EVENTS.ALL });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.TIME_LOGS.CURRENT });
+    },
   });
 };

@@ -22,8 +22,18 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     assert_equal [ @life_area.id, newer.id ], response.parsed_body["life_areas"].pluck("id")
-    assert_equal %w[ id name color emoji default_sound created_at updated_at ].sort,
+    assert_equal %w[ id name color emoji default_sound is_deleted created_at updated_at ].sort,
       response.parsed_body["life_areas"].first.keys.sort
+  end
+
+  def test_that_index_marks_deleted_areas
+    deleted = create(:life_area, user: @user, discarded_at: Time.current)
+    sign_in @user
+
+    get api_life_areas_path
+
+    assert_equal({ @life_area.id => false, deleted.id => true },
+      response.parsed_body["life_areas"].to_h { |area| area.values_at("id", "is_deleted") })
   end
 
   def test_that_user_can_create_an_area
@@ -107,16 +117,45 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
     assert_not_equal @name, @other_life_area.reload.name
   end
 
-  def test_that_destroy_removes_the_area_and_sends_its_tasks_to_the_inbox
+  def test_that_destroy_soft_deletes_the_area_and_sends_its_tasks_to_the_inbox
     task = create(:task, user: @user, life_area: @life_area)
     sign_in @user
 
-    assert_difference "LifeArea.count", -1 do
+    assert_difference "LifeArea.kept.count", -1 do
       delete api_life_area_path(@life_area)
     end
 
     assert_response :no_content
     assert_nil task.reload.life_area_id
+  end
+
+  def test_that_destroy_moves_the_tasks_to_the_given_area
+    target = create(:life_area, user: @user)
+    task = create(:task, user: @user, life_area: @life_area)
+    sign_in @user
+
+    assert_difference "LifeArea.kept.count", -1 do
+      delete api_life_area_path(@life_area, tasks_life_area_id: target.id)
+    end
+
+    assert_response :no_content
+    assert_equal target, task.reload.life_area
+  end
+
+  def test_that_destroy_keeps_the_area_when_its_tasks_cannot_move_to_the_one_given
+    task = create(:task, user: @user, life_area: @life_area)
+    deleted = create(:life_area, user: @user, discarded_at: Time.current)
+    sign_in @user
+
+    [ @other_life_area.id, @life_area.id, deleted.id, SecureRandom.uuid ].each do |id|
+      assert_no_difference "LifeArea.kept.count" do
+        delete api_life_area_path(@life_area, tasks_life_area_id: id)
+      end
+
+      assert_response :not_found
+    end
+
+    assert_equal @life_area, task.reload.life_area
   end
 
   def test_that_destroy_returns_401_when_signed_out
@@ -128,11 +167,24 @@ class Api::LifeAreasControllerTest < ActionDispatch::IntegrationTest
   def test_that_destroy_returns_403_for_another_users_area
     sign_in @user
 
-    assert_no_difference "LifeArea.count" do
+    assert_no_difference "LifeArea.kept.count" do
       delete api_life_area_path(@other_life_area)
     end
 
     assert_response :forbidden
+  end
+
+  def test_that_update_and_destroy_return_404_for_a_deleted_area
+    @life_area.discard!
+    sign_in @user
+
+    patch api_life_area_path(@life_area), params: { name: @name }, as: :json
+
+    assert_response :not_found
+
+    delete api_life_area_path(@life_area)
+
+    assert_response :not_found
   end
 
   def test_that_destroy_returns_404_for_an_unknown_area

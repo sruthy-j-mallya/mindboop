@@ -244,6 +244,8 @@ export type LifeArea = {
   color: LifeAreaColorId;
   emoji: string;
   defaultSound: SoundId;
+  // A deleted area keeps its completed tasks, so it's still shown on them.
+  isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -255,3 +257,6 @@ export type LifeAreaResponse = { lifeArea: LifeArea };
 export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "emoji" | "defaultSound">;
 
 export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> & Pick<LifeArea, "id">;
+
+// `tasksLifeAreaId` is the area its uncompleted tasks move to; without one, they go to the Inbox.
+export type DeleteLifeAreaPayload = Pick<LifeArea, "id"> & { tasksLifeAreaId?: string };

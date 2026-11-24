@@ -222,6 +222,7 @@ describe("AppLayout", () => {
             color: "indigo",
             emoji: "💼",
             defaultSound: "piano",
+            isDeleted: false,
             createdAt: STARTED_AT,
             updatedAt: STARTED_AT,
           },

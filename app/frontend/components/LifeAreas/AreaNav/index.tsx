@@ -8,7 +8,7 @@ import { useTaskCounts } from "@/hooks/reactQuery/useTaskCountsApi";
 import routes from "@/routes";
 
 import NewAreaDialog from "../AreaDialog/New";
-import { INBOX_DROP_ID, INBOX_NAME } from "../constants";
+import { INBOX_DROP_ID, INBOX_TARGET } from "../constants";
 import { getTasksCount } from "../utils";
 import AreaItem from "./AreaItem";
 import NavItem from "./NavItem";
@@ -35,7 +35,7 @@ const AreaNav = () => {
         <NavItem
           icon={<Inbox className="size-4 text-muted-foreground" />}
           id={INBOX_DROP_ID}
-          target={{ lifeAreaId: null, name: INBOX_NAME }}
+          target={INBOX_TARGET}
           tasksCount={getTasksCount(taskCounts, null)}
           to={routes.inbox.index}
         />

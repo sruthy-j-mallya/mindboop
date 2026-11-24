@@ -45,7 +45,7 @@ Every error response has one shape:
 | GET    | `/api/life_areas`                         | –                                                                            | 200 `{ life_areas }`              |
 | POST   | `/api/life_areas`                         | `name`, `color`, `emoji`, `default_sound` (optional)                         | 201 `{ life_area }`               |
 | PATCH  | `/api/life_areas/:id`                     | `name`, `color`, `emoji`, `default_sound` (any)                              | 200 `{ life_area }`               |
-| DELETE | `/api/life_areas/:id`                     | –                                                                            | 204, tasks go to the Inbox        |
+| DELETE | `/api/life_areas/:id`                     | `tasks_life_area_id` query param (optional)                                  | 204, soft delete                  |
 | POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                                    | 201 `{ task, time_log }`          |
 | POST   | `/api/time_logs`                          | `task_id`, Time log fields                                                   | 201 `{ time_log }`                |
 | PATCH  | `/api/time_logs/:id`                      | `started_at`, `completed_at`                                                 | 200 `{ time_log }`                |
@@ -133,13 +133,14 @@ is saved. `PATCH /api/tasks/:id` ignores them; change items one at a time throug
 ## Life areas
 
 Areas of life (Work, Health, …) group a user's tasks; a task in none is in the Inbox. `GET /api/life_areas` lists the
-signed-in user's areas, oldest first, unpaged, as `{ life_areas }`. Another user's area gets a 403, and an unknown one a 404.
+signed-in user's areas, oldest first, unpaged, as `{ life_areas }`, deleted ones (`is_deleted`) too: completed tasks and
+time logs still show theirs. Another user's area gets a 403, and an unknown one a 404.
 
-Each `life_area` is `{ id, name, color, emoji, default_sound, created_at, updated_at }`
+Each `life_area` is `{ id, name, color, emoji, default_sound, is_deleted, created_at, updated_at }`
 (`app/views/api/life_areas/_life_area.json.jbuilder`).
 
-- `name` is required, up to 40 characters, with runs of spaces squished. It's unique per user, ignoring case
-  ("Name has already been taken").
+- `name` is required, up to 40 characters, with runs of spaces squished. It's unique among a user's undeleted
+  areas, ignoring case ("Name has already been taken").
 - `color` is one of `rose`, `orange`, `amber`, `lime`, `emerald`, `teal`, `sky`, `indigo`, `violet`, `slate`.
 - `emoji` is one of `LifeArea::EMOJIS` (the emoji itself, such as `💼`), listed by category in
   `app/frontend/components/commons/LifeArea/emojis.json`.
@@ -147,8 +148,13 @@ Each `life_area` is `{ id, name, color, emoji, default_sound, created_at, update
   `wind`, `morning`, `campfire`, `night`) and defaults to `none`. A session on one of the area's tasks starts with that
   background sound; `none` keeps the one picked last.
 
-Anything else gets a 422. `DELETE /api/life_areas/:id` removes the area for good; its tasks (deleted ones included) go
-back to the Inbox.
+Anything else gets a 422.
+
+`DELETE /api/life_areas/:id` soft-deletes the area (Discard). Its uncompleted tasks move to the area in
+`tasks_life_area_id`, or to the Inbox without one; completed and deleted tasks stay with it. If that isn't another of the
+user's undeleted areas, it gets a 404 and nothing changes. A deleted area can't be changed or deleted again (404), and
+putting a task in one gets a 422 ("Life area must exist"). A task reopened or restored once its area is deleted goes to
+the Inbox.
 
 ## Checklist items
 

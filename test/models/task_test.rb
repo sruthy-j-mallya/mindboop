@@ -150,6 +150,45 @@ class TaskTest < ActiveSupport::TestCase
     assert_includes task.errors[:life_area], "must exist"
   end
 
+  def test_that_a_task_cannot_be_put_in_a_deleted_area
+    task = create(:task)
+    task.life_area = create(:life_area, user: task.user, discarded_at: Time.current)
+
+    assert_not task.valid?
+    assert_equal [ "must exist" ], task.errors[:life_area]
+  end
+
+  def test_that_a_completed_task_stays_in_its_deleted_area
+    life_area = create(:life_area)
+    task = create(:task, user: life_area.user, life_area:, is_completed: true)
+    life_area.discard!
+
+    task.reload.update!(title: Faker::Lorem.sentence)
+
+    assert_equal life_area, task.reload.life_area
+  end
+
+  def test_that_a_task_reopened_after_its_area_was_deleted_goes_to_the_inbox
+    life_area = create(:life_area)
+    task = create(:task, user: life_area.user, life_area:, is_completed: true)
+    life_area.discard!
+
+    task.reload.update!(is_completed: false)
+
+    assert_nil task.reload.life_area_id
+  end
+
+  def test_that_a_task_restored_after_its_area_was_deleted_goes_to_the_inbox
+    life_area = create(:life_area)
+    task = create(:task, user: life_area.user, life_area:)
+    task.discard!
+    life_area.discard!
+
+    task.reload.undiscard!
+
+    assert_nil task.reload.life_area_id
+  end
+
   def test_that_a_task_cannot_be_in_an_unknown_area
     task = create(:task)
     task.life_area_id = SecureRandom.uuid

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
 import { useCalendarEvents } from "@/hooks/reactQuery/useCalendarEventsApi";
-import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
+import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
 import { writeStorage } from "@/utils/storage";
@@ -85,7 +85,7 @@ const Calendar = () => {
   const { data: { tasks = [], timeLogs = [] } = {}, error } = useCalendarEvents(params, {
     enabled: !isPreferencePending,
   });
-  const { data: lifeAreas } = useLifeAreas();
+  const { data: lifeAreas } = useAllLifeAreas();
   const lifeAreaColors = useMemo(() => toLifeAreaColors(lifeAreas ?? []), [lifeAreas]);
   const { movedTimes, handleEventDrop, handleEventResize } = useEventMoves(view === CALENDAR_VIEWS.MONTH);
   const events = useMemo(

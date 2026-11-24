@@ -1,5 +1,8 @@
 # A part of the user's life (Work, Health, …) that groups their tasks. Tasks without one are in the Inbox.
+# A deleted (discarded) area keeps its completed and deleted tasks.
 class LifeArea < ApplicationRecord
+  include Discard::Model
+
   MAX_NAME_LENGTH = 40
   # Keys into the client's palette (`components/commons/LifeArea/constants.ts`).
   COLORS = %w[ rose orange amber lime emerald teal sky indigo violet slate ].freeze
@@ -15,11 +18,10 @@ class LifeArea < ApplicationRecord
   normalizes :name, with: ->(name) { name.squish }
 
   belongs_to :user
-  # The foreign key nullifies too (on_delete: :nullify), which also covers discarded tasks.
   has_many :tasks, dependent: :nullify
 
   validates :name, presence: true, length: { maximum: MAX_NAME_LENGTH },
-    uniqueness: { scope: :user_id, case_sensitive: false }
+    uniqueness: { scope: :user_id, case_sensitive: false, conditions: -> { kept } }
   validates :color, inclusion: { in: COLORS }
   validates :emoji, inclusion: { in: EMOJIS }
   validates :default_sound, inclusion: { in: SOUNDS }
