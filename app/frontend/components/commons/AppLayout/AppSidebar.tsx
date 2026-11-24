@@ -1,4 +1,4 @@
-import { Boxes, CalendarDays, LogOut, Settings, SquareParking, Timer, Zap } from "lucide-react";
+import { Boxes, CalendarDays, LogOut, Settings, Timer, Zap } from "lucide-react";
 import { Link, useLocation, useMatch } from "react-router";
 
 import {
@@ -12,13 +12,18 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useParkingLotItems } from "@/hooks/reactQuery/useParkingLotItemsApi";
 import { useLogout } from "@/hooks/reactQuery/useSessionsApi";
 import routes from "@/routes";
+
+import ParkingLotIcon from "./ParkingLotIcon";
 
 const AppSidebar = () => {
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();
   const { mutate: logout, isPending } = useLogout();
+  const { data: parkedItems } = useParkingLotItems({ status: "parked" });
+  const parkedCount = parkedItems?.parkingLotItemsCount ?? 0;
 
   const handleLogout = () => logout();
   const handleNavigate = () => setOpenMobile(false);
@@ -71,8 +76,16 @@ const AppSidebar = () => {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === routes.parkingLot} tooltip="Parking lot">
                   <Link to={routes.parkingLot} onClick={handleNavigate}>
-                    <SquareParking />
-                    <span>Parking lot</span>
+                    <ParkingLotIcon count={parkedCount} />
+                    <span>
+                      Parking lot
+                      {parkedCount > 0 && (
+                        <>
+                          {" "}
+                          <span className="sr-only">({parkedCount} parked)</span>
+                        </>
+                      )}
+                    </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

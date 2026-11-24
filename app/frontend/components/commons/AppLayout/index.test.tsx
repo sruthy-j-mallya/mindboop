@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
+import parkingLotItemsApi from "@/apis/parking_lot_items";
 import sessionsApi from "@/apis/sessions";
 import type { TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
@@ -43,6 +44,13 @@ const TIME_LOG: TimeLog = {
   updatedAt: STARTED_AT,
 };
 
+const listWithCount = (parkingLotItemsCount: number) => ({
+  parkingLotItems: [],
+  parkingLotItemsCount,
+  page: 1,
+  totalPages: 1,
+});
+
 class FakeAudioContext {
   state = "running";
   currentTime = 0;
@@ -56,6 +64,7 @@ describe("AppLayout", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(parkingLotItemsApi, "fetchList").mockResolvedValue(listWithCount(0));
     vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
       userPreference: {
         theme: "system",
@@ -112,6 +121,34 @@ describe("AppLayout", () => {
     expect(content.getByRole("link", { name: "Parking lot" })).toHaveAttribute("href", routes.parkingLot);
     expect(footer.getByRole("link", { name: "Settings" })).toHaveAttribute("href", routes.settings);
     expect(screen.getAllByRole("link", { name: "Settings" })).toHaveLength(1);
+  });
+
+  it("counts the parked thoughts over the Parking lot icon", async () => {
+    vi.mocked(parkingLotItemsApi.fetchList).mockResolvedValue(listWithCount(3));
+    renderWithProviders(<AppLayout />);
+
+    const link = await screen.findByRole("link", { name: "Parking lot (3 parked)" });
+
+    expect(within(link).getByText("3")).toBeInTheDocument();
+    expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({ status: "parked" });
+  });
+
+  it("shows no count over the Parking lot icon when nothing is parked", async () => {
+    renderWithProviders(<AppLayout />);
+
+    await waitFor(() => expect(parkingLotItemsApi.fetchList).toHaveBeenCalled());
+    await act(() => Promise.resolve());
+
+    expect(screen.getByRole("link", { name: "Parking lot" })).toHaveTextContent(/^Parking lot$/);
+  });
+
+  it("caps a large Parking lot count", async () => {
+    vi.mocked(parkingLotItemsApi.fetchList).mockResolvedValue(listWithCount(120));
+    renderWithProviders(<AppLayout />);
+
+    const link = await screen.findByRole("link", { name: "Parking lot (120 parked)" });
+
+    expect(within(link).getByText("99+")).toBeInTheDocument();
   });
 
   it("starts icon-only and toggles between the icon and full views", async () => {
