@@ -362,7 +362,8 @@ describe("LifeAreas", () => {
     renderLifeAreas(generatePath(routes.inbox.show, { taskId: task.id }));
 
     const pane = await screen.findByRole("article");
-    await userEvent.click(await within(pane).findByRole("button", { name: "Area of life: Inbox" }));
+    await userEvent.click(within(pane).getByRole("button", { name: "More actions" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Move to area" }));
     const picker = await screen.findByRole("dialog", { name: "Areas of life" });
     expect(within(picker).getByRole("button", { name: "Inbox" })).toHaveAttribute("aria-pressed", "true");
     await userEvent.click(within(picker).getByRole("button", { name: "Work" }));

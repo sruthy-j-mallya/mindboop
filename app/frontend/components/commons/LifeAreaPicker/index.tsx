@@ -1,28 +1,27 @@
-import { useState } from "react";
-
+import { cn } from "cn";
 import { Inbox } from "lucide-react";
 
 import LifeAreaBadge from "@/components/commons/LifeArea/Badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
+import useOpenState, { type OpenStateProps } from "@/hooks/useOpenState";
 
 import { INBOX_LABEL } from "./constants";
 import Option from "./Option";
 
-type LifeAreaPickerProps = {
+type LifeAreaPickerProps = OpenStateProps & {
   lifeAreaId: string | null;
   onSave: (lifeAreaId: string | null) => void;
-  // Just the Inbox icon while in no area, where room is tight (the Calendar's popover).
-  isCompact?: boolean;
+  // Styles its button.
+  className?: string;
 };
 
 // Picks the area of life a task is in, or the Inbox for none. Hidden until the user has an area.
-const LifeAreaPicker = ({ lifeAreaId, onSave, isCompact = false }: LifeAreaPickerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const LifeAreaPicker = ({ lifeAreaId, className, onSave, ...openState }: LifeAreaPickerProps) => {
+  const [isOpen, setIsOpen] = useOpenState(openState);
   const { data: lifeAreas = [] } = useLifeAreas();
   const lifeArea = lifeAreas.find(({ id }) => id === lifeAreaId);
-  const isIconOnly = isCompact && !lifeArea;
 
   const handlePick = (pickedId: string | null) => {
     setIsOpen(false);
@@ -36,8 +35,8 @@ const LifeAreaPicker = ({ lifeAreaId, onSave, isCompact = false }: LifeAreaPicke
       <PopoverTrigger asChild>
         <Button
           aria-label={`Area of life: ${lifeArea?.name ?? INBOX_LABEL}`}
-          className="text-muted-foreground"
-          size={isIconOnly ? "icon-sm" : "sm"}
+          className={cn("text-muted-foreground", className)}
+          size="sm"
           type="button"
           variant="ghost"
         >
@@ -50,7 +49,7 @@ const LifeAreaPicker = ({ lifeAreaId, onSave, isCompact = false }: LifeAreaPicke
           ) : (
             <Inbox />
           )}
-          {!isIconOnly && (lifeArea?.name ?? INBOX_LABEL)}
+          {lifeArea?.name ?? INBOX_LABEL}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" aria-label="Areas of life" className="w-56 p-1">

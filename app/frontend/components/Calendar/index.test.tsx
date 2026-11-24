@@ -168,7 +168,8 @@ describe("Calendar", () => {
       .mockResolvedValue({ task: { ...TASK, lifeAreaId: LIFE_AREA.id } });
     const dialog = await openTask();
 
-    await userEvent.click(await within(dialog).findByRole("button", { name: "Area of life: Inbox" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Move to area" }));
     await userEvent.click(await screen.findByRole("button", { name: "Work" }));
 
     await waitFor(() =>
@@ -176,15 +177,18 @@ describe("Calendar", () => {
     );
   });
 
-  it("shows an unset estimate as just its icon, which still opens the picker", async () => {
+  it("hides an unset estimate until it's picked from the menu, and again when the picker is left", async () => {
     const dialog = await openTask({ ...TASK, estimatedMinutes: null });
 
-    const estimate = within(dialog).getByRole("button", { name: "Estimate" });
-    expect(estimate).not.toHaveTextContent("Estimate");
-
-    // The tooltip shares the button with the picker, which still opens on click.
-    await userEvent.click(estimate);
+    expect(within(dialog).queryByRole("button", { name: "Estimate" })).not.toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
     expect(await screen.findByLabelText("Hours")).toBeInTheDocument();
+
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByLabelText("Hours")).not.toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "Estimate" })).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Edit task" })).toBeInTheDocument();
   });
 
   it("closes the task's popover once the task is completed", async () => {

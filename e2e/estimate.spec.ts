@@ -16,7 +16,8 @@ test("estimate an Inbox task, change it, then clear it", async ({ page }) => {
   await input.press("Enter");
   await page.getByRole("textbox", { name: "Plan the week" }).click();
 
-  await page.getByRole("button", { name: "Estimate" }).click();
+  await page.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Add estimate" }).click();
   await page.getByLabel("Minutes").fill("45");
   await page.getByRole("button", { name: "OK" }).click();
 
@@ -31,7 +32,7 @@ test("estimate an Inbox task, change it, then clear it", async ({ page }) => {
 
   await page.getByRole("button", { name: "1 h 40 min" }).click();
   await page.getByRole("button", { name: "Clear" }).click();
-  await expect(page.getByRole("button", { name: "Estimate" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Estimate" })).toBeHidden();
   // The list row stays to the title (and date), never the estimate.
   await expect(page.getByRole("list", { name: "Tasks" })).not.toContainText("min");
   await expect(page.getByRole("textbox", { name: "Plan the week" })).toHaveValue("Plan the week");
