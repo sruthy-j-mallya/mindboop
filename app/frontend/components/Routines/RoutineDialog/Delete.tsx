@@ -1,9 +1,11 @@
 import { useMatch, useNavigate } from "react-router";
 
 import type { Routine } from "@/apis/types";
+import ConfirmDeleteButton from "@/components/commons/ConfirmDeleteButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useDeleteRoutine } from "@/hooks/reactQuery/useRoutinesApi";
+import useInitialFocus from "@/hooks/useInitialFocus";
 import routes from "@/routes";
 
 type DeleteRoutineDialogProps = { routine: Routine; onClose: () => void };
@@ -13,6 +15,7 @@ const DeleteRoutineDialog = ({ routine, onClose }: DeleteRoutineDialogProps) => 
   const navigate = useNavigate();
   const isOpen = useMatch(routes.routines.show)?.params.routineId === routine.id;
   const { mutate: deleteRoutine, isPending, error } = useDeleteRoutine();
+  const { ref: deleteButtonRef, handleOpenAutoFocus } = useInitialFocus<HTMLButtonElement>();
 
   const handleDeleted = () => {
     onClose();
@@ -23,7 +26,7 @@ const DeleteRoutineDialog = ({ routine, onClose }: DeleteRoutineDialogProps) => 
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="gap-6 rounded-2xl p-8 sm:max-w-md">
+      <DialogContent className="gap-6 rounded-2xl p-8 sm:max-w-md" onOpenAutoFocus={handleOpenAutoFocus}>
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl">Delete {routine.title}?</DialogTitle>
           <DialogDescription className="text-base">
@@ -39,9 +42,12 @@ const DeleteRoutineDialog = ({ routine, onClose }: DeleteRoutineDialogProps) => 
           <Button disabled={isPending} size="lg" type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button disabled={isPending} size="lg" type="button" variant="destructive" onClick={handleDelete}>
-            Delete routine
-          </Button>
+          <ConfirmDeleteButton
+            ref={deleteButtonRef}
+            isDisabled={isPending}
+            label="Delete routine"
+            onClick={handleDelete}
+          />
         </div>
       </DialogContent>
     </Dialog>

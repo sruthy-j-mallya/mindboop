@@ -16,6 +16,8 @@ export const QUERY_KEYS = {
     LIST: (params: TaskListParams) => ["tasks", "list", params],
     // Every page loaded so far, under LISTS so a mutation refreshes it with the paged lists.
     INFINITE_LIST: (filters: TaskFilters) => ["tasks", "list", "infinite", filters],
+    // Under LISTS too: what changes a list can change how many tasks are in it.
+    COUNTS: ["tasks", "list", "counts"],
     DETAIL: (id: string) => ["tasks", "detail", id],
   },
   PARKING_LOT_ITEMS: {

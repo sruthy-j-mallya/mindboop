@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { useDraggable } from "@dnd-kit/core";
 import { cn } from "cn";
 import { CalendarDays, ChevronRight, GripVertical, Trash2 } from "lucide-react";
@@ -7,17 +9,19 @@ import type { Task } from "@/apis/types";
 import ScheduleLabel from "@/components/commons/ScheduleLabel";
 import SchedulePicker from "@/components/commons/SchedulePicker";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
+import DeleteTaskDialog from "@/components/commons/TaskDetails/DeleteTaskDialog";
 import TitleInput from "@/components/commons/TitleInput";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 import useCompleteTask from "@/hooks/useCompleteTask";
 import useDeleteTaskWithUndo from "@/hooks/useDeleteTaskWithUndo";
 import useRenameTask from "@/hooks/useRenameTask";
 import { getTaskPath } from "@/utils";
 
+import { DRAG_TYPES, NARROW_LAYOUT_QUERY } from "../../constants";
 import type { DragData } from "../../types";
-import { NARROW_LAYOUT_QUERY } from "./constants";
 
 type TaskRowProps = { task: Task };
 
@@ -25,14 +29,24 @@ const TaskRow = ({ task }: TaskRowProps) => {
   const { id } = task;
   const navigate = useNavigate();
   const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(id);
+  const { data: timeLog } = useCurrentTimeLog();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { deleteTask, isDeleting, error: deleteError } = useDeleteTaskWithUndo(task);
   const { mutate: updateTask, error: scheduleError } = useUpdateTask();
   const { title, renameTask, error: renameError } = useRenameTask(task);
   const error = completeError ?? deleteError ?? scheduleError ?? renameError;
-  const dragData: DragData = { task };
+  const dragData: DragData = { type: DRAG_TYPES.TASK, task };
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id, data: dragData });
 
   const handleScheduleSave = (schedule: SchedulePayload) => updateTask({ id, ...schedule });
+
+  // The task on the clock asks first, about the time so far.
+  const handleDelete = () => {
+    if (timeLog?.taskId === id) setShowDeleteDialog(true);
+    else void deleteTask();
+  };
+
+  const handleDeleteDialogClose = () => setShowDeleteDialog(false);
 
   const taskPath = getTaskPath(id, task.lifeAreaId);
 
@@ -95,7 +109,7 @@ const TaskRow = ({ task }: TaskRowProps) => {
           </SchedulePicker>
         )}
         {/* With a mouse, it shows on hover or focus to keep the list calm; touch screens always show it. No confirmation:
-            the toast offers to undo instead. */}
+            the toast offers to undo instead. The task on the clock is the exception. */}
         <Button
           aria-label={`Delete ${title}`}
           className="-mr-2 shrink-0 text-muted-foreground group-focus-within:opacity-100 group-hover:opacity-100 hover:text-destructive pointer-fine:opacity-0"
@@ -103,7 +117,7 @@ const TaskRow = ({ task }: TaskRowProps) => {
           size="icon-sm"
           type="button"
           variant="ghost"
-          onClick={deleteTask}
+          onClick={handleDelete}
         >
           <Trash2 />
         </Button>
@@ -123,6 +137,7 @@ const TaskRow = ({ task }: TaskRowProps) => {
           {error.message}
         </p>
       )}
+      {showDeleteDialog && <DeleteTaskDialog task={task} onClose={handleDeleteDialogClose} />}
     </li>
   );
 };

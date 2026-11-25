@@ -7,6 +7,7 @@ import type { CreateCompletionPayload, TimeLog } from "@/apis/types";
 import AmbiencePicker from "@/components/commons/Ambience/Picker";
 import BailDialog from "@/components/commons/BailDialog";
 import BreakBanner from "@/components/commons/BreakBanner";
+import TaskDetails from "@/components/commons/TaskDetails";
 import { Button } from "@/components/ui/button";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
@@ -20,7 +21,6 @@ import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
 import RoutineDetails from "./RoutineDetails";
 import SessionCard from "./SessionCard";
-import TaskDetails from "./TaskDetails";
 
 type SessionProps = {
   timeLog: TimeLog;
@@ -90,7 +90,9 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   return (
     <>
       <SessionCard
-        details={task ? <TaskDetails task={task} /> : routineId && <RoutineDetails routineId={routineId} />}
+        details={
+          task ? <TaskDetails isOnTimer task={task} /> : routineId && <RoutineDetails routineId={routineId} />
+        }
       >
         <header className="flex items-start justify-between gap-4">
           <div className="grid gap-1">

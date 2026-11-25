@@ -44,17 +44,19 @@ describe("formatSchedule", () => {
   });
 
   it("adds the time to a timed date", () => {
-    expect(formatSchedule(onDate(at(10, 12, 17, 30), false), NOW)).toBe("Today 5:30pm");
-    expect(formatSchedule(onDate(at(7, 12, 12, 0), false), NOW)).toBe("12 Aug 12:00pm");
+    expect(formatSchedule(onDate(at(10, 12, 17, 30), false), NOW)).toBe("Today, 5:30pm");
+    expect(formatSchedule(onDate(at(7, 12, 12, 0), false), NOW)).toBe("12 Aug, 12pm");
   });
 
   it("shows a duration within a day once, with both times", () => {
-    expect(formatSchedule(forDuration(at(10, 13, 1), at(10, 13, 2)), NOW)).toBe("Tomorrow 1:00am – 2:00am");
+    expect(formatSchedule(forDuration(at(10, 13, 1), at(10, 13, 2)), NOW)).toBe("Tomorrow, 1 – 2am");
+    expect(formatSchedule(forDuration(at(10, 13, 17, 30), at(10, 13, 19)), NOW)).toBe("Tomorrow, 5:30 – 7pm");
+    expect(formatSchedule(forDuration(at(10, 13, 11), at(10, 13, 13)), NOW)).toBe("Tomorrow, 11am – 1pm");
   });
 
   it("shows both ends of a duration over several days", () => {
     expect(formatSchedule(forDuration(at(10, 12, 23), at(10, 13, 1)), NOW)).toBe(
-      "Today 11:00pm – Tomorrow 1:00am",
+      "Today, 11pm – Tomorrow, 1am",
     );
     expect(formatSchedule(forDuration(at(10, 20), at(10, 22), true), NOW)).toBe("20 Nov – 22 Nov");
     expect(formatSchedule(forDuration(at(10, 20), at(10, 20), true), NOW)).toBe("20 Nov");

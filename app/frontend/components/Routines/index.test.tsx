@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { format, set, startOfMonth, subMonths } from "date-fns";
 import { generatePath, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -20,7 +21,7 @@ const CREATED_AT = "2026-11-05T10:00:00.000Z";
 const buildRoutine = (overrides: Partial<Routine> = {}): Routine => ({
   id: crypto.randomUUID(),
   title: "Meditation",
-  icon: "flower-2",
+  emoji: "🧘",
   color: "violet",
   sound: "bells",
   durationMinutes: 10,
@@ -87,7 +88,7 @@ describe("Routines", () => {
     await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
     expect(create.mock.calls.map(([payload]) => payload.title)).toEqual(["Shower", "Meditation"]);
     expect(create.mock.calls[0][0]).toMatchObject({
-      icon: "shower-head",
+      emoji: "🛁",
       durationMinutes: 15,
       reminderTime: null,
     });
@@ -133,7 +134,9 @@ describe("Routines", () => {
     const dialog = await screen.findByRole("dialog");
     await userEvent.type(within(dialog).getByLabelText("Name"), "Shower");
     await userEvent.click(within(dialog).getByRole("button", { name: "15 min" }));
-    await userEvent.click(within(dialog).getByRole("radio", { name: "Shower" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Emoji: sparkles" }));
+    await userEvent.type(await screen.findByRole("searchbox", { name: "Search emojis" }), "bathtub");
+    await userEvent.click(await screen.findByRole("gridcell", { name: "bathtub" }));
     await userEvent.click(within(dialog).getByRole("radio", { name: "Custom" }));
     await userEvent.click(within(dialog).getByRole("button", { name: "Monday" }));
     await userEvent.click(within(dialog).getByRole("button", { name: "Friday" }));
@@ -144,7 +147,7 @@ describe("Routines", () => {
         {
           title: "Shower",
           durationMinutes: 15,
-          icon: "shower-head",
+          emoji: "🛁",
           color: "indigo",
           sound: "none",
           reminderTime: "09:00",
@@ -202,6 +205,60 @@ describe("Routines", () => {
     await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.timer));
   });
 
+  it("logs time by hand on a past day", async () => {
+    const routine = buildRoutine();
+    const create = vi.spyOn(timeLogsApi, "create").mockResolvedValue({
+      timeLog: { id: crypto.randomUUID(), routineId: routine.id, completedAt: CREATED_AT } as TimeLog,
+    });
+    renderRoutines([routine], routinePath(routine.id));
+    const day = set(startOfMonth(subMonths(new Date(), 1)), { date: 15 });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Previous month" }));
+    await userEvent.click(screen.getByRole("button", { name: `Log time on ${format(day, "EEEE d MMMM")}` }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByLabelText("Minutes")).toHaveValue(10);
+    fireEvent.change(within(dialog).getByLabelText("Started at"), { target: { value: "07:30" } });
+    await userEvent.clear(within(dialog).getByLabelText("Minutes"));
+    await userEvent.type(within(dialog).getByLabelText("Minutes"), "25");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Log time" }));
+
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith(
+        {
+          mode: "manual",
+          routineId: routine.id,
+          startedAt: set(day, { hours: 7, minutes: 30 }).toISOString(),
+          completedAt: set(day, { hours: 7, minutes: 55 }).toISOString(),
+        },
+        expect.anything(),
+      ),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("keeps the log dialog open with the server's reason when the time is taken", async () => {
+    const routine = buildRoutine();
+    vi.spyOn(timeLogsApi, "create").mockRejectedValue(new ApiError(422, "This overlaps another session."));
+    renderRoutines([routine], routinePath(routine.id));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Previous month" }));
+    await userEvent.click(screen.getAllByRole("button", { name: /^Log time on/ })[0]);
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Log time" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("This overlaps another session.");
+  });
+
+  it("can't log time on a day still to come", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 10, 25, 18) });
+    const routine = buildRoutine();
+    renderRoutines([routine], routinePath(routine.id));
+
+    expect(await screen.findByRole("button", { name: "Thursday 26 November" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Log time on Wednesday 25 November" })).toBeEnabled();
+    vi.useRealTimers();
+  });
+
   it("edits a routine from its right-click menu", async () => {
     const routine = buildRoutine();
     const update = vi.spyOn(routinesApi, "update").mockResolvedValue({ routine });
@@ -253,5 +310,19 @@ describe("Routines", () => {
 
     await waitFor(() => expect(destroy).toHaveBeenCalledWith(routine.id, expect.anything()));
     await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.routines.index));
+  });
+
+  it("focuses the delete button, so Enter deletes the routine", async () => {
+    const routine = buildRoutine();
+    const destroy = vi.spyOn(routinesApi, "destroy").mockResolvedValue({} as never);
+    renderRoutines([routine], routinePath(routine.id));
+
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(dialog).getByRole("button", { name: "Delete routine" })).toHaveFocus());
+    await userEvent.keyboard("{Enter}");
+
+    await waitFor(() => expect(destroy).toHaveBeenCalledWith(routine.id, expect.anything()));
   });
 });

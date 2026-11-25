@@ -289,8 +289,9 @@ describe("getEventProps", () => {
       id: "area-1",
       name: "Work",
       color: "teal",
-      icon: "briefcase",
+      emoji: "💼",
       defaultSound: "none",
+      isDeleted: false,
       createdAt: new Date(NOW).toISOString(),
       updatedAt: new Date(NOW).toISOString(),
     },
@@ -322,7 +323,7 @@ describe("getEventProps", () => {
 });
 
 describe("toCalendarEvents", () => {
-  it("leaves out unscheduled tasks and lets only recent finished logs move", () => {
+  it("leaves out unscheduled tasks and lets only recent manual logs move", () => {
     const events = toCalendarEvents(
       {
         tasks: [buildTask(), buildTask({ id: "task-2", startsAt: null })],
@@ -333,7 +334,19 @@ describe("toCalendarEvents", () => {
             startedAt: at(11, 8).toISOString(),
             completedAt: at(11, 9).toISOString(),
           }),
-          buildTimeLog({ id: "log-3", completedAt: null, isRunning: true }),
+          buildTimeLog({ id: "log-3", mode: "stopwatch", completedAt: null, isRunning: true }),
+          buildTimeLog({
+            id: "log-4",
+            mode: "timer",
+            startedAt: at(12, 9).toISOString(),
+            completedAt: at(12, 9, 30).toISOString(),
+          }),
+          buildTimeLog({
+            id: "log-5",
+            mode: "stopwatch",
+            startedAt: at(12, 9, 30).toISOString(),
+            completedAt: at(12, 10).toISOString(),
+          }),
         ],
       },
       NOW,
@@ -344,6 +357,8 @@ describe("toCalendarEvents", () => {
       ["log-1", true],
       ["log-2", false],
       ["log-3", false],
+      ["log-4", false],
+      ["log-5", false],
       ["task-1", true],
     ]);
     expect(events[2].end).toEqual(new Date(NOW));

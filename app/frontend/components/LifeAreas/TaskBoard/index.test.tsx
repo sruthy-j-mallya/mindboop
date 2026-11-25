@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
+import taskCountsApi from "@/apis/task_counts";
 import taskRestorationsApi from "@/apis/task_restorations";
 import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
@@ -119,6 +120,7 @@ describe("Inbox", () => {
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
     toast.dismiss();
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(taskCountsApi, "fetchList").mockResolvedValue({ taskCounts: [] });
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
   });
 
@@ -430,6 +432,120 @@ describe("Inbox", () => {
     expect(screen.getByRole("heading", { name: "Cancel the gym", hidden: true })).toBeInTheDocument();
   });
 
+  it("keeps a detail that couldn't be saved on show, with its error", async () => {
+    const task = buildTask({ title: "Plan the week" });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(422, "Not allowed"));
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
+    await userEvent.type(screen.getByLabelText("Minutes"), "30");
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Not allowed");
+    expect(screen.getByRole("button", { name: "Estimate" })).toBeInTheDocument();
+  });
+
+  it("leaves a set detail out of the menu", async () => {
+    const task = buildTask({ title: "Plan the week", estimatedMinutes: 30 });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+
+    expect(screen.getByRole("menuitem", { name: "Add due date" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Add estimate" })).not.toBeInTheDocument();
+  });
+
+  describe("when deleting the task on the clock", () => {
+    const task = buildTask({ title: "Cancel the gym" });
+
+    const openDialog = async (timeLog: TimeLog) => {
+      vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+      vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog });
+      const destroyTask = vi.spyOn(tasksApi, "destroy").mockResolvedValue(undefined as never);
+      const destroyTimeLog = vi.spyOn(timeLogsApi, "destroy").mockResolvedValue(undefined as never);
+      renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
+
+      await screen.findByRole("button", { name: "On the clock" });
+      await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+      await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
+      const dialog = await screen.findByRole("dialog", { name: "Delete this task?" });
+
+      return { dialog, destroyTask, destroyTimeLog };
+    };
+
+    it("records the time so far", async () => {
+      const { dialog, destroyTask, destroyTimeLog } = await openDialog(buildTimeLog({ taskId: task.id }));
+
+      await userEvent.click(within(dialog).getByRole("button", { name: "Record time and delete" }));
+
+      await waitFor(() => expect(destroyTask).toHaveBeenCalledWith(task.id, expect.anything()));
+      expect(destroyTimeLog).not.toHaveBeenCalled();
+    });
+
+    it("discards the time so far, then deletes the task", async () => {
+      const timeLog = buildTimeLog({ taskId: task.id });
+      const { dialog, destroyTask, destroyTimeLog } = await openDialog(timeLog);
+
+      await userEvent.click(within(dialog).getByRole("button", { name: "Discard time and delete" }));
+
+      await waitFor(() => expect(destroyTask).toHaveBeenCalledWith(task.id, expect.anything()));
+      expect(destroyTimeLog).toHaveBeenCalledWith(timeLog.id, expect.anything());
+    });
+
+    it("keeps the task when discarding the time fails", async () => {
+      const { dialog, destroyTask, destroyTimeLog } = await openDialog(buildTimeLog({ taskId: task.id }));
+      destroyTimeLog.mockRejectedValue(new ApiError(500, "Something went wrong"));
+
+      await userEvent.click(within(dialog).getByRole("button", { name: "Discard time and delete" }));
+
+      expect(await within(dialog).findByRole("alert")).toHaveTextContent("Something went wrong");
+      expect(destroyTask).not.toHaveBeenCalled();
+    });
+
+    it("only deletes the task when trying again after its delete failed", async () => {
+      const { dialog, destroyTask, destroyTimeLog } = await openDialog(buildTimeLog({ taskId: task.id }));
+      destroyTask.mockRejectedValueOnce(new ApiError(500, "Something went wrong"));
+
+      await userEvent.click(within(dialog).getByRole("button", { name: "Discard time and delete" }));
+      expect(await within(dialog).findByRole("alert")).toBeInTheDocument();
+      expect(
+        within(dialog).queryByRole("button", { name: "Record time and delete" }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(within(dialog).getByRole("button", { name: "Discard time and delete" }));
+
+      await waitFor(() => expect(destroyTask).toHaveBeenCalledTimes(2));
+      expect(destroyTimeLog).toHaveBeenCalledTimes(1);
+    });
+
+    it("only offers to discard a session too short to log", async () => {
+      const now = new Date().toISOString();
+      const { dialog } = await openDialog(
+        buildTimeLog({ taskId: task.id, startedAt: now, currentRunStartedAt: now }),
+      );
+
+      expect(within(dialog).getByRole("button", { name: "Discard time and delete" })).toBeInTheDocument();
+      expect(
+        within(dialog).queryByRole("button", { name: "Record time and delete" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("asks from the task's row too", async () => {
+      const { dialog, destroyTask } = await openDialog(buildTimeLog({ taskId: task.id }));
+      await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "Delete Cancel the gym" }));
+
+      expect(await screen.findByRole("button", { name: "Record time and delete" })).toBeInTheDocument();
+      expect(destroyTask).not.toHaveBeenCalled();
+    });
+  });
+
   it("renames a task in its row", async () => {
     const task = buildTask({ title: "Cancel the gym" });
     const renamed = { ...task, title: "Cancel the gym membership" };
@@ -608,7 +724,8 @@ describe("Inbox", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "Due date" }));
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Add due date" }));
     const tomorrow = addDays(new Date(), 1);
     await userEvent.click(
       screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
@@ -637,7 +754,7 @@ describe("Inbox", () => {
 
     // The list row shows the date too; this is the pane's.
     const pane = await screen.findByRole("article");
-    await userEvent.click(within(pane).getByRole("button", { name: /Today 9:00am/ }));
+    await userEvent.click(within(pane).getByRole("button", { name: /Today, 9am/ }));
     await userEvent.click(screen.getByRole("tab", { name: "Duration" }));
     const endTime = screen.getByRole("combobox", { name: "End time" });
     expect(endTime).toHaveValue("10:00 AM");
@@ -706,7 +823,8 @@ describe("Inbox", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "Estimate" }));
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
     await userEvent.type(screen.getByLabelText("Hours"), "1");
     await userEvent.type(screen.getByLabelText("Minutes"), "30");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));

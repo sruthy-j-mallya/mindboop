@@ -3,6 +3,6 @@ FactoryBot.define do
     user
     sequence(:name) { |n| "#{Faker::Lorem.word.capitalize} #{n}" }
     color { LifeArea::COLORS.sample }
-    icon { LifeArea::ICONS.sample }
+    emoji { LifeArea::EMOJIS.sample }
   end
 end

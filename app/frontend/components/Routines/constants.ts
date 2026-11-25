@@ -7,16 +7,16 @@ const NO_REMINDER = { reminderTime: null, reminderDays: [] };
 export const ROUTINE_SUGGESTIONS: CreateRoutinePayload[] = [
   {
     title: "Brush & floss",
-    icon: "toothbrush",
+    emoji: "🪥",
     color: "sky",
     sound: "none",
     durationMinutes: 5,
     ...NO_REMINDER,
   },
-  { title: "Shower", icon: "shower-head", color: "teal", sound: "rain", durationMinutes: 15, ...NO_REMINDER },
+  { title: "Shower", emoji: "🛁", color: "teal", sound: "rain", durationMinutes: 15, ...NO_REMINDER },
   {
     title: "Meditation",
-    icon: "flower-2",
+    emoji: "🧘",
     color: "violet",
     sound: "bells",
     durationMinutes: 10,
@@ -24,7 +24,7 @@ export const ROUTINE_SUGGESTIONS: CreateRoutinePayload[] = [
   },
   {
     title: "Wash the dishes",
-    icon: "utensils",
+    emoji: "🍽️",
     color: "rose",
     sound: "none",
     durationMinutes: 15,
@@ -32,7 +32,7 @@ export const ROUTINE_SUGGESTIONS: CreateRoutinePayload[] = [
   },
   {
     title: "Fold clothes",
-    icon: "shirt",
+    emoji: "👕",
     color: "indigo",
     sound: "piano",
     durationMinutes: 15,
@@ -40,7 +40,7 @@ export const ROUTINE_SUGGESTIONS: CreateRoutinePayload[] = [
   },
   {
     title: "Quick stretch",
-    icon: "person-standing",
+    emoji: "💪",
     color: "lime",
     sound: "morning",
     durationMinutes: 5,
@@ -48,7 +48,7 @@ export const ROUTINE_SUGGESTIONS: CreateRoutinePayload[] = [
   },
   {
     title: "Short walk",
-    icon: "footprints",
+    emoji: "👣",
     color: "emerald",
     sound: "none",
     durationMinutes: 15,
@@ -56,14 +56,14 @@ export const ROUTINE_SUGGESTIONS: CreateRoutinePayload[] = [
   },
   {
     title: "Reading",
-    icon: "book-open",
+    emoji: "📖",
     color: "amber",
     sound: "campfire",
     durationMinutes: 20,
     ...NO_REMINDER,
   },
-  { title: "Tidy up", icon: "broom", color: "orange", sound: "none", durationMinutes: 10, ...NO_REMINDER },
-  { title: "Exercise", icon: "dumbbell", color: "slate", sound: "none", durationMinutes: 30, ...NO_REMINDER },
+  { title: "Tidy up", emoji: "🧹", color: "orange", sound: "none", durationMinutes: 10, ...NO_REMINDER },
+  { title: "Exercise", emoji: "🏋️", color: "slate", sound: "none", durationMinutes: 30, ...NO_REMINDER },
 ];
 
 // Monday first, as the month grid lays weeks out. `value` is the server's weekday (0 = Sunday).

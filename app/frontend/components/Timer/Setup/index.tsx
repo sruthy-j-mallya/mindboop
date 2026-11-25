@@ -4,6 +4,7 @@ import { Play } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 
 import type { StartableTimeLogMode, Task } from "@/apis/types";
+import TaskDetails from "@/components/commons/TaskDetails";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
@@ -12,7 +13,6 @@ import routes from "@/routes";
 
 import Dial from "../Dial";
 import SessionCard from "../SessionCard";
-import TaskDetails from "../TaskDetails";
 import type { TimerLocationState } from "../types";
 import { DEFAULT_MODE, DEFAULT_TIMER_MINUTES, MODES } from "./constants";
 import MinutesInput from "./MinutesInput";
@@ -57,7 +57,7 @@ const Setup = () => {
   };
 
   const details = task ? (
-    <TaskDetails key={task.id} task={task} />
+    <TaskDetails key={task.id} isOnTimer task={task} />
   ) : (
     <p className="m-auto py-12 text-center text-muted-foreground">
       Pick a task to see its steps and description.

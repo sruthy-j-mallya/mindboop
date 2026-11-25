@@ -31,7 +31,7 @@ module Api
       end
 
       def routine_params
-        params.permit(:title, :icon, :color, :sound, :duration_minutes, :reminder_time, reminder_days: [])
+        params.permit(:title, :emoji, :color, :sound, :duration_minutes, :reminder_time, reminder_days: [])
       end
   end
 end

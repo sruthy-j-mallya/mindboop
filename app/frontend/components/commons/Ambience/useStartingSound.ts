@@ -6,7 +6,7 @@ import { useRoutines } from "@/hooks/reactQuery/useRoutinesApi";
 import useAmbienceStore from "@/stores/useAmbienceStore";
 
 // A session on a routine starts with the routine's background sound, and one on a task in an area of life with the
-// area's, if they have one. It switches once per session (the store remembers which), so a sound picked during the
+// area's, silence included. It switches once per session (the store remembers which), so a sound picked during the
 // session stays, even across reloads.
 const useStartingSound = ({
   id,

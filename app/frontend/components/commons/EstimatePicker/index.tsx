@@ -1,12 +1,12 @@
-import { type ReactElement, useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { ReactElement } from "react";
 import { useForm } from "react-hook-form";
 
 import FormField from "@/components/commons/FormField";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MINUTES_PER_HOUR } from "@/constants";
+import useOpenState, { type OpenStateProps } from "@/hooks/useOpenState";
 
 import {
   ESTIMATE_MAX_HOURS,
@@ -16,7 +16,7 @@ import {
 } from "./constants";
 import { toFormValues, toTotalMinutes } from "./utils";
 
-type EstimatePickerProps = {
+type EstimatePickerProps = OpenStateProps & {
   estimatedMinutes: number | null;
   // The button that opens the popover.
   children: ReactElement;
@@ -27,8 +27,8 @@ const ERROR_ID = "estimate-error";
 
 // Sets how long a task should take. Hours and minutes add up to the estimate; nothing is saved until OK. Clear removes
 // the estimate. The caller saves and shows any error, as with SchedulePicker.
-const EstimatePicker = ({ estimatedMinutes, children, onSave }: EstimatePickerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const EstimatePicker = ({ estimatedMinutes, children, onSave, ...openState }: EstimatePickerProps) => {
+  const [isOpen, setIsOpen] = useOpenState(openState);
   const {
     register,
     handleSubmit,

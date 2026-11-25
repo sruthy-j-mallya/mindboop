@@ -60,12 +60,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
     t.uuid "user_id", null: false
     t.string "name", null: false
     t.string "color", null: false
-    t.string "icon", null: false
+    t.string "emoji", null: false
     t.string "default_sound", default: "none", null: false
+    t.integer "position", null: false
+    t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index "user_id, lower((name)::text)", name: "index_life_areas_on_user_id_and_lower_name", unique: true
-    t.index ["user_id"], name: "index_life_areas_on_user_id"
+    t.index "user_id, lower((name)::text)", name: "index_life_areas_on_user_id_and_lower_name", unique: true, where: "(discarded_at IS NULL)"
+    t.index ["discarded_at"], name: "index_life_areas_on_discarded_at"
+    t.index ["user_id", "position"], name: "index_life_areas_on_user_id_and_position"
   end
 
   create_table "parking_lot_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -89,7 +92,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
   create_table "routines", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
     t.string "title", null: false
-    t.string "icon", null: false
+    t.string "emoji", null: false
     t.string "color", null: false
     t.string "sound", default: "none", null: false
     t.integer "duration_minutes", null: false

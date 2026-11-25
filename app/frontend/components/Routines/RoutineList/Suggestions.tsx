@@ -57,7 +57,7 @@ const Suggestions = () => {
         </p>
       </div>
       <ul aria-label="Ideas" className="flex flex-wrap gap-2">
-        {ROUTINE_SUGGESTIONS.map(({ title, color, icon, durationMinutes }) => {
+        {ROUTINE_SUGGESTIONS.map(({ title, color, emoji, durationMinutes }) => {
           const isPicked = pickedTitles.includes(title);
 
           return (
@@ -77,7 +77,7 @@ const Suggestions = () => {
                     <Check className="size-4" />
                   </span>
                 ) : (
-                  <RoutineBadge className="size-7" color={color} icon={icon} iconClassName="size-3.5" />
+                  <RoutineBadge className="size-7 text-sm" color={color} emoji={emoji} />
                 )}
                 {title}
                 <span className="text-muted-foreground">{durationMinutes} min</span>

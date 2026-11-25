@@ -1,8 +1,7 @@
 import type { Day } from "date-fns";
 
 import type { SoundId } from "@/components/commons/Ambience/types";
-import type { LifeAreaColorId, LifeAreaIconId } from "@/components/commons/LifeArea/types";
-import type { RoutineIconId } from "@/components/commons/Routine/types";
+import type { LifeAreaColorId } from "@/components/commons/LifeArea/types";
 import type { AlarmSoundId } from "@/utils/alarmSound/types";
 import type { CompletionSoundId } from "@/utils/completionSound/types";
 
@@ -48,11 +47,13 @@ export type Task = {
   breadcrumbs: Breadcrumb[];
 };
 
-// `searchTerm` matches any part of a title, ignoring case. `isInInbox` lists only tasks without an area, `lifeAreaId`
+// `searchTerm` matches any part of a title, ignoring case; `isSearchingDetails` has it match descriptions and
+// checklist items too. `isInInbox` lists only tasks without an area, `lifeAreaId`
 // only those in that area.
 export type TaskFilters = {
   isCompleted?: boolean;
   searchTerm?: string;
+  isSearchingDetails?: boolean;
   isInInbox?: boolean;
   lifeAreaId?: string;
 };
@@ -62,6 +63,11 @@ export type TaskListParams = TaskFilters & { page?: number };
 export type TaskListResponse = { tasks: Task[]; tasksCount: number; page: number; totalPages: number };
 
 export type TaskResponse = { task: Task };
+
+// The tasks left to do in an area of life, or in the Inbox (`lifeAreaId` is null). Those with none are left out.
+export type TaskCount = { lifeAreaId: string | null; tasksCount: number };
+
+export type TaskCountListResponse = { taskCounts: TaskCount[] };
 
 type TaskFields = Pick<Task, "title"> &
   Partial<
@@ -127,9 +133,11 @@ export type StartTimeLogPayload = {
   timerPreset?: number | null;
 } & ({ taskId: string; routineId?: never } | { routineId: string; taskId?: never });
 
-// A session that already happened, linked to a task or saved with only a title.
+// A session that already happened, linked to a task or a routine, or saved with only a title.
 export type LogTimePayload = { mode: "manual"; startedAt: string; completedAt: string } & (
-  { taskId: string; title?: never } | { title: string; taskId?: never }
+  | { taskId: string; title?: never; routineId?: never }
+  | { title: string; taskId?: never; routineId?: never }
+  | { routineId: string; taskId?: never; title?: never }
 );
 
 export type CreateTimeLogPayload = StartTimeLogPayload | LogTimePayload;
@@ -236,13 +244,15 @@ export type ConvertParkingLotItemPayload = { parkingLotItemId: string } & Partia
 export type CuriosityTimeResponse = { parkingLotItem: ParkingLotItem | null };
 
 // A part of life (Work, Health, …) that groups tasks. `defaultSound` is the background sound a session on one of its
-// tasks starts with; "none" keeps the one picked last.
+// tasks starts with; "none" is silence.
 export type LifeArea = {
   id: string;
   name: string;
   color: LifeAreaColorId;
-  icon: LifeAreaIconId;
+  emoji: string;
   defaultSound: SoundId;
+  // A deleted area keeps its completed tasks, so it's still shown on them.
+  isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -251,16 +261,23 @@ export type LifeAreaListResponse = { lifeAreas: LifeArea[] };
 
 export type LifeAreaResponse = { lifeArea: LifeArea };
 
-export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "icon" | "defaultSound">;
+export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "emoji" | "defaultSound">;
 
-export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> & Pick<LifeArea, "id">;
+// `position` is the index the area lands on among the undeleted ones.
+export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> &
+  Pick<LifeArea, "id"> & { position?: number };
+
+export type MoveLifeAreaPayload = Pick<LifeArea, "id"> & { position: number };
+
+// `tasksLifeAreaId` is the area its uncompleted tasks move to; without one, they go to the Inbox.
+export type DeleteLifeAreaPayload = Pick<LifeArea, "id"> & { tasksLifeAreaId?: string };
 
 // A timer started again and again (a shower, meditation). `reminderTime` ("HH:MM", local time) and `reminderDays`
 // (0 = Sunday … 6) set an optional reminder. The stats count its finished sessions.
 export type Routine = {
   id: string;
   title: string;
-  icon: RoutineIconId;
+  emoji: string;
   color: LifeAreaColorId;
   sound: SoundId;
   durationMinutes: number;
@@ -279,7 +296,7 @@ export type RoutineResponse = { routine: Routine };
 
 export type CreateRoutinePayload = Pick<
   Routine,
-  "title" | "icon" | "color" | "sound" | "durationMinutes" | "reminderTime" | "reminderDays"
+  "title" | "emoji" | "color" | "sound" | "durationMinutes" | "reminderTime" | "reminderDays"
 >;
 
 export type UpdateRoutinePayload = Partial<CreateRoutinePayload> & Pick<Routine, "id">;

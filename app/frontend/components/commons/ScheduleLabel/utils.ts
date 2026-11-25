@@ -15,8 +15,18 @@ import type { Schedule, ScheduleTone } from "./types";
 // Weeks start on Monday, as in the date picker.
 const WEEK_OPTIONS = { weekStartsOn: 1 } as const;
 
-// "5:30pm", "12:00pm".
-const formatTime = (date: Date) => format(date, "h:mmaaa");
+// "5:30" or, on the hour, "5".
+const formatClock = (date: Date) => format(date, date.getMinutes() === 0 ? "h" : "h:mm");
+
+// "5:30pm", "12pm".
+const formatTime = (date: Date) => `${formatClock(date)}${format(date, "aaa")}`;
+
+// "10 – 11am", "11am – 1pm": am or pm shows once when both times share it.
+const formatTimeRange = (start: Date, end: Date) => {
+  const isSameHalf = format(start, "aaa") === format(end, "aaa");
+
+  return `${isSameHalf ? formatClock(start) : formatTime(start)} – ${formatTime(end)}`;
+};
 
 // "Today", "Tomorrow", "Yesterday", "Fri, Nov 5" within this week, "12 Aug" this year, "12 Aug 2027" otherwise.
 const formatDay = (date: Date, now: Date) => {
@@ -32,9 +42,9 @@ const formatDay = (date: Date, now: Date) => {
 };
 
 const formatMoment = (date: Date, hasTime: boolean, now: Date) =>
-  hasTime ? `${formatDay(date, now)} ${formatTime(date)}` : formatDay(date, now);
+  hasTime ? `${formatDay(date, now)}, ${formatTime(date)}` : formatDay(date, now);
 
-// A human-readable date or duration for a scheduled task ("Today 5:30pm", "Tomorrow 1:00am – 2:00am",
+// A human-readable date or duration for a scheduled task ("Today, 5:30pm", "Tomorrow, 1 – 2am",
 // "12 Aug – 15 Aug"), or null when the task isn't scheduled.
 export const formatSchedule = ({ isDuration, isAllDay, startsAt, endsAt }: Schedule, now: number) => {
   if (!startsAt) return null;
@@ -50,7 +60,7 @@ export const formatSchedule = ({ isDuration, isAllDay, startsAt, endsAt }: Sched
       : `${formatDay(start, today)} – ${formatDay(end, today)}`;
   }
 
-  if (isSameDay(start, end)) return `${formatMoment(start, true, today)} – ${formatTime(end)}`;
+  if (isSameDay(start, end)) return `${formatDay(start, today)}, ${formatTimeRange(start, end)}`;
 
   return `${formatMoment(start, true, today)} – ${formatMoment(end, true, today)}`;
 };

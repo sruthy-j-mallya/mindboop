@@ -1,14 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ReactNode } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useController, useForm, useWatch } from "react-hook-form";
 
 import { SOUNDS } from "@/components/commons/Ambience/constants";
 import useSoundPreview from "@/components/commons/Ambience/useSoundPreview";
 import ChoiceField from "@/components/commons/ChoiceField";
+import EmojiField from "@/components/commons/EmojiField";
 import FormField from "@/components/commons/FormField";
 import { LIFE_AREA_COLORS } from "@/components/commons/LifeArea/constants";
-import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
-import { ROUTINE_ICONS } from "@/components/commons/Routine/constants";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -37,7 +36,7 @@ const COLOR_OPTIONS = LIFE_AREA_COLORS.map(({ id, label, value }) => ({
 
 const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({
   value: id,
-  label: id === "none" ? "Keep the current sound" : label,
+  label,
   content: <Icon className="size-4" />,
 }));
 
@@ -61,14 +60,9 @@ const RoutineForm = ({
     resolver: zodResolver(ROUTINE_VALIDATION_SCHEMA),
   });
   const handleSoundChange = useSoundPreview();
-  const colorStyle = toAreaColorStyle(useWatch({ control, name: "color" }));
+  const { field: emojiField } = useController({ control, name: "emoji" });
+  const color = useWatch({ control, name: "color" });
   const durationMinutes = useWatch({ control, name: "durationMinutes" });
-  const iconOptions = ROUTINE_ICONS.map(({ id, label, icon: Icon }) => ({
-    value: id,
-    label,
-    style: colorStyle,
-    content: <Icon className="size-4 text-(--area-color)" />,
-  }));
 
   const handlePreset = (minutes: number) => setValue("durationMinutes", minutes, { shouldValidate: true });
 
@@ -107,8 +101,8 @@ const RoutineForm = ({
           ))}
         </div>
       </div>
-      <ChoiceField legend="Icon" options={iconOptions} registration={register("icon")} />
       <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
+      <EmojiField color={color} error={errors.emoji?.message} field={emojiField} />
       <ChoiceField
         hint="Plays when you start the routine. Pick one to hear a few seconds."
         legend="Background sound"

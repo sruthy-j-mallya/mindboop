@@ -33,11 +33,11 @@ class RoutineTest < ActiveSupport::TestCase
     assert @routine.valid?
   end
 
-  def test_that_icon_color_and_sound_must_be_known
-    @routine.assign_attributes(icon: "rocket-ship", color: "plaid", sound: "thunder")
+  def test_that_color_emoji_and_sound_must_be_known
+    @routine.assign_attributes(emoji: "shower-head", color: "plaid", sound: "thunder")
 
     assert_not @routine.valid?
-    assert_equal %i[ icon color sound ], @routine.errors.attribute_names
+    assert_equal %i[ emoji color sound ], @routine.errors.attribute_names
   end
 
   def test_that_a_reminder_needs_a_valid_time_and_days

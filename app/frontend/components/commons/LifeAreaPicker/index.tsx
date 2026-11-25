@@ -1,56 +1,57 @@
-import { useState } from "react";
-
+import { cn } from "cn";
 import { Inbox } from "lucide-react";
 
 import LifeAreaBadge from "@/components/commons/LifeArea/Badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
+import { useAllLifeAreas, useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
+import useOpenState, { type OpenStateProps } from "@/hooks/useOpenState";
 
 import { INBOX_LABEL } from "./constants";
 import Option from "./Option";
 
-type LifeAreaPickerProps = {
+type LifeAreaPickerProps = OpenStateProps & {
   lifeAreaId: string | null;
   onSave: (lifeAreaId: string | null) => void;
-  // Just the Inbox icon while in no area, where room is tight (the Calendar's popover).
-  isCompact?: boolean;
+  // Styles its button.
+  className?: string;
 };
 
-// Picks the area of life a task is in, or the Inbox for none. Hidden until the user has an area.
-const LifeAreaPicker = ({ lifeAreaId, onSave, isCompact = false }: LifeAreaPickerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+// Picks the area of life a task is in, or the Inbox for none. Hidden until the user has an area. A deleted area still
+// shows on a task in it, but can't be picked.
+const LifeAreaPicker = ({ lifeAreaId, className, onSave, ...openState }: LifeAreaPickerProps) => {
+  const [isOpen, setIsOpen] = useOpenState(openState);
   const { data: lifeAreas = [] } = useLifeAreas();
-  const lifeArea = lifeAreas.find(({ id }) => id === lifeAreaId);
-  const isIconOnly = isCompact && !lifeArea;
+  const { data: allLifeAreas = [] } = useAllLifeAreas();
+  const lifeArea = allLifeAreas.find(({ id }) => id === lifeAreaId);
 
   const handlePick = (pickedId: string | null) => {
     setIsOpen(false);
     if (pickedId !== lifeAreaId) onSave(pickedId);
   };
 
-  if (lifeAreas.length === 0) return null;
+  if (lifeAreas.length === 0 && !lifeArea) return null;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           aria-label={`Area of life: ${lifeArea?.name ?? INBOX_LABEL}`}
-          className="text-muted-foreground"
-          size={isIconOnly ? "icon-sm" : "sm"}
+          className={cn("text-muted-foreground", className)}
+          size="sm"
           type="button"
           variant="ghost"
         >
           {lifeArea ? (
             <LifeAreaBadge
-              className="size-4 rounded [&_svg]:size-3"
+              className="size-4 rounded text-[0.625rem]"
               color={lifeArea.color}
-              icon={lifeArea.icon}
+              emoji={lifeArea.emoji}
             />
           ) : (
             <Inbox />
           )}
-          {!isIconOnly && (lifeArea?.name ?? INBOX_LABEL)}
+          {lifeArea?.name ?? INBOX_LABEL}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" aria-label="Areas of life" className="w-56 p-1">
@@ -61,10 +62,10 @@ const LifeAreaPicker = ({ lifeAreaId, onSave, isCompact = false }: LifeAreaPicke
             label={INBOX_LABEL}
             onPick={() => handlePick(null)}
           />
-          {lifeAreas.map(({ id, name, color, icon }) => (
+          {lifeAreas.map(({ id, name, color, emoji }) => (
             <Option
               key={id}
-              icon={<LifeAreaBadge className="size-5" color={color} icon={icon} />}
+              icon={<LifeAreaBadge className="size-5 text-xs" color={color} emoji={emoji} />}
               isSelected={id === lifeAreaId}
               label={name}
               onPick={() => handlePick(id)}

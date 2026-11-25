@@ -145,6 +145,21 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, response.parsed_body["tasks_count"]
   end
 
+  def test_that_index_can_search_descriptions_and_steps
+    @task.update!(title: "Errands", description: "Return the umbrella")
+    stepped = create(:task, user: @user, title: "Pack")
+    create(:checklist_item, task: stepped, title: "Fold the umbrella")
+    someone_elses = create(:task, description: "Another umbrella")
+    create(:checklist_item, task: someone_elses, title: "Open the umbrella")
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "umbrella", is_searching_details: true }
+
+    assert_response :ok
+    assert_equal [ stepped.id, @task.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal 2, response.parsed_body["tasks_count"]
+  end
+
   def test_that_index_treats_like_wildcards_in_the_search_as_text
     @task.update!(title: "Raise to 100%")
     create(:task, user: @user, title: "Raise to 1000")

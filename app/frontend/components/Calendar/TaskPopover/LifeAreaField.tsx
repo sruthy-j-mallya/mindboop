@@ -12,7 +12,7 @@ const LifeAreaField = ({ control }: LifeAreaFieldProps) => {
     field: { value, onChange },
   } = useController({ control, name: "lifeAreaId" });
 
-  return <LifeAreaPicker isCompact lifeAreaId={value} onSave={onChange} />;
+  return <LifeAreaPicker lifeAreaId={value} onSave={onChange} />;
 };
 
 export default LifeAreaField;

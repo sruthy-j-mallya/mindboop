@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import { Ellipsis, ListTodo, Trash2 } from "lucide-react";
+import { CalendarDays, Ellipsis, Hourglass, Inbox, ListTodo, Trash2 } from "lucide-react";
 
 import type { Task } from "@/apis/types";
 import { Button } from "@/components/ui/button";
@@ -11,38 +11,72 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 
 import DeleteTaskDialog from "./DeleteTaskDialog";
+import type { Detail } from "./types";
 
 type TaskActionsMenuProps = {
   task: Task;
+  canDelete?: boolean;
+  onAddDetail: (detail: Detail) => void;
   onAddStep: () => void;
   onDeleted?: () => void;
 };
 
-// The task's less frequent actions, behind one button so the header keeps room for the date, estimate and area. Adding
-// the first step is offered only while there are none; after that, Enter in a step adds the next. Deleting asks first.
-const TaskActionsMenu = ({ task, onAddStep, onDeleted }: TaskActionsMenuProps) => {
+// What the task doesn't have yet (a due date, estimate, area or steps) and deleting it, behind one button so the header
+// stays calm. Adding the first step is offered only while there are none; after that, Enter in a step adds the next.
+// Deleting asks first. Renders nothing when there's nothing to offer.
+const TaskActionsMenu = ({
+  task,
+  canDelete = true,
+  onAddDetail,
+  onAddStep,
+  onDeleted,
+}: TaskActionsMenuProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   // Set when "Add step" is picked, so the closing menu leaves focus in the new step row instead of on its trigger.
   const isAddingStep = useRef(false);
-  const hasSteps = task.checklistItems.length > 0;
+  // The detail picked. Its picker opens only once the menu is gone, so the closing menu can't take focus from it.
+  const detailToAdd = useRef<Detail | null>(null);
+  const { data: lifeAreas = [] } = useLifeAreas();
+  const canAddStep = task.checklistItems.length === 0;
+  const canAddSchedule = !task.startsAt;
+  const canAddEstimate = !task.estimatedMinutes;
+  const canAddLifeArea = !task.lifeAreaId && lifeAreas.length > 0;
+  const canAdd = canAddSchedule || canAddEstimate || canAddLifeArea || canAddStep;
 
   const handleAddStep = () => {
     isAddingStep.current = true;
     onAddStep();
   };
 
-  const handleCloseAutoFocus = (event: Event) => {
-    if (!isAddingStep.current) return;
+  const handleAddSchedule = () => {
+    detailToAdd.current = "schedule";
+  };
 
-    isAddingStep.current = false;
+  const handleAddEstimate = () => {
+    detailToAdd.current = "estimate";
+  };
+
+  const handleAddLifeArea = () => {
+    detailToAdd.current = "lifeArea";
+  };
+
+  const handleCloseAutoFocus = (event: Event) => {
+    if (!isAddingStep.current && !detailToAdd.current) return;
+
     event.preventDefault();
+    if (detailToAdd.current) onAddDetail(detailToAdd.current);
+    isAddingStep.current = false;
+    detailToAdd.current = null;
   };
 
   const handleDelete = () => setShowDeleteDialog(true);
 
   const handleDeleteDialogClose = () => setShowDeleteDialog(false);
+
+  if (!canAdd && !canDelete) return null;
 
   return (
     <>
@@ -59,19 +93,37 @@ const TaskActionsMenu = ({ task, onAddStep, onDeleted }: TaskActionsMenuProps) =
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-40" onCloseAutoFocus={handleCloseAutoFocus}>
-          {!hasSteps && (
-            <>
-              <DropdownMenuItem onSelect={handleAddStep}>
-                <ListTodo />
-                Add step
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
+          {canAddSchedule && (
+            <DropdownMenuItem onSelect={handleAddSchedule}>
+              <CalendarDays />
+              Add due date
+            </DropdownMenuItem>
           )}
-          <DropdownMenuItem variant="destructive" onSelect={handleDelete}>
-            <Trash2 />
-            Delete task
-          </DropdownMenuItem>
+          {canAddLifeArea && (
+            <DropdownMenuItem onSelect={handleAddLifeArea}>
+              <Inbox />
+              Move to area
+            </DropdownMenuItem>
+          )}
+          {canAddEstimate && (
+            <DropdownMenuItem onSelect={handleAddEstimate}>
+              <Hourglass />
+              Add estimate
+            </DropdownMenuItem>
+          )}
+          {canAddStep && (
+            <DropdownMenuItem onSelect={handleAddStep}>
+              <ListTodo />
+              Add step
+            </DropdownMenuItem>
+          )}
+          {canAdd && canDelete && <DropdownMenuSeparator />}
+          {canDelete && (
+            <DropdownMenuItem variant="destructive" onSelect={handleDelete}>
+              <Trash2 />
+              Delete task
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       {showDeleteDialog && (

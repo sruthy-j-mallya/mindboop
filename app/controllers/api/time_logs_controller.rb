@@ -3,7 +3,7 @@ module Api
     before_action :set_time_log, only: %i[ update destroy ]
 
     def create
-      @time_log = TimeLog.new(time_log_params.merge(user: Current.user, task: find_task, routine: find_routine))
+      @time_log = TimeLog.new(time_log_params.merge(user: Current.user, task: task, routine: routine))
       # A routine's session runs for the routine's duration unless told otherwise.
       @time_log.timer_preset ||= @time_log.routine.duration_minutes if @time_log.routine && @time_log.timer?
       authorize @time_log
@@ -34,14 +34,14 @@ module Api
 
       # A manual log can be saved with only a title, and a routine's session runs on the routine; every other log runs on
       # a task.
-      def find_task
+      def task
         return if params[:task_id].blank? && (params[:mode] == "manual" || params[:routine_id].present?)
 
         Task.kept.find(params[:task_id])
       end
 
       # Another user's routine reads as unknown (404), so an id gives nothing away.
-      def find_routine
+      def routine
         return if params[:routine_id].blank?
 
         Current.user.routines.kept.find(params[:routine_id])
