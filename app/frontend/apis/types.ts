@@ -47,11 +47,13 @@ export type Task = {
   breadcrumbs: Breadcrumb[];
 };
 
-// `searchTerm` matches any part of a title, ignoring case. `isInInbox` lists only tasks without an area, `lifeAreaId`
+// `searchTerm` matches any part of a title, ignoring case; `isSearchingDetails` has it match descriptions and
+// checklist items too. `isInInbox` lists only tasks without an area, `lifeAreaId`
 // only those in that area.
 export type TaskFilters = {
   isCompleted?: boolean;
   searchTerm?: string;
+  isSearchingDetails?: boolean;
   isInInbox?: boolean;
   lifeAreaId?: string;
 };

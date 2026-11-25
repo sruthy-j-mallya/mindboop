@@ -1,17 +1,12 @@
-import { useState } from "react";
-
 import { cn } from "cn";
 import { Outlet } from "react-router";
 
 import type { LifeArea } from "@/apis/types";
 import { Card, CardContent } from "@/components/ui/card";
-import useDebouncedValue from "@/hooks/useDebouncedValue";
 import useOpenTask from "@/hooks/useOpenTask";
 
 import AddTaskForm from "./AddTaskForm";
 import BoardHeading from "./BoardHeading";
-import { SEARCH_DEBOUNCE_DELAY } from "./constants";
-import SearchField from "./SearchField";
 import TaskList from "./TaskList";
 
 type BoardProps = { lifeArea?: LifeArea };
@@ -20,8 +15,6 @@ type BoardProps = { lifeArea?: LifeArea };
 // a time: the list, or the task once one is picked. On wide screens the page fits the screen (basis-0 keeps its content
 // from stretching it), the list and the pane scroll on their own, and the pane's description fills the pane.
 const Board = ({ lifeArea }: BoardProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebouncedValue(searchTerm.trim(), SEARCH_DEBOUNCE_DELAY);
   const isTaskSelected = !!useOpenTask().openTaskId;
 
   return (
@@ -32,9 +25,8 @@ const Board = ({ lifeArea }: BoardProps) => {
       >
         <BoardHeading id="task-board-heading" lifeArea={lifeArea} />
         <AddTaskForm lifeArea={lifeArea} />
-        <SearchField value={searchTerm} onChange={setSearchTerm} />
         <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
-          <TaskList lifeArea={lifeArea} searchTerm={debouncedSearchTerm} />
+          <TaskList lifeArea={lifeArea} />
         </div>
       </section>
       <Card className={cn("lg:overflow-y-auto", !isTaskSelected && "max-lg:hidden")}>

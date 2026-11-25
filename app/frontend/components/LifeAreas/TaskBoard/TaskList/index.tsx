@@ -1,4 +1,4 @@
-import { Inbox, SearchX } from "lucide-react";
+import { Inbox } from "lucide-react";
 
 import type { LifeArea } from "@/apis/types";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,12 @@ import { getTaskFilters } from "../utils";
 import EmptyList from "./EmptyList";
 import TaskRow from "./TaskRow";
 
-type TaskListProps = { lifeArea?: LifeArea; searchTerm: string };
+type TaskListProps = { lifeArea?: LifeArea };
 
-// The tasks still to do in the area (or the Inbox), soonest due first, then newest first; with a search, only those
-// whose title contains it.
-const TaskList = ({ lifeArea, searchTerm }: TaskListProps) => {
+// The tasks still to do in the area (or the Inbox), soonest due first, then newest first.
+const TaskList = ({ lifeArea }: TaskListProps) => {
   const { data, isPending, error, hasNextPage, fetchNextPage, isFetchingNextPage } = useInfiniteTasks(
-    getTaskFilters(lifeArea, searchTerm),
+    getTaskFilters(lifeArea),
   );
   const tasks = data?.pages.flatMap((page) => page.tasks) ?? [];
 
@@ -27,16 +26,6 @@ const TaskList = ({ lifeArea, searchTerm }: TaskListProps) => {
       <p className="text-sm text-destructive" role="alert">
         {error.message}
       </p>
-    );
-  }
-
-  if (tasks.length === 0 && searchTerm) {
-    return (
-      <EmptyList
-        hint="Try other words, or clear the search."
-        icon={SearchX}
-        title={`No tasks match “${searchTerm}”`}
-      />
     );
   }
 

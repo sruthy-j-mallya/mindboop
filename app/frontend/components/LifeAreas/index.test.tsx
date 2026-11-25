@@ -303,31 +303,6 @@ describe("LifeAreas", () => {
     expect(await screen.findByRole("heading", { name: "Inbox" })).toBeInTheDocument();
   });
 
-  it("searches the list by title", async () => {
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
-    const fetchTasks = vi
-      .spyOn(tasksApi, "fetchList")
-      .mockImplementation(({ searchTerm } = {}) =>
-        Promise.resolve(listOf(searchTerm ? [] : [buildTask({ title: "Call the bank" })])),
-      );
-    renderLifeAreas();
-
-    expect(await screen.findByRole("textbox", { name: "Call the bank" })).toBeInTheDocument();
-    await userEvent.type(screen.getByRole("searchbox", { name: "Search tasks" }), " dentist ");
-
-    expect(await screen.findByText("No tasks match “dentist”")).toBeInTheDocument();
-    expect(fetchTasks).toHaveBeenCalledWith({
-      isCompleted: false,
-      isInInbox: true,
-      searchTerm: "dentist",
-      page: 1,
-    });
-
-    await userEvent.type(screen.getByRole("searchbox", { name: "Search tasks" }), "{Escape}");
-
-    expect(await screen.findByRole("textbox", { name: "Call the bank" })).toBeInTheDocument();
-  });
-
   it("has a handle to reorder each area, but not the Inbox", async () => {
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
       lifeAreas: [buildLifeArea(), buildLifeArea({ name: "Health" })],

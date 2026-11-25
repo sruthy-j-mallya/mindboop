@@ -19,6 +19,31 @@ class Tasks::FilterServiceTest < ActiveSupport::TestCase
     assert_equal [ @open_task ], filter(search_term: "  QUARTERLY ").to_a
   end
 
+  def test_that_descriptions_and_steps_are_searched_only_when_asked_for
+    described = create(:task, title: "Errands", description: "Pick up the **Umbrella**")
+    stepped = create(:task, title: "Pack")
+    2.times { create(:checklist_item, task: stepped, title: "Fold the umbrella") }
+    titled = create(:task, title: "Buy an umbrella")
+
+    assert_equal [ titled ], filter(search_term: "umbrella").to_a
+    assert_equal [ titled ], filter(search_term: "umbrella", is_searching_details: "false").to_a
+    assert_equal [ described, stepped, titled ].sort_by(&:id),
+      filter(search_term: " UMBRELLA ", is_searching_details: "true").sort_by(&:id)
+  end
+
+  def test_that_deleted_steps_are_not_searched
+    create(:checklist_item, task: @open_task, title: "Find the umbrella").discard!
+
+    assert_empty filter(search_term: "umbrella", is_searching_details: "true").to_a
+  end
+
+  def test_that_searching_details_combines_with_the_other_filters
+    @completed_task.update!(description: "Bring the umbrella")
+    create(:checklist_item, task: @completed_task, title: "Dry the umbrella")
+
+    assert_empty filter(search_term: "umbrella", is_searching_details: "true", is_completed: "false").to_a
+  end
+
   def test_that_like_wildcards_in_the_search_term_are_matched_literally
     assert_empty filter(search_term: "%").to_a
   end

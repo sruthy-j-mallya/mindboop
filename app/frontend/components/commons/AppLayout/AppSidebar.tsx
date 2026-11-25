@@ -1,4 +1,4 @@
-import { Boxes, CalendarDays, LogOut, Settings, Timer, Zap } from "lucide-react";
+import { Boxes, CalendarDays, LogOut, Search, Settings, Timer, Zap } from "lucide-react";
 import { Link, useLocation, useMatch } from "react-router";
 
 import {
@@ -18,7 +18,9 @@ import routes from "@/routes";
 
 import ParkingLotIcon from "./ParkingLotIcon";
 
-const AppSidebar = () => {
+type AppSidebarProps = { onSearchOpen: () => void };
+
+const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();
   const { mutate: logout, isPending } = useLogout();
@@ -27,6 +29,12 @@ const AppSidebar = () => {
 
   const handleLogout = () => logout();
   const handleNavigate = () => setOpenMobile(false);
+
+  const handleSearch = () => {
+    setOpenMobile(false);
+    onSearchOpen();
+  };
+
   // The areas of life and the Inbox share one page, with a sidebar of their own to switch between them.
   const isInboxActive = !!useMatch({ path: routes.inbox.index, end: false });
   const isLifeAreaActive = !!useMatch({ path: routes.lifeAreas.index, end: false });
@@ -37,6 +45,12 @@ const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton aria-haspopup="dialog" tooltip="Search" onClick={handleSearch}>
+                  <Search />
+                  <span>Search</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === routes.root} tooltip="Quick start">
                   <Link to={routes.root} onClick={handleNavigate}>

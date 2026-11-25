@@ -6,7 +6,7 @@ import routes from "@/routes";
 import Board from "./Board";
 
 // The Inbox's tasks, or an area's. An area that's gone (deleted, or never there) leads back to the Inbox. Keyed by the
-// list, so a search doesn't carry over to the next area picked.
+// list, so a half-typed task doesn't carry over to the next area picked.
 const TaskBoard = () => {
   const { lifeAreaId } = useParams();
   const { data: lifeAreas = [], isPending } = useLifeAreas({ enabled: !!lifeAreaId });

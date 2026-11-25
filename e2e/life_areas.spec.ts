@@ -56,10 +56,18 @@ test("add areas from the suggestions, move a task into it, search and edit it", 
   await expect(page.getByRole("textbox", { name: "Plan the sprint" })).toBeVisible();
   await addTask(page, "Review the PRs");
 
-  await page.getByRole("searchbox", { name: "Search tasks" }).fill("review");
-  await expect(page.getByRole("textbox", { name: "Plan the sprint" })).toBeHidden();
-  await expect(page.getByRole("textbox", { name: "Review the PRs" })).toBeVisible();
-  await page.getByRole("searchbox", { name: "Search tasks" }).fill("");
+  // The search in the sidebar finds tasks from every list, on any page.
+  await page.getByRole("link", { name: "Calendar" }).click();
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  const taskSearch = page.getByRole("combobox", { name: "Search tasks" });
+  await taskSearch.fill("plants");
+  await expect(page.getByRole("option", { name: /Water the plants/ })).toBeVisible();
+  await taskSearch.fill("review");
+  await expect(page.getByRole("option")).toHaveCount(1);
+  await page.getByRole("option", { name: /Review the PRs/ }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page).toHaveURL(/\/areas\/[^/]+\/[^/]+$/);
+  await expect(page.getByRole("heading", { name: "Work" })).toBeVisible();
 
   await work.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Edit" }).click();

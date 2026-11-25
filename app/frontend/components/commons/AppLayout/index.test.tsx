@@ -123,6 +123,15 @@ describe("AppLayout", () => {
     expect(screen.getAllByRole("link", { name: "Settings" })).toHaveLength(1);
   });
 
+  it("opens the search from the sidebar", async () => {
+    renderWithProviders(<AppLayout />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Search" }));
+
+    expect(screen.getByRole("dialog", { name: "Search tasks" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Search tasks" })).toHaveFocus();
+  });
+
   it("counts the parked thoughts over the Parking lot icon", async () => {
     vi.mocked(parkingLotItemsApi.fetchList).mockResolvedValue(listWithCount(3));
     renderWithProviders(<AppLayout />);
