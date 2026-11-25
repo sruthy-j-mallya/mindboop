@@ -152,7 +152,7 @@ describe("Home", () => {
       "href",
       `/areas/${LIFE_AREA_ID}/a`,
     );
-    expect(agenda.getByText("Today")).toBeVisible();
+    expect(agenda.getByText("All day")).toBeVisible();
     expect(agenda.getByRole("link", { name: "Today's agenda" })).toHaveAttribute("href", routes.calendar);
 
     const overdue = card("Overdue");

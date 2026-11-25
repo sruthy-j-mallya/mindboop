@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Schedule } from "./types";
-import { formatSchedule, getScheduleTone } from "./utils";
+import { formatSchedule, formatTodaySchedule, getScheduleTone } from "./utils";
 
 // Thursday 12 Nov 2026, 10:00 local time; its week runs from Monday 9 Nov to Sunday 15 Nov.
 const NOW = new Date(2026, 10, 12, 10, 0).getTime();
@@ -60,6 +60,18 @@ describe("formatSchedule", () => {
     );
     expect(formatSchedule(forDuration(at(10, 20), at(10, 22), true), NOW)).toBe("20 Nov – 22 Nov");
     expect(formatSchedule(forDuration(at(10, 20), at(10, 20), true), NOW)).toBe("20 Nov");
+  });
+});
+
+describe("formatTodaySchedule", () => {
+  it("leaves the day out for a schedule within today", () => {
+    expect(formatTodaySchedule(onDate(at(10, 12)), NOW)).toBe("All day");
+    expect(formatTodaySchedule(onDate(at(10, 12, 17, 30), false), NOW)).toBe("5:30pm");
+    expect(formatTodaySchedule(forDuration(at(10, 12, 13), at(10, 12, 14)), NOW)).toBe("1 – 2pm");
+  });
+
+  it("keeps the days of one that reaches past today", () => {
+    expect(formatTodaySchedule(forDuration(at(10, 11), at(10, 13), true), NOW)).toBe("Yesterday – Tomorrow");
   });
 });
 

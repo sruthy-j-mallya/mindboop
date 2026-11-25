@@ -42,7 +42,7 @@ test("move an overdue task to today, then complete it", async ({ page }) => {
 
   await expect(overdue.getByText("Nothing overdue.")).toBeVisible();
   await expect(agenda.getByRole("link", { name: "Renew passport" })).toBeVisible();
-  await expect(agenda.getByText("Today", { exact: true })).toBeVisible();
+  await expect(agenda.getByText("All day", { exact: true })).toBeVisible();
 
   await agenda.getByRole("checkbox", { name: "Complete Renew passport" }).click();
 

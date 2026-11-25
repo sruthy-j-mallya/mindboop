@@ -13,7 +13,7 @@ const Today = ({ tasks }: TaskListProps) => (
     titlePath={routes.calendar}
     renderTask={(task) => (
       <TaskRow key={task.id} task={task}>
-        <ScheduleLabel className="text-xs" schedule={task} />
+        <ScheduleLabel isDayHidden className="text-xs" schedule={task} />
       </TaskRow>
     )}
   />

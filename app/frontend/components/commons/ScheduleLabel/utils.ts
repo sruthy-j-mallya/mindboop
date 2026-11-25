@@ -65,6 +65,20 @@ export const formatSchedule = ({ isDuration, isAllDay, startsAt, endsAt }: Sched
   return `${formatMoment(start, true, today)} – ${formatMoment(end, true, today)}`;
 };
 
+// A schedule in a list of today's tasks: only the time, or "All day". One that reaches into other days keeps them.
+export const formatTodaySchedule = (schedule: Schedule, now: number) => {
+  const { isDuration, isAllDay, startsAt, endsAt } = schedule;
+  if (!startsAt) return null;
+
+  const start = parseISO(startsAt);
+  const end = isDuration && endsAt ? parseISO(endsAt) : start;
+  if (!isSameDay(start, now) || !isSameDay(end, now)) return formatSchedule(schedule, now);
+
+  if (isAllDay) return "All day";
+
+  return isDuration ? formatTimeRange(start, end) : formatTime(start);
+};
+
 export const getScheduleTone = (
   { isDuration, isAllDay, startsAt, endsAt }: Schedule,
   now: number,

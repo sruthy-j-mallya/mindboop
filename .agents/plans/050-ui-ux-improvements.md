@@ -39,7 +39,7 @@ Tick an issue in the commit that fixes it.
 - [ ] 11. ⌘K opens search (the editor keeps it for links), plus a quick capture shortcut
 - [ ] 12. Name the page in the browser tab, with the time left during a session
 - [ ] 13. Agenda rows: Start button, area badge and estimate
-- [ ] 14. Agenda rows: only the time, or "All day", instead of repeating "Today"
+- [x] 14. Agenda rows: only the time, or "All day", instead of repeating "Today"
 - [ ] 15. Overdue: undo for moving a task, plus Tomorrow and Pick a date (bulk moves stay out of scope, as in 049)
 - [ ] 16. Show today's routines on Home (out of scope in 049; needs a decision)
 - [ ] 17. Home's running session card names the task and shows the time left
