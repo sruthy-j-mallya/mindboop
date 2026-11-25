@@ -1,9 +1,10 @@
 import { z } from "zod";
 
-import { TASK_DESCRIPTION_MAX_LENGTH } from "@/constants";
+import { DISCARD_BELOW_MINUTES, TASK_DESCRIPTION_MAX_LENGTH } from "@/constants";
 
 export const TIMER_PRESETS = [5, 10, 15];
-export const CUSTOM_TIMER_MIN = 20;
+// A shorter timer could only ever be discarded.
+export const CUSTOM_TIMER_MIN = DISCARD_BELOW_MINUTES;
 export const CUSTOM_TIMER_MAX = 240; // 4 hours
 
 export const PICKED_ESTIMATE_CLASS_NAME =

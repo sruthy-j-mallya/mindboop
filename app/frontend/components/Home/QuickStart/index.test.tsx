@@ -456,7 +456,7 @@ describe("QuickStart", () => {
     expect(screen.getByRole("button", { name: "5 min" })).toHaveAttribute("aria-pressed", "false");
   });
 
-  it.each(["19", "241", "25.5"])("rejects %s custom minutes", async (minutes) => {
+  it.each(["1", "241", "25.5"])("rejects %s custom minutes", async (minutes) => {
     renderWithProviders(<QuickStart />);
     await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), minutes);
     await beginSession();
@@ -464,7 +464,7 @@ describe("QuickStart", () => {
     expect(await screen.findByText(CUSTOM_ERROR)).toBeVisible();
   });
 
-  it.each(["20", "240"])("accepts %s custom minutes", async (minutes) => {
+  it.each(["2", "12", "18", "240"])("accepts %s custom minutes", async (minutes) => {
     renderWithProviders(<QuickStart />);
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
     await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), minutes);
@@ -495,7 +495,7 @@ describe("QuickStart", () => {
 
   it("clears a custom minutes error when a preset is picked", async () => {
     renderWithProviders(<QuickStart />);
-    await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), "19");
+    await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), "1");
     await beginSession();
     await screen.findByText(CUSTOM_ERROR);
 
