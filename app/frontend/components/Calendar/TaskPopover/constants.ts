@@ -6,6 +6,8 @@ export const TASK_VALIDATION_SCHEMA = z.object({
   title: z.string().trim().min(1, "Say what you want to get done"),
   description: DESCRIPTION_SCHEMA,
   estimatedMinutes: z.number().nullable(),
+  // Without an area of life, the task goes in the Inbox.
+  lifeAreaId: z.string().nullable(),
   schedule: z.object({
     isDuration: z.boolean(),
     isAllDay: z.boolean(),
@@ -22,6 +24,7 @@ export const INITIAL_FORM_VALUES: Omit<TaskFormValues, "schedule"> = {
   title: "",
   description: "",
   estimatedMinutes: null,
+  lifeAreaId: null,
   steps: [],
 };
 

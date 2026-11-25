@@ -1,5 +1,7 @@
 import type { Day } from "date-fns";
 
+import type { SoundId } from "@/components/commons/Ambience/types";
+import type { LifeAreaColorId } from "@/components/commons/LifeArea/types";
 import type { AlarmSoundId } from "@/utils/alarmSound/types";
 import type { CompletionSoundId } from "@/utils/completionSound/types";
 
@@ -37,14 +39,24 @@ export type Task = {
   isCompleted: boolean;
   startsAt: string | null;
   endsAt: string | null;
+  // The area of life it's in; without one, it's in the Inbox.
+  lifeAreaId: string | null;
   createdAt: string;
   updatedAt: string;
   checklistItems: ChecklistItem[];
   breadcrumbs: Breadcrumb[];
 };
 
-// `searchTerm` matches any part of a title, ignoring case.
-export type TaskFilters = { isCompleted?: boolean; searchTerm?: string };
+// `searchTerm` matches any part of a title, ignoring case; `isSearchingDetails` has it match descriptions and
+// checklist items too. `isInInbox` lists only tasks without an area, `lifeAreaId`
+// only those in that area.
+export type TaskFilters = {
+  isCompleted?: boolean;
+  searchTerm?: string;
+  isSearchingDetails?: boolean;
+  isInInbox?: boolean;
+  lifeAreaId?: string;
+};
 
 export type TaskListParams = TaskFilters & { page?: number };
 
@@ -52,11 +64,23 @@ export type TaskListResponse = { tasks: Task[]; tasksCount: number; page: number
 
 export type TaskResponse = { task: Task };
 
+// The tasks left to do in an area of life, or in the Inbox (`lifeAreaId` is null). Those with none are left out.
+export type TaskCount = { lifeAreaId: string | null; tasksCount: number };
+
+export type TaskCountListResponse = { taskCounts: TaskCount[] };
+
 type TaskFields = Pick<Task, "title"> &
   Partial<
     Pick<
       Task,
-      "description" | "estimatedMinutes" | "isDuration" | "isAllDay" | "isCompleted" | "startsAt" | "endsAt"
+      | "description"
+      | "estimatedMinutes"
+      | "isDuration"
+      | "isAllDay"
+      | "isCompleted"
+      | "startsAt"
+      | "endsAt"
+      | "lifeAreaId"
     >
   >;
 
@@ -80,6 +104,8 @@ export type TimeLog = {
   taskId: string | null;
   title: string | null;
   taskTitle: string | null;
+  // Its task's area of life, which the Calendar colours it by.
+  lifeAreaId: string | null;
   // The work still counts once its task is deleted, but the task can't be opened.
   isTaskDeleted: boolean;
   mode: TimeLogMode;
@@ -211,3 +237,32 @@ export type ConvertParkingLotItemPayload = { parkingLotItemId: string } & Partia
 
 // The user's running curiosity time, if any.
 export type CuriosityTimeResponse = { parkingLotItem: ParkingLotItem | null };
+
+// A part of life (Work, Health, …) that groups tasks. `defaultSound` is the background sound a session on one of its
+// tasks starts with; "none" is silence.
+export type LifeArea = {
+  id: string;
+  name: string;
+  color: LifeAreaColorId;
+  emoji: string;
+  defaultSound: SoundId;
+  // A deleted area keeps its completed tasks, so it's still shown on them.
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LifeAreaListResponse = { lifeAreas: LifeArea[] };
+
+export type LifeAreaResponse = { lifeArea: LifeArea };
+
+export type CreateLifeAreaPayload = Pick<LifeArea, "name" | "color" | "emoji" | "defaultSound">;
+
+// `position` is the index the area lands on among the undeleted ones.
+export type UpdateLifeAreaPayload = Partial<CreateLifeAreaPayload> &
+  Pick<LifeArea, "id"> & { position?: number };
+
+export type MoveLifeAreaPayload = Pick<LifeArea, "id"> & { position: number };
+
+// `tasksLifeAreaId` is the area its uncompleted tasks move to; without one, they go to the Inbox.
+export type DeleteLifeAreaPayload = Pick<LifeArea, "id"> & { tasksLifeAreaId?: string };

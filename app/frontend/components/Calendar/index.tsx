@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
 import { useCalendarEvents } from "@/hooks/reactQuery/useCalendarEventsApi";
+import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
 import { writeStorage } from "@/utils/storage";
@@ -17,7 +18,6 @@ import { writeStorage } from "@/utils/storage";
 import {
   CALENDAR_VIEWS,
   DAY_COUNT_STORAGE_KEY,
-  EVENT_CLASS_NAMES,
   EVENT_KINDS,
   NOW_REFRESH_INTERVAL,
   SCROLL_BACK_HOURS,
@@ -39,6 +39,7 @@ import useWheelPaging from "./useWheelPaging";
 import {
   eventToAnchorRect,
   getCurrentSlotStart,
+  getEventProps,
   getLocalizer,
   getLogWindowStart,
   getSelectionIntent,
@@ -48,6 +49,7 @@ import {
   shiftDate,
   toAnchorRect,
   toCalendarEvents,
+  toLifeAreaColors,
 } from "./utils";
 import YearView from "./YearView";
 
@@ -60,11 +62,7 @@ const VIEWS = {
   [CALENDAR_VIEWS.YEAR]: YearView,
 } as unknown as ViewsProps<CalendarEvent>;
 
-const getEventProps = ({ kind }: CalendarEvent) => ({
-  className: kind === EVENT_KINDS.TASK ? EVENT_CLASS_NAMES.TASK : EVENT_CLASS_NAMES.TIME_LOG,
-});
-
-// Past time logs and upcoming tasks on one grid. Clicking or dragging across empty time adds a task from now on, or
+// Past time logs and upcoming tasks on one grid, in their area of life's colour. Clicking or dragging across empty time adds a task from now on, or
 // logs time in the last 24 hours; tasks open for editing on click, time logs show their task read only (and can be
 // deleted), and both move and resize by dragging. Scrolling sideways pages through dates, as does scrolling up and down
 // in the month view. Weeks start on the day picked in Settings, so the grid waits for that before showing.
@@ -87,6 +85,8 @@ const Calendar = () => {
   const { data: { tasks = [], timeLogs = [] } = {}, error } = useCalendarEvents(params, {
     enabled: !isPreferencePending,
   });
+  const { data: lifeAreas } = useAllLifeAreas();
+  const lifeAreaColors = useMemo(() => toLifeAreaColors(lifeAreas ?? []), [lifeAreas]);
   const { movedTimes, handleEventDrop, handleEventResize } = useEventMoves(view === CALENDAR_VIEWS.MONTH);
   const events = useMemo(
     () => toCalendarEvents({ tasks, timeLogs }, now, movedTimes),
@@ -118,6 +118,8 @@ const Calendar = () => {
   useWheelPaging(calendarRef, view, handleWheelStep);
 
   const handleClosePopover = () => setPopover(null);
+
+  const getAreaEventProps = (event: CalendarEvent) => getEventProps(event, lifeAreaColors);
 
   // The drag-and-drop addon still reports a click on an event as a slot click too, a moment after the event's own
   // click opened its popover. Popovers are modal, so a slot picked while one is open is never meant.
@@ -168,7 +170,7 @@ const Calendar = () => {
             date={date}
             dayPropGetter={getDayProps}
             draggableAccessor="isEditable"
-            eventPropGetter={getEventProps}
+            eventPropGetter={getAreaEventProps}
             events={events}
             length={dayCount}
             localizer={localizer}

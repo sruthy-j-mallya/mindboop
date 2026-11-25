@@ -209,3 +209,14 @@
     }
   }
 }
+
+/*
+ * An area of life's colour as a soft tint: set `--area-color` (an inline style) on the element. The text mixes the colour
+ * with the foreground, so it stays readable on the light and the dark theme alike.
+ */
+@layer components {
+  .area-tint {
+    background: color-mix(in oklab, var(--area-color) 14%, transparent);
+    color: color-mix(in oklab, var(--area-color) 70%, var(--foreground));
+  }
+}

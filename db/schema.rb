@@ -56,6 +56,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
     t.index ["task_id", "position"], name: "index_checklist_items_on_task_id_and_position"
   end
 
+  create_table "life_areas", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "name", null: false
+    t.string "color", null: false
+    t.string "emoji", null: false
+    t.string "default_sound", default: "none", null: false
+    t.integer "position", null: false
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "user_id, lower((name)::text)", name: "index_life_areas_on_user_id_and_lower_name", unique: true, where: "(discarded_at IS NULL)"
+    t.index ["discarded_at"], name: "index_life_areas_on_discarded_at"
+    t.index ["user_id", "position"], name: "index_life_areas_on_user_id_and_position"
+  end
+
   create_table "parking_lot_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
     t.uuid "task_id"
@@ -246,8 +261,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
     t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "life_area_id"
     t.index ["discarded_at"], name: "index_tasks_on_discarded_at"
     t.index ["is_completed"], name: "index_tasks_on_is_completed"
+    t.index ["life_area_id"], name: "index_tasks_on_life_area_id"
     t.index ["user_id"], name: "index_tasks_on_user_id"
   end
 
@@ -296,6 +313,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
   add_foreign_key "breadcrumbs", "tasks"
   add_foreign_key "breaks", "time_logs"
   add_foreign_key "checklist_items", "tasks", on_delete: :cascade
+  add_foreign_key "life_areas", "users"
   add_foreign_key "parking_lot_items", "tasks", on_delete: :nullify
   add_foreign_key "parking_lot_items", "time_logs", on_delete: :nullify
   add_foreign_key "parking_lot_items", "users"
@@ -308,6 +326,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "tasks", "life_areas", on_delete: :nullify
   add_foreign_key "tasks", "users"
   add_foreign_key "time_logs", "tasks"
   add_foreign_key "time_logs", "users"

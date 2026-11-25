@@ -40,6 +40,7 @@ export const MAX_VOLUME = 100;
 
 export const SOUND_STORAGE_KEY = "ambience.sound";
 export const VOLUME_STORAGE_KEY = "ambience.volume";
+export const LIFE_AREA_SOUND_STORAGE_KEY = "ambience.lifeAreaSoundTimeLogId";
 
 // How long a sound takes to fade in or out, so starting, stopping and switching never click.
 export const FADE_SECONDS = 0.6;

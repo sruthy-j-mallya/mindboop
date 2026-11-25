@@ -4,8 +4,9 @@ class Task < ApplicationRecord
   MAX_DESCRIPTION_LENGTH = 10_000
   MAX_ESTIMATED_MINUTES = 24 * 60
 
-  # Soonest due first, undated tasks last; ties go to the oldest task.
-  scope :by_due_date, -> { order(arel_table[:starts_at].asc.nulls_last, :created_at, :id) }
+  # Soonest due first, undated tasks last; ties go to the newest task. id breaks created_at ties, so a task can't repeat
+  # or go missing across pages.
+  scope :by_due_date, -> { order(arel_table[:starts_at].asc.nulls_last, created_at: :desc, id: :desc) }
   # Scheduled tasks that overlap `from...to`. A task with only a date reaches a day past it, which covers the estimate the
   # Calendar draws it with.
   scope :scheduled_between, ->(from, to) {
@@ -16,6 +17,8 @@ class Task < ApplicationRecord
   normalizes :description, with: ->(description) { description.strip.presence }
 
   belongs_to :user
+  # Without an area, the task is in the Inbox.
+  belongs_to :life_area, optional: true
   # Discarded items stay hidden. The database deletes them with their task (on_delete: :cascade).
   has_many :checklist_items, -> { kept.order(:position) }, inverse_of: :task
   has_many :time_logs, dependent: :destroy
@@ -38,10 +41,28 @@ class Task < ApplicationRecord
   validates :ends_at, presence: true, if: :is_duration
   validates :ends_at, absence: true, unless: :is_duration
   validates :ends_at, comparison: { greater_than_or_equal_to: :starts_at }, if: -> { starts_at? && ends_at? }
+  validate :life_area_belongs_to_user, if: :life_area_id?
+  validate :life_area_is_not_deleted, if: -> { life_area_id? && life_area_id_changed? }
 
+  before_save :return_to_inbox, if: -> { undiscarded? && !is_completed && life_area&.discarded? }
   before_discard :stop_running_session
 
   private
+    # An unknown area and another user's read the same, so an id gives nothing away.
+    def life_area_belongs_to_user
+      errors.add(:life_area, "must exist") if life_area&.user_id != user_id
+    end
+
+    # Reads like an unknown area: a deleted one takes no more tasks.
+    def life_area_is_not_deleted
+      errors.add(:life_area, "must exist") if life_area&.discarded? && errors[:life_area].empty?
+    end
+
+    # A task reopened or restored after its area was deleted has no list to go back to.
+    def return_to_inbox
+      self.life_area = nil
+    end
+
     # Work done on a task still counts once it's deleted, but no more can be done on it, so a running session ends here.
     # Restoring the task doesn't restart it.
     def stop_running_session

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 
 import type { TaskFormValues } from "./constants";
 import EstimateField from "./EstimateField";
+import LifeAreaField from "./LifeAreaField";
 import ScheduleField from "./ScheduleField";
 
 type TaskFormProps = {
@@ -21,8 +22,8 @@ type TaskFormProps = {
   onSubmit: () => void;
 };
 
-// A new task's form, laid out like the Inbox pane: the schedule and estimate above the title, then the steps and the
-// description. Saved only once the popover is left, since there's no task to save to until then.
+// A new task's form, laid out like a task's details: the title, then the schedule, area of life and estimate, the steps and the
+// description. All of them show from the start, as setting them is what the form is for. Saved only once the popover is left, since there's no task to save to until then.
 const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, onSubmit }: TaskFormProps) => {
   // The schedule and estimate pickers have forms of their own, whose submits bubble up here through their portals.
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -33,13 +34,6 @@ const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, on
   return (
     <form noValidate className="flex flex-col gap-4" onSubmit={handleSubmit}>
       <header className="flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="-ml-2 flex flex-wrap items-start gap-1">
-            <ScheduleField control={control} />
-            <EstimateField control={control} />
-          </div>
-          {showAddStep && <AddStepButton onClick={onAddStep} />}
-        </div>
         <Input
           autoFocus
           aria-describedby={errors.title ? "calendar-task-title-error" : undefined}
@@ -55,6 +49,14 @@ const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, on
             {errors.title.message}
           </p>
         )}
+        <div className="flex items-start justify-between gap-2">
+          <div className="-ml-2 flex flex-wrap items-start gap-1">
+            <ScheduleField control={control} />
+            <LifeAreaField control={control} />
+            <EstimateField control={control} />
+          </div>
+          {showAddStep && <AddStepButton onClick={onAddStep} />}
+        </div>
       </header>
       {steps}
       <div className="flex min-h-32 flex-col gap-2">

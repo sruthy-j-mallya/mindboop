@@ -229,6 +229,9 @@ importers:
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
+      frimousse:
+        specifier: 0.4.0
+        version: 0.4.0(react@19.3.1)(typescript@6.0.3)
       highlight.js:
         specifier: ^11.11.2
         version: 11.11.2
@@ -2343,6 +2346,15 @@ packages:
   form-data@4.0.6:
     resolution: {integrity: sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ==}
     engines: {node: '>= 6'}
+
+  frimousse@0.4.0:
+    resolution: {integrity: sha512-wA/1Xt9UTk51wYNpy+EvHKPUA4jdm4NuEFzSNNZxqT0Nxrj4RFwYByjRMuaq4qSLOco/ikDCpLKesB8W1w2q+Q==}
+    peerDependencies:
+      react: ^18 || ^19
+      typescript: '>=5.1.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -5413,6 +5425,12 @@ snapshots:
       es-set-tostringtag: 2.1.0
       hasown: 2.0.4
       mime-types: 2.1.35
+
+  frimousse@0.4.0(react@19.3.1)(typescript@6.0.3):
+    dependencies:
+      react: 19.3.1
+    optionalDependencies:
+      typescript: 6.0.3
 
   fsevents@2.3.3:
     optional: true

@@ -28,8 +28,8 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.parsed_body["tasks_count"]
   end
 
-  def test_that_index_paginates_the_tasks_oldest_first
-    tasks = [ @task, *create_list(:task, Pagy::DEFAULT[:limit], user: @user) ]
+  def test_that_index_paginates_the_tasks_newest_first
+    tasks = [ @task, *create_list(:task, Pagy::DEFAULT[:limit], user: @user) ].reverse
     sign_in @user
 
     get api_tasks_path
@@ -46,7 +46,7 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, response.parsed_body["page"]
   end
 
-  def test_that_index_orders_tasks_by_due_date_then_oldest_first
+  def test_that_index_orders_tasks_by_due_date_then_newest_first
     later = create(:task, user: @user, starts_at: 2.days.from_now)
     sooner = create(:task, user: @user, starts_at: 1.day.from_now)
     undated = create(:task, user: @user)
@@ -55,7 +55,7 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     get api_tasks_path
 
     assert_response :ok
-    assert_equal [ sooner.id, later.id, @task.id, undated.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal [ sooner.id, later.id, undated.id, @task.id ], response.parsed_body["tasks"].pluck("id")
   end
 
   def test_that_index_returns_no_tasks_for_a_page_past_the_end
@@ -113,7 +113,22 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
 
     get api_tasks_path
 
-    assert_equal [ @task.id, completed_task.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal [ completed_task.id, @task.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
+  def test_that_index_can_list_the_inbox_or_one_area
+    life_area = create(:life_area, user: @user)
+    task_in_area = create(:task, user: @user, life_area:)
+    sign_in @user
+
+    get api_tasks_path, params: { is_in_inbox: true }
+
+    assert_equal [ @task.id ], response.parsed_body["tasks"].pluck("id")
+
+    get api_tasks_path, params: { life_area_id: life_area.id }
+
+    assert_equal [ task_in_area.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal life_area.id, response.parsed_body["tasks"].first["life_area_id"]
   end
 
   def test_that_index_can_search_tasks_by_title
@@ -126,7 +141,22 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     get api_tasks_path, params: { search_term: "  draft " }
 
     assert_response :ok
-    assert_equal [ @task.id, other_match.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal [ other_match.id, @task.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal 2, response.parsed_body["tasks_count"]
+  end
+
+  def test_that_index_can_search_descriptions_and_steps
+    @task.update!(title: "Errands", description: "Return the umbrella")
+    stepped = create(:task, user: @user, title: "Pack")
+    create(:checklist_item, task: stepped, title: "Fold the umbrella")
+    someone_elses = create(:task, description: "Another umbrella")
+    create(:checklist_item, task: someone_elses, title: "Open the umbrella")
+    sign_in @user
+
+    get api_tasks_path, params: { search_term: "umbrella", is_searching_details: true }
+
+    assert_response :ok
+    assert_equal [ stepped.id, @task.id ], response.parsed_body["tasks"].pluck("id")
     assert_equal 2, response.parsed_body["tasks_count"]
   end
 
@@ -332,6 +362,41 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     assert_equal @user.id, Task.find(response.parsed_body.dig("task", "id")).user_id
+  end
+
+  def test_that_user_can_create_a_task_in_an_area
+    life_area = create(:life_area, user: @user)
+    sign_in @user
+
+    post api_tasks_path, params: { title: @title, life_area_id: life_area.id }, as: :json
+
+    assert_response :created
+    assert_equal life_area, Task.find(response.parsed_body.dig("task", "id")).life_area
+  end
+
+  def test_that_user_can_move_a_task_between_areas_and_back_to_the_inbox
+    life_area = create(:life_area, user: @user)
+    sign_in @user
+
+    patch api_task_path(@task), params: { life_area_id: life_area.id }, as: :json
+
+    assert_response :ok
+    assert_equal life_area.id, @task.reload.life_area_id
+
+    patch api_task_path(@task), params: { life_area_id: nil }, as: :json
+
+    assert_response :ok
+    assert_nil @task.reload.life_area_id
+  end
+
+  def test_that_a_task_cannot_be_moved_into_another_users_area
+    sign_in @user
+
+    patch api_task_path(@task), params: { life_area_id: create(:life_area).id }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Life area must exist", response.parsed_body["error"]
+    assert_nil @task.reload.life_area_id
   end
 
   def test_that_create_rejects_an_invalid_task

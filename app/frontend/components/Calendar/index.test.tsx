@@ -6,10 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import calendarEventsApi from "@/apis/calendar_events";
 import currentTimeLogsApi from "@/apis/current_time_logs";
+import lifeAreasApi from "@/apis/life_areas";
 import tasksApi from "@/apis/tasks";
 import timeLogRestorationsApi from "@/apis/time_log_restorations";
 import timeLogsApi from "@/apis/time_logs";
-import type { Task, TimeLog, UserPreference } from "@/apis/types";
+import type { LifeArea, Task, TimeLog, UserPreference } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import { Toaster } from "@/components/ui/sonner";
 import { renderWithProviders } from "@/test/utils";
@@ -30,6 +31,7 @@ const TASK: Task = {
   isCompleted: false,
   startsAt: startsAt.toISOString(),
   endsAt: null,
+  lifeAreaId: null,
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
   checklistItems: [],
@@ -43,6 +45,7 @@ const TIME_LOG: TimeLog = {
   taskId: null,
   title: "Answer emails",
   taskTitle: null,
+  lifeAreaId: null,
   isTaskDeleted: false,
   mode: "manual",
   timerPreset: null,
@@ -70,9 +73,21 @@ const chooseView = async (view: string) => {
   await userEvent.click(screen.getByRole("option", { name: view }));
 };
 
+const LIFE_AREA: LifeArea = {
+  id: "area-1",
+  name: "Work",
+  color: "teal",
+  emoji: "💼",
+  defaultSound: "none",
+  isDeleted: false,
+  createdAt: "2026-11-05T10:00:00.000Z",
+  updatedAt: "2026-11-05T10:00:00.000Z",
+};
+
 describe("Calendar", () => {
   // Weeks start on the saved day, so the grid waits for the preference.
   beforeEach(() => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [LIFE_AREA] });
     vi.spyOn(userPreferencesApi, "show").mockResolvedValue({ userPreference: PREFERENCE });
   });
 
@@ -131,20 +146,50 @@ describe("Calendar", () => {
     expect(within(dialog).getByRole("textbox", { name: "Task title" })).toHaveValue("Plan the week");
     expect(within(dialog).getByRole("checkbox", { name: "Mark as complete" })).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "30 min" })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Add step" })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "Delete task" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "More actions" })).toBeInTheDocument();
     expect(await within(dialog).findByRole("button", { name: "Start" })).toBeEnabled();
   });
 
-  it("shows an unset estimate as just its icon, which still opens the picker", async () => {
+  it("colours a task in an area of life with the area's colour", async () => {
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({
+      tasks: [{ ...TASK, lifeAreaId: LIFE_AREA.id }],
+      timeLogs: [],
+    });
+    renderWithProviders(<Calendar />);
+    await chooseView("Month");
+
+    const event = (await screen.findByTitle("Plan the week")).closest<HTMLElement>(".rbc-event");
+    await waitFor(() => expect(event).toHaveClass("calendar-event-area"));
+    expect(event?.style.getPropertyValue("--area-color")).toBe("#0f766e");
+  });
+
+  it("moves a task to an area of life from its popover", async () => {
+    const update = vi
+      .spyOn(tasksApi, "update")
+      .mockResolvedValue({ task: { ...TASK, lifeAreaId: LIFE_AREA.id } });
+    const dialog = await openTask();
+
+    await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Move to area" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Work" }));
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({ id: "task-1", lifeAreaId: LIFE_AREA.id }, expect.anything()),
+    );
+  });
+
+  it("hides an unset estimate until it's picked from the menu, and again when the picker is left", async () => {
     const dialog = await openTask({ ...TASK, estimatedMinutes: null });
 
-    const estimate = within(dialog).getByRole("button", { name: "Estimate" });
-    expect(estimate).not.toHaveTextContent("Estimate");
-
-    // The tooltip shares the button with the picker, which still opens on click.
-    await userEvent.click(estimate);
+    expect(within(dialog).queryByRole("button", { name: "Estimate" })).not.toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
     expect(await screen.findByLabelText("Hours")).toBeInTheDocument();
+
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByLabelText("Hours")).not.toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "Estimate" })).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Edit task" })).toBeInTheDocument();
   });
 
   it("closes the task's popover once the task is completed", async () => {
@@ -259,7 +304,8 @@ describe("Calendar", () => {
     const destroy = vi.spyOn(tasksApi, "destroy").mockResolvedValue(undefined as never);
     const dialog = await openTask();
 
-    await userEvent.click(within(dialog).getByRole("button", { name: "Delete task" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete task" }));
     const confirmation = await screen.findByRole("dialog", { name: "Delete this task?" });
     await userEvent.click(within(confirmation).getByRole("button", { name: "Delete task" }));
 

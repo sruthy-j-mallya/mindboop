@@ -12,15 +12,11 @@ import routes from "@/routes";
 
 import SwitchSessionDialog from "./SwitchSessionDialog";
 
-type StartTaskButtonProps = {
-  task: Task;
-  // Just the icon, named by a tooltip, where room is tight (the Calendar's popover).
-  isIconOnly?: boolean;
-};
+type StartTaskButtonProps = { task: Task };
 
-// Opens the Timer page with this task picked. With another task on the clock, it first asks how to wrap that one up;
-// with this one on the clock, it just leads to it.
-const StartTaskButton = ({ task, isIconOnly = false }: StartTaskButtonProps) => {
+// Just an icon, named by a tooltip. Opens the Timer page with this task picked. With another task on the clock, it
+// first asks how to wrap that one up; with this one on the clock, it just leads to it.
+const StartTaskButton = ({ task }: StartTaskButtonProps) => {
   const navigate = useNavigate();
   const { data: timeLog, isPending } = useCurrentTimeLog();
   // The session to switch from, kept while the dialog is open: ending it refetches the current time log as null, and
@@ -42,32 +38,25 @@ const StartTaskButton = ({ task, isIconOnly = false }: StartTaskButtonProps) => 
 
   const handleSwitchDialogClose = () => setSwitchingFrom(null);
 
-  const button = (
-    <Button
-      aria-label={isIconOnly ? label : undefined}
-      className="shrink-0"
-      disabled={isPending}
-      size={isIconOnly ? "icon-sm" : "sm"}
-      type="button"
-      onClick={handleClick}
-    >
-      {isOnTheClock ? <Timer /> : <Play />}
-      {!isIconOnly && label}
-    </Button>
-  );
-
   return (
     <>
-      {isIconOnly ? (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>{button}</TooltipTrigger>
-            <TooltipContent>{label}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ) : (
-        button
-      )}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              aria-label={label}
+              className="shrink-0"
+              disabled={isPending}
+              size="icon-sm"
+              type="button"
+              onClick={handleClick}
+            >
+              {isOnTheClock ? <Timer /> : <Play />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       {switchingFrom && (
         <SwitchSessionDialog timeLog={switchingFrom} onClose={handleSwitchDialogClose} onSwitch={startTask} />
       )}

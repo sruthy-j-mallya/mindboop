@@ -21,10 +21,11 @@ import {
   subMilliseconds,
 } from "date-fns";
 import { enUS } from "date-fns/locale";
-import type { SyntheticEvent } from "react";
+import type { CSSProperties, SyntheticEvent } from "react";
 import { dateFnsLocalizer } from "react-big-calendar";
 
-import type { Task, TimeLog, WeekStartsOn } from "@/apis/types";
+import type { LifeArea, Task, TimeLog, WeekStartsOn } from "@/apis/types";
+import { getLifeAreaColor } from "@/components/commons/LifeArea/utils";
 import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
 import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
@@ -36,6 +37,7 @@ import {
   DEFAULT_MULTI_DAY_COUNT,
   DEFAULT_TASK_MINUTES,
   DEFAULT_VIEW,
+  EVENT_CLASS_NAMES,
   EVENT_KINDS,
   INITIAL_WHEEL_GESTURE,
   MOVE_ERRORS,
@@ -406,3 +408,22 @@ export const eventToAnchorRect = ({
 // `exports.default`. This accepts either.
 export const unwrapDefault = <T>(module: T | { default: T }): T =>
   typeof module === "object" && module !== null && "default" in module ? module.default : (module as T);
+
+// Each area's CSS colour, by its id.
+export const toLifeAreaColors = (lifeAreas: LifeArea[]) =>
+  new Map(lifeAreas.map(({ id, color }) => [id, getLifeAreaColor(color)]));
+
+// An event's class names, and its area's colour (a task's own area, or a time log's task's) when it's in one.
+export const getEventProps = (event: CalendarEvent, lifeAreaColors: Map<string, string>) => {
+  const isTask = event.kind === EVENT_KINDS.TASK;
+  const lifeAreaId = isTask ? event.task.lifeAreaId : event.timeLog.lifeAreaId;
+  const color = lifeAreaId ? lifeAreaColors.get(lifeAreaId) : undefined;
+  const className = isTask ? EVENT_CLASS_NAMES.TASK : EVENT_CLASS_NAMES.TIME_LOG;
+
+  if (!color) return { className };
+
+  return {
+    className: `${className} ${EVENT_CLASS_NAMES.LIFE_AREA}`,
+    style: { "--area-color": color } as CSSProperties,
+  };
+};

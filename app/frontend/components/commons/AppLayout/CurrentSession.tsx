@@ -1,10 +1,10 @@
 import { useLocation } from "react-router";
 
-import Ambience from "@/components/commons/Ambience";
 import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import routes from "@/routes";
 
 import MiniTimer from "./MiniTimer";
+import SessionSound from "./SessionSound";
 
 // Lives in the layout, so the session's background sound keeps playing across pages. Away from the Timer page, a
 // mini timer keeps the clock in view.
@@ -16,7 +16,7 @@ const CurrentSession = () => {
 
   return (
     <>
-      <Ambience timeLog={timeLog} />
+      <SessionSound timeLog={timeLog} />
       {pathname !== routes.timer && <MiniTimer timeLog={timeLog} />}
     </>
   );
