@@ -37,6 +37,7 @@
   --popover-foreground: #1f1417;
   --primary: #5a2855;
   --primary-text: var(--primary);
+  --timer-ring: var(--primary);
   --primary-foreground: #ffffff;
   --secondary: #f5a392;
   --secondary-foreground: #1f1417;
@@ -96,6 +97,8 @@
   --popover-foreground: #e8e2db;
   --primary: var(--brand-purple);
   --primary-text: #c78bc2;
+  /* Mauve, so the time left stands out from the ring's track. */
+  --timer-ring: #b99ab0;
   --primary-foreground: #ffffff;
   --secondary: #d9a697;
   --secondary-foreground: #1f1b18;

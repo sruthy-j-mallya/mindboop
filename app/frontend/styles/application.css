@@ -29,6 +29,7 @@
   --color-primary: var(--primary);
   /* text-primary only: in the dark theme --primary is too deep to read as text. */
   --text-color-primary: var(--primary-text);
+  --color-timer-ring: var(--timer-ring);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
