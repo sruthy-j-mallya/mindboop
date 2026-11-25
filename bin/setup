@@ -25,6 +25,11 @@ FileUtils.chdir APP_ROOT do
   system! "bin/rails db:prepare"
   system! "bin/rails db:reset" if ARGV.include?("--reset")
 
+  unless ARGV.include?("--skip-sample-data")
+    puts "\n== Loading sample data =="
+    system! "bin/rails sample_data:load"
+  end
+
   puts "\n== Removing old logs and tempfiles =="
   system! "bin/rails log:clear tmp:clear"
 
