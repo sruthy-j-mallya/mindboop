@@ -71,7 +71,7 @@ Tick an issue in the commit that fixes it.
 
 ## P3: Polish
 
-- [ ] 40. Calendar: space under the header, no half-cut times on short events, a legend
+- [x] 40. Calendar: space under the header, no half-cut times on short events, a legend
 - [ ] 41. Calendar: a visible save button in the new task popover
 - [ ] 42. Date picker: Today, Tomorrow, Next week
 - [ ] 43. Sound picker: show names

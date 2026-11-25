@@ -4,6 +4,7 @@ import {
   addMonths,
   addWeeks,
   addYears,
+  differenceInMinutes,
   endOfMonth,
   endOfWeek,
   format,
@@ -45,6 +46,7 @@ import {
   MOVE_ERRORS,
   MULTI_DAY_COUNT_OPTIONS,
   SELECTION_ERRORS,
+  SHORT_EVENT_MINUTES,
   SLOT_MINUTES,
   TIME_LOG_WINDOW_HOURS,
   VIEW_OPTIONS,
@@ -434,7 +436,9 @@ export const getEventProps = (event: CalendarEvent, lifeAreaColors: Map<string, 
   const isTask = event.kind === EVENT_KINDS.TASK;
   const lifeAreaId = isTask ? event.task.lifeAreaId : event.timeLog.lifeAreaId;
   const color = lifeAreaId ? lifeAreaColors.get(lifeAreaId) : undefined;
-  const className = isTask ? EVENT_CLASS_NAMES.TASK : EVENT_CLASS_NAMES.TIME_LOG;
+  const isShort = differenceInMinutes(event.end, event.start) < SHORT_EVENT_MINUTES;
+  const kindClassName = isTask ? EVENT_CLASS_NAMES.TASK : EVENT_CLASS_NAMES.TIME_LOG;
+  const className = isShort ? `${kindClassName} ${EVENT_CLASS_NAMES.SHORT}` : kindClassName;
 
   if (!color) return { className };
 

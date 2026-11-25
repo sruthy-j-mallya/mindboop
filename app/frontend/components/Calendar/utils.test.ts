@@ -1,3 +1,4 @@
+import { addHours } from "date-fns";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Task, TimeLog } from "@/apis/types";
@@ -307,10 +308,20 @@ describe("getEventProps", () => {
     },
   ]);
   const [timeLogEvent, taskEvent] = toCalendarEvents(
-    { tasks: [buildTask({ lifeAreaId: "area-1" })], timeLogs: [buildTimeLog({ lifeAreaId: "area-1" })] },
+    {
+      tasks: [buildTask({ lifeAreaId: "area-1", estimatedMinutes: 60 })],
+      timeLogs: [buildTimeLog({ lifeAreaId: "area-1" })],
+    },
     NOW,
     {},
-  );
+  ).map((event) => ({ ...event, end: addHours(event.start, 1) }));
+
+  it("marks an event too short for its times", () => {
+    const short = { ...taskEvent, start: at(12, 10), end: at(12, 10, 30) };
+
+    expect(getEventProps(short, new Map()).className).toContain("calendar-event-short");
+    expect(getEventProps({ ...short, end: at(12, 11) }, new Map()).className).not.toContain("short");
+  });
 
   it("colours tasks and time logs by their area of life", () => {
     expect(getEventProps(taskEvent, lifeAreaColors)).toEqual({
