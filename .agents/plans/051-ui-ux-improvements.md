@@ -1,6 +1,6 @@
 # 051 — UI/UX improvements
 
-Status: in progress
+Status: done (16 dropped)
 Date: 2026-11-25
 
 ## Goal
