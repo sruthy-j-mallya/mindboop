@@ -48,6 +48,7 @@ const TIME_LOG: TimeLog = {
   completedAt: null,
   isFinishedEarly: false,
   currentBreak: null,
+  breaks: [],
   createdAt: STARTED_AT,
   updatedAt: STARTED_AT,
 };

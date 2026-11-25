@@ -99,6 +99,7 @@ const runningOn = (taskId: string): TimeLog => {
     completedAt: null,
     isFinishedEarly: false,
     currentBreak: null,
+    breaks: [],
     createdAt: startedAt,
     updatedAt: startedAt,
   };

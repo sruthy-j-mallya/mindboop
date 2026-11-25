@@ -58,6 +58,7 @@ const timeLogWithBreak = (endsAt: number): TimeLog => ({
     durationMinutes: 5,
     endsAt: new Date(endsAt).toISOString(),
   },
+  breaks: [],
   createdAt: new Date(NOW).toISOString(),
   updatedAt: new Date(NOW).toISOString(),
 });

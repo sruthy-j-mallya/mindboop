@@ -8,7 +8,7 @@ module Api
 
     def index
       @time_logs = policy_scope(TimeLog).kept.where(routine: @routine).where.not(completed_at: nil)
-        .where(started_at: @from...@to).includes(:task, :routine, :current_break).order(:started_at, :id)
+        .where(started_at: @from...@to).includes(:task, :routine, :current_break, :breaks).order(:started_at, :id)
     end
 
     private

@@ -293,8 +293,9 @@ are ignored.
 
 `time_log` also includes `id`, `task_id` (`null` for a log with only a title), `title`, `task_title` (its task's title, or
 `null`), `life_area_id` (its task's area of life, or `null`), `is_task_deleted` (whether its task was deleted), `buffer_minutes`, `is_finished_early`, `created_at`, `updated_at` and `current_break`, which is
-`{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise
-(`app/views/api/time_logs/_time_log.json.jbuilder`).
+`{ id, intention, duration_minutes, ends_at }` during a break and `null` otherwise, and `breaks`, every break taken in
+the session, oldest first, as `{ id, intention, duration_minutes, started_at, ends_at, ended_at }` (`ended_at` is `null`
+while the break is open) (`app/views/api/time_logs/_time_log.json.jbuilder`).
 
 `POST /api/time_logs/:time_log_id/completion` ends a session, in one transaction:
 

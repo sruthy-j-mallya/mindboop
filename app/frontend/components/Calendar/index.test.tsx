@@ -59,6 +59,7 @@ const TIME_LOG: TimeLog = {
   completedAt: new Date(loggedAt.getTime() + 30 * 60_000).toISOString(),
   isFinishedEarly: false,
   currentBreak: null,
+  breaks: [],
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
 };
@@ -111,6 +112,35 @@ describe("Calendar", () => {
     expect(task.closest(".rbc-event")).toHaveClass("calendar-event-task");
     expect(screen.getByTitle("Answer emails").closest(".rbc-event")).toHaveClass("calendar-event-time-log");
     expect(fetchList).toHaveBeenLastCalledWith({ from: expect.any(String), to: expect.any(String) });
+  });
+
+  it("draws the breaks taken in a time log as waves in the time grid", async () => {
+    const breakStart = new Date(loggedAt.getTime() + 10 * 60_000);
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({
+      tasks: [],
+      timeLogs: [
+        {
+          ...TIME_LOG,
+          mode: "timer",
+          breaks: [
+            {
+              id: "break-1",
+              intention: "Stretch",
+              durationMinutes: 10,
+              startedAt: breakStart.toISOString(),
+              endsAt: new Date(breakStart.getTime() + 10 * 60_000).toISOString(),
+              endedAt: new Date(breakStart.getTime() + 10 * 60_000).toISOString(),
+            },
+          ],
+        },
+      ],
+    });
+    renderWithProviders(<Calendar />);
+    await chooseView("Day");
+
+    const wave = await screen.findByTitle("Stretch · 10 min");
+    expect(wave).toHaveTextContent("Break: Stretch · 10 min");
+    expect(wave).toHaveStyle({ top: `${(10 / 30) * 100}%`, height: `${(10 / 30) * 100}%` });
   });
 
   it("starts the week on the day picked in Settings", async () => {

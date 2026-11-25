@@ -5,7 +5,7 @@ import "@/styles/calendar.css";
 import { type SyntheticEvent, useCallback, useMemo, useRef, useState } from "react";
 
 import { startOfDay, subHours } from "date-fns";
-import type { SlotInfo, ToolbarProps, View, ViewsProps } from "react-big-calendar";
+import type { Components, SlotInfo, ToolbarProps, View, ViewsProps } from "react-big-calendar";
 import { toast } from "sonner";
 
 import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
@@ -30,6 +30,7 @@ import DragAndDropCalendar from "./DragAndDropCalendar";
 import MultiDayView from "./MultiDayView";
 import EditTaskPopover from "./TaskPopover/Edit";
 import NewTaskPopover from "./TaskPopover/New";
+import TimeGridEvent from "./TimeGridEvent";
 import TimeLogPopover from "./TimeLogPopover";
 import ShowTimeLogPopover from "./TimeLogPopover/Show";
 import Toolbar from "./Toolbar";
@@ -98,13 +99,18 @@ const Calendar = () => {
     writeStorage(DAY_COUNT_STORAGE_KEY, String(nextDayCount));
   }, []);
 
-  // react-big-calendar only hands its toolbar its own props, so the day count goes in through a wrapper.
+  // react-big-calendar only hands its toolbar its own props, so the day count goes in through a wrapper. The time grid
+  // views draw a time log's breaks inside it; the month view keeps its one-line events.
   const components = useMemo(
-    () => ({
-      toolbar: (toolbarProps: ToolbarProps<CalendarEvent>) => (
-        <Toolbar {...toolbarProps} dayCount={dayCount} onDayCountChange={handleDayCountChange} />
-      ),
-    }),
+    () =>
+      ({
+        toolbar: (toolbarProps: ToolbarProps<CalendarEvent>) => (
+          <Toolbar {...toolbarProps} dayCount={dayCount} onDayCountChange={handleDayCountChange} />
+        ),
+        [CALENDAR_VIEWS.DAY]: { event: TimeGridEvent },
+        [CALENDAR_VIEWS.MULTI_DAY]: { event: TimeGridEvent },
+        [CALENDAR_VIEWS.WEEK]: { event: TimeGridEvent },
+      }) as Components<CalendarEvent>,
     [dayCount, handleDayCountChange],
   );
 

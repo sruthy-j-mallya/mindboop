@@ -9,7 +9,7 @@ module Api
     def index
       @tasks = policy_scope(Task).kept.where(is_completed: false).scheduled_between(@from, @to)
         .includes(:checklist_items).by_due_date
-      @time_logs = policy_scope(TimeLog).kept.overlapping(@from, @to).includes(:task, :routine, :current_break)
+      @time_logs = policy_scope(TimeLog).kept.overlapping(@from, @to).includes(:task, :routine, :current_break, :breaks)
         .order(:started_at, :id)
     end
 
