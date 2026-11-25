@@ -27,7 +27,7 @@ Tick an issue in the commit that fixes it.
   section in each list
 - [ ] 3. Done under 2 minutes only offers to discard, leaving the task open. Add a way to finish the task without logging
 - [x] 4. Quick start: 6–9, 11–14 and 16–19 minutes can't be entered. Allow any whole number from 2 to 240
-- [ ] 5. Unknown URLs show a blank page. Add a not-found page
+- [x] 5. Unknown URLs show a blank page. Add a not-found page
 - [ ] 6. Calendar's week view is unreadable on phones. Default to Day or 3 days there, and shorten headers
 
 ## P1: High impact
