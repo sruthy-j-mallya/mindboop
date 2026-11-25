@@ -87,9 +87,15 @@ export const getPageTitle = (pathname: string, timeLog: TimeLog | null | undefin
   return `${clock} · ${title}`;
 };
 
-// The page of the bottom bar a path belongs to: an area's tasks are under Tasks. Other pages are under More.
+// The Inbox, the areas, and the completed and deleted tasks share one page, with a sidebar of their own.
+export const isTasksPath = (pathname: string) =>
+  [routes.inbox.index, routes.lifeAreas.index, routes.completedTasks, routes.deletedTasks].some((path) =>
+    matchPath({ path, end: false }, pathname),
+  );
+
+// The page of the bottom bar a path belongs to: every list of tasks is under Tasks. Other pages are under More.
 export const findBottomBarPath = (pathname: string) => {
-  if (matchPath({ path: routes.lifeAreas.index, end: false }, pathname)) return routes.inbox.index;
+  if (isTasksPath(pathname)) return routes.inbox.index;
 
   return [routes.root, routes.inbox.index, routes.timer, routes.calendar].find((path) =>
     matchPath({ path, end: path === routes.root }, pathname),

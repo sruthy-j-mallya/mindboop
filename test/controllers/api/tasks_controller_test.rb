@@ -126,6 +126,19 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ latest.id, older.id ], response.parsed_body["tasks"].pluck("id")
   end
 
+  def test_that_index_can_list_only_deleted_tasks_latest_first
+    older = create(:task, user: @user, discarded_at: 2.days.ago)
+    latest = create(:task, user: @user, is_completed: true, discarded_at: 1.day.ago)
+    create(:task, discarded_at: 1.hour.ago)
+    sign_in @user
+
+    get api_tasks_path, params: { is_deleted: true }
+
+    assert_response :ok
+    assert_equal [ latest.id, older.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal latest.reload.discarded_at.as_json, response.parsed_body["tasks"].first["discarded_at"]
+  end
+
   def test_that_index_can_list_the_inbox_or_one_area
     life_area = create(:life_area, user: @user)
     task_in_area = create(:task, user: @user, life_area:)

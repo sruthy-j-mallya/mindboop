@@ -144,3 +144,28 @@ test("rename a task from its pane", async ({ page }) => {
   await page.reload();
   await expect(page.getByRole("textbox", { name: "Task title" })).toHaveValue("Cancel the gym membership");
 });
+
+test("reopen a completed task and restore a deleted one from their pages", async ({ page }) => {
+  await signUp(page);
+  await page.goto("/inbox");
+  await addTasks(page, ["Cancel the gym", "Sort the mail"]);
+  const nav = page.getByRole("navigation", { name: "Areas of life" });
+
+  await page.getByRole("checkbox", { name: "Complete Cancel the gym" }).click();
+  await expectTasks(page, ["Sort the mail"]);
+  await page.getByRole("textbox", { name: "Sort the mail" }).hover();
+  await page.getByRole("button", { name: "Delete Sort the mail" }).click();
+  await expect(page.getByText("Your Inbox is empty")).toBeVisible();
+
+  await nav.getByRole("link", { name: "Completed" }).click();
+  await page.getByRole("button", { name: "Reopen Cancel the gym" }).click();
+  await expect(page.getByText("Nothing completed yet")).toBeVisible();
+
+  await nav.getByRole("link", { name: "Deleted" }).click();
+  await page.getByRole("button", { name: "Restore Sort the mail" }).click();
+  await expect(page.getByText("Restored “Sort the mail” to your Inbox")).toBeVisible();
+  await expect(page.getByText("Nothing deleted")).toBeVisible();
+
+  await nav.getByRole("link", { name: "Inbox" }).click();
+  await expectTasks(page, ["Sort the mail", "Cancel the gym"]);
+});

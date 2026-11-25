@@ -7,7 +7,6 @@ import useOpenTask from "@/hooks/useOpenTask";
 
 import AddTaskForm from "./AddTaskForm";
 import BoardHeading from "./BoardHeading";
-import Completed from "./Completed";
 import TaskList from "./TaskList";
 
 type BoardProps = { lifeArea?: LifeArea };
@@ -28,8 +27,6 @@ const Board = ({ lifeArea }: BoardProps) => {
         <AddTaskForm lifeArea={lifeArea} />
         <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           <TaskList lifeArea={lifeArea} />
-          {/* Closed again when another list is picked. */}
-          <Completed key={lifeArea?.id} lifeArea={lifeArea} />
         </div>
       </section>
       <Card className={cn("lg:overflow-y-auto", !isTaskSelected && "max-lg:hidden")}>

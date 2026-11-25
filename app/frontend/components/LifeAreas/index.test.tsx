@@ -133,7 +133,13 @@ describe("LifeAreas", () => {
       within(nav)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Inbox", expect.stringContaining("Work"), expect.stringContaining("Health")]);
+    ).toEqual([
+      "Inbox",
+      "Completed",
+      "Deleted",
+      expect.stringContaining("Work"),
+      expect.stringContaining("Health"),
+    ]);
     expect(within(nav).queryByRole("list", { name: "Suggested areas" })).not.toBeInTheDocument();
     expect(within(nav).getByRole("button", { name: "Add an area" })).toBeInTheDocument();
     expect(within(nav).queryByRole("button", { name: "Suggested areas" })).not.toBeInTheDocument();

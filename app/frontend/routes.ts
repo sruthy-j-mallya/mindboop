@@ -9,6 +9,8 @@ const routes = {
     index: "/inbox",
     show: "/inbox/:taskId",
   },
+  completedTasks: "/completed",
+  deletedTasks: "/deleted",
   routines: {
     index: "/routines",
     show: "/routines/:routineId",

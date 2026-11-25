@@ -43,6 +43,7 @@ describe("findBottomBarPath", () => {
     expect(findBottomBarPath("/")).toBe("/");
     expect(findBottomBarPath("/inbox/some-task")).toBe("/inbox");
     expect(findBottomBarPath("/areas/some-area/some-task")).toBe("/inbox");
+    expect(findBottomBarPath("/completed")).toBe("/inbox");
     expect(findBottomBarPath("/calendar")).toBe("/calendar");
     expect(findBottomBarPath("/settings")).toBeUndefined();
   });

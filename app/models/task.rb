@@ -9,6 +9,7 @@ class Task < ApplicationRecord
   scope :by_due_date, -> { order(arel_table[:starts_at].asc.nulls_last, created_at: :desc, id: :desc) }
   # Most recently changed first, the order completed tasks are listed in. id breaks ties.
   scope :by_latest_change, -> { order(updated_at: :desc, id: :desc) }
+  scope :by_latest_deletion, -> { order(discarded_at: :desc, id: :desc) }
   # Scheduled tasks that overlap `from...to`. A task with only a date reaches a day past it, which covers the estimate the
   # Calendar draws it with.
   scope :scheduled_between, ->(from, to) {

@@ -26,6 +26,7 @@ import routes from "@/routes";
 
 import { CAPTURE_SHORTCUT_LABEL, SEARCH_SHORTCUT_LABEL } from "./constants";
 import ParkingLotIcon from "./ParkingLotIcon";
+import { isTasksPath } from "./utils";
 
 type AppSidebarProps = { onSearchOpen: () => void; onCaptureOpen: () => void };
 
@@ -47,9 +48,6 @@ const AppSidebar = ({ onSearchOpen, onCaptureOpen }: AppSidebarProps) => {
     onCaptureOpen();
   };
 
-  // The areas of life and the Inbox share one page, with a sidebar of their own to switch between them.
-  const isInboxActive = !!useMatch({ path: routes.inbox.index, end: false });
-  const isLifeAreaActive = !!useMatch({ path: routes.lifeAreas.index, end: false });
   const isRoutinesActive = !!useMatch({ path: routes.routines.index, end: false });
 
   return (
@@ -85,7 +83,7 @@ const AppSidebar = ({ onSearchOpen, onCaptureOpen }: AppSidebarProps) => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isInboxActive || isLifeAreaActive} tooltip="Tasks">
+                <SidebarMenuButton asChild isActive={isTasksPath(pathname)} tooltip="Tasks">
                   <Link to={routes.inbox.index} onClick={handleNavigate}>
                     <SquareCheckBig />
                     <span>Tasks</span>

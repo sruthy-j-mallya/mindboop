@@ -89,7 +89,8 @@ with undated tasks last; ties go to the newest task. Another user's task gets a 
 stay on the Calendar. A session still running on it ends at that moment, the way a completion ends it but without
 completing the task. One with under 2 minutes of focus is discarded instead.
 
-`POST /api/tasks/:task_id/restoration` brings back a deleted task (the Inbox's Undo). A task that isn't deleted gets a 404.
+`POST /api/tasks/:task_id/restoration` brings back a deleted task (Undo, and the Deleted page), as it was: a
+completed task is still completed, and an uncompleted one whose area was deleted goes to the Inbox. A task that isn't deleted gets a 404.
 A session that ended when the task was deleted stays ended.
 
 The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
@@ -100,8 +101,11 @@ pages. A missing or invalid `page` returns the first page, and a page past the e
 tasks is left out.
 
 `is_completed=false` lists only incomplete tasks (the Inbox and area lists), and `is_completed=true` only completed ones,
-most recently changed first (those lists' "Completed" section).
+most recently changed first (the Completed page).
 Leaving it out lists every task.
+
+`is_deleted=true` lists only deleted tasks, latest deletion (`discarded_at`) first (the Deleted page). It combines with
+the other filters and paging; without it, deleted tasks are left out.
 
 `is_in_inbox=true` lists only tasks in no area of life (the Inbox), and `life_area_id` only the tasks in that area. Both
 combine with the other filters and paging; leaving them out lists tasks from every area.

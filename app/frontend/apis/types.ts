@@ -43,6 +43,8 @@ export type Task = {
   lifeAreaId: string | null;
   createdAt: string;
   updatedAt: string;
+  // When it was deleted; only a deleted task has it.
+  discardedAt?: string;
   checklistItems: ChecklistItem[];
   breadcrumbs: Breadcrumb[];
 };
@@ -52,6 +54,8 @@ export type Task = {
 // only those in that area.
 export type TaskFilters = {
   isCompleted?: boolean;
+  // Only deleted tasks, which are otherwise left out.
+  isDeleted?: boolean;
   searchTerm?: string;
   isSearchingDetails?: boolean;
   isInInbox?: boolean;
