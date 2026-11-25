@@ -87,33 +87,37 @@ const TaskRow = ({ task }: TaskRowProps) => {
           disabled={isCompleting || isDeleting}
           onCheckedChange={completeTask}
         />
-        <div className="flex min-w-0 flex-1 flex-col py-2">
-          <TitleInput
-            className="text-sm"
-            isSelected={isSelected}
-            label={title}
-            title={title}
-            onFocus={handleTitleFocus}
-            onSave={renameTask}
-          />
-          {/* On phones the date is only read here, under the title; the pane changes it. */}
-          {isPhone && <ScheduleLabel className="text-xs" schedule={task} />}
+        {/* The date wraps under the title rather than squeezing it. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 py-1.5">
+          <div className="flex min-w-0 flex-[1_1_9rem] flex-col py-0.5">
+            <TitleInput
+              className="text-sm"
+              isSelected={isSelected}
+              label={title}
+              title={title}
+              onFocus={handleTitleFocus}
+              onSave={renameTask}
+            />
+            {/* On phones the date is only read here, under the title; the pane changes it. */}
+            {isPhone && <ScheduleLabel className="text-xs" schedule={task} />}
+          </div>
+          {/* Opens the same picker as the pane. */}
+          {task.startsAt && !isPhone && (
+            <SchedulePicker align="end" schedule={task} onSave={handleScheduleSave}>
+              {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
+              <Button
+                className="h-6 max-w-full min-w-0 gap-1 rounded-full border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 dark:bg-background dark:hover:bg-background"
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <CalendarDays className="size-3.5 text-muted-foreground" />
+                <span className="sr-only">Due date of {title}:</span>{" "}
+                <ScheduleLabel className="min-w-0 truncate" schedule={task} />
+              </Button>
+            </SchedulePicker>
+          )}
         </div>
-        {/* Opens the same picker as the pane. */}
-        {task.startsAt && !isPhone && (
-          <SchedulePicker align="end" schedule={task} onSave={handleScheduleSave}>
-            {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
-            <Button
-              className="h-6 shrink-0 gap-1 rounded-full border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 dark:bg-background dark:hover:bg-background"
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <CalendarDays className="size-3.5 text-muted-foreground" />
-              <span className="sr-only">Due date of {title}:</span> <ScheduleLabel schedule={task} />
-            </Button>
-          </SchedulePicker>
-        )}
         {/* With a mouse, it shows on hover or focus to keep the list calm; touch screens always show it. No confirmation:
             the toast offers to undo instead. The task on the clock is the exception. */}
         <Button

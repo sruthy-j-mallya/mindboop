@@ -23,8 +23,8 @@ export const CAPTURE_SHORTCUT_LABEL = IS_MAC ? "⌥N" : "Alt N";
 export const HOME_TITLE = "Home";
 export const UNKNOWN_PAGE_TITLE = "Page not found";
 
-// Tailwind's `xl`: room for the open sidebar beside a page of its own columns.
-export const WIDE_LAYOUT_QUERY = "(width >= 80rem)";
+// Room for the open sidebar beside a page with three columns of its own (Tasks).
+export const WIDE_LAYOUT_QUERY = "(width >= 90rem)";
 
 export const SIDEBAR_STORAGE_KEY = "sidebar_open";
 
