@@ -36,6 +36,7 @@
   --popover: #ffffff;
   --popover-foreground: #1f1417;
   --primary: #5a2855;
+  --primary-text: var(--primary);
   --primary-foreground: #ffffff;
   --secondary: #f5a392;
   --secondary-foreground: #1f1417;
@@ -83,8 +84,9 @@
   color-scheme: dark;
 
   /*
-   * Semantic colors — dark (brand palette is unchanged). Not from Figma: soft, low-saturation brown surfaces, each layer a
-   * step lighter, off-white text and a muted mauve primary that carries dark text, to be easy on the eyes.
+   * Semantic colors — dark (brand palette is unchanged). Not from Figma: soft, low-saturation brown surfaces, each layer
+   * a step lighter, and off-white text, to be easy on the eyes. Primary is the light theme's purple, which is too deep
+   * to read as text on brown, so primary text and icons (--primary-text) are a lighter purple.
    */
   --background: #1f1b18;
   --foreground: #e8e2db;
@@ -92,36 +94,37 @@
   --card-foreground: #e8e2db;
   --popover: #2e2925;
   --popover-foreground: #e8e2db;
-  --primary: #b99ab0;
-  --primary-foreground: #1f1b18;
+  --primary: var(--brand-purple);
+  --primary-text: #c78bc2;
+  --primary-foreground: #ffffff;
   --secondary: #d9a697;
   --secondary-foreground: #1f1b18;
   --muted: #332d29;
   --muted-foreground: #b0a59b;
   --accent: #3d3431;
-  --accent-foreground: #dcc6d4;
+  --accent-foreground: #d3a3cf;
   --destructive: #ea8580;
   --destructive-foreground: #ffffff;
   --border: #3d3632;
   --input: #887c74;
   --input-background: #332d29;
   --switch-background: #504741;
-  --ring: #b99ab0;
+  --ring: #9a5895;
 
-  --chart-1: #b99ab0;
+  --chart-1: #9a5895;
   --chart-2: #d9a697;
   --chart-3: #dfc084;
   --chart-4: #cdb699;
-  --chart-5: #dcc6d4;
+  --chart-5: #d3a3cf;
 
   --sidebar: #1f1b18;
   --sidebar-foreground: #e8e2db;
-  --sidebar-primary: #b99ab0;
-  --sidebar-primary-foreground: #1f1b18;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #3d3431;
-  --sidebar-accent-foreground: #dcc6d4;
+  --sidebar-accent-foreground: #d3a3cf;
   --sidebar-border: #3d3632;
-  --sidebar-ring: #b99ab0;
+  --sidebar-ring: #9a5895;
 
   --syntax-comment: #b0a59b;
   --syntax-keyword: #d9a0d4;
