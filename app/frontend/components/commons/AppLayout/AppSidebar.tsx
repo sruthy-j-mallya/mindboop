@@ -1,4 +1,4 @@
-import { CalendarDays, House, LogOut, Search, Settings, SquareCheckBig, SunMoon, Timer } from "lucide-react";
+import { CalendarDays, House, Search, Settings, SquareCheckBig, SunMoon, Timer } from "lucide-react";
 import { Link, useLocation, useMatch } from "react-router";
 
 import {
@@ -13,7 +13,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useParkingLotItems } from "@/hooks/reactQuery/useParkingLotItemsApi";
-import { useLogout } from "@/hooks/reactQuery/useSessionsApi";
 import routes from "@/routes";
 
 import ParkingLotIcon from "./ParkingLotIcon";
@@ -23,11 +22,9 @@ type AppSidebarProps = { onSearchOpen: () => void };
 const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();
-  const { mutate: logout, isPending } = useLogout();
   const { data: parkedItems } = useParkingLotItems({ status: "parked" });
   const parkedCount = parkedItems?.parkingLotItemsCount ?? 0;
 
-  const handleLogout = () => logout();
   const handleNavigate = () => setOpenMobile(false);
 
   const handleSearch = () => {
@@ -120,12 +117,6 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
                 <Settings />
                 <span>Settings</span>
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton disabled={isPending} tooltip="Sign out" onClick={handleLogout}>
-              <LogOut />
-              <span>Sign out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

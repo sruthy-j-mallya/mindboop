@@ -1,6 +1,7 @@
 import type { Theme } from "@/apis/types";
 import { useUpdateUserPreference, useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 
+import Account from "./Account";
 import Appearance from "./Appearance";
 import DateSettings from "./DateSettings";
 import Sounds from "./Sounds";
@@ -27,6 +28,7 @@ const Settings = () => {
           <DateSettings preference={preference} onChange={updatePreference} />
         </>
       )}
+      <Account />
     </div>
   );
 };

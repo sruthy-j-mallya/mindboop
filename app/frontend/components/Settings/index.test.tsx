@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
+import sessionsApi from "@/apis/sessions";
 import type { UserPreference } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import Settings from "@/components/Settings";
@@ -38,6 +39,7 @@ describe("Settings", () => {
     vi.spyOn(userPreferencesApi, "update").mockImplementation((changes) =>
       Promise.resolve({ userPreference: { ...PREFERENCE, ...changes } }),
     );
+    vi.spyOn(sessionsApi, "show").mockRejectedValue(new ApiError(500, "Not needed"));
   });
 
   afterEach(() => {
@@ -52,6 +54,19 @@ describe("Settings", () => {
     expect(await screen.findByRole("combobox", { name: "Theme" })).toHaveTextContent("Dark");
     expect(screen.getByRole("combobox", { name: "Task completed" })).toHaveTextContent("Bell");
     expect(screen.getByRole("combobox", { name: "Break over" })).toHaveTextContent("Marimba");
+  });
+
+  it("names the account and signs out of it", async () => {
+    vi.spyOn(sessionsApi, "show").mockResolvedValue({
+      user: { id: crypto.randomUUID(), emailAddress: "someone@example.com" },
+    });
+    const destroy = vi.spyOn(sessionsApi, "destroy").mockResolvedValue(undefined as never);
+    renderSettings();
+
+    expect(await screen.findByText("Signed in as someone@example.com.")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    await waitFor(() => expect(destroy).toHaveBeenCalled());
   });
 
   it("saves the chosen theme", async () => {

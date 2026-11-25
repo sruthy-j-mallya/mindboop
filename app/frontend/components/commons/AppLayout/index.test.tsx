@@ -7,7 +7,6 @@ import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
 import routinesApi from "@/apis/routines";
-import sessionsApi from "@/apis/sessions";
 import type { Routine, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import { playSound } from "@/components/commons/Ambience/utils";
@@ -260,15 +259,6 @@ describe("AppLayout", () => {
 
     const { container: collapsed } = renderWithProviders(<AppLayout />);
     expect(collapsed.querySelector('[data-slot="sidebar"]')).toHaveAttribute("data-state", "collapsed");
-  });
-
-  it("signs out from the sidebar footer", async () => {
-    const destroy = vi.spyOn(sessionsApi, "destroy").mockResolvedValue(undefined as never);
-    renderWithProviders(<AppLayout />);
-
-    await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
-
-    await waitFor(() => expect(destroy).toHaveBeenCalled());
   });
 
   describe("with a session on the clock", () => {
