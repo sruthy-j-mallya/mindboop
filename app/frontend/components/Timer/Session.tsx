@@ -23,6 +23,8 @@ import RoutineDetails from "./RoutineDetails";
 import SessionCard from "./SessionCard";
 import SessionTitle from "./SessionTitle";
 
+type DiscardedBy = "bail" | "done" | "discard";
+
 type SessionProps = {
   timeLog: TimeLog;
   isCompleting: boolean;
@@ -41,8 +43,8 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [showExtendDialog, setShowExtendDialog] = useState(false);
   const [showBailDialog, setShowBailDialog] = useState(false);
-  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  const [isDiscardChosen, setIsDiscardChosen] = useState(false);
+  // What the discard dialog was opened by; null while it's closed.
+  const [discardedBy, setDiscardedBy] = useState<DiscardedBy | null>(null);
   const [isOverrunIncluded, setIsOverrunIncluded] = useState(false);
   const { currentBreak } = timeLog;
   const isOnBreak = !!currentBreak;
@@ -60,18 +62,12 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   // A session too short to log can only be discarded, whether it's ended with Bail or Done. Decided on the click, so
   // the open dialog doesn't change when the elapsed time crosses the limit.
   const isTooShort = () => isTooShortToKeep(timeLog, Date.now(), { discardOverrun });
-  const handleBail = () => (isTooShort() ? setShowDiscardDialog(true) : setShowBailDialog(true));
+  const handleBail = () => (isTooShort() ? setDiscardedBy("bail") : setShowBailDialog(true));
   const handleBailDialogClose = () => setShowBailDialog(false);
-  const handleDiscardDialogClose = () => {
-    setShowDiscardDialog(false);
-    setIsDiscardChosen(false);
-  };
-  const handleDiscard = () => {
-    setIsDiscardChosen(true);
-    setShowDiscardDialog(true);
-  };
+  const handleDiscardDialogClose = () => setDiscardedBy(null);
+  const handleDiscard = () => setDiscardedBy("discard");
   const handleDone = () =>
-    isTooShort() ? setShowDiscardDialog(true) : onDone({ timeLogId: timeLog.id, discardOverrun });
+    isTooShort() ? setDiscardedBy("done") : onDone({ timeLogId: timeLog.id, discardOverrun });
   const handleOverrunToggle = () => setIsOverrunIncluded((isIncluded) => !isIncluded);
   const handleExtend = () => setShowExtendDialog(true);
   const handleExtendDialogClose = () => setShowExtendDialog(false);
@@ -171,8 +167,13 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
       {showBailDialog && (
         <BailDialog discardOverrun={discardOverrun} timeLogId={timeLog.id} onClose={handleBailDialogClose} />
       )}
-      {showDiscardDialog && (
-        <DiscardDialog isChosen={isDiscardChosen} timeLogId={timeLog.id} onClose={handleDiscardDialogClose} />
+      {discardedBy && (
+        <DiscardDialog
+          finishedTaskId={discardedBy === "done" ? timeLog.taskId : null}
+          isChosen={discardedBy === "discard"}
+          timeLogId={timeLog.id}
+          onClose={handleDiscardDialogClose}
+        />
       )}
     </>
   );

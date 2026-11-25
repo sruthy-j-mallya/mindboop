@@ -1183,6 +1183,8 @@ describe("Timer", () => {
       renderTimer(TIME_LOG);
 
       const dialog = await openDialog();
+      // Bailing means the task isn't finished.
+      expect(within(dialog).queryByRole("button", { name: /Mark task done/ })).not.toBeInTheDocument();
       await userEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
 
       expect(await screen.findByRole("heading", { name: "Start a session" })).toBeVisible();
@@ -1362,6 +1364,36 @@ describe("Timer", () => {
       expect(destroy).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
       expect(create).not.toHaveBeenCalled();
       expect(screen.queryByRole("dialog", { name: /Finished/ })).not.toBeInTheDocument();
+    });
+
+    it("finishes the task without logging a session that's too short", async () => {
+      const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: { ...TASK, isCompleted: true } });
+      const destroy = vi.spyOn(timeLogsApi, "destroy").mockImplementation(() => {
+        vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+        return Promise.resolve({} as AxiosResponse);
+      });
+      renderTimer(TIME_LOG);
+
+      await clickDone();
+      await userEvent.click(await screen.findByRole("button", { name: /Mark task done/ }));
+
+      expect(await screen.findByRole("heading", { name: "Start a session" })).toBeVisible();
+      expect(update.mock.lastCall?.[0]).toEqual({ id: TASK_ID, isCompleted: true });
+      expect(destroy).toHaveBeenCalledWith(TIME_LOG.id, expect.anything());
+      expect(playCompletionSound).toHaveBeenCalledWith("glass");
+    });
+
+    it("keeps the session when finishing its task fails", async () => {
+      vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(500, "Something went wrong"));
+      const destroy = vi.spyOn(timeLogsApi, "destroy");
+      renderTimer(TIME_LOG);
+
+      await clickDone();
+      await userEvent.click(await screen.findByRole("button", { name: /Mark task done/ }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
+      expect(destroy).not.toHaveBeenCalled();
     });
 
     it("completes once two minutes of focus are in", async () => {
