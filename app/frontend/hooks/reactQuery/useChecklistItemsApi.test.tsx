@@ -11,6 +11,25 @@ import { useCreateChecklistItem, useUpdateChecklistItem } from "./useChecklistIt
 
 const TASK = { id: "task", checklistItems: [{ id: "first", title: "First", isCompleted: false }] } as Task;
 
+const renderSteps = () => {
+  const queryClient = new QueryClient();
+  queryClient.setQueryData(QUERY_KEYS.TASKS.DETAIL(TASK.id), TASK);
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  const { result } = renderHook(
+    () => ({ create: useCreateChecklistItem(), update: useUpdateChecklistItem() }),
+    { wrapper },
+  );
+  const items = () => queryClient.getQueryData<Task>(QUERY_KEYS.TASKS.DETAIL(TASK.id))?.checklistItems;
+
+  return {
+    result,
+    titles: () => items()?.map(({ title }) => title),
+    ids: () => items()?.map(({ id }) => id),
+  };
+};
+
 describe("useChecklistItemsApi", () => {
   afterEach(() => vi.restoreAllMocks());
 
@@ -22,19 +41,7 @@ describe("useChecklistItemsApi", () => {
       }),
     );
     const update = vi.spyOn(checklistItemsApi, "update").mockResolvedValue({ task: TASK });
-    const queryClient = new QueryClient();
-    queryClient.setQueryData(QUERY_KEYS.TASKS.DETAIL(TASK.id), TASK);
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-    const { result } = renderHook(
-      () => ({ create: useCreateChecklistItem(), update: useUpdateChecklistItem() }),
-      { wrapper },
-    );
-    const titles = () =>
-      queryClient
-        .getQueryData<Task>(QUERY_KEYS.TASKS.DETAIL(TASK.id))
-        ?.checklistItems.map(({ title }) => title);
+    const { result, titles } = renderSteps();
 
     act(() => result.current.create.mutate({ taskId: TASK.id, title: "Second", position: 1 }));
     await waitFor(() => expect(create).toHaveBeenCalled());
@@ -48,5 +55,22 @@ describe("useChecklistItemsApi", () => {
     });
 
     await waitFor(() => expect(update).toHaveBeenCalled());
+  });
+
+  it("sends a change to a step still being created under its real id", async () => {
+    const second = { id: "second", title: "Second", isCompleted: false };
+    const created = { ...TASK, checklistItems: [...TASK.checklistItems, second] };
+    vi.spyOn(checklistItemsApi, "create").mockResolvedValue({ task: created });
+    const update = vi.spyOn(checklistItemsApi, "update").mockResolvedValue({ task: created });
+    const { result, titles, ids } = renderSteps();
+
+    act(() => result.current.create.mutate({ taskId: TASK.id, title: "Second" }));
+    await waitFor(() => expect(titles()).toEqual(["First", "Second"]));
+    const shownId = ids()?.at(1) ?? "";
+    act(() => result.current.update.mutate({ taskId: TASK.id, id: shownId, title: "Middle" }));
+
+    await waitFor(() =>
+      expect(update.mock.lastCall?.[0]).toEqual({ taskId: TASK.id, id: "second", title: "Middle" }),
+    );
   });
 });

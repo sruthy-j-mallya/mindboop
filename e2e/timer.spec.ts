@@ -53,6 +53,7 @@ test("finish a session early, and watch the dialog fade away with nothing parked
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
   await page.getByRole("button", { name: "10 min" }).click();
   await page.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("timer")).toBeVisible();
   await focusForTwoMinutes(page, email);
   await expect(page.getByRole("timer")).toHaveText(/^0[78]:[0-5]\d$/);
@@ -74,6 +75,7 @@ test("run past the timer, leave the extra time out, and finish", async ({ page }
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
   await page.getByRole("button", { name: "10 min" }).click();
   await page.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("timer")).toBeVisible();
   backdateSession(email, 11 * 60);
   await page.reload();
@@ -130,6 +132,7 @@ test("Done in the first two minutes of a stopwatch only discards it", async ({ p
   await page.getByRole("option", { name: "Draft permission" }).click();
   await page.getByRole("tab", { name: "Stopwatch" }).click();
   await page.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("timer")).toBeVisible();
 
   await page.getByRole("button", { name: "Done" }).click();
@@ -286,6 +289,7 @@ test("bail out of a session, leaving breadcrumbs", async ({ page }) => {
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
   await page.getByRole("button", { name: "10 min" }).click();
   await page.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("timer")).toBeVisible();
   await focusForTwoMinutes(page, email);
 
@@ -309,6 +313,7 @@ test("bail out in the first two minutes, discarding the timer", async ({ page })
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
   await page.getByRole("button", { name: "10 min" }).click();
   await page.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("timer")).toBeVisible();
 
   const dialog = page.getByRole("dialog", { name: "Discard this timer?" });
@@ -396,8 +401,16 @@ test("edit the steps and the description mid-session, and keep them through a re
   await addSteps(page, ["First", "Second"]);
   await page.getByRole("button", { name: "10 min" }).click();
   await page.getByRole("button", { name: "Start", exact: true }).click();
-  await expect(page.getByRole("timer")).toBeVisible();
+  // Home shows the session too for a moment, before the Timer opens.
+  await expect(page).toHaveURL("/timer");
 
+  // Changes to the steps are sent one at a time, so wait for the last one before reloading.
+  const stepMoved = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PATCH" &&
+      response.url().includes("/checklist_items") &&
+      (response.request().postData() ?? "").includes("position"),
+  );
   const steps = page.getByRole("list", { name: "Steps" }).getByRole("listitem");
   await page.getByRole("checkbox", { name: "First" }).click();
   await expect(page.getByRole("checkbox", { name: "First" })).toBeChecked();
@@ -406,8 +419,13 @@ test("edit the steps and the description mid-session, and keep them through a re
   await page.getByRole("textbox", { name: "Step text" }).press("Enter");
   const thirdStep = page.getByRole("textbox", { name: "New step" });
   await thirdStep.fill("Third");
+  // Its id changes once it's saved, which would end a drag under way.
+  const thirdCreated = page.waitForResponse(
+    (response) => response.request().method() === "POST" && response.url().includes("/checklist_items"),
+  );
   await thirdStep.press("Enter");
   await thirdStep.press("Escape");
+  await thirdCreated;
   await expect(steps).toHaveText(["First", "Second", "Third"]);
   await page.getByRole("button", { name: "Edit Second" }).click();
   await page.getByRole("textbox", { name: "Step text" }).fill("Middle");
@@ -438,6 +456,7 @@ test("edit the steps and the description mid-session, and keep them through a re
   await editor.pressSequentially("Cite **sources** ");
   await expect(editor.locator("strong")).toHaveText("sources");
   await descriptionSaved;
+  await stepMoved;
 
   await page.reload();
 
@@ -521,6 +540,7 @@ test("keep the clock in view in a mini timer on other pages, and go back to the 
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
   await page.getByRole("button", { name: "10 min" }).click();
   await page.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("timer")).toBeVisible();
   await expect(page.getByRole("region", { name: "Current session" })).toBeHidden();
 

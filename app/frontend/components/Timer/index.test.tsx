@@ -312,10 +312,7 @@ describe("Timer", () => {
       const step = await screen.findByRole("checkbox", { name: "Camera statistics" });
       await userEvent.click(step);
 
-      expect(update).toHaveBeenCalledWith(
-        { taskId: TASK.id, id: FIRST_ITEM.id, isCompleted: true },
-        expect.anything(),
-      );
+      expect(update).toHaveBeenCalledWith({ taskId: TASK.id, id: FIRST_ITEM.id, isCompleted: true });
       expect(step).toBeChecked();
     });
 
@@ -395,10 +392,7 @@ describe("Timer", () => {
       await userEvent.clear(input);
       await userEvent.type(input, "Camera stats{Enter}");
 
-      expect(update).toHaveBeenCalledWith(
-        { taskId: TASK.id, id: FIRST_ITEM.id, title: "Camera stats" },
-        expect.anything(),
-      );
+      expect(update).toHaveBeenCalledWith({ taskId: TASK.id, id: FIRST_ITEM.id, title: "Camera stats" });
       expect(screen.getByRole("checkbox", { name: "Camera stats" })).toBeVisible();
     });
 
@@ -410,7 +404,7 @@ describe("Timer", () => {
 
       await userEvent.click(await screen.findByRole("button", { name: "Remove Camera statistics" }));
 
-      expect(destroy).toHaveBeenCalledWith({ taskId: TASK.id, id: FIRST_ITEM.id }, expect.anything());
+      expect(destroy).toHaveBeenCalledWith({ taskId: TASK.id, id: FIRST_ITEM.id });
       await waitFor(() =>
         expect(screen.queryByRole("checkbox", { name: "Camera statistics" })).not.toBeInTheDocument(),
       );
