@@ -77,7 +77,7 @@ Tick an issue in the commit that fixes it.
 - [x] 43. Sound picker: show names
 - [x] 44. Routine form: sticky footer, appearance collapsed
 - [x] 45. Routine stats: three in a row on phones
-- [ ] 46. Quick start: label the steps icon "Add steps"
+- [x] 46. Quick start: label the steps icon "Add steps"
 - [ ] 47. Step rows: reveal the delete icon on hover
 - [ ] 48. Empty panes: the mascot and a next action
 - [x] 49. A first-run checklist
