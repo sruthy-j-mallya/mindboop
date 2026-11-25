@@ -81,7 +81,6 @@ const TaskRow = ({ task }: TaskRowProps) => {
         <Checkbox
           aria-label={`Complete ${title}`}
           checked={isCompleting}
-          className="border-muted-foreground/50"
           disabled={isCompleting || isDeleting}
           onCheckedChange={completeTask}
         />

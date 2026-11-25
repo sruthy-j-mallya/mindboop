@@ -88,7 +88,7 @@ const TaskDetails = ({
                   <Checkbox
                     aria-label="Mark as complete"
                     checked={isCompleting}
-                    className="mt-1.5 size-5 border-muted-foreground/50"
+                    className="mt-1.5 size-5"
                     disabled={isCompleting}
                     onCheckedChange={completeTask}
                   />

@@ -44,7 +44,7 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
               disabled
               checked={isTaskCompleted}
               aria-label="Completed"
-              className="mt-1.5 size-5 border-muted-foreground/50 disabled:opacity-100"
+              className="mt-1.5 size-5 disabled:opacity-100"
             />
             <h2 className="min-w-0 py-0.5 text-lg font-semibold wrap-anywhere">{title}</h2>
           </div>
@@ -76,7 +76,7 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
                   disabled
                   aria-label={stepTitle}
                   checked={isCompleted}
-                  className="border-muted-foreground/50 disabled:opacity-100"
+                  className="disabled:opacity-100"
                 />
                 <span
                   className={cn(

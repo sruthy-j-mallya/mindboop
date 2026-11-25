@@ -65,12 +65,7 @@ const Step = ({ id, text, isDone, onRename, onToggle, onRemove, onInsertBelow }:
       >
         <GripVertical />
       </Button>
-      <Checkbox
-        aria-label={text}
-        checked={isDone}
-        className="border-muted-foreground/50"
-        onCheckedChange={handleCheckedChange}
-      />
+      <Checkbox aria-label={text} checked={isDone} onCheckedChange={handleCheckedChange} />
       {isEditing ? (
         <EditStep
           text={text}
