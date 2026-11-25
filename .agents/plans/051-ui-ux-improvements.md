@@ -52,7 +52,7 @@ Tick an issue in the commit that fixes it.
 - [x] 24. Due dates in lists on phones, under the title
 - [x] 25. A visible menu on areas and routine rows, besides the right click
 - [x] 26. Hide the area navigation above an open task on phones
-- [ ] 27. Group long lists: Overdue, Today, Upcoming, No date
+- [x] 27. Group long lists: Overdue, Today, Upcoming, No date
 
 ## P2: Consistency and accessibility
 

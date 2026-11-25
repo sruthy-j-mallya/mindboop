@@ -1,12 +1,16 @@
 import { Inbox } from "lucide-react";
 
 import type { LifeArea } from "@/apis/types";
+import { SCHEDULE_REFRESH_INTERVAL } from "@/components/commons/ScheduleLabel/constants";
 import { Button } from "@/components/ui/button";
 import { useInfiniteTasks } from "@/hooks/reactQuery/useTasksApi";
+import useCurrentTime from "@/hooks/useCurrentTime";
 
 import { getTaskFilters } from "../utils";
 import EmptyList from "./EmptyList";
+import Group from "./Group";
 import TaskRow from "./TaskRow";
+import { groupTasks } from "./utils";
 
 type TaskListProps = { lifeArea?: LifeArea };
 
@@ -16,6 +20,9 @@ const TaskList = ({ lifeArea }: TaskListProps) => {
     getTaskFilters(lifeArea),
   );
   const tasks = data?.pages.flatMap((page) => page.tasks) ?? [];
+
+  const now = useCurrentTime(true, SCHEDULE_REFRESH_INTERVAL);
+  const groups = groupTasks(tasks, now);
 
   const handleLoadMore = () => fetchNextPage();
 
@@ -51,11 +58,20 @@ const TaskList = ({ lifeArea }: TaskListProps) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <ul aria-label="Tasks" className="flex flex-col gap-1">
-        {tasks.map((task) => (
-          <TaskRow key={task.id} task={task} />
-        ))}
-      </ul>
+      {/* Headings only once there's something to tell apart. */}
+      {groups.length > 1 ? (
+        <ul aria-label="Tasks" className="flex flex-col gap-4">
+          {groups.map((group) => (
+            <Group key={group.id} group={group} />
+          ))}
+        </ul>
+      ) : (
+        <ul aria-label="Tasks" className="flex flex-col gap-1">
+          {tasks.map((task) => (
+            <TaskRow key={task.id} task={task} />
+          ))}
+        </ul>
+      )}
       {hasNextPage && (
         <Button disabled={isFetchingNextPage} type="button" variant="ghost" onClick={handleLoadMore}>
           Load more
