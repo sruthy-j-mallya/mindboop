@@ -1,3 +1,19 @@
+import routes from "@/routes";
+
+// What the browser's tab calls each page. The paths match their nested pages too.
+export const PAGE_TITLES = [
+  { path: routes.inbox.index, title: "Inbox" },
+  { path: routes.lifeAreas.index, title: "Areas of life" },
+  { path: routes.calendar, title: "Calendar" },
+  { path: routes.routines.index, title: "Routines" },
+  { path: routes.timer, title: "Timer" },
+  { path: routes.parkingLot, title: "Parking lot" },
+  { path: routes.settings, title: "Settings" },
+];
+
+export const HOME_TITLE = "Home";
+export const UNKNOWN_PAGE_TITLE = "Page not found";
+
 export const SIDEBAR_STORAGE_KEY = "sidebar_open";
 
 export const ALARM_RING_DURATION = 60_000; // 1 minute

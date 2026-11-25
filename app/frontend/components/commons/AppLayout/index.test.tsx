@@ -82,6 +82,21 @@ describe("AppLayout", () => {
 
   afterEach(() => document.documentElement.classList.remove("dark"));
 
+  it("names the page in the browser's tab", async () => {
+    renderWithProviders(<AppLayout />, undefined, routes.calendar);
+
+    await waitFor(() => expect(document.title).toBe("Calendar · Mindboop"));
+  });
+
+  it("leads the tab's title with a session's time left", async () => {
+    vi.mocked(currentTimeLogsApi.show).mockResolvedValue({
+      timeLog: { ...TIME_LOG, isRunning: false, currentRunStartedAt: null, accumulatedElapsedSeconds: 60 },
+    });
+    renderWithProviders(<AppLayout />, undefined, "/areas/some-area");
+
+    await waitFor(() => expect(document.title).toBe("24:00 · Areas of life · Mindboop"));
+  });
+
   it("reminds about a routine once on its day, with a way to start it", async () => {
     localStorage.removeItem("routines.remindedOn");
     const now = new Date();

@@ -1,6 +1,19 @@
-import type { Routine } from "@/apis/types";
+import { matchPath } from "react-router";
 
-import { ALARM_PHASES, ALARM_RING_DURATION, REMINDER_GRACE_PERIOD, SIDEBAR_STORAGE_KEY } from "./constants";
+import type { Routine, TimeLog } from "@/apis/types";
+import routes from "@/routes";
+import { formatRemainingTime } from "@/utils";
+import { getClockState } from "@/utils/timeLogs";
+
+import {
+  ALARM_PHASES,
+  ALARM_RING_DURATION,
+  HOME_TITLE,
+  PAGE_TITLES,
+  REMINDER_GRACE_PERIOD,
+  SIDEBAR_STORAGE_KEY,
+  UNKNOWN_PAGE_TITLE,
+} from "./constants";
 
 export const isSidebarOpen = () => {
   try {
@@ -48,4 +61,22 @@ export const isReminderDue = (
   const lateBy = now.getTime() - dueAt.getTime();
 
   return lateBy >= 0 && lateBy <= REMINDER_GRACE_PERIOD;
+};
+
+const findPageTitle = (pathname: string) =>
+  pathname === routes.root
+    ? HOME_TITLE
+    : (PAGE_TITLES.find(({ path }) => matchPath({ path, end: false }, pathname))?.title ??
+      UNKNOWN_PAGE_TITLE);
+
+// "Calendar", or with a session on the clock "14:55 · Calendar", so the time shows from another tab.
+export const getPageTitle = (pathname: string, timeLog: TimeLog | null | undefined, currentTime: number) => {
+  const title = findPageTitle(pathname);
+  if (!timeLog) return title;
+
+  const clock = timeLog.currentBreak
+    ? "Paused"
+    : formatRemainingTime(getClockState(timeLog, currentTime).seconds);
+
+  return `${clock} · ${title}`;
 };

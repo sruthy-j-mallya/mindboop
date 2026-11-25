@@ -11,6 +11,7 @@ import BreakAlarm from "./BreakAlarm";
 import CuriosityAlarm from "./CuriosityAlarm";
 import CurrentSession from "./CurrentSession";
 import GlobalSearch from "./GlobalSearch";
+import PageTitle from "./PageTitle";
 import RoutineReminders from "./RoutineReminders";
 import { isSidebarOpen, saveSidebarOpen } from "./utils";
 
@@ -37,6 +38,7 @@ const AppLayout = () => {
         <CuriosityAlarm />
         <Outlet />
       </SidebarInset>
+      <PageTitle />
       <CurrentSession />
       <RoutineReminders />
       {/* Outside the sidebar, which unmounts its content on narrow screens when it closes. */}

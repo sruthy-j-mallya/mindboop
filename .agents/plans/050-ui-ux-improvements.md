@@ -37,7 +37,7 @@ Tick an issue in the commit that fixes it.
 - [ ] 9. Rename the "Areas of life" link "Tasks", as it opens the Inbox
 - [ ] 10. Move Sign out into an account section in Settings
 - [ ] 11. ⌘K opens search (the editor keeps it for links), plus a quick capture shortcut
-- [ ] 12. Name the page in the browser tab, with the time left during a session
+- [x] 12. Name the page in the browser tab, with the time left during a session
 - [ ] 13. Agenda rows: Start button, area badge and estimate
 - [x] 14. Agenda rows: only the time, or "All day", instead of repeating "Today"
 - [ ] 15. Overdue: undo for moving a task, plus Tomorrow and Pick a date (bulk moves stay out of scope, as in 049)
