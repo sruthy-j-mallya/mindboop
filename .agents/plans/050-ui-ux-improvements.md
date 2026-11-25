@@ -22,7 +22,7 @@ Tick an issue in the commit that fixes it.
 
 ## P0: Broken or blocking
 
-- [ ] 1. Search: rows run past the panel, cutting off area names. Let the panel shrink inside the dialog's grid
+- [x] 1. Search: rows run past the panel, cutting off area names. Let the panel shrink inside the dialog's grid
 - [ ] 2. Completing a task has no undo, and completed tasks can't be found. Add an Undo toast and a collapsed "Completed"
   section in each list
 - [ ] 3. Done under 2 minutes only offers to discard, leaving the task open. Add a way to finish the task without logging

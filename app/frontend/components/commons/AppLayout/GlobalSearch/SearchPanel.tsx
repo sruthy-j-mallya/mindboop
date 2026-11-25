@@ -80,7 +80,8 @@ const SearchPanel = ({ onClose }: SearchPanelProps) => {
   const status = getStatus();
 
   return (
-    <div role="search">
+    // Shrinks to the dialog, whose grid would otherwise stretch to the longest match.
+    <div className="min-w-0" role="search">
       <div className="flex items-center gap-3 px-4">
         <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
         <input
