@@ -141,7 +141,7 @@ html:has(.calendar) body {
 }
 
 .calendar .rbc-event.calendar-event-task.rbc-selected {
-  background: var(--brand-purple-light);
+  background: color-mix(in oklab, var(--primary) 85%, #ffffff);
 }
 
 .calendar .rbc-event.calendar-event-time-log,
