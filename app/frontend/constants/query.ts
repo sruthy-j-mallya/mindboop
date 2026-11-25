@@ -1,5 +1,6 @@
 import type {
   CalendarEventsParams,
+  HomeTasksParams,
   ParkingLotItemFilters,
   ParkingLotItemListParams,
   RoutineTimeLogsParams,
@@ -18,6 +19,8 @@ export const QUERY_KEYS = {
     INFINITE_LIST: (filters: TaskFilters) => ["tasks", "list", "infinite", filters],
     // Under LISTS too: what changes a list can change how many tasks are in it.
     COUNTS: ["tasks", "list", "counts"],
+    // Under LISTS too: whatever refreshes the task lists refreshes Home.
+    HOME: (params: HomeTasksParams) => ["tasks", "list", "home", params],
     DETAIL: (id: string) => ["tasks", "detail", id],
   },
   PARKING_LOT_ITEMS: {

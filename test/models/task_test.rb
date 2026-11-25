@@ -196,4 +196,36 @@ class TaskTest < ActiveSupport::TestCase
     assert_not task.valid?
     assert_includes task.errors[:life_area], "must exist"
   end
+
+  def test_that_due_between_and_overdue_at_never_share_a_task
+    from = Time.zone.local(2026, 11, 25)
+    to = from + 1.day
+    today = create(:task, starts_at: from, is_all_day: true)
+    ends_today = create(:task, is_duration: true, starts_at: from - 3.days, ends_at: from)
+    late_today = create(:task, starts_at: to - 1.second)
+    yesterday = create(:task, starts_at: from - 1.day, is_all_day: true)
+    tomorrow = create(:task, starts_at: to)
+
+    assert_equal [ today, ends_today, late_today ].to_set, Task.due_between(from, to).to_set
+    assert_equal [ yesterday ], Task.overdue_at(from).to_a
+    assert_not_includes Task.due_between(from, to), tomorrow
+  end
+
+  def test_that_by_end_puts_the_task_that_ended_first_first
+    due_later = create(:task, starts_at: 2.days.ago)
+    ended_earlier = create(:task, is_duration: true, starts_at: 6.days.ago, ends_at: 4.days.ago)
+    due_between = create(:task, starts_at: 3.days.ago)
+
+    assert_equal [ ended_earlier, due_between, due_later ], Task.where.not(starts_at: nil).by_end.to_a
+  end
+
+  def test_that_by_latest_breadcrumb_lists_tasks_with_breadcrumbs_once_newest_first
+    other = create(:task)
+    create(:breadcrumb, task: @task, created_at: 5.days.ago)
+    create(:breadcrumb, task: other, created_at: 2.days.ago)
+    create(:breadcrumb, task: @task, created_at: 1.day.ago)
+    create(:task)
+
+    assert_equal [ @task, other ], Task.by_latest_breadcrumb.to_a
+  end
 end

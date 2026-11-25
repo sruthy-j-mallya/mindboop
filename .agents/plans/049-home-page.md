@@ -1,6 +1,6 @@
-# 050 — Home page
+# 049 — Home page
 
-Status: proposed
+Status: done
 Date: 2026-11-25
 Mockup: https://claude.ai/artifact/FiQcbrzUah9G9wEagfhHZf (private)
 
@@ -15,7 +15,7 @@ agenda, Pick up where you left off, and Overdue.
 | --- | --- |
 | Navigation | Home (`House` icon) takes Quick start's place in the sidebar, and `/` renders it. Sign-in and sign-up redirects don't change. The standalone Quick Start page is removed |
 | Layout | Two by two on wide screens, in the order Quick start, Today's agenda, Pick up where you left off, Overdue. One column in that order on narrow screens. Under a heading with today's date and a short count ("4 on today's agenda, 4 overdue") |
-| Quick start | The existing form, draft storage, validation and `POST /api/quick_starts`, in a card. "Add notes" shows the description editor (open from the start when the draft has one); steps, estimate presets, custom minutes and Begin stay. With a session running, the card shows "Return to timer" instead, since a second session can't start; the draft is kept |
+| Quick start | The existing form, draft storage, validation and `POST /api/quick_starts`, in a card. "Add notes" shows the description editor (open from the start when the draft has one); steps, estimate presets and custom minutes (now in one row) and Begin stay. With a session running, the card shows "Return to timer" instead, since a second session can't start; the draft is kept |
 | Today's agenda | Open tasks whose date is today or whose duration touches today. All-day first, then by start time. A task timed earlier today stays here, in red through `ScheduleLabel`. The heading links to the Calendar. Routines aren't shown |
 | Overdue | Open tasks that ended (or were due) before today, oldest first. "Move to today" makes the task an all-day date for today, dropping any time or duration it had |
 | No repeats | A task is in the agenda or in Overdue, never both. It can also be in Pick up where you left off, which answers a different question |
@@ -52,7 +52,7 @@ agenda, Pick up where you left off, and Overdue.
   `utils.ts`, `types.ts`. `components/QuickStart/` moves to `components/Home/QuickStart/`.
 - The Start logic in `StartTaskButton` moves to a hook, `useStartTask`, so Resume shares it. `SwitchSessionDialog` moves
   to `components/commons/SwitchSessionDialog`, as two features now use it.
-- All colours come from the semantic tokens, so Home works in dark mode and with the colour themes.
+- All colours come from the semantic tokens, so Home works in dark mode.
 
 ## Tests
 
@@ -72,9 +72,3 @@ agenda, Pick up where you left off, and Overdue.
 3. Home with the three lists, and the Resume hook.
 4. Move Quick start into Home; sidebar and route.
 5. Vitest and Playwright, then the full check from `CLAUDE.md`.
-
-## Other branches
-
-- `have-theme-options` isn't merged. It takes plan number 049, so this is 050.
-- `design-updates` isn't merged either, and changes `QuickStart/index.tsx` and `QuickStart/Estimate.tsx`, which this plan
-  moves. Whichever merges second needs a rebase there.

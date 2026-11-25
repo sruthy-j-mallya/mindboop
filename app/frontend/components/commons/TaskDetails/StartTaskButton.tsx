@@ -1,42 +1,20 @@
-import { useState } from "react";
-
 import { Play, Timer } from "lucide-react";
-import { useNavigate } from "react-router";
 
-import type { Task, TimeLog } from "@/apis/types";
-import type { TimerLocationState } from "@/components/Timer/types";
+import type { Task } from "@/apis/types";
+import SwitchSessionDialog from "@/components/commons/SwitchSessionDialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
-import routes from "@/routes";
-
-import SwitchSessionDialog from "./SwitchSessionDialog";
+import useStartTask from "@/hooks/useStartTask";
 
 type StartTaskButtonProps = { task: Task };
 
-// Just an icon, named by a tooltip. Opens the Timer page with this task picked. With another task on the clock, it
-// first asks how to wrap that one up; with this one on the clock, it just leads to it.
+// Just an icon, named by a tooltip. Opens the Timer page with this task picked.
 const StartTaskButton = ({ task }: StartTaskButtonProps) => {
-  const navigate = useNavigate();
-  const { data: timeLog, isPending } = useCurrentTimeLog();
-  // The session to switch from, kept while the dialog is open: ending it refetches the current time log as null, and
-  // the dialog must stay mounted for its success callback to lead on to the Timer.
-  const [switchingFrom, setSwitchingFrom] = useState<TimeLog | null>(null);
-  const isOnTheClock = timeLog?.taskId === task.id;
+  const { startTask, isLoadingSession, runningTaskId, switchDialogProps } = useStartTask();
+  const isOnTheClock = runningTaskId === task.id;
   const label = isOnTheClock ? "On the clock" : "Start";
 
-  const startTask = () => {
-    const state: TimerLocationState = { taskId: task.id };
-    navigate(routes.timer, { state });
-  };
-
-  const handleClick = () => {
-    if (isOnTheClock) navigate(routes.timer);
-    else if (timeLog) setSwitchingFrom(timeLog);
-    else startTask();
-  };
-
-  const handleSwitchDialogClose = () => setSwitchingFrom(null);
+  const handleClick = () => startTask(task.id);
 
   return (
     <>
@@ -46,7 +24,7 @@ const StartTaskButton = ({ task }: StartTaskButtonProps) => {
             <Button
               aria-label={label}
               className="shrink-0"
-              disabled={isPending}
+              disabled={isLoadingSession}
               size="icon-sm"
               type="button"
               onClick={handleClick}
@@ -57,9 +35,7 @@ const StartTaskButton = ({ task }: StartTaskButtonProps) => {
           <TooltipContent>{label}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      {switchingFrom && (
-        <SwitchSessionDialog timeLog={switchingFrom} onClose={handleSwitchDialogClose} onSwitch={startTask} />
-      )}
+      {switchDialogProps && <SwitchSessionDialog {...switchDialogProps} />}
     </>
   );
 };

@@ -44,6 +44,6 @@ test("navigate from the sidebar and keep the chosen theme and sounds on the acco
   await expect(completionSound).toHaveText("Bell");
   await expect(breakAlarmSound).toHaveText("Marimba");
 
-  await page.getByRole("link", { name: "Quick start" }).click();
+  await page.getByRole("link", { name: "Home" }).click();
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 });

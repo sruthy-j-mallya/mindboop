@@ -4,12 +4,13 @@ import { Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
+import currentTimeLogsApi from "@/apis/current_time_logs";
 import quickStartsApi from "@/apis/quick_starts";
 import type { Task, TimeLog } from "@/apis/types";
-import QuickStart from "@/components/QuickStart";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
 
+import QuickStart from ".";
 import { DRAFT_STORAGE_KEY } from "./constants";
 
 const TASK = { id: "2f6e3c1a-0b7d-4c55-9a1e-7d0a4b8e1f23", estimatedMinutes: 10 } as Task;
@@ -43,6 +44,7 @@ const renderWithTimerRoute = () =>
 describe("QuickStart", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
     vi.spyOn(quickStartsApi, "create").mockResolvedValue({ task: TASK, timeLog: TIME_LOG });
   });
 
@@ -75,6 +77,7 @@ describe("QuickStart", () => {
     renderWithTimerRoute();
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
     // jsdom can't type into the editor reliably (Playwright covers typing), so paste and format the text instead.
+    await userEvent.click(screen.getByRole("button", { name: "Add notes" }));
     await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
     await userEvent.paste("Cite sources");
     await userEvent.keyboard("{Control>}a{/Control}");
@@ -87,6 +90,34 @@ describe("QuickStart", () => {
       expect.objectContaining({ description: "**Cite sources**" }),
       expect.anything(),
     );
+  });
+
+  it("shows the description editor only once notes are added", async () => {
+    renderWithProviders(<QuickStart />);
+
+    expect(screen.queryByRole("textbox", { name: "Description" })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Add notes" }));
+
+    expect(await screen.findByRole("textbox", { name: "Description" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Add notes" })).not.toBeInTheDocument();
+  });
+
+  it("leads back to the timer while a session is running, and keeps the draft", async () => {
+    localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      JSON.stringify({ title: "Draft submitted", description: "", steps: [] }),
+    );
+    vi.mocked(currentTimeLogsApi.show).mockResolvedValue({ timeLog: TIME_LOG });
+    renderWithTimerRoute();
+
+    const link = await screen.findByRole("link", { name: "Return to timer" });
+    expect(screen.queryByRole("button", { name: "Begin" })).not.toBeInTheDocument();
+    expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toContain("Draft submitted");
+
+    await userEvent.click(link);
+
+    expect(screen.getByText("Timer page")).toBeVisible();
   });
 
   it("leaves out an empty description", async () => {
@@ -124,6 +155,7 @@ describe("QuickStart", () => {
   it("keeps the title, description and steps across a remount", async () => {
     const { unmount } = renderWithProviders(<QuickStart />);
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
+    await userEvent.click(screen.getByRole("button", { name: "Add notes" }));
     await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
     await userEvent.paste("Cite sources");
     await addStep("Outline");

@@ -210,6 +210,8 @@ test("the multi-day view shows the chosen number of days", async ({ page }) => {
 test("scrolling sideways pages through dates, and up and down through months", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Calendar" }).click();
+  // Home has level 2 headings too, so wait for it to go.
+  await expect(page.locator(".rbc-time-content")).toBeVisible();
   const title = page.getByRole("heading", { level: 2 });
   const thisWeek = await title.textContent();
 
