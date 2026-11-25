@@ -1,6 +1,8 @@
 import { type ReactNode, useMemo } from "react";
 
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { PHONE_LAYOUT_QUERY } from "@/constants";
+import useMediaQuery from "@/hooks/useMediaQuery";
 
 import type { AnchorRect } from "./types";
 
@@ -31,6 +33,8 @@ const AnchoredPopover = ({
   children,
   onDismiss,
 }: AnchoredPopoverProps) => {
+  // No room beside the spot there: below (or above) it, the popover can shift sideways to fit.
+  const isPhone = useMediaQuery(PHONE_LAYOUT_QUERY);
   const virtualRef = useMemo(() => {
     const { left, top, width, height } = anchor;
     const rect = { left, top, width, height, x: left, y: top, right: left + width, bottom: top + height };
@@ -59,7 +63,7 @@ const AnchoredPopover = ({
         className={className}
         collisionPadding={COLLISION_PADDING}
         role="dialog"
-        side="right"
+        side={isPhone ? "bottom" : "right"}
         style={pinnedStyle}
         onOpenAutoFocus={handleOpenAutoFocus}
       >

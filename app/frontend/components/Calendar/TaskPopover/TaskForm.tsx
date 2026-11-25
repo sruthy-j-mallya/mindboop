@@ -50,12 +50,10 @@ const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, on
             {errors.title.message}
           </p>
         )}
-        <div className="flex items-start justify-between gap-2">
-          <div className="-ml-2 flex flex-wrap items-start gap-1">
-            <ScheduleField control={control} />
-            <LifeAreaField control={control} />
-            <EstimateField control={control} />
-          </div>
+        <div className="-ml-2 flex flex-wrap items-start gap-x-0.5">
+          <ScheduleField control={control} />
+          <LifeAreaField control={control} />
+          <EstimateField control={control} />
           {showAddStep && <AddStepButton onClick={onAddStep} />}
         </div>
       </header>
