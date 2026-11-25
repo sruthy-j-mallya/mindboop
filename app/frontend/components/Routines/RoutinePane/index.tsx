@@ -30,17 +30,17 @@ const RoutinePane = () => {
   const reminder = describeReminder(routine);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4">
       <Button asChild className="w-fit lg:hidden" size="sm" variant="ghost">
         <Link to={routes.routines.index}>
           <ChevronLeft />
           All routines
         </Link>
       </Button>
-      <header className="flex items-start gap-4">
-        <RoutineBadge className="size-14 text-3xl" color={color} emoji={emoji} />
-        <div className="grid min-w-0 flex-1 gap-1">
-          <h2 className="text-2xl font-semibold wrap-anywhere">{title}</h2>
+      <header className="flex items-start gap-3">
+        <RoutineBadge className="size-12 text-2xl" color={color} emoji={emoji} />
+        <div className="grid min-w-0 flex-1 gap-0.5">
+          <h2 className="text-xl font-semibold wrap-anywhere">{title}</h2>
           <p className="text-sm text-muted-foreground">
             {formatMinutes(durationMinutes)}
             {sound !== "none" && soundLabel && ` · ${soundLabel}`}

@@ -41,17 +41,17 @@ const RoutineRow = ({ routine, now }: RoutineRowProps) => {
         <ContextMenuTrigger asChild>
           <li className="group flex items-center gap-2 rounded-xl pr-2 hover:bg-muted/60 has-[a[aria-current=page]]:bg-muted data-[state=open]:bg-muted/60">
             <NavLink
-              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl py-2.5 pl-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-2 pl-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               to={getRoutinePath(id)}
             >
-              <RoutineBadge color={color} emoji={emoji} />
-              <span className="grid min-w-0 gap-0.5">
-                <span className="truncate font-medium">{title}</span>
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <RoutineBadge className="size-9 text-lg" color={color} emoji={emoji} />
+              <span className="grid min-w-0">
+                <span className="truncate text-sm font-medium">{title}</span>
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   {formatMinutes(durationMinutes)}
                   <span aria-hidden>·</span>
                   {lastDoneAt ? formatLastDone(lastDoneAt, now) : "Not yet"}
-                  {reminder && <Bell aria-label={reminder} className="size-3.5" />}
+                  {reminder && <Bell aria-label={reminder} className="size-3" />}
                 </span>
               </span>
             </NavLink>

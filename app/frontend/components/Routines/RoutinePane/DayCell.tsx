@@ -19,7 +19,7 @@ const DayCell = ({ day, onSelect }: DayCellProps) => {
     <button
       aria-label={isFuture ? label : `Log time on ${label}`}
       className={cn(
-        "group flex flex-col items-center gap-1 justify-self-center rounded-md px-1 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "group flex flex-col items-center gap-0.5 justify-self-center rounded-md px-1 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
         !isFuture && "cursor-pointer",
         (!isInMonth || isFuture) && "opacity-40",
       )}
@@ -31,11 +31,11 @@ const DayCell = ({ day, onSelect }: DayCellProps) => {
       <span className={cn("text-xs", isToday && "font-semibold text-primary")}>{format(date, "d")}</span>
       <span
         className={cn(
-          "flex size-8 items-center justify-center rounded-full transition-shadow group-enabled:group-hover:ring-2 group-enabled:group-hover:ring-(--area-color)",
+          "flex size-7 items-center justify-center rounded-full transition-shadow group-enabled:group-hover:ring-2 group-enabled:group-hover:ring-(--area-color)",
           isDone ? "bg-(--area-color) text-white" : "bg-muted",
         )}
       >
-        {isDone && <Check className="size-4" />}
+        {isDone && <Check className="size-3.5" />}
       </span>
     </button>
   );
