@@ -9,7 +9,7 @@ import type { TaskRowProps } from "./types";
 // The checkbox completes the task; the title opens it in its area or the Inbox.
 const TaskRow = ({ task, details, children, error }: TaskRowProps) => {
   const { id, title, lifeAreaId } = task;
-  const { completeTask, isCompleting, error: completeError } = useCompleteTask(id);
+  const { completeTask, isCompleting, error: completeError } = useCompleteTask(task);
   const message = completeError?.message ?? error;
 
   return (

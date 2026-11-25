@@ -296,6 +296,42 @@ describe("Inbox", () => {
     expect(playCompletionSound).toHaveBeenCalledExactlyOnceWith("bell");
   });
 
+  it("undoes completing a task from the toast", async () => {
+    const task = buildTask({ title: "Pay rent" });
+    vi.spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce(listOf([task]))
+      .mockResolvedValueOnce(listOf([]))
+      .mockResolvedValue(listOf([task]));
+    const update = vi
+      .spyOn(tasksApi, "update")
+      .mockImplementation(({ isCompleted = false }) => Promise.resolve({ task: { ...task, isCompleted } }));
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Complete Pay rent" }));
+    expect(await screen.findByText("Completed “Pay rent”")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+
+    expect(await screen.findByRole("checkbox", { name: "Complete Pay rent" })).not.toBeChecked();
+    expect(update.mock.lastCall?.[0]).toEqual({ id: task.id, isCompleted: false });
+  });
+
+  it("lists completed tasks when asked, and reopens one", async () => {
+    const task = buildTask({ title: "Pay rent", isCompleted: true });
+    const fetchList = vi
+      .spyOn(tasksApi, "fetchList")
+      .mockImplementation(({ isCompleted } = {}) => Promise.resolve(listOf(isCompleted ? [task] : [])));
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: { ...task, isCompleted: false } });
+    renderInbox();
+    await screen.findByText("Your Inbox is empty");
+    expect(fetchList).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(screen.getByRole("button", { name: "Completed" }));
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Reopen Pay rent" }));
+
+    expect(fetchList).toHaveBeenCalledWith({ isCompleted: true, isInInbox: true, page: 1 });
+    expect(update.mock.lastCall?.[0]).toEqual({ id: task.id, isCompleted: false });
+  });
+
   it("deletes the open task after confirming and closes its pane", async () => {
     const task = buildTask({ title: "Cancel the gym" });
     vi.spyOn(tasksApi, "fetchList")

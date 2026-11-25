@@ -4,7 +4,7 @@ module Api
 
     def index
       tasks = Tasks::FilterService.new(policy_scope(Task).kept, params.slice(*Tasks::FilterService::FILTERS)).process
-      @pagy, @tasks = pagy(tasks.includes(:checklist_items, :breadcrumbs).by_due_date)
+      @pagy, @tasks = pagy(in_order(tasks.includes(:checklist_items, :breadcrumbs)))
     end
 
     def show
@@ -27,6 +27,15 @@ module Api
     end
 
     private
+      # A list of only completed tasks is for finding one again, so the latest comes first.
+      def in_order(tasks)
+        only_completed? ? tasks.by_latest_change : tasks.by_due_date
+      end
+
+      def only_completed?
+        ActiveModel::Type::Boolean.new.cast(params[:is_completed])
+      end
+
       def set_task
         @task = Task.kept.includes(:checklist_items, :breadcrumbs).find(params[:id])
         authorize @task

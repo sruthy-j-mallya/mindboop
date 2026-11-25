@@ -98,7 +98,8 @@ pages. A missing or invalid `page` returns the first page, and a page past the e
 `{ task_counts: [{ life_area_id, tasks_count }] }`. A `null` `life_area_id` is the Inbox; an area (or Inbox) with no such
 tasks is left out.
 
-`is_completed=false` lists only incomplete tasks (the Inbox and area lists), and `is_completed=true` only completed ones.
+`is_completed=false` lists only incomplete tasks (the Inbox and area lists), and `is_completed=true` only completed ones,
+most recently changed first (those lists' "Completed" section).
 Leaving it out lists every task.
 
 `is_in_inbox=true` lists only tasks in no area of life (the Inbox), and `life_area_id` only the tasks in that area. Both

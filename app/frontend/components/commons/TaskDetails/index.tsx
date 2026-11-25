@@ -43,7 +43,7 @@ const TaskDetails = ({
 }: TaskDetailsProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
   const [openDetail, setOpenDetail] = useState<Detail | null>(null);
-  const { completeTask, isCompleting, error: completeError } = useCompleteTask(task.id, onRemoved);
+  const { completeTask, isCompleting, error: completeError } = useCompleteTask(task, onRemoved);
   const { title, renameTask, error: renameError } = useRenameTask(task);
   const error = completeError ?? renameError;
 

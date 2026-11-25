@@ -116,6 +116,16 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ completed_task.id, @task.id ], response.parsed_body["tasks"].pluck("id")
   end
 
+  def test_that_index_orders_completed_tasks_by_their_latest_change
+    older = create(:task, user: @user, is_completed: true, starts_at: 1.day.ago, updated_at: 2.days.ago)
+    latest = create(:task, user: @user, is_completed: true, updated_at: 1.day.ago)
+    sign_in @user
+
+    get api_tasks_path, params: { is_completed: true }
+
+    assert_equal [ latest.id, older.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
   def test_that_index_can_list_the_inbox_or_one_area
     life_area = create(:life_area, user: @user)
     task_in_area = create(:task, user: @user, life_area:)

@@ -28,7 +28,7 @@ type TaskRowProps = { task: Task };
 const TaskRow = ({ task }: TaskRowProps) => {
   const { id } = task;
   const navigate = useNavigate();
-  const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(id);
+  const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(task);
   const { data: timeLog } = useCurrentTimeLog();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { deleteTask, isDeleting, error: deleteError } = useDeleteTaskWithUndo(task);
