@@ -490,8 +490,7 @@ test("start an estimated Inbox task, switching from the one on the clock by mark
   // Estimate the second task, then start it: the first is still on the clock.
   await page.getByRole("link", { name: "Tasks", exact: true }).click();
   await page.getByRole("textbox", { name: "Call the bank" }).click();
-  await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Add estimate" }).click();
+  await page.getByRole("button", { name: "Estimate", exact: true }).click();
   await page.getByLabel("Minutes").fill("45");
   await page.getByRole("button", { name: "OK" }).click();
   await expect(page.getByRole("button", { name: "45 min" })).toBeVisible();

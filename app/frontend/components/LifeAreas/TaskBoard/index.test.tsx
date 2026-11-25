@@ -499,8 +499,7 @@ describe("Inbox", () => {
     vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(422, "Not allowed"));
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Estimate" }));
     await userEvent.type(screen.getByLabelText("Minutes"), "30");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
@@ -508,16 +507,14 @@ describe("Inbox", () => {
     expect(screen.getByRole("button", { name: "Estimate" })).toBeInTheDocument();
   });
 
-  it("leaves a set detail out of the menu", async () => {
+  it("shows a set detail, and offers the rest beside it", async () => {
     const task = buildTask({ title: "Plan the week", estimatedMinutes: 30 });
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
     vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-
-    expect(screen.getByRole("menuitem", { name: "Add due date" })).toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: "Add estimate" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "30 min" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Due date" })).toBeInTheDocument();
   });
 
   describe("when deleting the task on the clock", () => {
@@ -784,8 +781,7 @@ describe("Inbox", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Add due date" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Due date" }));
     const tomorrow = addDays(new Date(), 1);
     await userEvent.click(
       screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
@@ -883,8 +879,7 @@ describe("Inbox", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Estimate" }));
     await userEvent.type(screen.getByLabelText("Hours"), "1");
     await userEvent.type(screen.getByLabelText("Minutes"), "30");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));

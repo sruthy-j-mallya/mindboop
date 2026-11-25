@@ -199,11 +199,11 @@ describe("Timer", () => {
     expect(await screen.findByRole("textbox", { name: "Task title" })).toHaveValue("Draft permission");
     expect(screen.queryByRole("checkbox", { name: "Mark as complete" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "On the clock" })).not.toBeInTheDocument();
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-    expect(screen.getByRole("menuitem", { name: "Add due date" })).toBeVisible();
-    expect(screen.getByRole("menuitem", { name: "Add estimate" })).toBeVisible();
-    expect(await screen.findByRole("menuitem", { name: "Move to area" })).toBeVisible();
-    expect(screen.queryByRole("menuitem", { name: "Delete task" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Due date" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Estimate" })).toBeVisible();
+    expect(await screen.findByRole("button", { name: "Area of life: Inbox" })).toBeVisible();
+    // Deleting is all that's left for the menu, as the task has steps.
+    expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
   });
 
   it("shows the title once, edited beside the clock", async () => {
@@ -218,7 +218,7 @@ describe("Timer", () => {
     expect(update.mock.lastCall?.[0]).toEqual({ id: TASK_ID, title: "Draft the form" });
   });
 
-  it("hides the menu when there's nothing left to add", async () => {
+  it("hides the menu when the task already has steps", async () => {
     renderTimer(TIME_LOG, { ...TASK, estimatedMinutes: 30, isAllDay: true, startsAt: STARTED_AT });
 
     expect(await screen.findByRole("button", { name: "30 min" })).toBeVisible();
@@ -230,8 +230,7 @@ describe("Timer", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: TASK });
     renderTimer(TIME_LOG);
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Add due date" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Due date" }));
     const tomorrow = addDays(new Date(), 1);
     await userEvent.click(
       screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
@@ -333,8 +332,7 @@ describe("Timer", () => {
       renderTimer(TIME_LOG);
 
       expect(await screen.findByRole("checkbox", { name: FIRST_ITEM.title })).toBeVisible();
-      await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-      expect(screen.queryByRole("menuitem", { name: "Add step" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
     });
 
     it("adds the first step from the menu beside the title", async () => {

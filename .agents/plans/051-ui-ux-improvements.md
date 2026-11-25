@@ -48,7 +48,7 @@ Tick an issue in the commit that fixes it.
 - [ ] 20. Timer setup: list today's and recent tasks, and create a task when nothing matches
 - [x] 21. Timer setup: duration presets
 - [x] 22. Mini timer: task name and paused state, clear of the list on phones
-- [ ] 23. Task pane: ghost chips for date, area and estimate, as in the Calendar's popover
+- [x] 23. Task pane: ghost chips for date, area and estimate, as in the Calendar's popover
 - [x] 24. Due dates in lists on phones, under the title
 - [x] 25. A visible menu on areas and routine rows, besides the right click
 - [x] 26. Hide the area navigation above an open task on phones
@@ -91,4 +91,7 @@ Tick an issue in the commit that fixes it.
 | 3 | Offered after Done only. Bailing means the task isn't finished |
 | 30 | The description box goes without an outline or a focus ring in both themes: it's read more than filled in. Its placeholder shows what it is, and the caret shows it has focus |
 | 28 | "12 Nov" and "5:30pm" (or "17:30") everywhere, through `utils/dateTime.ts`. `user_preferences.time_format` defaults to the 12-hour clock. Browser time inputs (a routine's reminder, logging time) follow the browser's locale and can't be set |
+| 23 | Changes plan 042: an unset date, area or estimate is offered beside the set ones rather than in the menu, which keeps Add step and Delete |
+| 11 | ⌘K (Ctrl+K) searches. ⌥N (Alt+N) adds a task to the Inbox, except while typing, as ⌥N types "˜" on a Mac. Both are in the sidebar too |
+| 27 | A task that was due earlier today is under Overdue, as its red date says. With one group there are no headings |
 | 19 | The heading beside the clock takes over the pane's in-place title editing |

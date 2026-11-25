@@ -16,8 +16,7 @@ test("estimate an Inbox task, change it, then clear it", async ({ page }) => {
   await input.press("Enter");
   await page.getByRole("textbox", { name: "Plan the week" }).click();
 
-  await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Add estimate" }).click();
+  await page.getByRole("button", { name: "Estimate", exact: true }).click();
   await page.getByLabel("Minutes").fill("45");
   await page.getByRole("button", { name: "OK" }).click();
 

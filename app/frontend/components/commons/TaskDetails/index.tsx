@@ -18,7 +18,6 @@ import StartTaskButton from "./StartTaskButton";
 import TaskActionsMenu from "./TaskActionsMenu";
 import TaskEstimatePicker from "./TaskEstimatePicker";
 import TaskLifeAreaPicker from "./TaskLifeAreaPicker";
-import type { Detail, DetailPickerProps } from "./types";
 
 type TaskDetailsProps = {
   task: Task;
@@ -42,7 +41,6 @@ const TaskDetails = ({
   onRemoved,
 }: TaskDetailsProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
-  const [openDetail, setOpenDetail] = useState<Detail | null>(null);
   const { completeTask, isCompleting, error: completeError } = useCompleteTask(task, onRemoved);
   const { title, renameTask, error: renameError } = useRenameTask(task);
   const error = completeError ?? renameError;
@@ -50,24 +48,12 @@ const TaskDetails = ({
   // A row that's already open keeps its place rather than being replaced.
   const handleAddStep = () => setStepDraft((draft) => draft ?? NEW_STEP_DRAFT);
 
-  const getDetailProps = (detail: Detail): DetailPickerProps => ({
-    task,
-    isOpen: openDetail === detail,
-    // Closing one leaves another that has opened since alone.
-    onOpenChange: (isOpen) =>
-      setOpenDetail((current) => {
-        if (isOpen) return detail;
-
-        return current === detail ? null : current;
-      }),
-  });
-
   // Lined up with the title's text.
   const meta = (
     <div className={cn("-ml-1.5 flex flex-wrap items-start gap-1 empty:hidden", !isOnTimer && "pl-8")}>
-      <DueDatePicker {...getDetailProps("schedule")} />
-      <TaskLifeAreaPicker {...getDetailProps("lifeArea")} />
-      <TaskEstimatePicker {...getDetailProps("estimate")} />
+      <DueDatePicker task={task} />
+      <TaskLifeAreaPicker task={task} />
+      <TaskEstimatePicker task={task} />
     </div>
   );
 
@@ -75,8 +61,7 @@ const TaskDetails = ({
     <article className={cn("flex flex-1 flex-col", isCompact ? "gap-5" : "gap-8")}>
       {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
       <div className={cn("flex flex-col", isCompact ? "gap-1" : "gap-2")}>
-        {/* The title comes first; what's set of the date, area and estimate sits in a quiet line below it. The rest is
-            added from the menu. */}
+        {/* The title comes first, with the date, area and estimate in a quiet line below it. */}
         <header className="flex flex-col gap-1">
           <div className={cn("flex items-start", isCompact ? "gap-2" : "gap-4")}>
             {/* Without the title, what's set takes its place beside the menu. */}
@@ -111,7 +96,6 @@ const TaskDetails = ({
               <TaskActionsMenu
                 canDelete={!isOnTimer}
                 task={task}
-                onAddDetail={setOpenDetail}
                 onAddStep={handleAddStep}
                 onDeleted={onRemoved}
               />

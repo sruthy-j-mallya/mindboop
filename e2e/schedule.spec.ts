@@ -17,8 +17,7 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
   await input.press("Enter");
   await page.getByRole("textbox", { name: "Renew passport" }).click();
 
-  await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Add due date" }).click();
+  await page.getByRole("button", { name: "Due date", exact: true }).click();
   const tomorrow = format(addDays(new Date(), 1), "EEEE, MMMM do, yyyy");
   await page.getByRole("button", { name: tomorrow }).click();
   await page.getByRole("combobox", { name: "Time" }).click();
