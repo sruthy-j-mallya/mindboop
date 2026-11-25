@@ -113,6 +113,7 @@ const renderTimer = (
       completionSound: "glass",
       breakAlarmSound: "classic",
       weekStartsOn: 1,
+      timeFormat: "12h",
     },
   });
   renderWithProviders(<Timer />, undefined, initialPath);
@@ -1530,7 +1531,7 @@ describe("Timer", () => {
         expect.stringContaining("Clean my scooter"),
         expect.stringContaining("Is the shop open on Sunday?"),
       ]);
-      expect(thoughts[0]).toHaveTextContent(/\d{2}:\d{2}/);
+      expect(thoughts[0]).toHaveTextContent(/\d(am|pm)/);
       expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({
         status: "parked",
         timeLogId: TIME_LOG.id,

@@ -12,6 +12,7 @@ const PREFERENCE: UserPreference = {
   completionSound: "rising",
   breakAlarmSound: "classic",
   weekStartsOn: 1,
+  timeFormat: "12h",
 };
 
 const renderPicker = async (preference: Partial<UserPreference> = {}) => {

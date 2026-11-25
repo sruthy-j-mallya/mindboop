@@ -5,6 +5,7 @@ import { SOUNDS } from "@/components/commons/Ambience/constants";
 import RoutineBadge from "@/components/commons/Routine/Badge";
 import { Button } from "@/components/ui/button";
 import { useRoutines } from "@/hooks/reactQuery/useRoutinesApi";
+import useDatePreferences from "@/hooks/useDatePreferences";
 import routes from "@/routes";
 import { formatMinutes } from "@/utils";
 
@@ -18,6 +19,7 @@ import StatTile from "./StatTile";
 const RoutinePane = () => {
   const { routineId } = useParams();
   const { data: routines, isPending } = useRoutines();
+  const { timeFormat } = useDatePreferences();
   const routine = routines?.find(({ id }) => id === routineId);
 
   if (isPending) return null;
@@ -27,7 +29,7 @@ const RoutinePane = () => {
 
   const { title, color, emoji, durationMinutes, sound, sessionsCount, totalSeconds, lastDoneAt } = routine;
   const soundLabel = SOUNDS.find(({ id }) => id === sound)?.label;
-  const reminder = describeReminder(routine);
+  const reminder = describeReminder(routine, timeFormat);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4">

@@ -9,7 +9,7 @@ import { formatSchedule } from "@/components/commons/ScheduleLabel/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
-import useWeekStartsOn from "@/hooks/useWeekStartsOn";
+import useDatePreferences from "@/hooks/useDatePreferences";
 import { formatMinutes } from "@/utils";
 
 type ReadOnlyDetailsProps = { task: Task };
@@ -32,8 +32,8 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
   const now = useCurrentTime(false);
   const { data: lifeAreas = [] } = useAllLifeAreas();
   const lifeArea = lifeAreas.find(({ id }) => id === lifeAreaId);
-  const weekStartsOn = useWeekStartsOn();
-  const schedule = formatSchedule(task, now, weekStartsOn);
+  const preferences = useDatePreferences();
+  const schedule = formatSchedule(task, now, preferences);
 
   return (
     <article className="flex flex-1 flex-col gap-5">

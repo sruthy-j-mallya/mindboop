@@ -68,6 +68,7 @@ const PREFERENCE: UserPreference = {
   completionSound: "bell",
   breakAlarmSound: "classic",
   weekStartsOn: 1,
+  timeFormat: "12h",
 };
 
 const chooseView = async (view: string) => {

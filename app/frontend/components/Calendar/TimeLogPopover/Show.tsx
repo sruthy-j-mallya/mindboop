@@ -2,13 +2,14 @@ import { Clock, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
+import useDatePreferences from "@/hooks/useDatePreferences";
 
 import AnchoredPopover from "../AnchoredPopover";
 import ReadOnlyDetails from "../TaskPopover/ReadOnlyDetails";
 import type { AnchorRect, TimeLogEvent } from "../types";
 import { SHOW_POPOVER_CLASS_NAME } from "./constants";
 import useDeleteTimeLogWithUndo from "./useDeleteTimeLogWithUndo";
-import { formatTimeRange } from "./utils";
+import { formatLoggedRange } from "./utils";
 
 type ShowProps = { anchor: AnchorRect; event: TimeLogEvent; onClose: () => void };
 
@@ -20,6 +21,7 @@ const Show = ({ anchor, event, onClose }: ShowProps) => {
   const { taskId, isTaskDeleted, completedAt } = timeLog;
   const hasTask = !!taskId && !isTaskDeleted;
   const { data: task, error } = useTask(taskId ?? "", { enabled: hasTask });
+  const { timeFormat } = useDatePreferences();
   const deleteTimeLog = useDeleteTimeLogWithUndo();
 
   const handleDelete = () => {
@@ -36,7 +38,7 @@ const Show = ({ anchor, event, onClose }: ShowProps) => {
     >
       <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
         <Clock className="size-4 shrink-0" />
-        <span className="flex-1">{formatTimeRange({ start, end })}</span>
+        <span className="flex-1">{formatLoggedRange({ start, end }, timeFormat)}</span>
         {completedAt && (
           <Button
             aria-label="Delete time log"

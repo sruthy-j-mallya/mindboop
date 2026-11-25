@@ -22,7 +22,7 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
   const tomorrow = format(addDays(new Date(), 1), "EEEE, MMMM do, yyyy");
   await page.getByRole("button", { name: tomorrow }).click();
   await page.getByRole("combobox", { name: "Time" }).click();
-  await page.getByRole("option", { name: "5:30 PM" }).click();
+  await page.getByRole("option", { name: "5:30pm" }).click();
   await page.getByRole("button", { name: "OK" }).click();
 
   const rowDate = page.getByRole("button", { name: /^Due date of Renew passport:/ });
@@ -34,7 +34,7 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
   await rowDate.click();
   await page.getByRole("tab", { name: "Duration" }).click();
   const endTime = page.getByRole("combobox", { name: "End time" });
-  await expect(endTime).toHaveValue("6:30 PM");
+  await expect(endTime).toHaveValue("6:30pm");
   await endTime.fill("7pm");
   await endTime.press("Enter");
   await page.getByRole("button", { name: "OK" }).click();

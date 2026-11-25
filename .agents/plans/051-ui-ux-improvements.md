@@ -56,7 +56,7 @@ Tick an issue in the commit that fixes it.
 
 ## P2: Consistency and accessibility
 
-- [ ] 28. One date and time formatter, and a 12/24-hour setting
+- [x] 28. One date and time formatter, and a 12/24-hour setting
 - [x] 29. Due-date labels and routines follow the week start picked in Settings
 - [ ] 30. Light inputs are 1.04–1.10:1 against the page. Give `--input` a visible colour, aiming for 3:1
 - [ ] 31. Checkbox borders are 2.2:1 (light) and 2.7:1 (dark). Drop the 50% opacity
@@ -89,4 +89,5 @@ Tick an issue in the commit that fixes it.
 | --- | --- |
 | 2 | Completed tasks are listed most recently changed first (`updated_at`), as no completion time is stored. Rows only reopen a task; they don't open it |
 | 3 | Offered after Done only. Bailing means the task isn't finished |
+| 28 | "12 Nov" and "5:30pm" (or "17:30") everywhere, through `utils/dateTime.ts`. `user_preferences.time_format` defaults to the 12-hour clock. Browser time inputs (a routine's reminder, logging time) follow the browser's locale and can't be set |
 | 19 | The heading beside the clock takes over the pane's in-place title editing |

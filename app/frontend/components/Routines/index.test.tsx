@@ -214,7 +214,7 @@ describe("Routines", () => {
     const day = set(startOfMonth(subMonths(new Date(), 1)), { date: 15 });
 
     await userEvent.click(await screen.findByRole("button", { name: "Previous month" }));
-    await userEvent.click(screen.getByRole("button", { name: `Log time on ${format(day, "EEEE d MMMM")}` }));
+    await userEvent.click(screen.getByRole("button", { name: `Log time on ${format(day, "EEEE, d MMMM")}` }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByLabelText("Minutes")).toHaveValue(10);
     fireEvent.change(within(dialog).getByLabelText("Started at"), { target: { value: "07:30" } });
@@ -254,8 +254,8 @@ describe("Routines", () => {
     const routine = buildRoutine();
     renderRoutines([routine], routinePath(routine.id));
 
-    expect(await screen.findByRole("button", { name: "Thursday 26 November" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Log time on Wednesday 25 November" })).toBeEnabled();
+    expect(await screen.findByRole("button", { name: "Thursday, 26 November" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Log time on Wednesday, 25 November" })).toBeEnabled();
     vi.useRealTimers();
   });
 

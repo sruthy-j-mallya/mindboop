@@ -13,6 +13,7 @@ import { useCalendarEvents } from "@/hooks/reactQuery/useCalendarEventsApi";
 import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
+import useDatePreferences from "@/hooks/useDatePreferences";
 import { writeStorage } from "@/utils/storage";
 
 import {
@@ -40,6 +41,7 @@ import {
   eventToAnchorRect,
   getCurrentSlotStart,
   getEventProps,
+  getFormats,
   getLocalizer,
   getLogWindowStart,
   getSelectionIntent,
@@ -76,6 +78,8 @@ const Calendar = () => {
   const now = useCurrentTime(true, NOW_REFRESH_INTERVAL);
   const { data: preference, isPending: isPreferencePending } = useUserPreference();
   const weekStartsOn = preference?.weekStartsOn ?? DEFAULT_WEEK_STARTS_ON;
+  const { timeFormat } = useDatePreferences();
+  const formats = useMemo(() => getFormats(timeFormat), [timeFormat]);
   const localizer = useMemo(() => getLocalizer(weekStartsOn), [weekStartsOn]);
   const params = useMemo(() => {
     const { start, end } = getVisibleRange(view, date, dayCount, weekStartsOn);
@@ -172,6 +176,7 @@ const Calendar = () => {
             draggableAccessor="isEditable"
             eventPropGetter={getAreaEventProps}
             events={events}
+            formats={formats}
             length={dayCount}
             localizer={localizer}
             resizableAccessor="isEditable"

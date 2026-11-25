@@ -1,10 +1,11 @@
 import { differenceInCalendarDays, format, parse, parseISO } from "date-fns";
 import { generatePath } from "react-router";
 
-import type { Routine, TimeLog, WeekStartsOn } from "@/apis/types";
+import type { Routine, TimeFormat, TimeLog, WeekStartsOn } from "@/apis/types";
 import { SECONDS_PER_MINUTE } from "@/constants";
 import routes from "@/routes";
 import { formatMinutes } from "@/utils";
+import { formatTime } from "@/utils/dateTime";
 
 import { ALL_WEEKDAYS, DAY_KEY_FORMAT, WEEKDAYS } from "./constants";
 
@@ -21,17 +22,14 @@ export const formatLastDone = (lastDoneAt: string, now: Date) => {
 // "1 h 59 min", rounded to the minute.
 export const formatTotalTime = (seconds: number) => formatMinutes(Math.round(seconds / SECONDS_PER_MINUTE));
 
-// "8:30 AM" in the browser's locale.
-const formatReminderTime = (time: string) => format(parse(time, "HH:mm", new Date()), "p");
-
-// "Daily at 8:30 AM", "Mondays at 8:30 AM", "Mon, Wed, Fri at 8:30 AM", or null without a reminder.
-export const describeReminder = ({
-  reminderTime,
-  reminderDays,
-}: Pick<Routine, "reminderTime" | "reminderDays">) => {
+// "Daily at 8:30am", "Mondays at 8:30am", "Mon, Wed, Fri at 8:30am", or null without a reminder.
+export const describeReminder = (
+  { reminderTime, reminderDays }: Pick<Routine, "reminderTime" | "reminderDays">,
+  timeFormat: TimeFormat,
+) => {
   if (!reminderTime || reminderDays.length === 0) return null;
 
-  const time = formatReminderTime(reminderTime);
+  const time = formatTime(parse(reminderTime, "HH:mm", new Date()), timeFormat);
   if (reminderDays.length === ALL_WEEKDAYS.length) return `Daily at ${time}`;
 
   const days = WEEKDAYS.filter(({ value }) => reminderDays.includes(value));

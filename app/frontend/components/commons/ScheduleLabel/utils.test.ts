@@ -34,8 +34,8 @@ describe("formatSchedule", () => {
     [at(10, 12), "Today"],
     [at(10, 13), "Tomorrow"],
     [at(10, 11), "Yesterday"],
-    [at(10, 15), "Sun, Nov 15"],
-    [at(10, 9), "Mon, Nov 9"],
+    [at(10, 15), "Sun, 15 Nov"],
+    [at(10, 9), "Mon, 9 Nov"],
     [at(10, 16), "16 Nov"],
     [at(7, 12), "12 Aug"],
     [at(0, 3, 0, 0, 2027), "3 Jan 2027"],
@@ -65,8 +65,21 @@ describe("formatSchedule", () => {
 
 describe("formatSchedule with another week start", () => {
   it("counts Sunday as this week only when weeks end after it", () => {
-    expect(formatSchedule(onDate(at(10, 15)), NOW, 1)).toBe("Sun, Nov 15");
-    expect(formatSchedule(onDate(at(10, 15)), NOW, 0)).toBe("15 Nov");
+    expect(formatSchedule(onDate(at(10, 15)), NOW, { weekStartsOn: 1, timeFormat: "12h" })).toBe(
+      "Sun, 15 Nov",
+    );
+    expect(formatSchedule(onDate(at(10, 15)), NOW, { weekStartsOn: 0, timeFormat: "12h" })).toBe("15 Nov");
+  });
+});
+
+describe("formatSchedule on the 24-hour clock", () => {
+  it("drops am and pm", () => {
+    const preferences = { weekStartsOn: 1, timeFormat: "24h" } as const;
+
+    expect(formatSchedule(onDate(at(10, 12, 17, 30), false), NOW, preferences)).toBe("Today, 17:30");
+    expect(formatTodaySchedule(forDuration(at(10, 12, 13), at(10, 12, 14)), NOW, preferences)).toBe(
+      "13:00 – 14:00",
+    );
   });
 });
 

@@ -18,6 +18,7 @@ const PREFERENCE: UserPreference = {
   completionSound: "rising",
   breakAlarmSound: "classic",
   weekStartsOn: 1,
+  timeFormat: "12h",
 };
 
 const renderSettings = (preference: Partial<UserPreference> = {}) => {
@@ -71,6 +72,19 @@ describe("Settings", () => {
 
     expect(userPreferencesApi.update).toHaveBeenCalledWith({ weekStartsOn: 0 }, expect.anything());
     expect(screen.getByRole("combobox", { name: "Week starts on" })).toHaveTextContent("Sunday");
+  });
+
+  it("shows and saves the time format", async () => {
+    renderSettings();
+
+    expect(await screen.findByRole("combobox", { name: "Time format" })).toHaveTextContent(
+      "12-hour (5:30pm)",
+    );
+
+    await choose("Time format", "24-hour (17:30)");
+
+    expect(userPreferencesApi.update).toHaveBeenCalledWith({ timeFormat: "24h" }, expect.anything());
+    expect(screen.getByRole("combobox", { name: "Time format" })).toHaveTextContent("24-hour (17:30)");
   });
 
   it("plays and saves the chosen completion sound", async () => {

@@ -13,6 +13,7 @@ import {
 
 import type { WeekStartsOn } from "@/apis/types";
 import { formatMinutes } from "@/utils";
+import { formatLongDate } from "@/utils/dateTime";
 
 import { DAY_KEY_FORMAT } from "../constants";
 import type { MonthDay } from "./types";
@@ -32,9 +33,9 @@ export const describeDaysDone = (daysDone: number) => {
   return daysDone === 1 ? "1 day with it" : `${daysDone} days with it`;
 };
 
-// "Thursday 19 November: 25 min", or just the date on a day it wasn't done.
+// "Thursday, 19 November: 25 min", or just the date on a day it wasn't done.
 export const describeDay = (date: Date, minutes: number) => {
-  const day = format(date, "EEEE d MMMM");
+  const day = formatLongDate(date);
 
   return minutes > 0 ? `${day}: ${formatMinutes(minutes)}` : day;
 };

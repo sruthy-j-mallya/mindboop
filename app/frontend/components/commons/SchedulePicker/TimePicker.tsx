@@ -13,6 +13,7 @@ import { Check, ChevronRight, Clock, X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import useDatePreferences from "@/hooks/useDatePreferences";
 
 import { DEFAULT_TIME_SLOT_INDEX, TIME_SLOTS } from "./constants";
 import {
@@ -50,6 +51,7 @@ const TimePicker = ({
   className,
   onChange,
 }: TimePickerProps) => {
+  const { timeFormat } = useDatePreferences();
   const listId = useId();
   const anchorRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -183,7 +185,7 @@ const TimePicker = ({
             placeholder={placeholder}
             ref={inputRef}
             role="combobox"
-            value={text ?? (value && toTimeLabel(value))}
+            value={text ?? (value && toTimeLabel(value, timeFormat))}
             onBlur={handleBlur}
             onChange={handleChange}
             onClick={openList}
@@ -240,7 +242,7 @@ const TimePicker = ({
                 onClick={() => selectSlot(slot)}
                 onMouseEnter={() => setActiveIndex(index)}
               >
-                {toTimeLabel(slot)}
+                {toTimeLabel(slot, timeFormat)}
                 {isSelected && <Check className="size-4" />}
               </li>
             );

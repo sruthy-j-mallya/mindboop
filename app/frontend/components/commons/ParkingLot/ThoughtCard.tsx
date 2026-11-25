@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import type { ParkingLotItem } from "@/apis/types";
 import useCurrentTime from "@/hooks/useCurrentTime";
+import useDatePreferences from "@/hooks/useDatePreferences";
 
 import { formatParkedAt } from "./utils";
 
@@ -16,6 +17,7 @@ type ThoughtCardProps = {
 // The time is read once: a thought parked today only reads as another day after midnight, which a reload or tab change
 // fixes.
 const ThoughtCard = ({ item: { content, createdAt }, className, children }: ThoughtCardProps) => {
+  const { timeFormat } = useDatePreferences();
   const now = useCurrentTime(false);
 
   return (
@@ -23,7 +25,7 @@ const ThoughtCard = ({ item: { content, createdAt }, className, children }: Thou
       <p className="text-sm wrap-anywhere whitespace-pre-wrap">{content}</p>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
-          <time dateTime={createdAt}>{formatParkedAt(createdAt, now)}</time>
+          <time dateTime={createdAt}>{formatParkedAt(createdAt, now, timeFormat)}</time>
         </p>
         {children}
       </div>

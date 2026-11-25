@@ -22,13 +22,14 @@ import {
 } from "date-fns";
 import { enUS } from "date-fns/locale";
 import type { CSSProperties, SyntheticEvent } from "react";
-import { dateFnsLocalizer } from "react-big-calendar";
+import { dateFnsLocalizer, type DateRange, type Formats } from "react-big-calendar";
 
-import type { LifeArea, Task, TimeLog, WeekStartsOn } from "@/apis/types";
+import type { LifeArea, Task, TimeFormat, TimeLog, WeekStartsOn } from "@/apis/types";
 import { getLifeAreaColor } from "@/components/commons/LifeArea/utils";
 import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
 import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
+import { formatDayRange, formatLongDate, formatTime, formatTimeRange } from "@/utils/dateTime";
 import { readStorage } from "@/utils/storage";
 
 import {
@@ -101,6 +102,18 @@ export const getLocalizer = (weekStartsOn: WeekStartsOn) =>
     getDay,
     locales: { "en-US": enUS },
   });
+
+// How react-big-calendar writes its dates and times: the way the rest of the app does.
+export const getFormats = (timeFormat: TimeFormat): Formats => ({
+  timeGutterFormat: (date: Date) => formatTime(date, timeFormat),
+  eventTimeRangeFormat: ({ start, end }: DateRange) => formatTimeRange(start, end, timeFormat),
+  eventTimeRangeStartFormat: ({ start }: DateRange) => `${formatTime(start, timeFormat)} –`,
+  eventTimeRangeEndFormat: ({ end }: DateRange) => `– ${formatTime(end, timeFormat)}`,
+  selectRangeFormat: ({ start, end }: DateRange) => formatTimeRange(start, end, timeFormat),
+  dayFormat: "EEE d",
+  dayHeaderFormat: formatLongDate,
+  dayRangeHeaderFormat: ({ start, end }: DateRange) => formatDayRange(start, end),
+});
 
 // The days a view shows, as a half-open range: what the Calendar asks the API for. `dayCount` is how many days the
 // multi-day view shows, and `weekStartsOn` the day the week and month views' weeks start on.

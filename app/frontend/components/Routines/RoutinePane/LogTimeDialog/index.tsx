@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, isFuture } from "date-fns";
+import { isFuture } from "date-fns";
 import { useForm } from "react-hook-form";
 
 import type { Routine } from "@/apis/types";
@@ -7,6 +7,7 @@ import FormField from "@/components/commons/FormField";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCreateTimeLog } from "@/hooks/reactQuery/useTimeLogsApi";
+import { formatLongDate } from "@/utils/dateTime";
 
 import { LOG_TIME_VALIDATION_SCHEMA, type LogTimeFormValues, MINUTES_PER_DAY } from "./constants";
 import { getInitialValues, getLoggedRange } from "./utils";
@@ -54,7 +55,7 @@ const LogTimeDialog = ({ routine, date, onClose }: LogTimeDialogProps) => {
         <DialogHeader>
           <DialogTitle>Log time</DialogTitle>
           <DialogDescription>
-            {routine.title} · {format(date, "EEEE d MMMM")}
+            {routine.title} · {formatLongDate(date)}
           </DialogDescription>
         </DialogHeader>
         <form noValidate className="grid gap-5" onSubmit={handleSubmit(handleSave)}>

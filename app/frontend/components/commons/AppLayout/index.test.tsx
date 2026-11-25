@@ -75,6 +75,7 @@ describe("AppLayout", () => {
         completionSound: "rising",
         breakAlarmSound: "classic",
         weekStartsOn: 1,
+        timeFormat: "12h",
       },
     });
     vi.spyOn(routinesApi, "fetchList").mockResolvedValue({ routines: [] });
@@ -134,6 +135,7 @@ describe("AppLayout", () => {
         completionSound: "rising",
         breakAlarmSound: "classic",
         weekStartsOn: 1,
+        timeFormat: "12h",
       },
     });
 

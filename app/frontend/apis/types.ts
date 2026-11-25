@@ -193,12 +193,19 @@ export type Theme = "system" | "light" | "dark";
 // The day the Calendar's weeks start on: 0 is Sunday and 6 Saturday, as date-fns numbers them.
 export type WeekStartsOn = Day;
 
+// The 12-hour ("5:30pm") or 24-hour ("17:30") clock.
+export type TimeFormat = "12h" | "24h";
+
 export type UserPreference = {
   theme: Theme;
   completionSound: CompletionSoundId;
   breakAlarmSound: AlarmSoundId;
   weekStartsOn: WeekStartsOn;
+  timeFormat: TimeFormat;
 };
+
+// How dates and times read.
+export type DatePreferences = Pick<UserPreference, "weekStartsOn" | "timeFormat">;
 
 export type UserPreferenceResponse = { userPreference: UserPreference };
 

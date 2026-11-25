@@ -1,4 +1,4 @@
-import type { WeekStartsOn } from "@/apis/types";
+import type { DatePreferences, WeekStartsOn } from "@/apis/types";
 
 export const APP_NAME = "Mindboop";
 
@@ -27,3 +27,10 @@ export const UNDO_TOAST_DURATION = 8_000; // 8 seconds
 // Weeks (in the Calendar and the date pickers) start on the day picked in Settings, and on Monday until it has loaded
 // or if it can't. Keep in sync with the `user_preferences.week_starts_on` column default.
 export const DEFAULT_WEEK_STARTS_ON: WeekStartsOn = 1;
+
+// Until the preference has loaded, or if it can't. `timeFormat`: keep in sync with the `user_preferences.time_format`
+// column default.
+export const DEFAULT_DATE_PREFERENCES: DatePreferences = {
+  weekStartsOn: DEFAULT_WEEK_STARTS_ON,
+  timeFormat: "12h",
+};

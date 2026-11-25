@@ -96,7 +96,8 @@ describe("SchedulePicker utils", () => {
   });
 
   it("labels times and finds their half-hour slot", () => {
-    expect(toTimeLabel("15:30")).toBe("3:30 PM");
+    expect(toTimeLabel("15:30", "12h")).toBe("3:30pm");
+    expect(toTimeLabel("15:30", "24h")).toBe("15:30");
     expect(toTimeSlotIndex("15:30")).toBe(31);
     expect(toTimeSlotIndex("15:45")).toBe(31);
     expect(toTimeSlotIndex("00:00")).toBe(0);

@@ -89,6 +89,7 @@ describe("LifeAreas", () => {
         completionSound: "bell",
         breakAlarmSound: "classic",
         weekStartsOn: 1,
+        timeFormat: "12h",
       },
     });
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });

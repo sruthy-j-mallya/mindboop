@@ -11,14 +11,14 @@ import {
   startOfHour,
 } from "date-fns";
 
-import type { UpdateTaskPayload } from "@/apis/types";
+import type { TimeFormat, UpdateTaskPayload } from "@/apis/types";
 import { MINUTES_PER_HOUR } from "@/constants";
+import { formatTime } from "@/utils/dateTime";
 
 import {
   DEFAULT_START_HOUR,
   END_BEFORE_START_ERROR,
   TIME_INPUT_FORMAT,
-  TIME_LABEL_FORMAT,
   TIME_SLOT_MINUTES,
   TIME_TEXT_PATTERN,
 } from "./constants";
@@ -37,8 +37,9 @@ export const withTime = (date: Date, time: string) => {
   return set(date, { hours, minutes, seconds: 0, milliseconds: 0 });
 };
 
-// "15:30" → "3:30 PM".
-export const toTimeLabel = (time: string) => format(withTime(new Date(), time), TIME_LABEL_FORMAT);
+// "15:30" → "3:30pm", or as is on the 24-hour clock.
+export const toTimeLabel = (time: string, timeFormat: TimeFormat) =>
+  formatTime(withTime(new Date(), time), timeFormat);
 
 // The half-hour slot a "HH:mm" time falls in (3:45 PM → the 3:30 PM slot).
 export const toTimeSlotIndex = (time: string) => {

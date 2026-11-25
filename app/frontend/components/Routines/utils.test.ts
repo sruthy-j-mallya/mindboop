@@ -6,13 +6,15 @@ import { describeReminder, formatLastDone, formatTotalTime, getMinutesByDay, get
 
 describe("Routines utils", () => {
   it("describes a reminder by its days", () => {
-    expect(describeReminder({ reminderTime: null, reminderDays: [] })).toBeNull();
-    expect(describeReminder({ reminderTime: "08:30", reminderDays: [0, 1, 2, 3, 4, 5, 6] })).toMatch(
-      /^Daily at 8:30/,
+    expect(describeReminder({ reminderTime: null, reminderDays: [] }, "12h")).toBeNull();
+    expect(describeReminder({ reminderTime: "08:30", reminderDays: [0, 1, 2, 3, 4, 5, 6] }, "12h")).toMatch(
+      /^Daily at 8:30am$/,
     );
-    expect(describeReminder({ reminderTime: "08:30", reminderDays: [1] })).toMatch(/^Mondays at 8:30/);
-    expect(describeReminder({ reminderTime: "18:00", reminderDays: [5, 1, 3] })).toMatch(
-      /^Mon, Wed, Fri at 6:00/,
+    expect(describeReminder({ reminderTime: "08:30", reminderDays: [1] }, "12h")).toMatch(
+      /^Mondays at 8:30am$/,
+    );
+    expect(describeReminder({ reminderTime: "18:00", reminderDays: [5, 1, 3] }, "12h")).toMatch(
+      /^Mon, Wed, Fri at 6pm$/,
     );
   });
 

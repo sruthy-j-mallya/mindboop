@@ -9,18 +9,20 @@ import type { Task } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCreateTimeLog } from "@/hooks/reactQuery/useTimeLogsApi";
+import useDatePreferences from "@/hooks/useDatePreferences";
 
 import AnchoredPopover from "../AnchoredPopover";
 import type { AnchorRect, TimeRange } from "../types";
 import { INITIAL_FORM_VALUES, TIME_LOG_VALIDATION_SCHEMA, type TimeLogFormValues } from "./constants";
 import TaskSuggestions from "./TaskSuggestions";
-import { buildLogTimePayload, formatTimeRange } from "./utils";
+import { buildLogTimePayload, formatLoggedRange } from "./utils";
 
 type TimeLogPopoverProps = { anchor: AnchorRect; range: TimeRange; onClose: () => void };
 
 // Logs time already spent, in the last 24 hours: a title of its own, or a link to an existing task. Leaving the
 // popover saves it; one left empty is dropped.
 const TimeLogPopover = ({ anchor, range, onClose }: TimeLogPopoverProps) => {
+  const { timeFormat } = useDatePreferences();
   const { mutate: createTimeLog } = useCreateTimeLog();
   const {
     control,
@@ -64,7 +66,7 @@ const TimeLogPopover = ({ anchor, range, onClose }: TimeLogPopoverProps) => {
       <form noValidate className="flex min-h-0 flex-col gap-3" onSubmit={handleFormSubmit}>
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="size-4" />
-          {formatTimeRange(range)}
+          {formatLoggedRange(range, timeFormat)}
         </p>
         {linkedTask ? (
           <div className="flex items-center justify-between gap-2 rounded-md bg-accent px-3 py-2 text-sm">

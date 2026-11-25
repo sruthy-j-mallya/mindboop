@@ -11,6 +11,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import useDatePreferences from "@/hooks/useDatePreferences";
 import { formatMinutes } from "@/utils";
 
 import DeleteRoutineDialog from "../RoutineDialog/Delete";
@@ -28,7 +29,8 @@ type Dialog = (typeof DIALOGS)[keyof typeof DIALOGS];
 // long press) opens a menu to edit or delete it.
 const RoutineRow = ({ routine, now }: RoutineRowProps) => {
   const { id, title, color, emoji, durationMinutes, lastDoneAt } = routine;
-  const reminder = describeReminder(routine);
+  const { timeFormat } = useDatePreferences();
+  const reminder = describeReminder(routine, timeFormat);
   const [dialog, setDialog] = useState<Dialog | null>(null);
 
   const handleEdit = () => setDialog(DIALOGS.EDIT);

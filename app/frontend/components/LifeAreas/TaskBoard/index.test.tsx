@@ -115,6 +115,7 @@ describe("Inbox", () => {
         completionSound: "bell",
         breakAlarmSound: "classic",
         weekStartsOn: 1,
+        timeFormat: "12h",
       },
     });
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
@@ -767,7 +768,7 @@ describe("Inbox", () => {
       screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
     );
     await userEvent.click(screen.getByRole("combobox", { name: "Time" }));
-    await userEvent.click(screen.getByRole("option", { name: "5:30 PM" }));
+    await userEvent.click(screen.getByRole("option", { name: "5:30pm" }));
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
     const startsAt = set(tomorrow, { hours: 17, minutes: 30, seconds: 0, milliseconds: 0 });
@@ -793,7 +794,7 @@ describe("Inbox", () => {
     await userEvent.click(within(pane).getByRole("button", { name: /Today, 9am/ }));
     await userEvent.click(screen.getByRole("tab", { name: "Duration" }));
     const endTime = screen.getByRole("combobox", { name: "End time" });
-    expect(endTime).toHaveValue("10:00 AM");
+    expect(endTime).toHaveValue("10am");
 
     await userEvent.clear(endTime);
     await userEvent.type(endTime, "8am{Enter}");

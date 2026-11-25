@@ -169,7 +169,7 @@ describe("Home", () => {
     const resumable = card("Pick up where you left off");
     expect(resumable.getByText("Pick up from: Chapter 2")).toBeVisible();
     expect(resumable.queryByText(/Chapter 1/)).not.toBeInTheDocument();
-    expect(resumable.getByText("Nov 5 2025, 5:30pm")).toBeVisible();
+    expect(resumable.getByText("5 Nov 2025, 5:30pm")).toBeVisible();
   });
 
   it("says when there's nothing in a list", async () => {

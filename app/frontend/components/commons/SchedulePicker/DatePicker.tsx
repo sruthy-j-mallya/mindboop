@@ -1,19 +1,14 @@
 import { useState } from "react";
 
 import { cn } from "cn";
-import { format, isSameYear } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import useWeekStartsOn from "@/hooks/useWeekStartsOn";
+import { formatDate } from "@/utils/dateTime";
 
-import {
-  CALENDAR_CLASS_NAME,
-  CALENDAR_CLASS_NAMES,
-  DATE_LABEL_FORMAT,
-  OTHER_YEAR_DATE_LABEL_FORMAT,
-} from "./constants";
+import { CALENDAR_CLASS_NAME, CALENDAR_CLASS_NAMES } from "./constants";
 
 type DatePickerProps = {
   label: string;
@@ -47,7 +42,7 @@ const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
           type="button"
           variant="outline"
         >
-          {format(value, isSameYear(value, new Date()) ? DATE_LABEL_FORMAT : OTHER_YEAR_DATE_LABEL_FORMAT)}
+          {formatDate(value, new Date())}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-3">

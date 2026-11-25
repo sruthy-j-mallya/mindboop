@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildLogTimePayload, formatTimeRange } from "./utils";
+import { buildLogTimePayload, formatLoggedRange } from "./utils";
 
 const RANGE = { start: new Date(2026, 10, 12, 9, 15), end: new Date(2026, 10, 12, 10) };
 
@@ -25,8 +25,9 @@ describe("buildLogTimePayload", () => {
   });
 });
 
-describe("formatTimeRange", () => {
+describe("formatLoggedRange", () => {
   it("names the day once for a range inside it", () => {
-    expect(formatTimeRange(RANGE)).toBe("Thu 12 Nov, 9:15 AM – 10:00 AM");
+    expect(formatLoggedRange(RANGE, "12h")).toBe("Thu, 12 Nov, 9:15 – 10am");
+    expect(formatLoggedRange(RANGE, "24h")).toBe("Thu, 12 Nov, 09:15 – 10:00");
   });
 });
