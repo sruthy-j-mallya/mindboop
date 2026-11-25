@@ -9,6 +9,7 @@ import routes from "@/routes";
 
 import type { QuickStartFormValues } from "./constants";
 import QuickStartForm from "./QuickStartForm";
+import RunningSession from "./RunningSession";
 import { buildQuickStartPayload, clearDraft } from "./utils";
 
 // Starts a task and its timer in one go. One thing at a time: with a session already running it leads to that instead,
@@ -34,16 +35,14 @@ const QuickStart = () => {
       <Card>
         <CardContent className="flex flex-1 flex-col gap-4">
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            Start with intention
+            {isSessionRunning ? "On the clock" : "Start with intention"}
           </p>
-          <h2 id="quick-start-heading" className={isSessionRunning ? "text-lg font-semibold" : "sr-only"}>
+          <h2 id="quick-start-heading" className="sr-only">
             {isSessionRunning ? "A session is on the clock" : "What do you want to get done?"}
           </h2>
           {isSessionRunning ? (
             <>
-              <p className="text-sm text-muted-foreground">
-                One thing at a time. Wrap it up to start another.
-              </p>
+              <RunningSession timeLog={timeLog} />
               <Button asChild className="mt-auto h-12 w-full text-base">
                 <Link to={routes.timer}>
                   <Timer />

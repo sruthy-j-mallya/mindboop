@@ -103,6 +103,25 @@ describe("QuickStart", () => {
     expect(screen.queryByRole("button", { name: "Add notes" })).not.toBeInTheDocument();
   });
 
+  it("names what's on the clock and its time", async () => {
+    vi.mocked(currentTimeLogsApi.show).mockResolvedValue({
+      timeLog: {
+        ...TIME_LOG,
+        taskTitle: "Write the report",
+        mode: "timer",
+        timerPreset: 25,
+        bufferMinutes: 0,
+        accumulatedElapsedSeconds: 60,
+        isRunning: false,
+        currentBreak: null,
+      },
+    });
+    renderWithTimerRoute();
+
+    expect(await screen.findByText("Write the report")).toBeVisible();
+    expect(screen.getByRole("timer")).toHaveTextContent("24:00 left");
+  });
+
   it("leads back to the timer while a session is running, and keeps the draft", async () => {
     localStorage.setItem(
       DRAFT_STORAGE_KEY,
