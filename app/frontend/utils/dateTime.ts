@@ -1,6 +1,6 @@
-import { format, isSameDay, isSameYear } from "date-fns";
+import { addDays, format, isSameDay, isSameYear, startOfDay } from "date-fns";
 
-import type { TimeFormat } from "@/apis/types";
+import type { HomeTasksParams, TimeFormat } from "@/apis/types";
 
 // How dates and times read across the app. `timeFormat` is the clock picked in Settings (`useDatePreferences`).
 
@@ -38,3 +38,9 @@ export const formatDayRange = (start: Date, end: Date) =>
   start.getMonth() === end.getMonth()
     ? `${format(start, "d")} – ${format(end, "d MMMM")}`
     : `${format(start, "d MMM")} – ${format(end, "d MMM")}`;
+
+// The bounds of the local day `now` is in.
+export const getDayRange = (now: number): HomeTasksParams => ({
+  from: startOfDay(now).toISOString(),
+  to: startOfDay(addDays(now, 1)).toISOString(),
+});

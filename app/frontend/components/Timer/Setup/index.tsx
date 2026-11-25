@@ -16,6 +16,7 @@ import SessionCard from "../SessionCard";
 import type { TimerLocationState } from "../types";
 import { DEFAULT_MODE, DEFAULT_TIMER_MINUTES, MODES, TIMER_PRESETS } from "./constants";
 import MinutesInput from "./MinutesInput";
+import Suggestions from "./Suggestions";
 import TaskSearch from "./TaskSearch";
 import { buildTimeLogPayload, findMode, getEstimatedTimerMinutes } from "./utils";
 
@@ -59,9 +60,7 @@ const Setup = () => {
   const details = task ? (
     <TaskDetails key={task.id} isOnTimer task={task} />
   ) : (
-    <p className="m-auto py-12 text-center text-muted-foreground">
-      Pick a task to see its steps and description.
-    </p>
+    <Suggestions onPick={setPickedTask} />
   );
 
   return (

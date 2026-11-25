@@ -2,14 +2,12 @@ import { type ChangeEvent, type KeyboardEvent, useEffect, useId, useRef, useStat
 
 import { keepPreviousData } from "@tanstack/react-query";
 import { cn } from "cn";
-import { Check, Search } from "lucide-react";
+import { Check, Plus, Search } from "lucide-react";
 
 import type { Task } from "@/apis/types";
-import TextLink from "@/components/commons/TextLink";
 import { Input } from "@/components/ui/input";
-import { useTasks } from "@/hooks/reactQuery/useTasksApi";
+import { useCreateTask, useTasks } from "@/hooks/reactQuery/useTasksApi";
 import useDebouncedValue from "@/hooks/useDebouncedValue";
-import routes from "@/routes";
 
 import { OPEN_TASK_FILTERS, TASK_SEARCH_DEBOUNCE } from "./constants";
 
@@ -22,6 +20,7 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
   const listboxRef = useRef<HTMLUListElement>(null);
   // null while closed, when the field shows the picked task's title.
   const [query, setQuery] = useState<string | null>(null);
+  const { mutate: createTask, isPending: isCreating, error: createError } = useCreateTask();
   const [activeIndex, setActiveIndex] = useState(0);
   const isOpen = query !== null;
   const searchTerm = useDebouncedValue(query?.trim() ?? "", TASK_SEARCH_DEBOUNCE);
@@ -35,7 +34,10 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
   const isSettled = !isPlaceholderData && searchTerm === (query?.trim() ?? "");
   const hasMore = (data?.totalPages ?? 0) > 1;
   const hasNoOpenTasks = !searchTerm && !isPending && !error && tasks.length === 0;
+  // What's typed can become a task once the search has found nothing by that name.
+  const canCreate = isSettled && !!searchTerm && !isPending && !error && tasks.length === 0;
   const activeTask = tasks.length > 0 ? tasks[Math.min(activeIndex, tasks.length - 1)] : undefined;
+  const createOptionId = `${listboxId}-create`;
   const optionId = (task: Task) => `${listboxId}-${task.id}`;
 
   useEffect(() => {
@@ -53,6 +55,9 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
     onChange(task);
     close();
   };
+
+  const handleCreate = () =>
+    createTask({ title: searchTerm, lifeAreaId: null }, { onSuccess: ({ task }) => pick(task) });
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
@@ -74,11 +79,21 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
     } else if (key === "Enter" && isOpen && activeTask && isSettled) {
       event.preventDefault();
       pick(activeTask);
+    } else if (key === "Enter" && isOpen && canCreate && !isCreating) {
+      event.preventDefault();
+      handleCreate();
     } else if (key === "ArrowDown" || key === "ArrowUp") {
       event.preventDefault();
       if (isOpen) moveHighlight(key === "ArrowDown" ? 1 : -1);
       else open();
     }
+  };
+
+  const getActiveDescendant = () => {
+    if (!isOpen) return undefined;
+    if (activeTask) return optionId(activeTask);
+
+    return canCreate ? createOptionId : undefined;
   };
 
   const getStatus = () => {
@@ -89,6 +104,7 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
   };
 
   const status = getStatus();
+  const listError = error ?? createError;
 
   return (
     <div className="grid gap-2">
@@ -98,14 +114,14 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
           className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
         />
         <Input
-          aria-activedescendant={isOpen && activeTask ? optionId(activeTask) : undefined}
+          aria-activedescendant={getActiveDescendant()}
           aria-autocomplete="list"
           aria-controls={listboxId}
           aria-expanded={isOpen}
           aria-label="Task"
           autoComplete="off"
           className="h-auto py-2 pl-9 text-base font-medium md:text-base"
-          placeholder={value?.title ?? "Search your open tasks"}
+          placeholder={value?.title ?? "Find or create a task"}
           role="combobox"
           value={query ?? value?.title ?? ""}
           onBlur={close}
@@ -116,9 +132,9 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
         />
         {isOpen && (
           <div className="absolute top-full z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
-            {error && (
+            {listError && (
               <p className="px-3 py-2 text-sm text-destructive" role="alert">
-                {error.message}
+                {listError.message}
               </p>
             )}
             {!error && status && <p className="px-3 py-2 text-sm text-muted-foreground">{status}</p>}
@@ -148,6 +164,20 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
                   {task.id === value?.id && <Check aria-hidden="true" className="size-4 text-primary" />}
                 </li>
               ))}
+              {canCreate && (
+                <li
+                  aria-selected
+                  className="flex cursor-default items-center gap-2 bg-accent px-3 py-2 text-sm text-accent-foreground"
+                  id={createOptionId}
+                  role="option"
+                  onClick={handleCreate}
+                  // Keeps focus in the field, as above.
+                  onMouseDown={(event) => event.preventDefault()}
+                >
+                  <Plus aria-hidden="true" className="size-4 shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">Create “{searchTerm}”</span>
+                </li>
+              )}
             </ul>
             {hasMore && (
               <p className="border-t px-3 py-2 text-xs text-muted-foreground">
@@ -158,9 +188,7 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
         )}
       </div>
       {hasNoOpenTasks && (
-        <p className="text-sm text-muted-foreground">
-          Add one in the <TextLink to={routes.inbox.index}>Inbox</TextLink> first.
-        </p>
+        <p className="text-sm text-muted-foreground">Type a name to create your first one.</p>
       )}
     </div>
   );

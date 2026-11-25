@@ -45,7 +45,7 @@ Tick an issue in the commit that fixes it.
 - [x] 17. Home's running session card names the task and shows the time left
 - [x] 18. Timer: Done is the primary action; Bail and Discard are quiet
 - [x] 19. Timer: the task's title shows once during a session
-- [ ] 20. Timer setup: list today's and recent tasks, and create a task when nothing matches
+- [x] 20. Timer setup: list today's and recent tasks, and create a task when nothing matches
 - [x] 21. Timer setup: duration presets
 - [x] 22. Mini timer: task name and paused state, clear of the list on phones
 - [x] 23. Task pane: ghost chips for date, area and estimate, as in the Calendar's popover

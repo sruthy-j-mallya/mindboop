@@ -8,6 +8,7 @@ import { ApiError } from "@/apis/axios";
 import breaksApi from "@/apis/breaks";
 import checklistItemsApi from "@/apis/checklist_items";
 import currentTimeLogsApi from "@/apis/current_time_logs";
+import homeTasksApi from "@/apis/home_tasks";
 import lifeAreasApi from "@/apis/life_areas";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
 import routinesApi from "@/apis/routines";
@@ -107,6 +108,7 @@ const renderTimer = (
   vi.spyOn(tasksApi, "fetchList").mockResolvedValue(taskListOf([task]));
   vi.spyOn(parkingLotItemsApi, "fetchList").mockResolvedValue(parkingLotListOf(parkingLotItems));
   vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+  vi.spyOn(homeTasksApi, "fetchList").mockResolvedValue({ today: [], overdue: [], resumable: [] });
   vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
     userPreference: {
       theme: "system",
@@ -810,6 +812,23 @@ describe("Timer", () => {
       expect(minutesInput()).toHaveValue(shown);
     });
 
+    it("suggests today's tasks and the ones bailed out of, each once", async () => {
+      renderTimer(null);
+      const other = { ...TASK, id: crypto.randomUUID(), title: "Write the report" };
+      vi.mocked(homeTasksApi.fetchList).mockResolvedValue({
+        today: [TASK],
+        overdue: [],
+        resumable: [TASK, other],
+      });
+
+      const today = await screen.findByRole("region", { name: "Today" });
+      const resumable = screen.getByRole("region", { name: "Pick up where you left off" });
+      expect(within(resumable).getAllByRole("button")).toHaveLength(1);
+      await userEvent.click(within(today).getByRole("button", { name: TASK.title }));
+
+      expect(screen.getByRole("combobox", { name: "Task" })).toHaveValue(TASK.title);
+    });
+
     it("picks a common length", async () => {
       renderTimer(null);
 
@@ -854,12 +873,12 @@ describe("Timer", () => {
       expect(screen.queryByRole("timer")).not.toBeInTheDocument();
     });
 
-    it("points to the Inbox when there are no open tasks", async () => {
+    it("offers to create a first task when there are no open ones", async () => {
       vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
       vi.spyOn(tasksApi, "fetchList").mockResolvedValue(taskListOf([]));
       renderWithProviders(<Timer />);
 
-      expect(await screen.findByRole("link", { name: "Inbox" })).toHaveAttribute("href", routes.inbox.index);
+      expect(await screen.findByText("Type a name to create your first one.")).toBeVisible();
       await userEvent.click(screen.getByRole("combobox", { name: "Task" }));
       expect(screen.getByText("No open tasks")).toBeVisible();
     });
@@ -920,14 +939,20 @@ describe("Timer", () => {
         expect(screen.getByRole("button", { name: "Start" })).toBeEnabled();
       });
 
-      it("says when nothing matches", async () => {
+      it("says when nothing matches, and creates it as a task instead", async () => {
+        const task = { ...TASK, id: crypto.randomUUID(), title: "dentist", estimatedMinutes: null };
+        const create = vi.spyOn(tasksApi, "create").mockResolvedValue({ task });
         renderWithTasks([TASK]);
+        vi.mocked(tasksApi.show).mockResolvedValue({ task });
 
         await userEvent.click(await screen.findByRole("combobox", { name: "Task" }));
         await userEvent.keyboard("dentist");
 
         expect(await screen.findByText("No open tasks match “dentist”")).toBeVisible();
-        expect(screen.queryByRole("option")).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole("option", { name: "Create “dentist”" }));
+
+        expect(create).toHaveBeenCalledWith({ title: "dentist", lifeAreaId: null }, expect.anything());
+        expect(screen.getByRole("combobox", { name: "Task" })).toHaveValue("dentist");
       });
 
       it("keeps the picked task when closed with Escape", async () => {

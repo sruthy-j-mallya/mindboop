@@ -1,13 +1,13 @@
 import { useHomeTasks } from "@/hooks/reactQuery/useHomeTasksApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
-import { formatLongDate } from "@/utils/dateTime";
+import { formatLongDate, getDayRange } from "@/utils/dateTime";
 
 import { DAY_REFRESH_INTERVAL } from "./constants";
 import Overdue from "./Overdue";
 import QuickStart from "./QuickStart";
 import Resumable from "./Resumable";
 import Today from "./Today";
-import { getDayRange, getSummary } from "./utils";
+import { getSummary } from "./utils";
 
 // What matters now, in four quarters. Quick start needs nothing loaded; the other three share one request.
 const Home = () => {
