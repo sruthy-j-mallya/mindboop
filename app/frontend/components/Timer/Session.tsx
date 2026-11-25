@@ -135,24 +135,17 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
             </Button>
           )}
           {canBail ? (
-            <Button size="lg" type="button" variant="outline" onClick={handleBail}>
+            <Button size="lg" type="button" variant="ghost" onClick={handleBail}>
               <LogOut />
               Bail
             </Button>
           ) : (
-            <Button size="lg" type="button" variant="outline" onClick={handleDiscard}>
+            <Button size="lg" type="button" variant="ghost" onClick={handleDiscard}>
               <X />
               Discard
             </Button>
           )}
-          <Button
-            className="bg-muted text-primary"
-            disabled={isCompleting}
-            size="lg"
-            type="button"
-            variant="ghost"
-            onClick={handleDone}
-          >
+          <Button disabled={isCompleting} size="lg" type="button" onClick={handleDone}>
             <PartyPopper />
             Done
           </Button>
