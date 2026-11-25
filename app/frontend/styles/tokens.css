@@ -29,26 +29,29 @@
   --radius: 0.75rem;
 
   /* Semantic colors — light */
-  --background: #fefcfb;
+  --background: #f7f3ef;
   --foreground: #1f1417;
-  --card: #ffffff;
+  --card: #fcfaf7;
   --card-foreground: #1f1417;
-  --popover: #ffffff;
+  --popover: #fcfaf7;
   --popover-foreground: #1f1417;
   --primary: #5a2855;
+  --primary-text: var(--primary);
+  --timer-ring: var(--primary);
   --primary-foreground: #ffffff;
   --secondary: #f5a392;
   --secondary-foreground: #1f1417;
-  --muted: #f8f3f0;
+  --muted: #f0eae5;
   --muted-foreground: #6b5a5d;
-  --accent: #f5e5f3;
+  --accent: #f0e0ee;
   --accent-foreground: #1f1417;
   --destructive: #dc2626;
+  --destructive-text: #c01f1f;
   --destructive-foreground: #ffffff;
-  --border: #e5d7d3;
+  --border: #dfd1cc;
   --input: transparent;
-  --input-background: #fbf6f4;
-  --switch-background: #d4c5c1;
+  --input-background: #f4eeea;
+  --switch-background: #cbbab5;
   --ring: #5a2855;
 
   --chart-1: #5a2855;
@@ -57,19 +60,19 @@
   --chart-4: #e5c9a8;
   --chart-5: #7a3875;
 
-  --sidebar: #fefcfb;
+  --sidebar: #f7f3ef;
   --sidebar-foreground: #1f1417;
   --sidebar-primary: #5a2855;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f5e5f3;
+  --sidebar-accent: #f0e0ee;
   --sidebar-accent-foreground: #1f1417;
-  --sidebar-border: #e5d7d3;
+  --sidebar-border: #dfd1cc;
   --sidebar-ring: #5a2855;
 
   /* Code syntax highlighting (lowlight / highlight.js classes), tuned for contrast on --muted */
   --syntax-comment: #6b5a5d;
   --syntax-keyword: #8a2c84;
-  --syntax-string: #2f7a33;
+  --syntax-string: #2a6f2e;
   --syntax-number: #a14a08;
   --syntax-title: #1f5fae;
   --syntax-type: #7a5200;
@@ -82,45 +85,53 @@
 .dark {
   color-scheme: dark;
 
-  /* Semantic colors — dark (brand palette is unchanged) */
-  --background: #1a0f12;
-  --foreground: #f8f3f0;
-  --card: #251719;
-  --card-foreground: #f8f3f0;
-  --popover: #251719;
-  --popover-foreground: #f8f3f0;
-  --primary: #9a5895;
+  /*
+   * Semantic colors — dark (brand palette is unchanged). Not from Figma: soft, low-saturation brown surfaces, each layer
+   * a step lighter, and off-white text, to be easy on the eyes. Primary is the light theme's purple, which is too deep
+   * to read as text on brown, so primary text and icons (--primary-text) are a lighter purple.
+   */
+  --background: #1f1b18;
+  --foreground: #e8e2db;
+  --card: #272220;
+  --card-foreground: #e8e2db;
+  --popover: #2e2925;
+  --popover-foreground: #e8e2db;
+  --primary: var(--brand-purple);
+  --primary-text: #c78bc2;
+  /* Mauve, so the time left stands out from the ring's track. */
+  --timer-ring: #b99ab0;
   --primary-foreground: #ffffff;
-  --secondary: #ffb8a8;
-  --secondary-foreground: #1a0f12;
-  --muted: #2d1f22;
-  --muted-foreground: #b5a4a7;
-  --accent: #3a1f35;
-  --accent-foreground: #c78bc2;
-  --destructive: #ef4444;
-  --destructive-foreground: #f8f3f0;
-  --border: #3d2b2e;
-  --input: #7d676b;
-  --input-background: #2d1f22;
-  --switch-background: #4a3639;
+  --secondary: #d9a697;
+  --secondary-foreground: #1f1b18;
+  --muted: #332d29;
+  --muted-foreground: #b0a59b;
+  --accent: #3d3431;
+  --accent-foreground: #d3a3cf;
+  --destructive: #dc2626;
+  --destructive-text: #ea8580;
+  --destructive-foreground: #ffffff;
+  --border: #3d3632;
+  --input: #887c74;
+  --input-background: #332d29;
+  --switch-background: #504741;
   --ring: #9a5895;
 
   --chart-1: #9a5895;
-  --chart-2: #ffb8a8;
-  --chart-3: #ffd484;
-  --chart-4: #e5c9a8;
-  --chart-5: #c78bc2;
+  --chart-2: #d9a697;
+  --chart-3: #dfc084;
+  --chart-4: #cdb699;
+  --chart-5: #d3a3cf;
 
-  --sidebar: #1a0f12;
-  --sidebar-foreground: #f8f3f0;
-  --sidebar-primary: #9a5895;
+  --sidebar: #1f1b18;
+  --sidebar-foreground: #e8e2db;
+  --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #3a1f35;
-  --sidebar-accent-foreground: #c78bc2;
-  --sidebar-border: #3d2b2e;
+  --sidebar-accent: #3d3431;
+  --sidebar-accent-foreground: #d3a3cf;
+  --sidebar-border: #3d3632;
   --sidebar-ring: #9a5895;
 
-  --syntax-comment: #b5a4a7;
+  --syntax-comment: #b0a59b;
   --syntax-keyword: #d9a0d4;
   --syntax-string: #a3d69e;
   --syntax-number: #ffb38a;
@@ -128,5 +139,5 @@
   --syntax-type: #ffd484;
   --syntax-attr: #ff9e9e;
 
-  --highlight: #5c4412;
+  --highlight: #544724;
 }

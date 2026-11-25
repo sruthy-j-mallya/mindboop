@@ -27,6 +27,9 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  /* text-primary only: in the dark theme --primary is too deep to read as text. */
+  --text-color-primary: var(--primary-text);
+  --color-timer-ring: var(--timer-ring);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -35,6 +38,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  /* text-destructive only: lighter in the dark theme, to read on brown. */
+  --text-color-destructive: var(--destructive-text);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);

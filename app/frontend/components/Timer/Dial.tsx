@@ -12,7 +12,7 @@ const Dial = ({ fill = 0, children }: DialProps) => (
       <circle className="stroke-border" cx="50" cy="50" r="46" strokeWidth="2.5" />
       {fill > 0 && (
         <circle
-          className="stroke-primary transition-[stroke-dasharray] duration-1000 ease-linear"
+          className="stroke-timer-ring transition-[stroke-dasharray] duration-1000 ease-linear"
           cx="50"
           cy="50"
           pathLength={1}

@@ -495,7 +495,7 @@ describe("Timer", () => {
   describe("ring", () => {
     // Decorative (aria-hidden), so there's no accessible handle; the arc is the primary-coloured circle.
     const arcFill = () => {
-      const dashArray = document.querySelector("circle.stroke-primary")?.getAttribute("stroke-dasharray");
+      const dashArray = document.querySelector("circle.stroke-timer-ring")?.getAttribute("stroke-dasharray");
 
       return dashArray === undefined ? null : Number(dashArray?.split(" ")[0]);
     };
@@ -946,7 +946,7 @@ describe("Timer", () => {
 
       await screen.findByRole("timer");
 
-      expect(document.querySelector("circle.stroke-primary")).toBeNull();
+      expect(document.querySelector("circle.stroke-timer-ring")).toBeNull();
     });
 
     it("offers every action but Extend", async () => {
