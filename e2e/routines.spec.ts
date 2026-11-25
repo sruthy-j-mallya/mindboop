@@ -57,7 +57,8 @@ test("add a routine from an idea, run it, see it counted, then edit and delete i
 
   await page.getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Delete" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Delete routine" }).click();
+  await expect(page.getByRole("dialog").getByRole("button", { name: "Delete routine" })).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(page).toHaveURL("/routines");
   await expect(list.getByRole("link", { name: /Evening meditation/ })).toBeHidden();
   await expect(list.getByRole("link", { name: /Shower/ })).toBeVisible();

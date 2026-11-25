@@ -113,6 +113,7 @@ test("add areas from the suggestions, move a task into it, search and edit it", 
   await nav.getByRole("link", { name: "Career" }).click({ button: "right" });
   await page.getByRole("menuitem", { name: "Delete" }).click();
   const deleteDialog = page.getByRole("dialog", { name: "Delete Career?" });
+  await expect(deleteDialog.getByRole("button", { name: "Delete area" })).toBeFocused();
   await deleteDialog.getByRole("combobox", { name: "Move tasks to" }).click();
   await page.getByRole("option", { name: "Health" }).click();
   await deleteDialog.getByRole("button", { name: "Delete area" }).click();

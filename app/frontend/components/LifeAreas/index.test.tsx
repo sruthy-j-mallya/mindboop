@@ -349,9 +349,37 @@ describe("LifeAreas", () => {
 
   const clickDelete = async (dialog: HTMLElement) => {
     const button = within(dialog).getByRole("button", { name: "Delete area" });
-    await waitFor(() => expect(button).toBeEnabled());
+    await waitFor(() => expect(button).toHaveAttribute("aria-disabled", "false"));
     await userEvent.click(button);
   };
+
+  it("focuses the delete button, so Enter deletes the area once its tasks are checked", async () => {
+    const work = buildLifeArea();
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work] });
+    const fetchTasks = vi.spyOn(tasksApi, "fetchList");
+    const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
+    renderLifeAreas();
+    await screen.findByRole("link", { name: "Work" });
+    let finishCheck = () => {};
+    fetchTasks.mockReturnValue(
+      new Promise((resolve) => {
+        finishCheck = () => resolve(listOf([]));
+      }),
+    );
+
+    const dialog = await openDeleteDialog("Work");
+    const button = within(dialog).getByRole("button", { name: "Delete area" });
+    await waitFor(() => expect(button).toHaveFocus());
+    await userEvent.keyboard("{Enter}");
+    expect(destroy).not.toHaveBeenCalled();
+
+    finishCheck();
+    await waitFor(() => expect(button).toHaveAttribute("aria-disabled", "false"));
+    expect(button).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+
+    expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: undefined }, expect.anything());
+  });
 
   it("asks which list to move a deleted area's tasks to, and opens it", async () => {
     const work = buildLifeArea();

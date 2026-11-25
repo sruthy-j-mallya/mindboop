@@ -1,10 +1,12 @@
 import { useState } from "react";
 
 import type { LifeArea } from "@/apis/types";
+import ConfirmDeleteButton from "@/components/commons/ConfirmDeleteButton";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useTasks } from "@/hooks/reactQuery/useTasksApi";
+import useInitialFocus from "@/hooks/useInitialFocus";
 
 import { INBOX_TARGET } from "../constants";
 import type { DropTarget } from "../types";
@@ -33,12 +35,13 @@ const DeleteAreaDialog = ({ lifeArea, onClose }: DeleteAreaDialogProps) => {
     ...lifeAreas.filter((area) => area.id !== id).map((area) => ({ lifeAreaId: area.id, name: area.name })),
   ];
   const hasChoice = hasTasks && targets.length > 1;
+  const { ref: deleteButtonRef, handleOpenAutoFocus } = useInitialFocus<HTMLButtonElement>();
 
   const handleDelete = () => deleteArea(hasTasks ? target : null);
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="gap-6 rounded-2xl p-8 sm:max-w-md">
+      <DialogContent className="gap-6 rounded-2xl p-8 sm:max-w-md" onOpenAutoFocus={handleOpenAutoFocus}>
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl">Delete {name}?</DialogTitle>
           <DialogDescription className="text-base">
@@ -57,15 +60,12 @@ const DeleteAreaDialog = ({ lifeArea, onClose }: DeleteAreaDialogProps) => {
           <Button disabled={isDeleting} size="lg" type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            disabled={isDeleting || isFetching}
-            size="lg"
-            type="button"
-            variant="destructive"
+          <ConfirmDeleteButton
+            ref={deleteButtonRef}
+            isDisabled={isDeleting || isFetching}
+            label="Delete area"
             onClick={handleDelete}
-          >
-            Delete area
-          </Button>
+          />
         </div>
       </DialogContent>
     </Dialog>

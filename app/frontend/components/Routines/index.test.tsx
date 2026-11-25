@@ -256,4 +256,18 @@ describe("Routines", () => {
     await waitFor(() => expect(destroy).toHaveBeenCalledWith(routine.id, expect.anything()));
     await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.routines.index));
   });
+
+  it("focuses the delete button, so Enter deletes the routine", async () => {
+    const routine = buildRoutine();
+    const destroy = vi.spyOn(routinesApi, "destroy").mockResolvedValue({} as never);
+    renderRoutines([routine], routinePath(routine.id));
+
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(dialog).getByRole("button", { name: "Delete routine" })).toHaveFocus());
+    await userEvent.keyboard("{Enter}");
+
+    await waitFor(() => expect(destroy).toHaveBeenCalledWith(routine.id, expect.anything()));
+  });
 });
