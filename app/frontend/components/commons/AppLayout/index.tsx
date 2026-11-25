@@ -11,6 +11,7 @@ import BreakAlarm from "./BreakAlarm";
 import CuriosityAlarm from "./CuriosityAlarm";
 import CurrentSession from "./CurrentSession";
 import GlobalSearch from "./GlobalSearch";
+import RoutineReminders from "./RoutineReminders";
 import { isSidebarOpen, saveSidebarOpen } from "./utils";
 
 const AppLayout = () => {
@@ -37,6 +38,7 @@ const AppLayout = () => {
         <Outlet />
       </SidebarInset>
       <CurrentSession />
+      <RoutineReminders />
       {/* Outside the sidebar, which unmounts its content on narrow screens when it closes. */}
       <GlobalSearch isOpen={isSearchOpen} onOpenChange={setIsSearchOpen} />
       {/* Bottom centre, clear of the mini timer in the bottom-right corner. */}

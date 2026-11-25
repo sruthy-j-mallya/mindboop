@@ -2,6 +2,7 @@ import type {
   CalendarEventsParams,
   ParkingLotItemFilters,
   ParkingLotItemListParams,
+  RoutineTimeLogsParams,
   TaskFilters,
   TaskListParams,
 } from "@/apis/types";
@@ -34,6 +35,12 @@ export const QUERY_KEYS = {
   USER_PREFERENCE: ["userPreference"],
   LIFE_AREAS: {
     LIST: ["lifeAreas", "list"],
+  },
+  ROUTINES: {
+    // Every routine query: finishing or moving a routine's session changes its stats and history.
+    ALL: ["routines"],
+    LIST: ["routines", "list"],
+    TIME_LOGS: (params: RoutineTimeLogsParams) => ["routines", "timeLogs", params],
   },
   CALENDAR_EVENTS: {
     // Every range loaded so far; task and time log mutations refresh them all.

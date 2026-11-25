@@ -46,8 +46,13 @@ Every error response has one shape:
 | POST   | `/api/life_areas`                         | `name`, `color`, `emoji`, `default_sound` (optional)                                                | 201 `{ life_area }`               |
 | PATCH  | `/api/life_areas/:id`                     | `name`, `color`, `emoji`, `default_sound`, `position` (any)                                         | 200 `{ life_area }`               |
 | DELETE | `/api/life_areas/:id`                     | `tasks_life_area_id` query param (optional)                                                         | 204, soft delete                  |
+| GET    | `/api/routines`                           | –                                                                                                   | 200 `{ routines }`                |
+| POST   | `/api/routines`                           | Routine fields (see below)                                                                          | 201 `{ routine }`                 |
+| PATCH  | `/api/routines/:id`                       | Routine fields (any)                                                                                | 200 `{ routine }`                 |
+| DELETE | `/api/routines/:id`                       | –                                                                                                   | 204, soft delete                  |
+| GET    | `/api/routines/:routine_id/time_logs`     | `from`, `to` query params (ISO 8601)                                                                | 200 `{ time_logs }`               |
 | POST   | `/api/quick_starts`                       | Task fields, `estimated_minutes` required                                                           | 201 `{ task, time_log }`          |
-| POST   | `/api/time_logs`                          | `task_id`, Time log fields                                                                          | 201 `{ time_log }`                |
+| POST   | `/api/time_logs`                          | `task_id` or `routine_id`, Time log fields                                                          | 201 `{ time_log }`                |
 | PATCH  | `/api/time_logs/:id`                      | `started_at`, `completed_at`                                                                        | 200 `{ time_log }`                |
 | DELETE | `/api/time_logs/:id`                      | –                                                                                                   | 204, soft delete                  |
 | POST   | `/api/time_logs/:time_log_id/restoration` | –                                                                                                   | 201 `{ time_log }`, undoes delete |
@@ -161,6 +166,30 @@ user's undeleted areas, it gets a 404 and nothing changes. A deleted area can't 
 putting a task in one gets a 422 ("Life area must exist"). A task reopened or restored once its area is deleted goes to
 the Inbox.
 
+## Routines
+
+Routines are timers a user starts again and again (a shower, meditation, folding clothes). `GET /api/routines` lists the
+signed-in user's undeleted routines, oldest first, unpaged, as `{ routines }`. Another user's routine gets a 403, and a
+deleted or unknown one a 404.
+
+Each `routine` is `{ id, title, emoji, color, sound, duration_minutes, reminder_time, reminder_days, sessions_count,
+total_seconds, last_done_at, created_at, updated_at }` (`app/views/api/routines/_routine.json.jbuilder`).
+
+- `title` is required, up to 60 characters, with runs of spaces squished.
+- `duration_minutes` is a whole number from 5 to 240: what a session on the routine is timed for.
+- `emoji` is one of `LifeArea::EMOJIS`, the same list a life area's `emoji` comes from.
+- `color` and `sound` take the same values as a life area's `color` and `default_sound`; `sound` defaults to `none`.
+- `reminder_time` is optional, `"HH:MM"` in the user's local time. Without it there's no reminder and `reminder_days` is
+  cleared. With it, `reminder_days` must list at least one weekday, 0 (Sunday) to 6; it's stored sorted without repeats.
+  Reminders are shown by the client while the app is open.
+- `sessions_count`, `total_seconds` and `last_done_at` count the routine's finished, undeleted sessions. They're read-only.
+
+Anything else gets a 422. `DELETE /api/routines/:id` soft deletes the routine; its sessions stay, and keep its title on the
+Calendar.
+
+`GET /api/routines/:routine_id/time_logs?from=…&to=…` lists the routine's finished, undeleted sessions that started in
+that range (up to 400 days), oldest first, as `{ time_logs }` in the time log shape. A missing or bad range gets a 422.
+
 ## Checklist items
 
 `/api/tasks/:task_id/checklist_items` adds, changes and removes a task's checklist items (the Steps on the Timer page).
@@ -227,8 +256,11 @@ set. Every response is `{ parking_lot_item }`: the item, or `null` when none is 
 
 ## Time logs
 
-A time log belongs to a user, and usually to one of their tasks. Only a `manual` log (time logged afterwards from the
-Calendar) can go without a task; it then has a `title` of its own. Another user's time log gets a 403. A deleted or
+A time log belongs to a user, and usually to one of their tasks. A `manual` log (time logged afterwards from the
+Calendar) can go without a task; it then has a `title` of its own. So can a session on a routine: send `routine_id`
+instead of `task_id` (another user's or a deleted routine gets a 404). Its `timer_preset` defaults to the routine's
+`duration_minutes`. Completing it only logs the time, and bailing out of it leaves no breadcrumb. Time logs include
+`routine_id` and `routine_title`. Another user's time log gets a 403. A deleted or
 unknown time log gets a 404. A time log whose task was deleted is still listed, moved and deleted like any other, but
 no new log can be started or logged on that task.
 
@@ -238,12 +270,13 @@ no new log can be started or logged on that task.
 | -------------- | ------------------------------------------------------------------------------------------------ |
 | `mode`         | Required, `timer`, `stopwatch` or `manual`                                                       |
 | `timer_preset` | Optional, whole number of minutes, at least 2 (the least a session can log; `timer`/`stopwatch`) |
-| `title`        | `manual` only: required without a `task_id`, up to 255 characters                                |
-| `started_at`   | `manual` only, required: no more than 24 hours ago                                               |
+| `title`        | `manual` only: required without a `task_id` or `routine_id`, up to 255 characters                |
+| `started_at`   | `manual` only, required: no more than 24 hours ago, or any past time on a routine                |
 | `completed_at` | `manual` only, required: after `started_at`, and not in the future                               |
 
 A `manual` log is saved finished: `is_running` is `false`, and `accumulated_elapsed_seconds` is the time from
 `started_at` to `completed_at`. Its times allow 5 minutes of clock drift. A log that breaks these rules gets a 422.
+With a `routine_id` and no `task_id` it's logged on the routine (its month grid's days), at any time in the past.
 `task_id` is optional for it; when given, the same task rules apply as for any other log.
 
 A user does one thing at a time, so their time logs can't overlap. Creating a log (of any mode), or moving one with

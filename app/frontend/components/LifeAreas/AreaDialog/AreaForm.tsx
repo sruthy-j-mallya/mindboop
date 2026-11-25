@@ -1,19 +1,16 @@
-import { type ChangeEvent, type ReactNode, useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
+import type { ReactNode } from "react";
+import { useController, useForm, useWatch } from "react-hook-form";
 
-import { NO_SOUND, SOUNDS } from "@/components/commons/Ambience/constants";
-import type { SoundId } from "@/components/commons/Ambience/types";
-import useAmbience from "@/components/commons/Ambience/useAmbience";
+import { SOUNDS } from "@/components/commons/Ambience/constants";
+import useSoundPreview from "@/components/commons/Ambience/useSoundPreview";
+import ChoiceField from "@/components/commons/ChoiceField";
+import EmojiField from "@/components/commons/EmojiField";
 import FormField from "@/components/commons/FormField";
 import { LIFE_AREA_COLORS } from "@/components/commons/LifeArea/constants";
 import { Button } from "@/components/ui/button";
-import useAmbienceStore from "@/stores/useAmbienceStore";
 
-import ChoiceField from "./ChoiceField";
 import { LIFE_AREA_VALIDATION_SCHEMA, type LifeAreaFormValues } from "./constants";
-import EmojiField from "./EmojiField";
 
 type AreaFormProps = {
   initialValues: LifeAreaFormValues;
@@ -38,7 +35,6 @@ const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({
 }));
 
 // The add and edit dialogs' form: a name, a colour, an emoji (shown on the colour picked) and the background sound.
-// Picking a sound previews it at the app's volume until another is picked or the dialog closes.
 const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, children }: AreaFormProps) => {
   const {
     register,
@@ -49,22 +45,17 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
     defaultValues: initialValues,
     resolver: zodResolver(LIFE_AREA_VALIDATION_SCHEMA),
   });
-  const [previewSoundId, setPreviewSoundId] = useState<SoundId>(NO_SOUND);
-  const volume = useAmbienceStore((state) => state.volume);
-  useAmbience({ soundId: previewSoundId, volume, isPlaying: true });
-
-  const handleSoundChange = (event: ChangeEvent<HTMLInputElement>) =>
-    setPreviewSoundId(event.target.value as SoundId);
-
+  const handleSoundChange = useSoundPreview();
+  const { field: emojiField } = useController({ control, name: "emoji" });
   const color = useWatch({ control, name: "color" });
 
   return (
     <form noValidate className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
       <FormField autoComplete="off" error={errors.name?.message} label="Name" {...register("name")} />
       <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
-      <EmojiField color={color} control={control} />
+      <EmojiField color={color} error={errors.emoji?.message} field={emojiField} />
       <ChoiceField
-        hint="Plays when you start a session on one of the area’s tasks."
+        hint="Plays when you start a session on one of the area’s tasks. Pick one to hear a few seconds."
         legend="Background sound"
         options={SOUND_OPTIONS}
         registration={register("defaultSound", { onChange: handleSoundChange })}

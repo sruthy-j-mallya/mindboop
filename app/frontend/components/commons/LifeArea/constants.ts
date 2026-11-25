@@ -15,5 +15,5 @@ export const LIFE_AREA_COLORS: LifeAreaColor[] = [
   { id: "slate", label: "Slate", value: "#475569" },
 ];
 
-// The emojis on offer, each listed once. The server reads the same file (`LifeArea::EMOJIS`).
+// The emojis on offer for areas and routines, each listed once. The server reads the same file (`LifeArea::EMOJIS`).
 export const LIFE_AREA_EMOJI_CATEGORIES: LifeAreaEmojiCategory[] = emojiCategories;

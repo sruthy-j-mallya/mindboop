@@ -100,6 +100,31 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  def test_that_user_can_start_a_routine_for_its_duration
+    @time_log.update!(started_at: 1.hour.ago, completed_at: 50.minutes.ago, accumulated_elapsed_seconds: 600)
+    routine = create(:routine, user: @user, duration_minutes: 12)
+    sign_in @user
+
+    assert_difference "routine.time_logs.count", 1 do
+      post api_time_logs_path, params: { routine_id: routine.id, mode: "timer" }, as: :json
+    end
+
+    assert_response :created
+    time_log = response.parsed_body["time_log"]
+    assert_equal [ nil, routine.id, routine.title, 12, true ],
+      time_log.values_at("task_id", "routine_id", "routine_title", "timer_preset", "is_running")
+  end
+
+  def test_that_create_returns_404_for_another_users_routine
+    sign_in @user
+
+    assert_no_difference "TimeLog.count" do
+      post api_time_logs_path, params: { routine_id: create(:routine).id, mode: "timer" }, as: :json
+    end
+
+    assert_response :not_found
+  end
+
   def test_that_destroy_soft_deletes_the_time_log
     sign_in @user
 
@@ -217,6 +242,62 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :forbidden
+  end
+
+  def test_that_user_can_log_a_session_on_a_routine_on_any_past_day
+    freeze_time
+    routine = create(:routine, user: @user)
+    sign_in @user
+
+    assert_difference "routine.finished_time_logs.count", 1 do
+      post api_time_logs_path, params: {
+        mode: "manual", routine_id: routine.id, started_at: 20.days.ago, completed_at: 20.days.ago + 15.minutes
+      }, as: :json
+    end
+
+    assert_response :created
+    time_log = response.parsed_body["time_log"]
+    assert_equal [ nil, routine.id, routine.title, nil, 15.minutes.to_i ],
+      time_log.values_at("task_id", "routine_id", "routine_title", "timer_preset", "accumulated_elapsed_seconds")
+  end
+
+  def test_that_a_session_on_a_routine_cannot_be_logged_into_the_future
+    routine = create(:routine, user: @user)
+    sign_in @user
+
+    assert_no_difference "TimeLog.count" do
+      post api_time_logs_path, params: {
+        mode: "manual", routine_id: routine.id, started_at: 1.hour.ago, completed_at: 1.hour.from_now
+      }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_equal "Completed at can't be in the future", response.parsed_body["error"]
+  end
+
+  def test_that_a_session_cannot_be_logged_on_another_users_routine
+    sign_in @user
+
+    assert_no_difference "TimeLog.count" do
+      post api_time_logs_path, params: {
+        mode: "manual", routine_id: create(:routine).id, started_at: 2.hours.ago, completed_at: 1.hour.ago
+      }, as: :json
+    end
+
+    assert_response :not_found
+  end
+
+  def test_that_a_routine_does_not_lift_the_24_hour_limit_for_a_task
+    routine = create(:routine, user: @user)
+    sign_in @user
+
+    assert_no_difference "TimeLog.count" do
+      post api_time_logs_path, params: {
+        mode: "manual", routine_id: routine.id, task_id: @task.id, started_at: 3.days.ago, completed_at: 3.days.ago + 1.hour
+      }, as: :json
+    end
+
+    assert_response :unprocessable_content
   end
 
   def test_that_update_moves_a_finished_session

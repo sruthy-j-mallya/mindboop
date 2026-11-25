@@ -1,4 +1,6 @@
-import { ALARM_PHASES, ALARM_RING_DURATION, SIDEBAR_STORAGE_KEY } from "./constants";
+import type { Routine } from "@/apis/types";
+
+import { ALARM_PHASES, ALARM_RING_DURATION, REMINDER_GRACE_PERIOD, SIDEBAR_STORAGE_KEY } from "./constants";
 
 export const isSidebarOpen = () => {
   try {
@@ -31,4 +33,19 @@ export const getNextAlarmChange = (endsAt: string, currentTime: number) => {
   if (phase === ALARM_PHASES.WAITING) return Date.parse(endsAt);
 
   return phase === ALARM_PHASES.RINGING ? Date.parse(endsAt) + ALARM_RING_DURATION : null;
+};
+
+// A reminder is due on one of its days, from its time until the grace period runs out, in the browser's time zone.
+export const isReminderDue = (
+  { reminderTime, reminderDays }: Pick<Routine, "reminderTime" | "reminderDays">,
+  now: Date,
+) => {
+  if (!reminderTime || !reminderDays.includes(now.getDay())) return false;
+
+  const [hours, minutes] = reminderTime.split(":").map(Number);
+  const dueAt = new Date(now);
+  dueAt.setHours(hours, minutes, 0, 0);
+  const lateBy = now.getTime() - dueAt.getTime();
+
+  return lateBy >= 0 && lateBy <= REMINDER_GRACE_PERIOD;
 };

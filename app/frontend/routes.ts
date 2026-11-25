@@ -9,6 +9,10 @@ const routes = {
     index: "/inbox",
     show: "/inbox/:taskId",
   },
+  routines: {
+    index: "/routines",
+    show: "/routines/:routineId",
+  },
   lifeAreas: {
     // Leads to the Inbox, where the areas are listed beside it.
     index: "/areas",

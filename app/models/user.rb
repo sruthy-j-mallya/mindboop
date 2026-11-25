@@ -9,6 +9,7 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :tasks, dependent: :destroy
   has_many :life_areas, dependent: :destroy
+  has_many :routines, dependent: :destroy
   # Logs linked to a task go with the task; this catches the ones saved with only a title.
   has_many :time_logs, dependent: :destroy
   has_many :achievements, dependent: :destroy

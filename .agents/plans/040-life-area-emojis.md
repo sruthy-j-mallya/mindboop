@@ -16,7 +16,7 @@ in `039-life-areas.md`; the area's name, colour and default sound stay as they a
 | One list | `app/frontend/components/commons/LifeArea/emojis.json` is read by both the picker and `LifeArea::EMOJIS`, so they can't drift. The production image includes `app/frontend` |
 | Column | `life_areas.icon` became `life_areas.emoji`, in the API too. `CreateLifeAreas` was edited in place, as `life_areas` isn't on `main` |
 | Validation | `emoji` must be in `LifeArea::EMOJIS`. The client only requires one, as it comes from the picker |
-| Picker | Frimousse `0.4.0`, pinned exactly (pre-1.0), in `AreaDialog/EmojiField`. `resolveEmojiData` hands it the list, so nothing is downloaded from a CDN. Search matches labels, tags and category names |
+| Picker | Frimousse `0.4.0`, pinned exactly (pre-1.0), in `commons/EmojiField` (shared with routines). `resolveEmojiData` hands it the list, so nothing is downloaded from a CDN. Search matches labels, tags and category names |
 | Popover in the dialog | `<Popover modal>`, so the list scrolls inside the dialog. Escape closes only the popover |
 | Rendering | Native emojis, so they look different per platform, on the area's colour tint. New areas start with ✨ |
 | Suggestions | Work 💼, Health 🩺, Relationships ❤️, Household 🏠, Leisure 🎮, Learning 📚, Finances 💰 |

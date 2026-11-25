@@ -40,7 +40,11 @@ export const MAX_VOLUME = 100;
 
 export const SOUND_STORAGE_KEY = "ambience.sound";
 export const VOLUME_STORAGE_KEY = "ambience.volume";
-export const LIFE_AREA_SOUND_STORAGE_KEY = "ambience.lifeAreaSoundTimeLogId";
+// The key predates routines, which share it, so a session in progress isn't switched again after an upgrade.
+export const STARTING_SOUND_STORAGE_KEY = "ambience.lifeAreaSoundTimeLogId";
 
 // How long a sound takes to fade in or out, so starting, stopping and switching never click.
 export const FADE_SECONDS = 0.6;
+
+// How long a sound plays when it's picked in a form, as a taste of it.
+export const SOUND_PREVIEW_DURATION = 4_000; // 4 seconds

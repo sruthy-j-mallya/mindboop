@@ -10,6 +10,9 @@ Rails.application.routes.draw do
     end
     resources :task_counts, only: :index
     resources :life_areas, only: %i[ index create update destroy ]
+    resources :routines, only: %i[ index create update destroy ] do
+      resources :time_logs, only: :index, controller: "routine_time_logs"
+    end
     resources :quick_starts, only: :create
     resources :time_logs, only: %i[ create update destroy ] do
       resource :completion, only: :create, controller: "time_log_completions"
