@@ -12,6 +12,13 @@ import { QUERY_KEYS } from "@/constants/query";
 
 const CHECKLIST_ITEMS_MUTATION_KEY = ["checklistItems"];
 
+// Changes to the steps reach the server one at a time (`scope`), in the order made: each position counts on the changes
+// before it.
+const CHECKLIST_ITEMS_MUTATION = {
+  mutationKey: CHECKLIST_ITEMS_MUTATION_KEY,
+  scope: { id: "checklistItems" },
+};
+
 // While another change to the steps is still in flight, this older answer would undo its optimistic update, so the
 // last one to finish writes the cache.
 const saveTask = (queryClient: QueryClient, { task }: TaskResponse) => {
@@ -66,7 +73,7 @@ export const useCreateChecklistItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: CHECKLIST_ITEMS_MUTATION_KEY,
+    ...CHECKLIST_ITEMS_MUTATION,
     mutationFn: checklistItemsApi.create,
     onMutate: optimisticallyUpdate(queryClient, applyCreate),
     onError: rollBack(queryClient),
@@ -80,7 +87,7 @@ export const useUpdateChecklistItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: CHECKLIST_ITEMS_MUTATION_KEY,
+    ...CHECKLIST_ITEMS_MUTATION,
     mutationFn: checklistItemsApi.update,
     onMutate: optimisticallyUpdate(queryClient, applyUpdate),
     onError: rollBack(queryClient),
@@ -92,7 +99,7 @@ export const useDeleteChecklistItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: CHECKLIST_ITEMS_MUTATION_KEY,
+    ...CHECKLIST_ITEMS_MUTATION,
     mutationFn: checklistItemsApi.destroy,
     onSuccess: (response) => saveTask(queryClient, response),
   });
