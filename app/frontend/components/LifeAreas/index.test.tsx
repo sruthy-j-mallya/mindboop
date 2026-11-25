@@ -404,12 +404,8 @@ describe("LifeAreas", () => {
     expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Inbox", "Health"]);
     await userEvent.click(screen.getByRole("option", { name: "Health" }));
 
-    vi.mocked(lifeAreasApi.fetchList).mockImplementation(async () => {
-      // A refresh takes a moment, as over a network; the router moves to the new list before it's in.
-      await new Promise((resolve) => setTimeout(resolve, 20));
-
-      return { lifeAreas: [health] };
-    });
+    // At once, so the list can refresh before the router has moved to the new one.
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [health] });
     await clickDelete(dialog);
 
     expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: health.id }, expect.anything());
