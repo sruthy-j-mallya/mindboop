@@ -44,7 +44,7 @@ Tick an issue in the commit that fixes it.
 - [ ] 16. Show today's routines on Home (out of scope in 049; needs a decision)
 - [ ] 17. Home's running session card names the task and shows the time left
 - [x] 18. Timer: Done is the primary action; Bail and Discard are quiet
-- [ ] 19. Timer: the task's title shows once during a session
+- [x] 19. Timer: the task's title shows once during a session
 - [ ] 20. Timer setup: list today's and recent tasks, and create a task when nothing matches
 - [ ] 21. Timer setup: duration presets
 - [ ] 22. Mini timer: task name and paused state, clear of the list on phones

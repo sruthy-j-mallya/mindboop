@@ -26,13 +26,21 @@ type TaskDetailsProps = {
   isCompact?: boolean;
   // Without completing, starting or deleting: the Timer has its own ways to start and end a session.
   isOnTimer?: boolean;
+  // The title is already shown (and edited) elsewhere, as beside a session's clock.
+  isTitleHidden?: boolean;
   // The task left this view, completed or deleted. The Inbox pane closes itself; a popover passes its close here.
   onRemoved?: () => void;
 };
 
 // A task's full view, as the task pane, the Calendar's popover and the Timer show it. Everything saves as it changes. Rendered with
 // `key={task.id}`, so an open step row doesn't carry over to the next task picked.
-const TaskDetails = ({ task, isCompact = false, isOnTimer = false, onRemoved }: TaskDetailsProps) => {
+const TaskDetails = ({
+  task,
+  isCompact = false,
+  isOnTimer = false,
+  isTitleHidden = false,
+  onRemoved,
+}: TaskDetailsProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
   const [openDetail, setOpenDetail] = useState<Detail | null>(null);
   const { completeTask, isCompleting, error: completeError } = useCompleteTask(task.id, onRemoved);
@@ -54,6 +62,15 @@ const TaskDetails = ({ task, isCompact = false, isOnTimer = false, onRemoved }: 
       }),
   });
 
+  // Lined up with the title's text.
+  const meta = (
+    <div className={cn("-ml-1.5 flex flex-wrap items-start gap-1 empty:hidden", !isOnTimer && "pl-8")}>
+      <DueDatePicker {...getDetailProps("schedule")} />
+      <TaskLifeAreaPicker {...getDetailProps("lifeArea")} />
+      <TaskEstimatePicker {...getDetailProps("estimate")} />
+    </div>
+  );
+
   return (
     <article className={cn("flex flex-1 flex-col", isCompact ? "gap-5" : "gap-8")}>
       {/* Grouped, so the gap below the title doesn't double up while the task has no steps. */}
@@ -62,29 +79,34 @@ const TaskDetails = ({ task, isCompact = false, isOnTimer = false, onRemoved }: 
             added from the menu. */}
         <header className="flex flex-col gap-1">
           <div className={cn("flex items-start", isCompact ? "gap-2" : "gap-4")}>
-            <div className="flex min-w-0 flex-1 items-start gap-3">
-              {!isOnTimer && (
-                <Checkbox
-                  aria-label="Mark as complete"
-                  checked={isCompleting}
-                  className="mt-1.5 size-5 border-muted-foreground/50"
-                  disabled={isCompleting}
-                  onCheckedChange={completeTask}
-                />
-              )}
-              {/* The heading keeps the title as its name; the field inside it edits the title in place. */}
-              <h2
-                aria-label={title}
-                className={cn("flex min-w-0 flex-1 font-semibold", isCompact ? "text-lg" : "text-xl")}
-              >
-                <TitleInput
-                  className="-mx-2 w-full rounded-md px-2 py-0.5 transition-colors hover:bg-muted focus:bg-muted"
-                  label="Task title"
-                  title={title}
-                  onSave={renameTask}
-                />
-              </h2>
-            </div>
+            {/* Without the title, what's set takes its place beside the menu. */}
+            {isTitleHidden ? (
+              <div className="min-w-0 flex-1">{meta}</div>
+            ) : (
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                {!isOnTimer && (
+                  <Checkbox
+                    aria-label="Mark as complete"
+                    checked={isCompleting}
+                    className="mt-1.5 size-5 border-muted-foreground/50"
+                    disabled={isCompleting}
+                    onCheckedChange={completeTask}
+                  />
+                )}
+                {/* The heading keeps the title as its name; the field inside it edits the title in place. */}
+                <h2
+                  aria-label={title}
+                  className={cn("flex min-w-0 flex-1 font-semibold", isCompact ? "text-lg" : "text-xl")}
+                >
+                  <TitleInput
+                    className="-mx-2 w-full rounded-md px-2 py-0.5 transition-colors hover:bg-muted focus:bg-muted"
+                    label="Task title"
+                    title={title}
+                    onSave={renameTask}
+                  />
+                </h2>
+              </div>
+            )}
             <div className="flex shrink-0 items-center gap-1">
               <TaskActionsMenu
                 canDelete={!isOnTimer}
@@ -96,12 +118,7 @@ const TaskDetails = ({ task, isCompact = false, isOnTimer = false, onRemoved }: 
               {!isOnTimer && <StartTaskButton task={task} />}
             </div>
           </div>
-          {/* Lined up with the title's text. */}
-          <div className={cn("-ml-1.5 flex flex-wrap items-start gap-1 empty:hidden", !isOnTimer && "pl-8")}>
-            <DueDatePicker {...getDetailProps("schedule")} />
-            <TaskLifeAreaPicker {...getDetailProps("lifeArea")} />
-            <TaskEstimatePicker {...getDetailProps("estimate")} />
-          </div>
+          {!isTitleHidden && meta}
           {error && (
             <p className="text-sm text-destructive" role="alert">
               {error.message}

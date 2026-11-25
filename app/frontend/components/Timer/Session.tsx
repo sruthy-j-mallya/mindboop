@@ -21,6 +21,7 @@ import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
 import RoutineDetails from "./RoutineDetails";
 import SessionCard from "./SessionCard";
+import SessionTitle from "./SessionTitle";
 
 type SessionProps = {
   timeLog: TimeLog;
@@ -91,15 +92,23 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
     <>
       <SessionCard
         details={
-          task ? <TaskDetails isOnTimer task={task} /> : routineId && <RoutineDetails routineId={routineId} />
+          task ? (
+            <TaskDetails isOnTimer isTitleHidden task={task} />
+          ) : (
+            routineId && <RoutineDetails routineId={routineId} />
+          )
         }
       >
         <header className="flex items-start justify-between gap-4">
-          <div className="grid gap-1">
+          <div className="grid min-w-0 flex-1 gap-1">
             <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
               {isOnBreak ? "Paused" : "Focusing on"}
             </p>
-            <h1 className="text-2xl font-semibold wrap-anywhere">{task?.title ?? timeLog.routineTitle}</h1>
+            {task ? (
+              <SessionTitle key={task.id} task={task} />
+            ) : (
+              <h1 className="text-2xl font-semibold wrap-anywhere">{timeLog.routineTitle}</h1>
+            )}
           </div>
           <AmbiencePicker />
         </header>

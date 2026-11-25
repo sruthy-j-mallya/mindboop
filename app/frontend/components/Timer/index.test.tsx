@@ -205,6 +205,18 @@ describe("Timer", () => {
     expect(screen.queryByRole("menuitem", { name: "Delete task" })).not.toBeInTheDocument();
   });
 
+  it("shows the title once, edited beside the clock", async () => {
+    const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: TASK });
+    renderTimer(TIME_LOG);
+
+    expect(await screen.findAllByRole("heading", { name: "Draft permission" })).toHaveLength(1);
+    const title = screen.getByRole("textbox", { name: "Task title" });
+    await userEvent.clear(title);
+    await userEvent.type(title, "Draft the form{Enter}");
+
+    expect(update.mock.lastCall?.[0]).toEqual({ id: TASK_ID, title: "Draft the form" });
+  });
+
   it("hides the menu when there's nothing left to add", async () => {
     renderTimer(TIME_LOG, { ...TASK, estimatedMinutes: 30, isAllDay: true, startsAt: STARTED_AT });
 
