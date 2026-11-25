@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :routine do
     user
     title { Faker::Lorem.words(number: 2).join(" ").capitalize }
-    icon { Routine::ICONS.sample }
+    emoji { LifeArea::EMOJIS.sample }
     color { LifeArea::COLORS.sample }
     duration_minutes { rand(Routine::MIN_DURATION_MINUTES..60) }
 

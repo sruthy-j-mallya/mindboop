@@ -92,7 +92,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_120000) do
   create_table "routines", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "user_id", null: false
     t.string "title", null: false
-    t.string "icon", null: false
+    t.string "emoji", null: false
     t.string "color", null: false
     t.string "sound", default: "none", null: false
     t.integer "duration_minutes", null: false

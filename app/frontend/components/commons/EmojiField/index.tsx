@@ -1,25 +1,25 @@
 import { useState } from "react";
 
-import { type Control, useController } from "react-hook-form";
+import type { ControllerRenderProps } from "react-hook-form";
 
 import type { LifeAreaColorId } from "@/components/commons/LifeArea/types";
 import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-import type { LifeAreaFormValues } from "../constants";
 import Picker from "./Picker";
 import { getEmojiLabel } from "./utils";
 
-type EmojiFieldProps = { control: Control<LifeAreaFormValues>; color: LifeAreaColorId };
+type EmojiFieldProps = {
+  // The form's `useController` field for its emoji.
+  field: Pick<ControllerRenderProps<{ emoji: string }, "emoji">, "value" | "onChange" | "onBlur" | "ref">;
+  color: LifeAreaColorId;
+  error?: string;
+};
 
-// The area's emoji on the colour picked, opening a picker of the emojis on offer. The popover is modal so its list can
+// The form's emoji on the colour picked, opening a picker of the emojis on offer. The popover is modal so its list can
 // scroll inside the dialog.
-const EmojiField = ({ control, color }: EmojiFieldProps) => {
+const EmojiField = ({ field: { value, onChange, onBlur, ref }, color, error }: EmojiFieldProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const {
-    field: { value, onChange, onBlur, ref },
-    fieldState: { error },
-  } = useController({ control, name: "emoji" });
 
   const handlePick = (emoji: string) => {
     onChange(emoji);
@@ -46,7 +46,7 @@ const EmojiField = ({ control, color }: EmojiFieldProps) => {
           <Picker onPick={handlePick} />
         </PopoverContent>
       </Popover>
-      {error && <p className="text-sm text-destructive">{error.message}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 };

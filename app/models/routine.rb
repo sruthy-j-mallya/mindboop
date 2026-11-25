@@ -7,11 +7,6 @@ class Routine < ApplicationRecord
   # A routine is worth a timer; quicker habits are out of scope.
   MIN_DURATION_MINUTES = 5
   MAX_DURATION_MINUTES = 240
-  # Keys into the client's icon set (`components/commons/Routine/constants.ts`).
-  ICONS = %w[
-    toothbrush shower-head bath flower-2 dumbbell person-standing footprints bike book-open utensils cooking-pot
-    washing-machine shirt broom spray-can bed pill leaf droplets music sun moon heart sparkles
-  ].freeze
   REMINDER_TIME_FORMAT = /\A([01]\d|2[0-3]):[0-5]\d\z/
   WEEKDAYS = (0..6)
 
@@ -37,7 +32,7 @@ class Routine < ApplicationRecord
   has_many :finished_time_logs, -> { kept.where.not(completed_at: nil) }, class_name: "TimeLog"
 
   validates :title, presence: true, length: { maximum: MAX_TITLE_LENGTH }
-  validates :icon, inclusion: { in: ICONS }
+  validates :emoji, inclusion: { in: LifeArea::EMOJIS }
   validates :color, inclusion: { in: LifeArea::COLORS }
   validates :sound, inclusion: { in: LifeArea::SOUNDS }
   validates :duration_minutes, numericality: {

@@ -20,7 +20,7 @@ const CREATED_AT = "2026-11-05T10:00:00.000Z";
 const buildRoutine = (overrides: Partial<Routine> = {}): Routine => ({
   id: crypto.randomUUID(),
   title: "Meditation",
-  icon: "flower-2",
+  emoji: "🧘",
   color: "violet",
   sound: "bells",
   durationMinutes: 10,
@@ -87,7 +87,7 @@ describe("Routines", () => {
     await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
     expect(create.mock.calls.map(([payload]) => payload.title)).toEqual(["Shower", "Meditation"]);
     expect(create.mock.calls[0][0]).toMatchObject({
-      icon: "shower-head",
+      emoji: "🛁",
       durationMinutes: 15,
       reminderTime: null,
     });
@@ -133,7 +133,9 @@ describe("Routines", () => {
     const dialog = await screen.findByRole("dialog");
     await userEvent.type(within(dialog).getByLabelText("Name"), "Shower");
     await userEvent.click(within(dialog).getByRole("button", { name: "15 min" }));
-    await userEvent.click(within(dialog).getByRole("radio", { name: "Shower" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Emoji: sparkles" }));
+    await userEvent.type(await screen.findByRole("searchbox", { name: "Search emojis" }), "bathtub");
+    await userEvent.click(await screen.findByRole("gridcell", { name: "bathtub" }));
     await userEvent.click(within(dialog).getByRole("radio", { name: "Custom" }));
     await userEvent.click(within(dialog).getByRole("button", { name: "Monday" }));
     await userEvent.click(within(dialog).getByRole("button", { name: "Friday" }));
@@ -144,7 +146,7 @@ describe("Routines", () => {
         {
           title: "Shower",
           durationMinutes: 15,
-          icon: "shower-head",
+          emoji: "🛁",
           color: "indigo",
           sound: "none",
           reminderTime: "09:00",

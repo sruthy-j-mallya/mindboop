@@ -172,12 +172,12 @@ Routines are timers a user starts again and again (a shower, meditation, folding
 signed-in user's undeleted routines, oldest first, unpaged, as `{ routines }`. Another user's routine gets a 403, and a
 deleted or unknown one a 404.
 
-Each `routine` is `{ id, title, icon, color, sound, duration_minutes, reminder_time, reminder_days, sessions_count,
+Each `routine` is `{ id, title, emoji, color, sound, duration_minutes, reminder_time, reminder_days, sessions_count,
 total_seconds, last_done_at, created_at, updated_at }` (`app/views/api/routines/_routine.json.jbuilder`).
 
 - `title` is required, up to 60 characters, with runs of spaces squished.
 - `duration_minutes` is a whole number from 5 to 240: what a session on the routine is timed for.
-- `icon` is one of `Routine::ICONS` (lucide icon names such as `toothbrush`, `shower-head`, `flower-2`).
+- `emoji` is one of `LifeArea::EMOJIS`, the same list a life area's `emoji` comes from.
 - `color` and `sound` take the same values as a life area's `color` and `default_sound`; `sound` defaults to `none`.
 - `reminder_time` is optional, `"HH:MM"` in the user's local time. Without it there's no reminder and `reminder_days` is
   cleared. With it, `reminder_days` must list at least one weekday, 0 (Sunday) to 6; it's stored sorted without repeats.

@@ -15,7 +15,7 @@ const toReminderDays = ({ reminderFrequency, reminderDays }: RoutineFormValues) 
 export const toRoutinePayload = (values: RoutineFormValues): CreateRoutinePayload => ({
   title: values.title,
   durationMinutes: values.durationMinutes,
-  icon: values.icon,
+  emoji: values.emoji,
   color: values.color,
   sound: values.sound,
   reminderTime: values.reminderFrequency === "off" ? null : values.reminderTime,
@@ -32,7 +32,7 @@ const toReminderFrequency = ({ reminderTime, reminderDays }: Routine): ReminderF
 export const toRoutineFormValues = (routine: Routine): RoutineFormValues => ({
   title: routine.title,
   durationMinutes: routine.durationMinutes,
-  icon: routine.icon,
+  emoji: routine.emoji,
   color: routine.color,
   sound: routine.sound,
   reminderFrequency: toReminderFrequency(routine),

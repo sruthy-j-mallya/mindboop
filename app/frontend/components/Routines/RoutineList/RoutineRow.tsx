@@ -24,10 +24,10 @@ const DIALOGS = { EDIT: "edit", DELETE: "delete" } as const;
 
 type Dialog = (typeof DIALOGS)[keyof typeof DIALOGS];
 
-// The routine's icon, name, length and when it was last done, opening its pane; play starts it. A right click (or a
+// The routine's emoji, name, length and when it was last done, opening its pane; play starts it. A right click (or a
 // long press) opens a menu to edit or delete it.
 const RoutineRow = ({ routine, now }: RoutineRowProps) => {
-  const { id, title, color, icon, durationMinutes, lastDoneAt } = routine;
+  const { id, title, color, emoji, durationMinutes, lastDoneAt } = routine;
   const reminder = describeReminder(routine);
   const [dialog, setDialog] = useState<Dialog | null>(null);
 
@@ -44,7 +44,7 @@ const RoutineRow = ({ routine, now }: RoutineRowProps) => {
               className="flex min-w-0 flex-1 items-center gap-3 rounded-xl py-2.5 pl-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               to={getRoutinePath(id)}
             >
-              <RoutineBadge color={color} icon={icon} />
+              <RoutineBadge color={color} emoji={emoji} />
               <span className="grid min-w-0 gap-0.5">
                 <span className="truncate font-medium">{title}</span>
                 <span className="flex items-center gap-1.5 text-sm text-muted-foreground">

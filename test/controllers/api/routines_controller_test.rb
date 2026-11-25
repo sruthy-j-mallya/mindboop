@@ -6,7 +6,7 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
     @routine = create(:routine, user: @user)
     @other_routine = create(:routine)
     @title = Faker::Lorem.words(number: 2).join(" ").capitalize
-    @params = { title: @title, icon: "flower-2", color: "violet", sound: "rain", duration_minutes: 10 }
+    @params = { title: @title, emoji: "🧘", color: "violet", sound: "rain", duration_minutes: 10 }
   end
 
   def test_that_index_returns_401_when_signed_out
@@ -28,7 +28,7 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
     routines = response.parsed_body["routines"]
     assert_equal [ @routine.id, newer.id ], routines.pluck("id")
     assert_equal %w[
-      id title icon color sound duration_minutes reminder_time reminder_days sessions_count total_seconds last_done_at
+      id title emoji color sound duration_minutes reminder_time reminder_days sessions_count total_seconds last_done_at
       created_at updated_at
     ].sort, routines.first.keys.sort
     assert_equal [ 1, 600 ], routines.first.values_at("sessions_count", "total_seconds")
@@ -44,8 +44,8 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     body = response.parsed_body["routine"]
-    assert_equal [ @title, "flower-2", "violet", "rain", 10, "07:30", [ 1, 2, 3, 4, 5 ], 0 ],
-      body.values_at("title", "icon", "color", "sound", "duration_minutes", "reminder_time", "reminder_days",
+    assert_equal [ @title, "🧘", "violet", "rain", 10, "07:30", [ 1, 2, 3, 4, 5 ], 0 ],
+      body.values_at("title", "emoji", "color", "sound", "duration_minutes", "reminder_time", "reminder_days",
         "sessions_count")
   end
 
@@ -84,13 +84,13 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ @title, 25, nil ], @routine.reload.values_at(:title, :duration_minutes, :reminder_time)
   end
 
-  def test_that_update_rejects_an_unknown_icon
+  def test_that_update_rejects_an_unknown_emoji
     sign_in @user
 
-    patch api_routine_path(@routine), params: { icon: "rocket-ship" }, as: :json
+    patch api_routine_path(@routine), params: { emoji: "shower-head" }, as: :json
 
     assert_response :unprocessable_content
-    assert_equal "Icon is not included in the list", response.parsed_body["error"]
+    assert_equal "Emoji is not included in the list", response.parsed_body["error"]
   end
 
   def test_that_update_returns_401_when_signed_out

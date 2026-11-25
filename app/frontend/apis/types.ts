@@ -2,7 +2,6 @@ import type { Day } from "date-fns";
 
 import type { SoundId } from "@/components/commons/Ambience/types";
 import type { LifeAreaColorId } from "@/components/commons/LifeArea/types";
-import type { RoutineIconId } from "@/components/commons/Routine/types";
 import type { AlarmSoundId } from "@/utils/alarmSound/types";
 import type { CompletionSoundId } from "@/utils/completionSound/types";
 
@@ -276,7 +275,7 @@ export type DeleteLifeAreaPayload = Pick<LifeArea, "id"> & { tasksLifeAreaId?: s
 export type Routine = {
   id: string;
   title: string;
-  icon: RoutineIconId;
+  emoji: string;
   color: LifeAreaColorId;
   sound: SoundId;
   durationMinutes: number;
@@ -295,7 +294,7 @@ export type RoutineResponse = { routine: Routine };
 
 export type CreateRoutinePayload = Pick<
   Routine,
-  "title" | "icon" | "color" | "sound" | "durationMinutes" | "reminderTime" | "reminderDays"
+  "title" | "emoji" | "color" | "sound" | "durationMinutes" | "reminderTime" | "reminderDays"
 >;
 
 export type UpdateRoutinePayload = Partial<CreateRoutinePayload> & Pick<Routine, "id">;

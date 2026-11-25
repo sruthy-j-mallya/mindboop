@@ -1,16 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ReactNode } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useController, useForm, useWatch } from "react-hook-form";
 
 import { SOUNDS } from "@/components/commons/Ambience/constants";
 import useSoundPreview from "@/components/commons/Ambience/useSoundPreview";
 import ChoiceField from "@/components/commons/ChoiceField";
+import EmojiField from "@/components/commons/EmojiField";
 import FormField from "@/components/commons/FormField";
 import { LIFE_AREA_COLORS } from "@/components/commons/LifeArea/constants";
 import { Button } from "@/components/ui/button";
 
 import { LIFE_AREA_VALIDATION_SCHEMA, type LifeAreaFormValues } from "./constants";
-import EmojiField from "./EmojiField";
 
 type AreaFormProps = {
   initialValues: LifeAreaFormValues;
@@ -46,13 +46,14 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
     resolver: zodResolver(LIFE_AREA_VALIDATION_SCHEMA),
   });
   const handleSoundChange = useSoundPreview();
+  const { field: emojiField } = useController({ control, name: "emoji" });
   const color = useWatch({ control, name: "color" });
 
   return (
     <form noValidate className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
       <FormField autoComplete="off" error={errors.name?.message} label="Name" {...register("name")} />
       <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
-      <EmojiField color={color} control={control} />
+      <EmojiField color={color} error={errors.emoji?.message} field={emojiField} />
       <ChoiceField
         hint="Plays when you start a session on one of the area’s tasks. Pick one to hear a few seconds."
         legend="Background sound"

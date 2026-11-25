@@ -25,7 +25,7 @@ const RoutinePane = () => {
   // Deleted, or never there.
   if (!routine) return <Navigate replace to={routes.routines.index} />;
 
-  const { title, color, icon, durationMinutes, sound, sessionsCount, totalSeconds, lastDoneAt } = routine;
+  const { title, color, emoji, durationMinutes, sound, sessionsCount, totalSeconds, lastDoneAt } = routine;
   const soundLabel = SOUNDS.find(({ id }) => id === sound)?.label;
   const reminder = describeReminder(routine);
 
@@ -38,7 +38,7 @@ const RoutinePane = () => {
         </Link>
       </Button>
       <header className="flex items-start gap-4">
-        <RoutineBadge className="size-14" color={color} icon={icon} iconClassName="size-7" />
+        <RoutineBadge className="size-14 text-3xl" color={color} emoji={emoji} />
         <div className="grid min-w-0 flex-1 gap-1">
           <h2 className="text-2xl font-semibold wrap-anywhere">{title}</h2>
           <p className="text-sm text-muted-foreground">

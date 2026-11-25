@@ -8,7 +8,7 @@ import { toRoutineFormValues, toRoutinePayload } from "./utils";
 const ROUTINE: Routine = {
   id: "routine-1",
   title: "Shower",
-  icon: "shower-head",
+  emoji: "🛁",
   color: "teal",
   sound: "rain",
   durationMinutes: 15,

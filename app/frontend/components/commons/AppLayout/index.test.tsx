@@ -88,7 +88,7 @@ describe("AppLayout", () => {
     const routine: Routine = {
       id: crypto.randomUUID(),
       title: "Meditation",
-      icon: "flower-2",
+      emoji: "🧘",
       color: "violet",
       sound: "none",
       durationMinutes: 10,
@@ -324,7 +324,7 @@ describe("AppLayout", () => {
           {
             id: routineId,
             title: "Meditation",
-            icon: "flower-2",
+            emoji: "🧘",
             color: "violet",
             sound: "none",
             durationMinutes: 10,

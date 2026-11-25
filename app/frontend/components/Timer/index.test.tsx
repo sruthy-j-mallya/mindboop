@@ -137,7 +137,7 @@ describe("Timer", () => {
         {
           id: routineId,
           title: "Meditation",
-          icon: "flower-2",
+          emoji: "🧘",
           color: "violet",
           sound: "none",
           durationMinutes: 10,
