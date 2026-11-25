@@ -812,6 +812,15 @@ describe("Timer", () => {
       expect(minutesInput()).toHaveValue(shown);
     });
 
+    it("picks a common length", async () => {
+      renderTimer(null);
+
+      await userEvent.click(await screen.findByRole("button", { name: "45 min" }));
+
+      expect(minutesInput()).toHaveValue("45");
+      expect(screen.getByRole("button", { name: "45 min" })).toHaveAttribute("aria-pressed", "true");
+    });
+
     it("puts the minutes back on Escape", async () => {
       renderTimer(null);
 

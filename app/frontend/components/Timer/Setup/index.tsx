@@ -14,7 +14,7 @@ import routes from "@/routes";
 import Dial from "../Dial";
 import SessionCard from "../SessionCard";
 import type { TimerLocationState } from "../types";
-import { DEFAULT_MODE, DEFAULT_TIMER_MINUTES, MODES } from "./constants";
+import { DEFAULT_MODE, DEFAULT_TIMER_MINUTES, MODES, TIMER_PRESETS } from "./constants";
 import MinutesInput from "./MinutesInput";
 import TaskSearch from "./TaskSearch";
 import { buildTimeLogPayload, findMode, getEstimatedTimerMinutes } from "./utils";
@@ -96,6 +96,24 @@ const Setup = () => {
             <MinutesInput minutes={timerMinutes} onChange={setTimerMinutes} />
             <p className="text-muted-foreground">minutes</p>
           </Dial>
+          <div
+            aria-label="Common lengths"
+            className="mt-4 flex flex-wrap justify-center gap-1.5"
+            role="group"
+          >
+            {TIMER_PRESETS.map((minutes) => (
+              <Button
+                key={minutes}
+                aria-pressed={timerMinutes === minutes}
+                size="sm"
+                type="button"
+                variant={timerMinutes === minutes ? "secondary" : "ghost"}
+                onClick={() => setTimerMinutes(minutes)}
+              >
+                {minutes} min
+              </Button>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
       {error && (

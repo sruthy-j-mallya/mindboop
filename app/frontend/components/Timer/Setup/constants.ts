@@ -9,6 +9,7 @@ export const MODES: { value: StartableTimeLogMode; label: string }[] = [
 export const DEFAULT_MODE: StartableTimeLogMode = "timer";
 
 export const DEFAULT_TIMER_MINUTES = 5;
+export const TIMER_PRESETS = [5, 15, 25, 45, 60];
 // A shorter timer could never be logged, only discarded. Keep in sync with the timer_preset validation on TimeLog.
 export const TIMER_MINUTES_MIN = DISCARD_BELOW_MINUTES;
 export const TIMER_MINUTES_MAX = 240; // 4 hours
