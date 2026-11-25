@@ -46,7 +46,7 @@ const MonthActivity = ({ routine }: MonthActivityProps) => {
       <header className="flex items-center justify-between gap-2">
         <div className="grid">
           <h2 className="text-base font-medium">{format(month, "MMMM yyyy")}</h2>
-          <p className="text-xs text-muted-foreground">{describeDaysDone(daysDone)}</p>
+          <p className="text-sm text-muted-foreground">{describeDaysDone(daysDone)}</p>
         </div>
         <div className="flex gap-1">
           <Button

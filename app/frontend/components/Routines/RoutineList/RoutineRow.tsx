@@ -46,12 +46,12 @@ const RoutineRow = ({ routine, now }: RoutineRowProps) => {
             >
               <RoutineBadge className="size-9 text-lg" color={color} emoji={emoji} />
               <span className="grid min-w-0">
-                <span className="truncate text-sm font-medium">{title}</span>
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="truncate font-medium">{title}</span>
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   {formatMinutes(durationMinutes)}
                   <span aria-hidden>·</span>
                   {lastDoneAt ? formatLastDone(lastDoneAt, now) : "Not yet"}
-                  {reminder && <Bell aria-label={reminder} className="size-3" />}
+                  {reminder && <Bell aria-label={reminder} className="size-3.5" />}
                 </span>
               </span>
             </NavLink>

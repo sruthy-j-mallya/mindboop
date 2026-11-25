@@ -25,7 +25,7 @@ const RoutineList = ({ className }: RoutineListProps) => {
   return (
     <section aria-labelledby="routines-heading" className={cn("flex flex-col gap-4 p-4", className)}>
       <header className="flex items-center justify-between gap-2 px-2">
-        <h1 className="text-xl font-semibold" id="routines-heading">
+        <h1 className="text-2xl font-semibold" id="routines-heading">
           Routines
         </h1>
         <Button

@@ -40,7 +40,7 @@ const RoutinePane = () => {
       <header className="flex items-start gap-3">
         <RoutineBadge className="size-12 text-2xl" color={color} emoji={emoji} />
         <div className="grid min-w-0 flex-1 gap-0.5">
-          <h2 className="text-xl font-semibold wrap-anywhere">{title}</h2>
+          <h2 className="text-2xl font-semibold wrap-anywhere">{title}</h2>
           <p className="text-sm text-muted-foreground">
             {formatMinutes(durationMinutes)}
             {sound !== "none" && soundLabel && ` · ${soundLabel}`}
