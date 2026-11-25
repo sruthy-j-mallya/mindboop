@@ -396,6 +396,27 @@ describe("AppLayout", () => {
       expect(screen.queryByRole("region", { name: "Current session" })).not.toBeInTheDocument();
     });
 
+    it("names what's on the clock in the mini timer, and says when it's paused", async () => {
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({
+        timeLog: {
+          ...TIME_LOG,
+          taskTitle: "Write the report",
+          isRunning: false,
+          currentBreak: {
+            id: crypto.randomUUID(),
+            intention: "Snack",
+            durationMinutes: 10,
+            endsAt: new Date(Date.now() + 600_000).toISOString(),
+          },
+        },
+      });
+      renderWithProviders(<AppLayout />, undefined, routes.inbox.index);
+
+      const session = await screen.findByRole("region", { name: "Current session" });
+      expect(within(session).getByText("Write the report")).toBeVisible();
+      expect(within(session).getByText("Paused")).toBeVisible();
+    });
+
     it("keeps the background sound playing across pages", async () => {
       useAmbienceStore.setState({ soundId: "rain" });
       renderWithProviders(<AppLayout />, undefined, routes.inbox.index);

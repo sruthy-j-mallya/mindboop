@@ -32,7 +32,8 @@ const AppLayout = () => {
   return (
     <SidebarProvider open={isOpen} onOpenChange={handleOpenChange}>
       <AppSidebar onSearchOpen={handleSearchOpen} />
-      <SidebarInset className="max-md:pb-(--bottom-bar-height)">
+      {/* On phones, clear of the bottom bar, and of the mini timer above it while there is one. */}
+      <SidebarInset className="max-md:pb-(--bottom-bar-height) max-md:group-has-data-mini-timer/sidebar-wrapper:pb-[calc(var(--bottom-bar-height)+4.5rem)]">
         {/* On phones the bottom bar leads to the sidebar instead. */}
         <header className="flex items-center p-2">
           <SidebarTrigger className="max-md:hidden" />

@@ -11,8 +11,8 @@ export const PAGE_TITLES = [
   { path: routes.settings, title: "Settings" },
 ];
 
-// Keeps toasts above the bottom bar on phones.
-export const TOAST_MOBILE_OFFSET = "calc(var(--bottom-bar-height) + 1rem)";
+// Keeps toasts above the bottom bar and the mini timer on phones.
+export const TOAST_MOBILE_OFFSET = "calc(var(--bottom-bar-height) + 4.5rem)";
 
 export const HOME_TITLE = "Home";
 export const UNKNOWN_PAGE_TITLE = "Page not found";

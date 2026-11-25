@@ -47,7 +47,7 @@ Tick an issue in the commit that fixes it.
 - [x] 19. Timer: the task's title shows once during a session
 - [ ] 20. Timer setup: list today's and recent tasks, and create a task when nothing matches
 - [ ] 21. Timer setup: duration presets
-- [ ] 22. Mini timer: task name and paused state, clear of the list on phones
+- [x] 22. Mini timer: task name and paused state, clear of the list on phones
 - [ ] 23. Task pane: ghost chips for date, area and estimate, as in the Calendar's popover
 - [ ] 24. Due dates in lists on phones, under the title
 - [ ] 25. A visible menu on areas and routine rows, besides the right click
