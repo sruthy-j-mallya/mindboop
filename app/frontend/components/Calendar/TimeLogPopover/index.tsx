@@ -107,6 +107,9 @@ const TimeLogPopover = ({ anchor, range, onClose }: TimeLogPopoverProps) => {
             <TaskSuggestions searchTerm={title} onSelect={handleSelectTask} />
           </>
         )}
+        <Button className="self-end" disabled={!title.trim() && !linkedTask} type="submit">
+          Log time
+        </Button>
       </form>
     </AnchoredPopover>
   );

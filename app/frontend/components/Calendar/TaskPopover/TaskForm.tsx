@@ -3,6 +3,7 @@ import { type Control, Controller, type FieldErrors, type UseFormRegister } from
 
 import RichTextEditor from "@/components/commons/RichText/LazyEditor";
 import AddStepButton from "@/components/commons/Steps/AddStepButton";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import type { TaskFormValues } from "./constants";
@@ -18,7 +19,7 @@ type TaskFormProps = {
   steps: ReactNode;
   showAddStep: boolean;
   onAddStep: () => void;
-  // Enter in the title saves, the same as leaving the popover.
+  // Add task, or Enter in the title.
   onSubmit: () => void;
 };
 
@@ -80,6 +81,9 @@ const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, on
           </p>
         )}
       </div>
+      <Button className="self-end" type="submit">
+        Add task
+      </Button>
     </form>
   );
 };

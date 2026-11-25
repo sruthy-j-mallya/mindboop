@@ -19,7 +19,8 @@ import { buildCreatePayload, getNewTaskFormValues } from "./utils";
 
 type NewProps = { anchor: AnchorRect; schedule: Schedule; onClose: () => void };
 
-// A new task at the slot clicked. Leaving the popover saves it; one left without a title is dropped.
+// A new task at the slot clicked. Leaving the popover saves it too; one left without a title is dropped, while Add task
+// asks for one.
 const New = ({ anchor, schedule, onClose }: NewProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
   const { mutate: createTask } = useCreateTask();
@@ -68,7 +69,7 @@ const New = ({ anchor, schedule, onClose }: NewProps) => {
           <DraftSteps control={control} draft={stepDraft} setValue={setValue} onDraftChange={setStepDraft} />
         }
         onAddStep={handleAddStep}
-        onSubmit={handleDismiss}
+        onSubmit={handleSubmit(handleSave)}
       />
     </AnchoredPopover>
   );
