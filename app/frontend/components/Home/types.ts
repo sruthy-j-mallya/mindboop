@@ -24,9 +24,10 @@ export type TaskRowProps = {
   error?: string;
 };
 
-export type ResumableRowProps = {
+// A row with a button that starts its task.
+export type StartableRowProps = {
   task: Task;
   isOnTheClock: boolean;
   isDisabled: boolean;
-  onResume: (taskId: string) => void;
+  onStart: (taskId: string) => void;
 };

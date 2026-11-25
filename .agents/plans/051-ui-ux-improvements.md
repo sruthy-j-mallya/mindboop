@@ -38,7 +38,7 @@ Tick an issue in the commit that fixes it.
 - [x] 10. Move Sign out into an account section in Settings
 - [x] 11. ⌘K opens search (the editor keeps it for links), plus a quick capture shortcut
 - [x] 12. Name the page in the browser tab, with the time left during a session
-- [ ] 13. Agenda rows: Start button, area badge and estimate
+- [x] 13. Agenda rows: Start button, area badge and estimate
 - [x] 14. Agenda rows: only the time, or "All day", instead of repeating "Today"
 - [x] 15. Overdue: undo for moving a task, plus Tomorrow and Pick a date (bulk moves stay out of scope, as in 049)
 - [ ] ~~16. Show today's routines on Home~~ Dropped: not wanted there

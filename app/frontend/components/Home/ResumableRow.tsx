@@ -5,15 +5,15 @@ import { Button } from "@/components/ui/button";
 import useDatePreferences from "@/hooks/useDatePreferences";
 
 import TaskRow from "./TaskRow";
-import type { ResumableRowProps } from "./types";
+import type { StartableRowProps } from "./types";
 
-const ResumableRow = ({ task, isOnTheClock, isDisabled, onResume }: ResumableRowProps) => {
+const ResumableRow = ({ task, isOnTheClock, isDisabled, onStart }: StartableRowProps) => {
   const { timeFormat } = useDatePreferences();
   // Newest first, so the first is the latest one left.
   const breadcrumb = task.breadcrumbs.at(0);
   const label = isOnTheClock ? "On the clock" : "Resume";
 
-  const handleResume = () => onResume(task.id);
+  const handleResume = () => onStart(task.id);
 
   return (
     <TaskRow

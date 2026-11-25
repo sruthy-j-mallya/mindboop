@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import homeTasksApi from "@/apis/home_tasks";
+import lifeAreasApi from "@/apis/life_areas";
 import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import type { Breadcrumb, HomeTasksResponse, Task, TimeLog } from "@/apis/types";
@@ -133,6 +134,7 @@ describe("Home", () => {
     toast.dismiss();
     vi.spyOn(homeTasksApi, "fetchList").mockResolvedValue(LISTS);
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
     vi.spyOn(userPreferencesApi, "show").mockRejectedValue(new ApiError(500, "Not needed"));
     vi.spyOn(tasksApi, "update").mockImplementation(({ id }) => Promise.resolve({ task: buildTask(id) }));
     vi.spyOn(tasksApi, "show").mockImplementation((id) => Promise.resolve({ task: buildTask(id) }));
@@ -170,6 +172,36 @@ describe("Home", () => {
     expect(resumable.getByText("Pick up from: Chapter 2")).toBeVisible();
     expect(resumable.queryByText(/Chapter 1/)).not.toBeInTheDocument();
     expect(resumable.getByText("5 Nov 2025, 5:30pm")).toBeVisible();
+  });
+
+  it("shows an agenda task's area and estimate, and starts it on the Timer", async () => {
+    vi.mocked(homeTasksApi.fetchList).mockResolvedValue({
+      ...LISTS,
+      today: [{ ...AGENDA_TASK, estimatedMinutes: 45 }],
+    });
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({
+      lifeAreas: [
+        {
+          id: LIFE_AREA_ID,
+          name: "Finances",
+          color: "teal",
+          emoji: "💰",
+          defaultSound: "none",
+          isDeleted: false,
+          createdAt: TODAY.toISOString(),
+          updatedAt: TODAY.toISOString(),
+        },
+      ],
+    });
+    renderHome();
+
+    const start = await screen.findByRole("button", { name: "Start: Pay the bill" });
+    expect(await card("Today's agenda").findByText("Finances")).toBeVisible();
+    expect(card("Today's agenda").getByText("45 min")).toBeVisible();
+
+    await userEvent.click(start);
+
+    expect(screen.getByText("Timer with a picked")).toBeVisible();
   });
 
   it("says when there's nothing in a list", async () => {
