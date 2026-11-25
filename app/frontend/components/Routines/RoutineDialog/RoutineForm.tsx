@@ -107,6 +107,7 @@ const RoutineForm = ({
       <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
       <EmojiField color={color} error={errors.emoji?.message} field={emojiField} />
       <ChoiceField
+        hasLabels
         hint="Plays when you start the routine. Pick one to hear a few seconds."
         legend="Background sound"
         options={SOUND_OPTIONS}
