@@ -65,7 +65,7 @@ Tick an issue in the commit that fixes it.
 - [x] 34. Parking lot actions on phones: 44px targets, or one labelled button and a menu
 - [x] 35. Skeletons while Home, lists and panes load
 - [x] 36. Respect `prefers-reduced-motion`
-- [ ] 37. One look for "selected" (now yellow, coral, purple and grey)
+- [x] 37. One look for "selected" (now yellow, coral, purple and grey)
 - [ ] 38. One look for Start (now a square icon, pill, triangle and bar)
 - [ ] 39. One word each for Begin, Start, Resume; "Focus for" instead of "Estimate" where it sets the timer
 
@@ -94,4 +94,7 @@ Tick an issue in the commit that fixes it.
 | 23 | Changes plan 042: an unset date, area or estimate is offered beside the set ones rather than in the menu, which keeps Add step and Delete |
 | 11 | ⌘K (Ctrl+K) searches. ⌥N (Alt+N) adds a task to the Inbox, except while typing, as ⌥N types "˜" on a Mac. Both are in the sidebar too |
 | 27 | A task that was due earlier today is under Overdue, as its red date says. With one group there are no headings |
+| 37 | The accent everywhere: with an edge for a picked choice, plain for the open page, list or row. It replaces Quick start's yellow and the coral lengths. Dates in calendars keep the solid purple, as calendars do |
+| 38 | Play (outlined) always. A page's or pane's main action is a filled button with its word; a row's is a ghost icon |
+| 39 | Start begins something, Resume goes back to it. Begin is gone |
 | 19 | The heading beside the clock takes over the pane's in-place title editing |

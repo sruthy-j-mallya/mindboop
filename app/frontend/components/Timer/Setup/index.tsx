@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { cn } from "cn";
 import { Play } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 
@@ -7,6 +8,7 @@ import type { StartableTimeLogMode, Task } from "@/apis/types";
 import TaskDetails from "@/components/commons/TaskDetails";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PICKED_CLASS_NAME } from "@/constants";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 import { useCreateTimeLog } from "@/hooks/reactQuery/useTimeLogsApi";
 import routes from "@/routes";
@@ -104,9 +106,10 @@ const Setup = () => {
               <Button
                 key={minutes}
                 aria-pressed={timerMinutes === minutes}
+                className={cn(timerMinutes === minutes && PICKED_CLASS_NAME)}
                 size="sm"
                 type="button"
-                variant={timerMinutes === minutes ? "secondary" : "ghost"}
+                variant="ghost"
                 onClick={() => setTimerMinutes(minutes)}
               >
                 {minutes} min

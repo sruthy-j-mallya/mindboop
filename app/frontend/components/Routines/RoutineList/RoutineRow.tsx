@@ -42,7 +42,7 @@ const RoutineRow = ({ routine, now }: RoutineRowProps) => {
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <li className="group flex items-center gap-2 rounded-xl pr-2 hover:bg-muted/60 has-[a[aria-current=page]]:bg-muted data-[state=open]:bg-muted/60">
+          <li className="group flex items-center gap-2 rounded-xl pr-2 hover:bg-muted/60 has-[a[aria-current=page]]:bg-accent data-[state=open]:bg-muted/60">
             <NavLink
               className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-2 pl-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               to={getRoutinePath(id)}

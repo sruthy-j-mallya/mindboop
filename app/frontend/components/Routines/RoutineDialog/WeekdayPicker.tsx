@@ -1,5 +1,6 @@
 import { cn } from "cn";
 
+import { PICKED_CLASS_NAME } from "@/constants";
 import useWeekStartsOn from "@/hooks/useWeekStartsOn";
 
 import { getWeekdays } from "../utils";
@@ -32,7 +33,7 @@ const WeekdayPicker = ({ value, isMultiple, onChange }: WeekdayPickerProps) => {
             aria-pressed={isPicked}
             className={cn(
               "flex size-9 items-center justify-center rounded-full text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-              isPicked ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-accent",
+              isPicked ? PICKED_CLASS_NAME : "bg-muted hover:bg-accent",
             )}
             title={label}
             type="button"

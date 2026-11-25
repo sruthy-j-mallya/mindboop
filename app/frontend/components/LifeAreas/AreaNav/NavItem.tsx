@@ -59,7 +59,7 @@ const NavItem = ({
       to={to}
       className={cn(
         "flex items-center gap-2 rounded-md py-1.5 pr-2 pl-5 text-sm whitespace-nowrap transition-colors outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        isActive && "bg-muted font-medium",
+        isActive && "bg-accent font-medium",
         action && "pointer-coarse:pr-8",
         canDrop && "ring-1 ring-border ring-inset",
         canDrop && isOver && "bg-accent ring-2 ring-primary",

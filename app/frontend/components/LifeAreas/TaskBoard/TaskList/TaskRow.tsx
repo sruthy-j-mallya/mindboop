@@ -64,7 +64,7 @@ const TaskRow = ({ task }: TaskRowProps) => {
       <div
         className={cn(
           "group flex items-center gap-3 rounded-md pr-3 pl-1 transition-colors focus-within:bg-muted hover:bg-muted",
-          isSelected && "bg-muted",
+          isSelected && "bg-accent focus-within:bg-accent hover:bg-accent",
           (isDeleting || isDragging) && "opacity-50",
         )}
       >

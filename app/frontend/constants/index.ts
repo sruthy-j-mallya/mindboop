@@ -37,3 +37,7 @@ export const DEFAULT_DATE_PREFERENCES: DatePreferences = {
 
 // Phones, below Tailwind's `sm`.
 export const PHONE_LAYOUT_QUERY = "(width < 40rem)";
+
+// How a picked choice looks (a length of time, a day): the accent, with an edge so colour isn't the only sign.
+export const PICKED_CLASS_NAME =
+  "bg-accent font-semibold text-foreground ring-1 ring-inset ring-(--primary-text) hover:bg-accent hover:text-foreground dark:bg-accent dark:hover:bg-accent";

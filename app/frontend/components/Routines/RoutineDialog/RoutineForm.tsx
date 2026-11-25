@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 import { useController, useForm, useWatch } from "react-hook-form";
 
@@ -9,6 +10,7 @@ import EmojiField from "@/components/commons/EmojiField";
 import FormField from "@/components/commons/FormField";
 import { LIFE_AREA_COLORS } from "@/components/commons/LifeArea/constants";
 import { Button } from "@/components/ui/button";
+import { PICKED_CLASS_NAME } from "@/constants";
 
 import {
   DURATION_PRESETS,
@@ -91,9 +93,10 @@ const RoutineForm = ({
             <Button
               key={minutes}
               aria-pressed={durationMinutes === minutes}
+              className={cn(durationMinutes === minutes && PICKED_CLASS_NAME)}
               size="sm"
               type="button"
-              variant={durationMinutes === minutes ? "secondary" : "ghost"}
+              variant="ghost"
               onClick={() => handlePreset(minutes)}
             >
               {minutes} min
