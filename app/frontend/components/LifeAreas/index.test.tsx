@@ -330,7 +330,7 @@ describe("LifeAreas", () => {
     const name = within(dialog).getByRole("textbox", { name: "Name" });
     await userEvent.clear(name);
     await userEvent.type(name, "Career");
-    await userEvent.click(within(dialog).getByRole("radio", { name: "Keep the current sound" }));
+    await userEvent.click(within(dialog).getByRole("radio", { name: "None" }));
     await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
     expect(update).toHaveBeenCalledWith(

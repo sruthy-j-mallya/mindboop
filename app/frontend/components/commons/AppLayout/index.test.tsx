@@ -250,6 +250,33 @@ describe("AppLayout", () => {
       expect(useAmbienceStore.getState().soundId).toBe("waves");
     });
 
+    it("starts a session on a task in an area of life in silence when the area's sound is none", async () => {
+      useAmbienceStore.setState({ soundId: "rain" });
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({
+        timeLog: { ...TIME_LOG, lifeAreaId: LIFE_AREA_ID },
+      });
+      vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
+        lifeAreas: [
+          {
+            id: LIFE_AREA_ID,
+            name: "Work",
+            color: "indigo",
+            emoji: "💼",
+            defaultSound: "none",
+            isDeleted: false,
+            createdAt: STARTED_AT,
+            updatedAt: STARTED_AT,
+          },
+        ],
+      });
+      renderWithProviders(<AppLayout />, undefined, routes.inbox.index);
+
+      expect(await screen.findByRole("region", { name: "Current session" })).toBeInTheDocument();
+      await act(() => Promise.resolve());
+      expect(useAmbienceStore.getState().soundId).toBe("none");
+      expect(stopSound).toHaveBeenCalled();
+    });
+
     it("floats a mini timer away from the Timer page, leading back to it and hiding there", async () => {
       renderWithProviders(<AppLayout />, undefined, routes.inbox.index);
 

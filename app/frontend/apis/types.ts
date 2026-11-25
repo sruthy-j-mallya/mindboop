@@ -239,7 +239,7 @@ export type ConvertParkingLotItemPayload = { parkingLotItemId: string } & Partia
 export type CuriosityTimeResponse = { parkingLotItem: ParkingLotItem | null };
 
 // A part of life (Work, Health, …) that groups tasks. `defaultSound` is the background sound a session on one of its
-// tasks starts with; "none" keeps the one picked last.
+// tasks starts with; "none" is silence.
 export type LifeArea = {
   id: string;
   name: string;

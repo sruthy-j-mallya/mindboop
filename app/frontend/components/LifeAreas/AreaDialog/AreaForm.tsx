@@ -31,10 +31,9 @@ const COLOR_OPTIONS = LIFE_AREA_COLORS.map(({ id, label, value }) => ({
   content: <span className="size-5 rounded-full" style={{ background: value }} />,
 }));
 
-// An area without a sound of its own leaves the one playing as it is.
 const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({
   value: id,
-  label: id === NO_SOUND ? "Keep the current sound" : label,
+  label,
   content: <Icon className="size-4" />,
 }));
 

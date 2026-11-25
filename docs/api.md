@@ -147,7 +147,7 @@ Each `life_area` is `{ id, name, color, emoji, default_sound, is_deleted, create
   `app/frontend/components/commons/LifeArea/emojis.json`.
 - `default_sound` is one of the Ambience sounds (`none`, `clock`, `bells`, `piano`, `harp`, `flute`, `rain`, `waves`,
   `wind`, `morning`, `campfire`, `night`) and defaults to `none`. A session on one of the area's tasks starts with that
-  background sound; `none` keeps the one picked last.
+  background sound; `none` is silence.
 
 Anything else gets a 422.
 

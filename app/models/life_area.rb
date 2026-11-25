@@ -12,7 +12,7 @@ class LifeArea < ApplicationRecord
   # The emojis on offer, by category: the same file the client's picker lists.
   EMOJIS = JSON.parse(Rails.root.join("app/frontend/components/commons/LifeArea/emojis.json").read)
     .flat_map { |category| category["emojis"].pluck("emoji") }.freeze
-  # The Ambience sounds (`components/commons/Ambience/constants.ts`); "none" leaves the sound as it was.
+  # The Ambience sounds (`components/commons/Ambience/constants.ts`); "none" is silence.
   SOUNDS = %w[ none clock bells piano harp flute rain waves wind morning campfire night ].freeze
 
   normalizes :name, with: ->(name) { name.squish }
