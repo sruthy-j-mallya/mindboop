@@ -34,3 +34,6 @@ export const DEFAULT_DATE_PREFERENCES: DatePreferences = {
   weekStartsOn: DEFAULT_WEEK_STARTS_ON,
   timeFormat: "12h",
 };
+
+// Phones, below Tailwind's `sm`.
+export const PHONE_LAYOUT_QUERY = "(width < 40rem)";

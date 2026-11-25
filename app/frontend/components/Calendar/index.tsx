@@ -8,7 +8,7 @@ import { startOfDay, subHours } from "date-fns";
 import type { SlotInfo, ToolbarProps, View, ViewsProps } from "react-big-calendar";
 import { toast } from "sonner";
 
-import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
+import { DEFAULT_WEEK_STARTS_ON, PHONE_LAYOUT_QUERY } from "@/constants";
 import { useCalendarEvents } from "@/hooks/reactQuery/useCalendarEventsApi";
 import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
@@ -22,7 +22,6 @@ import {
   DAY_COUNT_STORAGE_KEY,
   EVENT_KINDS,
   NOW_REFRESH_INTERVAL,
-  PHONE_LAYOUT_QUERY,
   SCROLL_BACK_HOURS,
   SLOT_CLASS_NAMES,
   SLOT_MINUTES,

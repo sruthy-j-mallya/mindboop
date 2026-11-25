@@ -28,7 +28,7 @@ import type { LifeArea, Task, TimeFormat, TimeLog, WeekStartsOn } from "@/apis/t
 import { getLifeAreaColor } from "@/components/commons/LifeArea/utils";
 import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
-import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
+import { DEFAULT_WEEK_STARTS_ON, PHONE_LAYOUT_QUERY } from "@/constants";
 import { formatDayRange, formatLongDate, formatTime, formatTimeRange } from "@/utils/dateTime";
 import { readStorage } from "@/utils/storage";
 
@@ -44,7 +44,6 @@ import {
   INITIAL_WHEEL_GESTURE,
   MOVE_ERRORS,
   MULTI_DAY_COUNT_OPTIONS,
-  PHONE_LAYOUT_QUERY,
   SELECTION_ERRORS,
   SLOT_MINUTES,
   TIME_LOG_WINDOW_HOURS,

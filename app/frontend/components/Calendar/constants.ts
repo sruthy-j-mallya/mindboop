@@ -8,8 +8,7 @@ export const CALENDAR_VIEWS = {
 
 export const DEFAULT_VIEW = CALENDAR_VIEWS.WEEK;
 
-// Phones: a week's columns are too narrow to read there, so the Calendar opens on a day, until another view is picked.
-export const PHONE_LAYOUT_QUERY = "(width < 40rem)";
+// A week's columns are too narrow to read on phones, so there the Calendar opens on a day, until another view is picked.
 export const DEFAULT_PHONE_VIEW = CALENDAR_VIEWS.DAY;
 
 // The toolbar's view picker options, in order.

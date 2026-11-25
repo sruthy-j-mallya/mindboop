@@ -21,6 +21,7 @@ import TaskBoard from "@/components/LifeAreas/TaskBoard";
 import NoTaskSelected from "@/components/LifeAreas/TaskBoard/NoTaskSelected";
 import TaskPane from "@/components/LifeAreas/TaskBoard/TaskPane";
 import { Toaster } from "@/components/ui/sonner";
+import { PHONE_LAYOUT_QUERY } from "@/constants";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
 import { playCompletionSound } from "@/utils/completionSound";
@@ -135,6 +136,28 @@ describe("Inbox", () => {
     expect(await screen.findByRole("textbox", { name: "First" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Second" })).toBeInTheDocument();
     expect(fetchList).toHaveBeenCalledWith({ isCompleted: false, isInInbox: true, page: 1 });
+  });
+
+  it("shows the date under the title on phones", async () => {
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      (query) =>
+        ({
+          matches: query === PHONE_LAYOUT_QUERY,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        }) as unknown as MediaQueryList,
+    );
+    const task = buildTask({
+      title: "Pay rent",
+      isAllDay: true,
+      startsAt: startOfDay(new Date()).toISOString(),
+    });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+
+    renderInbox();
+
+    expect(await screen.findByText("Today")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Due date of/ })).not.toBeInTheDocument();
   });
 
   it("says so when there are no tasks", async () => {
