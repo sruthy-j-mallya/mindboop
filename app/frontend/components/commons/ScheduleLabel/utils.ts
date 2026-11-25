@@ -10,10 +10,10 @@ import {
   subDays,
 } from "date-fns";
 
-import type { Schedule, ScheduleTone } from "./types";
+import type { WeekStartsOn } from "@/apis/types";
+import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
 
-// Weeks start on Monday, as in the date picker.
-const WEEK_OPTIONS = { weekStartsOn: 1 } as const;
+import type { Schedule, ScheduleTone } from "./types";
 
 // "5:30" or, on the hour, "5".
 const formatClock = (date: Date) => format(date, date.getMinutes() === 0 ? "h" : "h:mm");
@@ -29,50 +29,64 @@ const formatTimeRange = (start: Date, end: Date) => {
 };
 
 // "Today", "Tomorrow", "Yesterday", "Fri, Nov 5" within this week, "12 Aug" this year, "12 Aug 2027" otherwise.
-const formatDay = (date: Date, now: Date) => {
+const formatDay = (date: Date, now: Date, weekStartsOn: WeekStartsOn) => {
   if (isSameDay(date, now)) return "Today";
 
   if (isSameDay(date, addDays(now, 1))) return "Tomorrow";
 
   if (isSameDay(date, subDays(now, 1))) return "Yesterday";
 
-  if (isSameWeek(date, now, WEEK_OPTIONS)) return format(date, "EEE, MMM d");
+  if (isSameWeek(date, now, { weekStartsOn })) return format(date, "EEE, MMM d");
 
   return format(date, isSameYear(date, now) ? "d MMM" : "d MMM yyyy");
 };
 
-const formatMoment = (date: Date, hasTime: boolean, now: Date) =>
-  hasTime ? `${formatDay(date, now)}, ${formatTime(date)}` : formatDay(date, now);
+const formatMoment = (date: Date, hasTime: boolean, now: Date, weekStartsOn: WeekStartsOn) => {
+  const day = formatDay(date, now, weekStartsOn);
+
+  return hasTime ? `${day}, ${formatTime(date)}` : day;
+};
 
 // A human-readable date or duration for a scheduled task ("Today, 5:30pm", "Tomorrow, 1 – 2am",
 // "12 Aug – 15 Aug"), or null when the task isn't scheduled.
-export const formatSchedule = ({ isDuration, isAllDay, startsAt, endsAt }: Schedule, now: number) => {
+export const formatSchedule = (
+  { isDuration, isAllDay, startsAt, endsAt }: Schedule,
+  now: number,
+  weekStartsOn: WeekStartsOn = DEFAULT_WEEK_STARTS_ON,
+) => {
   if (!startsAt) return null;
 
   const today = new Date(now);
   const start = parseISO(startsAt);
-  if (!isDuration || !endsAt) return formatMoment(start, !isAllDay, today);
+  if (!isDuration || !endsAt) return formatMoment(start, !isAllDay, today, weekStartsOn);
 
   const end = parseISO(endsAt);
   if (isAllDay) {
     return isSameDay(start, end)
-      ? formatDay(start, today)
-      : `${formatDay(start, today)} – ${formatDay(end, today)}`;
+      ? formatDay(start, today, weekStartsOn)
+      : `${formatDay(start, today, weekStartsOn)} – ${formatDay(end, today, weekStartsOn)}`;
   }
 
-  if (isSameDay(start, end)) return `${formatDay(start, today)}, ${formatTimeRange(start, end)}`;
+  if (isSameDay(start, end))
+    return `${formatDay(start, today, weekStartsOn)}, ${formatTimeRange(start, end)}`;
 
-  return `${formatMoment(start, true, today)} – ${formatMoment(end, true, today)}`;
+  return `${formatMoment(start, true, today, weekStartsOn)} – ${formatMoment(end, true, today, weekStartsOn)}`;
 };
 
 // A schedule in a list of today's tasks: only the time, or "All day". One that reaches into other days keeps them.
-export const formatTodaySchedule = (schedule: Schedule, now: number) => {
+export const formatTodaySchedule = (
+  schedule: Schedule,
+  now: number,
+  weekStartsOn: WeekStartsOn = DEFAULT_WEEK_STARTS_ON,
+) => {
   const { isDuration, isAllDay, startsAt, endsAt } = schedule;
   if (!startsAt) return null;
 
   const start = parseISO(startsAt);
   const end = isDuration && endsAt ? parseISO(endsAt) : start;
-  if (!isSameDay(start, now) || !isSameDay(end, now)) return formatSchedule(schedule, now);
+  if (!isSameDay(start, now) || !isSameDay(end, now)) {
+    return formatSchedule(schedule, now, weekStartsOn);
+  }
 
   if (isAllDay) return "All day";
 

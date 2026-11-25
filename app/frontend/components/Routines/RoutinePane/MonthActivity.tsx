@@ -7,9 +7,9 @@ import type { Routine } from "@/apis/types";
 import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
 import { Button } from "@/components/ui/button";
 import { useRoutineTimeLogs } from "@/hooks/reactQuery/useRoutineTimeLogsApi";
+import useWeekStartsOn from "@/hooks/useWeekStartsOn";
 
-import { WEEKDAYS } from "../constants";
-import { getMinutesByDay } from "../utils";
+import { getMinutesByDay, getWeekdays } from "../utils";
 import DayCell from "./DayCell";
 import LogTimeDialog from "./LogTimeDialog";
 import { describeDaysDone, getMonthDays, getMonthRange } from "./utils";
@@ -21,14 +21,15 @@ type MonthActivityProps = { routine: Pick<Routine, "id" | "title" | "color" | "d
 const MonthActivity = ({ routine }: MonthActivityProps) => {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [loggingDate, setLoggingDate] = useState<Date | null>(null);
+  const weekStartsOn = useWeekStartsOn();
   const now = new Date();
-  const { from, to } = getMonthRange(month);
+  const { from, to } = getMonthRange(month, weekStartsOn);
   const { data: timeLogs = [], error } = useRoutineTimeLogs({
     routineId: routine.id,
     from: from.toISOString(),
     to: to.toISOString(),
   });
-  const days = getMonthDays(month, getMinutesByDay(timeLogs), now);
+  const days = getMonthDays(month, getMinutesByDay(timeLogs), now, weekStartsOn);
   const daysDone = days.filter(({ isInMonth, minutes }) => isInMonth && minutes > 0).length;
   const isCurrentMonth = isSameMonth(month, now);
 
@@ -75,7 +76,7 @@ const MonthActivity = ({ routine }: MonthActivityProps) => {
         </p>
       )}
       <div className="grid grid-cols-7 gap-y-2 text-center text-sm">
-        {WEEKDAYS.map(({ value, label }) => (
+        {getWeekdays(weekStartsOn).map(({ value, label }) => (
           <span key={value} className="text-xs text-muted-foreground">
             {label.slice(0, 3)}
           </span>

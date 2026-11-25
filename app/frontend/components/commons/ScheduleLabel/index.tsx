@@ -1,6 +1,7 @@
 import { cn } from "cn";
 
 import useCurrentTime from "@/hooks/useCurrentTime";
+import useWeekStartsOn from "@/hooks/useWeekStartsOn";
 
 import { SCHEDULE_REFRESH_INTERVAL, SCHEDULE_TONE_CLASS_NAMES } from "./constants";
 import type { Schedule } from "./types";
@@ -16,7 +17,8 @@ type ScheduleLabelProps = {
 // The task's date or duration in words, red once overdue and highlighted for today. Renders nothing when unscheduled.
 const ScheduleLabel = ({ schedule, isDayHidden = false, className }: ScheduleLabelProps) => {
   const now = useCurrentTime(!!schedule.startsAt, SCHEDULE_REFRESH_INTERVAL);
-  const label = (isDayHidden ? formatTodaySchedule : formatSchedule)(schedule, now);
+  const weekStartsOn = useWeekStartsOn();
+  const label = (isDayHidden ? formatTodaySchedule : formatSchedule)(schedule, now, weekStartsOn);
 
   if (!label) return null;
 

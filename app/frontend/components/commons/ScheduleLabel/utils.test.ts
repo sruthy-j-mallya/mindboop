@@ -63,6 +63,13 @@ describe("formatSchedule", () => {
   });
 });
 
+describe("formatSchedule with another week start", () => {
+  it("counts Sunday as this week only when weeks end after it", () => {
+    expect(formatSchedule(onDate(at(10, 15)), NOW, 1)).toBe("Sun, Nov 15");
+    expect(formatSchedule(onDate(at(10, 15)), NOW, 0)).toBe("15 Nov");
+  });
+});
+
 describe("formatTodaySchedule", () => {
   it("leaves the day out for a schedule within today", () => {
     expect(formatTodaySchedule(onDate(at(10, 12)), NOW)).toBe("All day");

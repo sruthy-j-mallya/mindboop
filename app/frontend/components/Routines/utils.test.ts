@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { TimeLog } from "@/apis/types";
 
-import { describeReminder, formatLastDone, formatTotalTime, getMinutesByDay } from "./utils";
+import { describeReminder, formatLastDone, formatTotalTime, getMinutesByDay, getWeekdays } from "./utils";
 
 describe("Routines utils", () => {
   it("describes a reminder by its days", () => {
@@ -14,6 +14,12 @@ describe("Routines utils", () => {
     expect(describeReminder({ reminderTime: "18:00", reminderDays: [5, 1, 3] })).toMatch(
       /^Mon, Wed, Fri at 6:00/,
     );
+  });
+
+  it("orders the weekdays from the one weeks start on", () => {
+    expect(getWeekdays(1).map(({ value }) => value)).toEqual([1, 2, 3, 4, 5, 6, 0]);
+    expect(getWeekdays(0).map(({ value }) => value)).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect(getWeekdays(6).map(({ value }) => value)).toEqual([6, 0, 1, 2, 3, 4, 5]);
   });
 
   it("says when it was last done in plain words", () => {

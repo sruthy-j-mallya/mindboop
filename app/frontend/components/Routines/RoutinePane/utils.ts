@@ -11,17 +11,16 @@ import {
   startOfWeek,
 } from "date-fns";
 
+import type { WeekStartsOn } from "@/apis/types";
 import { formatMinutes } from "@/utils";
 
 import { DAY_KEY_FORMAT } from "../constants";
 import type { MonthDay } from "./types";
 
-const WEEK_OPTIONS = { weekStartsOn: 1 } as const;
-
-// The whole weeks the month's grid shows, Monday first, and the range to load its sessions for.
-export const getMonthRange = (month: Date) => {
-  const from = startOfWeek(startOfMonth(month), WEEK_OPTIONS);
-  const to = addDays(endOfWeek(endOfMonth(month), WEEK_OPTIONS), 1);
+// The whole weeks the month's grid shows, and the range to load its sessions for.
+export const getMonthRange = (month: Date, weekStartsOn: WeekStartsOn) => {
+  const from = startOfWeek(startOfMonth(month), { weekStartsOn });
+  const to = addDays(endOfWeek(endOfMonth(month), { weekStartsOn }), 1);
 
   return { from, to };
 };
@@ -40,8 +39,13 @@ export const describeDay = (date: Date, minutes: number) => {
   return minutes > 0 ? `${day}: ${formatMinutes(minutes)}` : day;
 };
 
-export const getMonthDays = (month: Date, minutesByDay: Map<string, number>, now: Date): MonthDay[] => {
-  const { from, to } = getMonthRange(month);
+export const getMonthDays = (
+  month: Date,
+  minutesByDay: Map<string, number>,
+  now: Date,
+  weekStartsOn: WeekStartsOn,
+): MonthDay[] => {
+  const { from, to } = getMonthRange(month, weekStartsOn);
 
   return eachDayOfInterval({ start: from, end: addDays(to, -1) }).map((date) => {
     const key = format(date, DAY_KEY_FORMAT);

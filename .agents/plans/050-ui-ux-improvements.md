@@ -57,7 +57,7 @@ Tick an issue in the commit that fixes it.
 ## P2: Consistency and accessibility
 
 - [ ] 28. One date and time formatter, and a 12/24-hour setting
-- [ ] 29. Due-date labels and routines follow the week start picked in Settings
+- [x] 29. Due-date labels and routines follow the week start picked in Settings
 - [ ] 30. Light inputs are 1.04–1.10:1 against the page. Give `--input` a visible colour, aiming for 3:1
 - [ ] 31. Checkbox borders are 2.2:1 (light) and 2.7:1 (dark). Drop the 50% opacity
 - [ ] 32. Routine day circles: outline the empty ones and ring today

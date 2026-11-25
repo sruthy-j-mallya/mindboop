@@ -1,7 +1,7 @@
 import { differenceInCalendarDays, format, parse, parseISO } from "date-fns";
 import { generatePath } from "react-router";
 
-import type { Routine, TimeLog } from "@/apis/types";
+import type { Routine, TimeLog, WeekStartsOn } from "@/apis/types";
 import { SECONDS_PER_MINUTE } from "@/constants";
 import routes from "@/routes";
 import { formatMinutes } from "@/utils";
@@ -55,4 +55,11 @@ export const describeAddButton = (count: number, isAdding: boolean) => {
   if (count === 0) return "Pick some to add";
 
   return count === 1 ? "Add 1 routine" : `Add ${count} routines`;
+};
+
+// The weekdays in order, from the one weeks start on.
+export const getWeekdays = (weekStartsOn: WeekStartsOn) => {
+  const first = WEEKDAYS.findIndex(({ value }) => value === weekStartsOn);
+
+  return [...WEEKDAYS.slice(first), ...WEEKDAYS.slice(0, first)];
 };
