@@ -259,6 +259,15 @@ describe("Routines", () => {
     vi.useRealTimers();
   });
 
+  it("offers to delete a routine from its row's menu", async () => {
+    renderRoutines([buildRoutine()]);
+
+    await userEvent.click(await screen.findByRole("button", { name: /^Options for/ }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+
+    expect(await screen.findByRole("dialog")).toBeVisible();
+  });
+
   it("edits a routine from its right-click menu", async () => {
     const routine = buildRoutine();
     const update = vi.spyOn(routinesApi, "update").mockResolvedValue({ routine });

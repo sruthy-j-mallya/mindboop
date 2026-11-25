@@ -4,6 +4,7 @@ import { Bell, Pencil, Trash2 } from "lucide-react";
 import { NavLink } from "react-router";
 
 import type { Routine } from "@/apis/types";
+import EditDeleteMenu from "@/components/commons/EditDeleteMenu";
 import RoutineBadge from "@/components/commons/Routine/Badge";
 import {
   ContextMenu,
@@ -57,6 +58,7 @@ const RoutineRow = ({ routine, now }: RoutineRowProps) => {
                 </span>
               </span>
             </NavLink>
+            <EditDeleteMenu name={title} onDelete={handleDelete} onEdit={handleEdit} />
             <StartRoutineButton routine={routine} />
           </li>
         </ContextMenuTrigger>
