@@ -138,6 +138,15 @@ describe("Inbox", () => {
     expect(fetchList).toHaveBeenCalledWith({ isCompleted: false, isInInbox: true, page: 1 });
   });
 
+  it("leads from the empty pane to adding a task", async () => {
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([]));
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Or add a new one" }));
+
+    expect(screen.getByRole("textbox", { name: "New task" })).toHaveFocus();
+  });
+
   it("shows the date under the title on phones", async () => {
     vi.spyOn(window, "matchMedia").mockImplementation(
       (query) =>

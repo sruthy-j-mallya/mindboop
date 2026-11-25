@@ -9,6 +9,7 @@ import { INITIAL_FORM_VALUES, TASK_VALIDATION_SCHEMA, type TaskFormValues } from
 import { useCreateTask } from "@/hooks/reactQuery/useTasksApi";
 
 import { INBOX_NAME } from "../constants";
+import { NEW_TASK_INPUT_ID } from "./constants";
 
 type AddTaskFormProps = { lifeArea?: LifeArea };
 
@@ -48,6 +49,7 @@ const AddTaskForm = ({ lifeArea }: AddTaskFormProps) => {
           aria-describedby={errorMessage ? "new-task-error" : undefined}
           aria-invalid={!!errors.title}
           aria-label="New task"
+          id={NEW_TASK_INPUT_ID}
           autoComplete="off"
           placeholder={`Add a task to ${listName}`}
           {...register("title", { onBlur: handleBlur })}

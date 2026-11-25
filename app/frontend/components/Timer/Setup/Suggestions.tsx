@@ -1,4 +1,5 @@
 import type { Task } from "@/apis/types";
+import EmptyPane from "@/components/commons/EmptyPane";
 import { useHomeTasks } from "@/hooks/reactQuery/useHomeTasksApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
 import { getDayRange } from "@/utils/dateTime";
@@ -17,11 +18,7 @@ const Suggestions = ({ onPick }: SuggestionsProps) => {
   const resumable = (home?.resumable ?? []).filter(({ id }) => !todayIds.includes(id));
 
   if (today.length + resumable.length === 0) {
-    return (
-      <p className="m-auto py-12 text-center text-muted-foreground">
-        Pick a task to see its steps and description.
-      </p>
-    );
+    return <EmptyPane message="Pick a task to see its steps and description." />;
   }
 
   return (
