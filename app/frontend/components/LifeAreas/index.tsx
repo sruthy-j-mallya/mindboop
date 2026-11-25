@@ -12,6 +12,8 @@ import {
 } from "@dnd-kit/core";
 import { Outlet } from "react-router";
 
+import useOpenTask from "@/hooks/useOpenTask";
+
 import AreaNav from "./AreaNav";
 import { DRAG_TYPES } from "./constants";
 import DraggedArea from "./DraggedArea";
@@ -35,6 +37,7 @@ const DRAG_DISTANCE = 4;
 // are drop targets for either.
 const LifeAreas = () => {
   const [dragged, setDragged] = useState<DragData | null>(null);
+  const isTaskOpen = !!useOpenTask().openTaskId;
   const moveTask = useMoveTask();
   const moveArea = useMoveArea();
   const sensors = useSensors(
@@ -64,7 +67,8 @@ const LifeAreas = () => {
       onDragStart={handleDragStart}
     >
       <div className="flex flex-1 flex-col lg:basis-0 lg:flex-row lg:overflow-hidden">
-        <AreaNav />
+        {/* On narrow screens an open task takes the whole page, with a way back to its list. */}
+        <AreaNav className={isTaskOpen ? "max-lg:hidden" : undefined} />
         <Outlet />
       </div>
       <DragOverlay dropAnimation={null}>

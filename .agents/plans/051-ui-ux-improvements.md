@@ -51,7 +51,7 @@ Tick an issue in the commit that fixes it.
 - [ ] 23. Task pane: ghost chips for date, area and estimate, as in the Calendar's popover
 - [x] 24. Due dates in lists on phones, under the title
 - [ ] 25. A visible menu on areas and routine rows, besides the right click
-- [ ] 26. Hide the area navigation above an open task on phones
+- [x] 26. Hide the area navigation above an open task on phones
 - [ ] 27. Group long lists: Overdue, Today, Upcoming, No date
 
 ## P2: Consistency and accessibility

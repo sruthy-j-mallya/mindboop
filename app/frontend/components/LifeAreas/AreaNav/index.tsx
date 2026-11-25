@@ -5,6 +5,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { cn } from "cn";
 import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,10 +20,12 @@ import AreaItem from "./AreaItem";
 import InboxItem from "./InboxItem";
 import SuggestionPicker from "./SuggestionPicker";
 
+type AreaNavProps = { className?: string };
+
 // The Inbox, then the areas in the user's order (changed by dragging), to switch between and drop tasks on (and to edit
 // or delete, from an area's right-click menu). A column on wide screens; on narrow ones the areas are a row that scrolls sideways. Until there are
 // areas, suggestions to pick from take their place.
-const AreaNav = () => {
+const AreaNav = ({ className }: AreaNavProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const { data: lifeAreas = [], isPending, error } = useLifeAreas();
   const { data: taskCounts = [] } = useTaskCounts();
@@ -35,7 +38,10 @@ const AreaNav = () => {
   return (
     <nav
       aria-label="Areas of life"
-      className="flex shrink-0 flex-col gap-3 border-b px-4 pb-4 lg:w-60 lg:overflow-y-auto lg:border-r lg:border-b-0"
+      className={cn(
+        "flex shrink-0 flex-col gap-3 border-b px-4 pb-4 lg:w-60 lg:overflow-y-auto lg:border-r lg:border-b-0",
+        className,
+      )}
     >
       <ul className="-mx-1 px-1 py-0.5">
         <InboxItem tasksCount={getTasksCount(taskCounts, null)} />
