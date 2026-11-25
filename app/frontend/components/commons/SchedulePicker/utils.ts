@@ -1,6 +1,8 @@
 import {
+  addDays,
   addHours,
   addMilliseconds,
+  addWeeks,
   format,
   isBefore,
   isSameDay,
@@ -9,9 +11,10 @@ import {
   setHours,
   startOfDay,
   startOfHour,
+  startOfWeek,
 } from "date-fns";
 
-import type { TimeFormat, UpdateTaskPayload } from "@/apis/types";
+import type { TimeFormat, UpdateTaskPayload, WeekStartsOn } from "@/apis/types";
 import { MINUTES_PER_HOUR } from "@/constants";
 import { formatTime } from "@/utils/dateTime";
 
@@ -151,3 +154,10 @@ export const toPayload = ({
 
 export const getDraftError = ({ isDuration, startsAt, endsAt }: ScheduleDraft) =>
   isDuration && isBefore(endsAt, startsAt) ? END_BEFORE_START_ERROR : null;
+
+// Next week is its first day.
+export const getQuickDays = (today: Date, weekStartsOn: WeekStartsOn) => [
+  { label: "Today", day: today },
+  { label: "Tomorrow", day: addDays(today, 1) },
+  { label: "Next week", day: addWeeks(startOfWeek(today, { weekStartsOn }), 1) },
+];

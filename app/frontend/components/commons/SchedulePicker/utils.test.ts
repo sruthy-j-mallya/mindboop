@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ScheduleDraft } from "./types";
 import {
   getDraftError,
+  getQuickDays,
   moveStart,
   parseTimeText,
   setAllDay,
@@ -101,5 +102,16 @@ describe("SchedulePicker utils", () => {
     expect(toTimeSlotIndex("15:30")).toBe(31);
     expect(toTimeSlotIndex("15:45")).toBe(31);
     expect(toTimeSlotIndex("00:00")).toBe(0);
+  });
+});
+
+describe("getQuickDays", () => {
+  it("offers today, tomorrow and the first day of next week", () => {
+    // A Thursday.
+    const days = (weekStartsOn: 0 | 1) =>
+      getQuickDays(new Date(2026, 10, 12), weekStartsOn).map(({ day }) => day.getDate());
+
+    expect(days(1)).toEqual([12, 13, 16]);
+    expect(days(0)).toEqual([12, 13, 15]);
   });
 });

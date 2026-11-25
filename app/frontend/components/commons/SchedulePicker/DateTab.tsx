@@ -4,6 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import useWeekStartsOn from "@/hooks/useWeekStartsOn";
 
 import { CALENDAR_CLASS_NAME, CALENDAR_CLASS_NAMES } from "./constants";
+import QuickDays from "./QuickDays";
 import TimePicker from "./TimePicker";
 import type { ScheduleDraft } from "./types";
 import { moveStart, setDateTime, toTimeInputValue, withDay } from "./utils";
@@ -26,6 +27,7 @@ const DateTab = ({ draft, onChange }: DateTabProps) => {
   return (
     // Sized to the calendar, so the time row spans it.
     <div className="mx-auto flex w-fit flex-col gap-2">
+      <QuickDays value={draft.startsAt} onPick={handleSelectDay} />
       <Calendar
         required
         className={CALENDAR_CLASS_NAME}
