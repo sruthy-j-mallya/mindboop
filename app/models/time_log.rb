@@ -24,7 +24,7 @@ class TimeLog < ApplicationRecord
   enum :mode, { timer: "timer", stopwatch: "stopwatch", manual: "manual" }, validate: true
 
   belongs_to :user, default: -> { task&.user }
-  # A manual log can go without a task (it then has a title of its own), and so can a session on a routine.
+  # A manual log can go without a task (it then has a title of its own, or a routine), and so can a session on a routine.
   belongs_to :task, optional: true
   belongs_to :routine, optional: true
   has_many :breaks, dependent: :destroy
@@ -32,7 +32,7 @@ class TimeLog < ApplicationRecord
   has_many :parking_lot_items, dependent: :nullify
 
   validates :task, presence: true, unless: -> { manual? || routine }
-  validates :title, presence: true, if: -> { manual? && task.nil? }
+  validates :title, presence: true, if: -> { manual? && task.nil? && routine.nil? }
   validate :routine_belongs_to_user, if: :routine_id?
   validates :title, length: { maximum: MAX_TITLE_LENGTH }
   validates :started_at, presence: true
@@ -193,9 +193,16 @@ class TimeLog < ApplicationRecord
       return unless started_at? && completed_at?
 
       now = Time.current
-      errors.add(:started_at, "can't be more than 24 hours ago") if started_at < now - LOGGING_WINDOW - CLOCK_DRIFT_ALLOWANCE
+      if logging_window_applies? && started_at < now - LOGGING_WINDOW - CLOCK_DRIFT_ALLOWANCE
+        errors.add(:started_at, "can't be more than 24 hours ago")
+      end
       errors.add(:completed_at, "can't be in the future") if completed_at > now + CLOCK_DRIFT_ALLOWANCE
       errors.add(:completed_at, "must be after the start") unless completed_at > started_at
+    end
+
+    # A routine's past days can be filled in at any time, from its month grid. Moving a log is still limited.
+    def logging_window_applies?
+      validation_context != :log || routine.nil? || task.present?
     end
 
     # Where a timer reaches zero, read before buffer_minutes changes.

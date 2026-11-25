@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import { cn } from "cn";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { Routine } from "@/apis/types";
 import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
@@ -11,14 +10,17 @@ import { useRoutineTimeLogs } from "@/hooks/reactQuery/useRoutineTimeLogsApi";
 
 import { WEEKDAYS } from "../constants";
 import { getMinutesByDay } from "../utils";
-import { describeDay, describeDaysDone, getMonthDays, getMonthRange } from "./utils";
+import DayCell from "./DayCell";
+import LogTimeDialog from "./LogTimeDialog";
+import { describeDaysDone, getMonthDays, getMonthRange } from "./utils";
 
-type MonthActivityProps = { routine: Pick<Routine, "id" | "color"> };
+type MonthActivityProps = { routine: Pick<Routine, "id" | "title" | "color" | "durationMinutes"> };
 
 // A month of days, the ones the routine was done on filled in its colour. The rest stay plain: a day without it isn't a
-// mark against anyone.
+// mark against anyone. Picking a day up to today logs time on it by hand.
 const MonthActivity = ({ routine }: MonthActivityProps) => {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [loggingDate, setLoggingDate] = useState<Date | null>(null);
   const now = new Date();
   const { from, to } = getMonthRange(month);
   const { data: timeLogs = [], error } = useRoutineTimeLogs({
@@ -32,6 +34,7 @@ const MonthActivity = ({ routine }: MonthActivityProps) => {
 
   const handlePrevious = () => setMonth((shown) => addMonths(shown, -1));
   const handleNext = () => setMonth((shown) => addMonths(shown, 1));
+  const handleLogTimeClose = () => setLoggingDate(null);
 
   return (
     <section
@@ -77,33 +80,11 @@ const MonthActivity = ({ routine }: MonthActivityProps) => {
             {label.slice(0, 3)}
           </span>
         ))}
-        {days.map(({ key, date, minutes, isInMonth, isToday, isFuture }) => {
-          const isDone = minutes > 0;
-          const label = describeDay(date, minutes);
-
-          return (
-            <div
-              key={key}
-              aria-label={label}
-              className={cn("flex flex-col items-center gap-1", (!isInMonth || isFuture) && "opacity-40")}
-              role="img"
-              title={label}
-            >
-              <span className={cn("text-xs", isToday && "font-semibold text-primary")}>
-                {format(date, "d")}
-              </span>
-              <span
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-full",
-                  isDone ? "bg-(--area-color) text-white" : "bg-muted",
-                )}
-              >
-                {isDone && <Check className="size-4" />}
-              </span>
-            </div>
-          );
-        })}
+        {days.map((day) => (
+          <DayCell key={day.key} day={day} onSelect={setLoggingDate} />
+        ))}
       </div>
+      {loggingDate && <LogTimeDialog date={loggingDate} routine={routine} onClose={handleLogTimeClose} />}
     </section>
   );
 };

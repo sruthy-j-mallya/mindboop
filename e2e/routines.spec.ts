@@ -46,6 +46,14 @@ test("add a routine from an idea, run it, see it counted, then edit and delete i
   await expect(page.getByText("Times done").locator("..")).toContainText("1");
   await expect(page.getByText("1 day with it")).toBeVisible();
 
+  await page.getByRole("button", { name: "Previous month" }).click();
+  await page.getByRole("button", { name: /^Log time on \w+ 15 / }).click();
+  await page.getByRole("dialog").getByLabel("Minutes").fill("25");
+  await page.getByRole("dialog").getByRole("button", { name: "Log time" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(page.getByRole("button", { name: /^Log time on \w+ 15 .*25 min/ })).toBeVisible();
+  await expect(page.getByText("Times done").locator("..")).toContainText("2");
+
   await page.getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Edit" }).click();
   const dialog = page.getByRole("dialog");

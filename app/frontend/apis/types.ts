@@ -133,9 +133,11 @@ export type StartTimeLogPayload = {
   timerPreset?: number | null;
 } & ({ taskId: string; routineId?: never } | { routineId: string; taskId?: never });
 
-// A session that already happened, linked to a task or saved with only a title.
+// A session that already happened, linked to a task or a routine, or saved with only a title.
 export type LogTimePayload = { mode: "manual"; startedAt: string; completedAt: string } & (
-  { taskId: string; title?: never } | { title: string; taskId?: never }
+  | { taskId: string; title?: never; routineId?: never }
+  | { title: string; taskId?: never; routineId?: never }
+  | { routineId: string; taskId?: never; title?: never }
 );
 
 export type CreateTimeLogPayload = StartTimeLogPayload | LogTimePayload;

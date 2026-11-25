@@ -270,12 +270,13 @@ no new log can be started or logged on that task.
 | -------------- | ------------------------------------------------------------------------------------------------ |
 | `mode`         | Required, `timer`, `stopwatch` or `manual`                                                       |
 | `timer_preset` | Optional, whole number of minutes, at least 2 (the least a session can log; `timer`/`stopwatch`) |
-| `title`        | `manual` only: required without a `task_id`, up to 255 characters                                |
-| `started_at`   | `manual` only, required: no more than 24 hours ago                                               |
+| `title`        | `manual` only: required without a `task_id` or `routine_id`, up to 255 characters                |
+| `started_at`   | `manual` only, required: no more than 24 hours ago, or any past time on a routine                |
 | `completed_at` | `manual` only, required: after `started_at`, and not in the future                               |
 
 A `manual` log is saved finished: `is_running` is `false`, and `accumulated_elapsed_seconds` is the time from
 `started_at` to `completed_at`. Its times allow 5 minutes of clock drift. A log that breaks these rules gets a 422.
+With a `routine_id` and no `task_id` it's logged on the routine (its month grid's days), at any time in the past.
 `task_id` is optional for it; when given, the same task rules apply as for any other log.
 
 A user does one thing at a time, so their time logs can't overlap. Creating a log (of any mode), or moving one with
