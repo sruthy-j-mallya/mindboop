@@ -15,7 +15,7 @@ flows weren't tried live. One commit per issue on the `ui-ux-improvements` branc
 2. Trust: 2, 3, 15
 3. Visibility: 28, 30–33
 4. Mobile: 6, 8, 22, 24, 26, 34
-5. Larger work: 13, 16, 20, 23, 27, 49, each with its own plan where it needs decisions
+5. Larger work: 13, 20, 23, 27, 49, each with its own plan where it needs decisions
 6. The rest, by priority
 
 Tick an issue in the commit that fixes it.
@@ -32,7 +32,7 @@ Tick an issue in the commit that fixes it.
 
 ## P1: High impact
 
-- [ ] 7. Start the sidebar expanded on desktop
+- [x] 7. Start the sidebar expanded on desktop
 - [x] 8. Add a bottom bar on phones: Home, Tasks, Timer, Calendar, More
 - [ ] 9. Rename the "Areas of life" link "Tasks", as it opens the Inbox
 - [ ] 10. Move Sign out into an account section in Settings
@@ -41,7 +41,7 @@ Tick an issue in the commit that fixes it.
 - [ ] 13. Agenda rows: Start button, area badge and estimate
 - [x] 14. Agenda rows: only the time, or "All day", instead of repeating "Today"
 - [x] 15. Overdue: undo for moving a task, plus Tomorrow and Pick a date (bulk moves stay out of scope, as in 049)
-- [ ] 16. Show today's routines on Home (out of scope in 049; needs a decision)
+- [ ] ~~16. Show today's routines on Home~~ Dropped: not wanted there
 - [ ] 17. Home's running session card names the task and shows the time left
 - [x] 18. Timer: Done is the primary action; Bail and Discard are quiet
 - [x] 19. Timer: the task's title shows once during a session

@@ -13,14 +13,20 @@ import {
   REMINDER_GRACE_PERIOD,
   SIDEBAR_STORAGE_KEY,
   UNKNOWN_PAGE_TITLE,
+  WIDE_LAYOUT_QUERY,
 } from "./constants";
 
+// As it was last left. Until then it starts open where there's room for its labels.
 export const isSidebarOpen = () => {
+  const isWide = window.matchMedia(WIDE_LAYOUT_QUERY).matches;
+
   try {
-    return localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+    const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+
+    return stored === null ? isWide : stored === "true";
   } catch {
-    // Storage can be blocked; the sidebar starts collapsed.
-    return false;
+    // Storage can be blocked.
+    return isWide;
   }
 };
 

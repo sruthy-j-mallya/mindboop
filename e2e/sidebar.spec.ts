@@ -14,6 +14,12 @@ test("keep the sidebar state across reloads", async ({ page }) => {
 
   const sidebar = page.locator('[data-slot="sidebar"]');
   const toggle = page.getByRole("button", { name: "Toggle Sidebar" });
+  await expect(sidebar).toHaveAttribute("data-state", "expanded");
+
+  await toggle.click();
+  await expect(sidebar).toHaveAttribute("data-state", "collapsed");
+
+  await page.reload();
   await expect(sidebar).toHaveAttribute("data-state", "collapsed");
 
   await toggle.click();

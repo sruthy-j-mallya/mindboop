@@ -17,6 +17,9 @@ export const TOAST_MOBILE_OFFSET = "calc(var(--bottom-bar-height) + 4.5rem)";
 export const HOME_TITLE = "Home";
 export const UNKNOWN_PAGE_TITLE = "Page not found";
 
+// Tailwind's `xl`: room for the open sidebar beside a page of its own columns.
+export const WIDE_LAYOUT_QUERY = "(width >= 80rem)";
+
 export const SIDEBAR_STORAGE_KEY = "sidebar_open";
 
 export const ALARM_RING_DURATION = 60_000; // 1 minute
