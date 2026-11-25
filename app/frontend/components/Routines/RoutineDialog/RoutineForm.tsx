@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "cn";
+import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { useController, useForm, useWatch } from "react-hook-form";
 
@@ -104,22 +105,32 @@ const RoutineForm = ({
           ))}
         </div>
       </div>
-      <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
-      <EmojiField color={color} error={errors.emoji?.message} field={emojiField} />
-      <ChoiceField
-        hasLabels
-        hint="Plays when you start the routine. Pick one to hear a few seconds."
-        legend="Background sound"
-        options={SOUND_OPTIONS}
-        registration={register("sound", { onChange: handleSoundChange })}
-      />
       <ReminderField control={control} errors={errors} register={register} />
+      {/* Out of the way: what's picked to start with will do. */}
+      <details className="group rounded-xl border px-4 py-3">
+        <summary className="flex cursor-pointer list-none items-center justify-between rounded-sm text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+          Look and sound
+          <ChevronDown aria-hidden className="size-4 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid gap-5 pt-4">
+          <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
+          <EmojiField color={color} error={errors.emoji?.message} field={emojiField} />
+          <ChoiceField
+            hasLabels
+            hint="Plays when you start the routine. Pick one to hear a few seconds."
+            legend="Background sound"
+            options={SOUND_OPTIONS}
+            registration={register("sound", { onChange: handleSoundChange })}
+          />
+        </div>
+      </details>
       {error && (
         <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      {/* Stays in view while the dialog scrolls; the negative margins cover its padding. */}
+      <div className="sticky -bottom-6 -mx-6 -mb-6 flex flex-wrap items-center justify-end gap-2 border-t bg-background px-6 py-4">
         {children}
         <Button disabled={isSubmitting} type="submit">
           {submitLabel}
