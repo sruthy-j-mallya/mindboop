@@ -32,7 +32,8 @@ const DayCell = ({ day, onSelect }: DayCellProps) => {
       <span
         className={cn(
           "flex size-7 items-center justify-center rounded-full transition-shadow group-enabled:group-hover:ring-2 group-enabled:group-hover:ring-(--area-color)",
-          isDone ? "bg-(--area-color) text-white" : "bg-muted",
+          isDone ? "bg-(--area-color) text-white" : "border border-input",
+          isToday && "outline-2 outline-offset-2 outline-ring",
         )}
       >
         {isDone && <Check className="size-3.5" />}

@@ -60,7 +60,7 @@ Tick an issue in the commit that fixes it.
 - [x] 29. Due-date labels and routines follow the week start picked in Settings
 - [x] 30. Light inputs are 1.04–1.10:1 against the page. Give `--input` a visible colour, aiming for 3:1
 - [x] 31. Checkbox borders are 2.2:1 (light) and 2.7:1 (dark). Drop the 50% opacity
-- [ ] 32. Routine day circles: outline the empty ones and ring today
+- [x] 32. Routine day circles: outline the empty ones and ring today
 - [ ] 33. Dark primary buttons are 1.4:1 against the card. Keep the purple, add a lighter border
 - [ ] 34. Parking lot actions on phones: 44px targets, or one labelled button and a menu
 - [ ] 35. Skeletons while Home, lists and panes load
