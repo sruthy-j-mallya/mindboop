@@ -89,6 +89,6 @@ Tick an issue in the commit that fixes it.
 | --- | --- |
 | 2 | Completed tasks are listed most recently changed first (`updated_at`), as no completion time is stored. Rows only reopen a task; they don't open it |
 | 3 | Offered after Done only. Bailing means the task isn't finished |
-| 30 | The description box goes without an outline in both themes: it's read more than filled in, and its placeholder and focus ring show what it is |
+| 30 | The description box goes without an outline or a focus ring in both themes: it's read more than filled in. Its placeholder shows what it is, and the caret shows it has focus |
 | 28 | "12 Nov" and "5:30pm" (or "17:30") everywhere, through `utils/dateTime.ts`. `user_preferences.time_format` defaults to the 12-hour clock. Browser time inputs (a routine's reminder, logging time) follow the browser's locale and can't be set |
 | 19 | The heading beside the clock takes over the pane's in-place title editing |

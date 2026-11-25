@@ -71,8 +71,8 @@ const RichTextEditor = ({
   return (
     <div
       className={cn(
-        "relative flex flex-1 flex-col rounded-md border border-transparent bg-input-background transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
-        isInvalid && "border-destructive ring-destructive/20",
+        "relative flex flex-1 flex-col rounded-md border border-transparent bg-input-background",
+        isInvalid && "border-destructive",
         // While the toolbar is hidden, this reserves its row (min-h-10 in Toolbar) for the toggle in the corner, so
         // showing or hiding the toolbar doesn't change the editor's height.
         !showToolbar && "pb-10",
