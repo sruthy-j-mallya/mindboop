@@ -3,6 +3,7 @@ import useCurrentTime from "@/hooks/useCurrentTime";
 import { formatLongDate, getDayRange } from "@/utils/dateTime";
 
 import { DAY_REFRESH_INTERVAL } from "./constants";
+import Onboarding from "./Onboarding";
 import Overdue from "./Overdue";
 import QuickStart from "./QuickStart";
 import Resumable from "./Resumable";
@@ -27,6 +28,7 @@ const Home = () => {
           {error.message}
         </p>
       )}
+      <Onboarding />
       <div className="grid gap-4 lg:grid-cols-2">
         <QuickStart />
         {showLists && (

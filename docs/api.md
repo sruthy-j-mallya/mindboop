@@ -64,6 +64,7 @@ Every error response has one shape:
 | GET    | `/api/current_time_log`                   | –                                                                                                   | 200 `{ time_log }` or `null`        |
 | GET    | `/api/calendar_events`                    | `from`, `to` query params (ISO 8601)                                                                | 200 `{ tasks, time_logs }`          |
 | GET    | `/api/home_tasks`                         | `from`, `to` query params (ISO 8601)                                                                | 200 `{ today, overdue, resumable }` |
+| GET    | `/api/onboarding`                         | –                                                                                                   | 200 `{ onboarding }`                |
 | GET    | `/api/user_preference`                    | –                                                                                                   | 200 `{ user_preference }`           |
 | PATCH  | `/api/user_preference`                    | `theme`, `completion_sound`, `break_alarm_sound`, `week_starts_on`, `time_format` (any)             | 200 `{ user_preference }`           |
 | GET    | `/api/parking_lot_items`                  | `page`, `status`, `time_log_id` query params (optional)                                             | 200 list (see below)                |
@@ -205,6 +206,12 @@ shape as `GET /api/tasks/:id`, since a move also changes the other items' order.
   land on among the task's items. An index past the end moves it last, and a negative or non-integer one gets a 422 with
   nothing saved. Items keep their stored positions among themselves, so a discarded item never shares one with a kept item.
 - `DELETE` soft-deletes the item (Discard).
+
+## Onboarding
+
+`GET /api/onboarding` says which first steps the signed-in user has taken, as
+`{ has_life_areas, has_tasks, has_sessions }`, for the checklist on Home. Deleted areas and tasks count; discarded
+sessions don't.
 
 ## Quick starts
 

@@ -317,3 +317,8 @@ export type UpdateRoutinePayload = Partial<CreateRoutinePayload> & Pick<Routine,
 export type RoutineTimeLogsParams = { routineId: string; from: string; to: string };
 
 export type RoutineTimeLogsResponse = { timeLogs: TimeLog[] };
+
+// The first steps a user has taken, for the checklist on Home.
+export type Onboarding = { hasLifeAreas: boolean; hasTasks: boolean; hasSessions: boolean };
+
+export type OnboardingResponse = { onboarding: Onboarding };

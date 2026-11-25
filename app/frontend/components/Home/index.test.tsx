@@ -10,6 +10,7 @@ import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import homeTasksApi from "@/apis/home_tasks";
 import lifeAreasApi from "@/apis/life_areas";
+import sessionsApi from "@/apis/sessions";
 import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import type { Breadcrumb, HomeTasksResponse, Task, TimeLog } from "@/apis/types";
@@ -135,6 +136,7 @@ describe("Home", () => {
     vi.spyOn(homeTasksApi, "fetchList").mockResolvedValue(LISTS);
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
+    vi.spyOn(sessionsApi, "show").mockRejectedValue(new ApiError(500, "Not needed"));
     vi.spyOn(userPreferencesApi, "show").mockRejectedValue(new ApiError(500, "Not needed"));
     vi.spyOn(tasksApi, "update").mockImplementation(({ id }) => Promise.resolve({ task: buildTask(id) }));
     vi.spyOn(tasksApi, "show").mockImplementation((id) => Promise.resolve({ task: buildTask(id) }));
