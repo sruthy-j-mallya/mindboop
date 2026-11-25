@@ -64,7 +64,7 @@ const RoutinePane = () => {
           ? "Not started yet. Whenever you’re ready, it’s one click away."
           : "Every time counts. Days you skip don’t undo any of it."}
       </p>
-      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <dl className="grid grid-cols-3 gap-2 sm:gap-3">
         <StatTile label="Times done" value={String(sessionsCount)} />
         <StatTile label="Time given" value={formatTotalTime(totalSeconds)} />
         <StatTile label="Last time" value={lastDoneAt ? formatLastDone(lastDoneAt, new Date()) : "Not yet"} />
