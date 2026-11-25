@@ -99,6 +99,8 @@
   --popover-foreground: #e8e2db;
   --primary: var(--brand-purple);
   --primary-text: #c78bc2;
+  /* The deep purple barely stands out on brown, so what's filled with it gets this edge: 3:1 on every dark surface. */
+  --primary-edge: #a565a0;
   /* Mauve, so the time left stands out from the ring's track. */
   --timer-ring: #b99ab0;
   --primary-foreground: #ffffff;
