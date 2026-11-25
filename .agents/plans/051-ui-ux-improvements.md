@@ -78,7 +78,7 @@ Tick an issue in the commit that fixes it.
 - [x] 44. Routine form: sticky footer, appearance collapsed
 - [x] 45. Routine stats: three in a row on phones
 - [x] 46. Quick start: label the steps icon "Add steps"
-- [ ] 47. Step rows: reveal the delete icon on hover
+- [x] 47. Step rows: reveal the delete icon on hover
 - [ ] 48. Empty panes: the mascot and a next action
 - [x] 49. A first-run checklist
 - [ ] 50. Sign in: one-line description, autofocus, "Forgot password?" by its field

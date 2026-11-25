@@ -90,7 +90,8 @@ const Step = ({ id, text, isDone, onRename, onToggle, onRemove, onInsertBelow }:
       )}
       <Button
         aria-label={`Remove ${text}`}
-        className="text-muted-foreground"
+        // With a mouse, it shows on hover or focus to keep the list calm; touch screens always show it.
+        className="text-muted-foreground group-focus-within:opacity-100 group-hover:opacity-100 pointer-fine:opacity-0"
         size="icon-sm"
         type="button"
         variant="ghost"
