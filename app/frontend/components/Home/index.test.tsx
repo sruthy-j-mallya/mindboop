@@ -206,6 +206,13 @@ describe("Home", () => {
     expect(screen.getByText("Timer with a picked")).toBeVisible();
   });
 
+  it("holds the lists' places while they load", async () => {
+    vi.mocked(homeTasksApi.fetchList).mockReturnValue(new Promise(() => undefined));
+    renderHome();
+
+    expect(await screen.findAllByTestId("list-skeleton")).toHaveLength(3);
+  });
+
   it("says when there's nothing in a list", async () => {
     vi.mocked(homeTasksApi.fetchList).mockResolvedValue(EMPTY);
     renderHome();

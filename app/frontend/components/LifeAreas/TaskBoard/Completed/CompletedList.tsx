@@ -1,4 +1,5 @@
 import type { LifeArea } from "@/apis/types";
+import ListSkeleton from "@/components/commons/ListSkeleton";
 import { Button } from "@/components/ui/button";
 import { useInfiniteTasks } from "@/hooks/reactQuery/useTasksApi";
 
@@ -16,7 +17,7 @@ const CompletedList = ({ lifeArea }: CompletedListProps) => {
 
   const handleLoadMore = () => fetchNextPage();
 
-  if (isPending) return null;
+  if (isPending) return <ListSkeleton className="px-3" rows={2} />;
 
   if (error) {
     return (

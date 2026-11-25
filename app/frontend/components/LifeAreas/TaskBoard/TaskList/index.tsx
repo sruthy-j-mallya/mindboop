@@ -1,6 +1,7 @@
 import { Inbox } from "lucide-react";
 
 import type { LifeArea } from "@/apis/types";
+import ListSkeleton from "@/components/commons/ListSkeleton";
 import { SCHEDULE_REFRESH_INTERVAL } from "@/components/commons/ScheduleLabel/constants";
 import { Button } from "@/components/ui/button";
 import { useInfiniteTasks } from "@/hooks/reactQuery/useTasksApi";
@@ -26,7 +27,7 @@ const TaskList = ({ lifeArea }: TaskListProps) => {
 
   const handleLoadMore = () => fetchNextPage();
 
-  if (isPending) return null;
+  if (isPending) return <ListSkeleton className="px-2" />;
 
   if (error) {
     return (
