@@ -37,7 +37,7 @@ const COLOR_OPTIONS = LIFE_AREA_COLORS.map(({ id, label, value }) => ({
 
 const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({
   value: id,
-  label: id === "none" ? "Keep the current sound" : label,
+  label,
   content: <Icon className="size-4" />,
 }));
 

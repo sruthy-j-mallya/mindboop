@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
+import parkingLotItemsApi from "@/apis/parking_lot_items";
 import routinesApi from "@/apis/routines";
 import sessionsApi from "@/apis/sessions";
 import type { Routine, TimeLog } from "@/apis/types";
@@ -47,6 +48,13 @@ const TIME_LOG: TimeLog = {
   updatedAt: STARTED_AT,
 };
 
+const listWithCount = (parkingLotItemsCount: number) => ({
+  parkingLotItems: [],
+  parkingLotItemsCount,
+  page: 1,
+  totalPages: 1,
+});
+
 class FakeAudioContext {
   state = "running";
   currentTime = 0;
@@ -60,6 +68,7 @@ describe("AppLayout", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(parkingLotItemsApi, "fetchList").mockResolvedValue(listWithCount(0));
     vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
       userPreference: {
         theme: "system",
@@ -150,6 +159,43 @@ describe("AppLayout", () => {
     expect(screen.getAllByRole("link", { name: "Settings" })).toHaveLength(1);
   });
 
+  it("opens the search from the sidebar", async () => {
+    renderWithProviders(<AppLayout />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Search" }));
+
+    expect(screen.getByRole("dialog", { name: "Search tasks" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Search tasks" })).toHaveFocus();
+  });
+
+  it("counts the parked thoughts over the Parking lot icon", async () => {
+    vi.mocked(parkingLotItemsApi.fetchList).mockResolvedValue(listWithCount(3));
+    renderWithProviders(<AppLayout />);
+
+    const link = await screen.findByRole("link", { name: "Parking lot (3 parked)" });
+
+    expect(within(link).getByText("3")).toBeInTheDocument();
+    expect(parkingLotItemsApi.fetchList).toHaveBeenCalledWith({ status: "parked" });
+  });
+
+  it("shows no count over the Parking lot icon when nothing is parked", async () => {
+    renderWithProviders(<AppLayout />);
+
+    await waitFor(() => expect(parkingLotItemsApi.fetchList).toHaveBeenCalled());
+    await act(() => Promise.resolve());
+
+    expect(screen.getByRole("link", { name: "Parking lot" })).toHaveTextContent(/^Parking lot$/);
+  });
+
+  it("caps a large Parking lot count", async () => {
+    vi.mocked(parkingLotItemsApi.fetchList).mockResolvedValue(listWithCount(120));
+    renderWithProviders(<AppLayout />);
+
+    const link = await screen.findByRole("link", { name: "Parking lot (120 parked)" });
+
+    expect(within(link).getByText("99+")).toBeInTheDocument();
+  });
+
   it("starts icon-only and toggles between the icon and full views", async () => {
     const { container } = renderWithProviders(<AppLayout />);
     const sidebar = container.querySelector<HTMLElement>('[data-slot="sidebar"]')!;
@@ -219,8 +265,9 @@ describe("AppLayout", () => {
             id: LIFE_AREA_ID,
             name: "Work",
             color: "indigo",
-            icon: "briefcase",
+            emoji: "💼",
             defaultSound: "piano",
+            isDeleted: false,
             createdAt: STARTED_AT,
             updatedAt: STARTED_AT,
           },
@@ -237,6 +284,66 @@ describe("AppLayout", () => {
       act(() => useAmbienceStore.getState().setSoundId("waves"));
       act(() => useAmbienceStore.getState().applyStartingSound(TIME_LOG.id, "piano"));
       expect(useAmbienceStore.getState().soundId).toBe("waves");
+    });
+
+    it("starts a session on a task in an area of life in silence when the area's sound is none", async () => {
+      useAmbienceStore.setState({ soundId: "rain" });
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({
+        timeLog: { ...TIME_LOG, lifeAreaId: LIFE_AREA_ID },
+      });
+      vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
+        lifeAreas: [
+          {
+            id: LIFE_AREA_ID,
+            name: "Work",
+            color: "indigo",
+            emoji: "💼",
+            defaultSound: "none",
+            isDeleted: false,
+            createdAt: STARTED_AT,
+            updatedAt: STARTED_AT,
+          },
+        ],
+      });
+      renderWithProviders(<AppLayout />, undefined, routes.inbox.index);
+
+      expect(await screen.findByRole("region", { name: "Current session" })).toBeInTheDocument();
+      await act(() => Promise.resolve());
+      expect(useAmbienceStore.getState().soundId).toBe("none");
+      expect(stopSound).toHaveBeenCalled();
+    });
+
+    it("starts a session on a routine in silence when the routine's sound is none", async () => {
+      useAmbienceStore.setState({ soundId: "rain" });
+      const routineId = crypto.randomUUID();
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({
+        timeLog: { ...TIME_LOG, taskId: null, routineId, routineTitle: "Meditation" },
+      });
+      vi.spyOn(routinesApi, "fetchList").mockResolvedValue({
+        routines: [
+          {
+            id: routineId,
+            title: "Meditation",
+            icon: "flower-2",
+            color: "violet",
+            sound: "none",
+            durationMinutes: 10,
+            reminderTime: null,
+            reminderDays: [],
+            sessionsCount: 0,
+            totalSeconds: 0,
+            lastDoneAt: null,
+            createdAt: STARTED_AT,
+            updatedAt: STARTED_AT,
+          },
+        ],
+      });
+      renderWithProviders(<AppLayout />, undefined, routes.inbox.index);
+
+      expect(await screen.findByRole("region", { name: "Current session" })).toBeInTheDocument();
+      await act(() => Promise.resolve());
+      expect(useAmbienceStore.getState().soundId).toBe("none");
+      expect(stopSound).toHaveBeenCalled();
     });
 
     it("floats a mini timer away from the Timer page, leading back to it and hiding there", async () => {

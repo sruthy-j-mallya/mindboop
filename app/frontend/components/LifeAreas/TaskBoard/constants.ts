@@ -7,5 +7,3 @@ export const TASK_VALIDATION_SCHEMA = z.object({
 export type TaskFormValues = z.infer<typeof TASK_VALIDATION_SCHEMA>;
 
 export const INITIAL_FORM_VALUES: TaskFormValues = { title: "" };
-
-export const SEARCH_DEBOUNCE_DELAY = 300; // milliseconds

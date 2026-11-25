@@ -1,6 +1,7 @@
 import http from "@/apis/axios";
 import type {
   CreateLifeAreaPayload,
+  DeleteLifeAreaPayload,
   LifeAreaListResponse,
   LifeAreaResponse,
   UpdateLifeAreaPayload,
@@ -18,7 +19,7 @@ const create = (payload: CreateLifeAreaPayload) =>
 const update = ({ id, ...payload }: UpdateLifeAreaPayload) =>
   http.patch<LifeAreaResponse>(lifeAreaURL(id), payload).then(({ data }) => data);
 
-const destroy = (id: string) => http.delete(lifeAreaURL(id));
+const destroy = ({ id, ...params }: DeleteLifeAreaPayload) => http.delete(lifeAreaURL(id), { params });
 
 const lifeAreasApi = { fetchList, create, update, destroy };
 

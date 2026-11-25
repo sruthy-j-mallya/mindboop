@@ -1,7 +1,7 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
 
-type ChoiceOption = { value: string; label: string; content: ReactNode; style?: CSSProperties };
+type ChoiceOption = { value: string; label: string; content: ReactNode };
 
 type ChoiceFieldProps = {
   legend: string;
@@ -10,15 +10,15 @@ type ChoiceFieldProps = {
   registration: UseFormRegisterReturn;
 };
 
-// A row of round radio buttons (colours, icons, sounds), each named by its label. The input lies see-through over its
+// A row of round radio buttons (colours, sounds), each named by its label. The input lies see-through over its
 // circle, so a click anywhere on it picks it.
 const ChoiceField = ({ legend, hint, options, registration }: ChoiceFieldProps) => (
   <fieldset className="grid gap-2">
     <legend className="mb-2 text-sm font-medium">{legend}</legend>
     {hint && <p className="-mt-1 text-sm text-muted-foreground">{hint}</p>}
     <div className="flex flex-wrap gap-1.5">
-      {options.map(({ value, label, content, style }) => (
-        <label key={value} className="relative" style={style} title={label}>
+      {options.map(({ value, label, content }) => (
+        <label key={value} className="relative" title={label}>
           <input
             {...registration}
             aria-label={label}

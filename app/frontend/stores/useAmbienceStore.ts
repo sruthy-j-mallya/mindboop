@@ -49,7 +49,7 @@ const useAmbienceStore = create<AmbienceStore>()((set, get) => ({
     set({ volume });
   },
   applyStartingSound: (timeLogId, soundId) => {
-    if (soundId === NO_SOUND || get().startingSoundTimeLogId === timeLogId) return;
+    if (get().startingSoundTimeLogId === timeLogId) return;
 
     writeStorage(SOUND_STORAGE_KEY, soundId);
     writeStorage(STARTING_SOUND_STORAGE_KEY, timeLogId);

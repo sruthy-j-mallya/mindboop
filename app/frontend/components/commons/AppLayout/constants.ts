@@ -12,3 +12,6 @@ export const REMINDER_TOAST_DURATION = 5 * 60_000; // 5 minutes
 
 // The day each routine was last reminded on, so a reminder shows once a day, across tabs and reloads.
 export const REMINDED_ON_STORAGE_KEY = "routines.remindedOn";
+
+// The sidebar's parking lot badge shows "99+" above this.
+export const MAX_PARKED_COUNT = 99;

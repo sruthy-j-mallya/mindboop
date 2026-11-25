@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       resources :checklist_items, only: %i[ create update destroy ]
       resource :restoration, only: :create, controller: "task_restorations"
     end
+    resources :task_counts, only: :index
     resources :life_areas, only: %i[ index create update destroy ]
     resources :routines, only: %i[ index create update destroy ] do
       resources :time_logs, only: :index, controller: "routine_time_logs"

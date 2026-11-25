@@ -42,13 +42,25 @@ class Task < ApplicationRecord
   validates :ends_at, absence: true, unless: :is_duration
   validates :ends_at, comparison: { greater_than_or_equal_to: :starts_at }, if: -> { starts_at? && ends_at? }
   validate :life_area_belongs_to_user, if: :life_area_id?
+  validate :life_area_is_not_deleted, if: -> { life_area_id? && life_area_id_changed? }
 
+  before_save :return_to_inbox, if: -> { undiscarded? && !is_completed && life_area&.discarded? }
   before_discard :stop_running_session
 
   private
     # An unknown area and another user's read the same, so an id gives nothing away.
     def life_area_belongs_to_user
       errors.add(:life_area, "must exist") if life_area&.user_id != user_id
+    end
+
+    # Reads like an unknown area: a deleted one takes no more tasks.
+    def life_area_is_not_deleted
+      errors.add(:life_area, "must exist") if life_area&.discarded? && errors[:life_area].empty?
+    end
+
+    # A task reopened or restored after its area was deleted has no list to go back to.
+    def return_to_inbox
+      self.life_area = nil
     end
 
     # Work done on a task still counts once it's deleted, but no more can be done on it, so a running session ends here.

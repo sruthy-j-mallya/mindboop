@@ -3,6 +3,7 @@ import { type FormEvent, type ReactElement, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useOpenState, { type OpenStateProps } from "@/hooks/useOpenState";
 
 import { CLEARED_SCHEDULE, DATE_TAB, DURATION_TAB, UNSCHEDULED } from "./constants";
 import DateTab from "./DateTab";
@@ -10,7 +11,7 @@ import DurationTab from "./DurationTab";
 import type { Schedule, ScheduleDraft, SchedulePayload } from "./types";
 import { getDraftError, setIsDuration, toDraft, toPayload } from "./utils";
 
-type SchedulePickerProps = {
+type SchedulePickerProps = OpenStateProps & {
   // The schedule the picker opens on; unscheduled by default.
   schedule?: Schedule;
   // The button that opens the popover.
@@ -35,8 +36,9 @@ const SchedulePicker = ({
   clearLabel = "Clear",
   saveLabel = "OK",
   onSave,
+  ...openState
 }: SchedulePickerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useOpenState(openState);
   const [draft, setDraft] = useState<ScheduleDraft>(() => toDraft(schedule, Date.now()));
   const draftError = getDraftError(draft);
 

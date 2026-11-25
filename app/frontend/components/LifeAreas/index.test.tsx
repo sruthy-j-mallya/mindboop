@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
+import taskCountsApi from "@/apis/task_counts";
 import tasksApi from "@/apis/tasks";
 import type { LifeArea, Task } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
@@ -24,8 +25,9 @@ const buildLifeArea = (overrides: Partial<LifeArea> = {}): LifeArea => ({
   id: crypto.randomUUID(),
   name: "Work",
   color: "indigo",
-  icon: "briefcase",
+  emoji: "💼",
   defaultSound: "rain",
+  isDeleted: false,
   createdAt: CREATED_AT,
   updatedAt: CREATED_AT,
   ...overrides,
@@ -90,12 +92,14 @@ describe("LifeAreas", () => {
       },
     });
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(taskCountsApi, "fetchList").mockResolvedValue({ taskCounts: [] });
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([]));
   });
 
-  it("lists the Inbox and the areas, and suggests areas until there are some", async () => {
+  it("suggests areas until there are some, adding all those picked at once", async () => {
+    const health = buildLifeArea({ name: "Health" });
     const fetchList = vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
-    const create = vi.spyOn(lifeAreasApi, "create").mockResolvedValue({ lifeArea: buildLifeArea() });
+    const create = vi.spyOn(lifeAreasApi, "create").mockResolvedValue({ lifeArea: health });
     renderLifeAreas();
 
     const nav = screen.getByRole("navigation", { name: "Areas of life" });
@@ -103,53 +107,61 @@ describe("LifeAreas", () => {
     const suggestions = await within(nav).findByRole("list", { name: "Suggested areas" });
     expect(
       within(suggestions)
-        .getAllByRole("button")
+        .getAllByRole("button", { pressed: false })
         .map((chip) => chip.getAttribute("aria-label")),
-    ).toEqual([
-      "Add Work",
-      "Add Health",
-      "Add Relationships",
-      "Add Household",
-      "Add Leisure",
-      "Add Learning",
-      "Add Finances",
-    ]);
+    ).toEqual(["Work", "Health", "Relationships", "Household", "Leisure", "Learning", "Finances"]);
+    expect(within(nav).getByRole("button", { name: "Add areas" })).toBeDisabled();
+    expect(within(nav).queryByRole("button", { name: "Add an area" })).not.toBeInTheDocument();
 
-    fetchList.mockResolvedValue({ lifeAreas: [buildLifeArea()] });
-    await userEvent.click(within(suggestions).getByRole("button", { name: "Add Work" }));
+    for (const name of ["Health", "Work", "Leisure", "Leisure"]) {
+      await userEvent.click(within(suggestions).getByRole("button", { name }));
+    }
+    expect(within(suggestions).getByRole("button", { name: "Work", pressed: true })).toBeInTheDocument();
+    expect(within(suggestions).getByRole("button", { name: "Leisure", pressed: false })).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
 
-    expect(create).toHaveBeenCalledWith(
-      { name: "Work", color: "indigo", icon: "briefcase", defaultSound: "rain" },
-      expect.anything(),
-    );
+    fetchList.mockResolvedValue({ lifeAreas: [buildLifeArea(), health] });
+    await userEvent.click(within(nav).getByRole("button", { name: "Add 2 areas" }));
+
     expect(await within(nav).findByRole("link", { name: "Work" })).toBeInTheDocument();
+    expect(create.mock.calls.map(([payload]) => payload)).toEqual([
+      { name: "Work", color: "indigo", emoji: "💼", defaultSound: "rain" },
+      { name: "Health", color: "emerald", emoji: "🩺", defaultSound: "waves" },
+    ]);
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Inbox", expect.stringContaining("Work"), expect.stringContaining("Health")]);
     expect(within(nav).queryByRole("list", { name: "Suggested areas" })).not.toBeInTheDocument();
+    expect(within(nav).getByRole("button", { name: "Add an area" })).toBeInTheDocument();
+    expect(within(nav).queryByRole("button", { name: "Suggested areas" })).not.toBeInTheDocument();
   });
 
-  it("offers only the suggestions not added yet behind the bulb", async () => {
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
-      lifeAreas: [buildLifeArea({ name: "work" }), buildLifeArea({ name: "Health" })],
-    });
+  it("lists the areas added before one that fails, and shows its error", async () => {
+    const fetchList = vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
+    vi.spyOn(lifeAreasApi, "create")
+      .mockResolvedValueOnce({ lifeArea: buildLifeArea() })
+      .mockRejectedValueOnce(new ApiError(500, "Something went wrong"));
     renderLifeAreas();
 
-    await userEvent.click(await screen.findByRole("button", { name: "Suggested areas" }));
+    const nav = screen.getByRole("navigation", { name: "Areas of life" });
+    await userEvent.click(await within(nav).findByRole("button", { name: "Work" }));
+    await userEvent.click(within(nav).getByRole("button", { name: "Health" }));
+    fetchList.mockResolvedValue({ lifeAreas: [buildLifeArea()] });
+    await userEvent.click(within(nav).getByRole("button", { name: "Add 2 areas" }));
 
-    const suggestions = await screen.findByRole("list", { name: "Suggested areas" });
-    const names = within(suggestions)
-      .getAllByRole("button")
-      .map((chip) => chip.getAttribute("aria-label"));
-    expect(names).not.toContain("Add Work");
-    expect(names).not.toContain("Add Health");
-    expect(names).toContain("Add Leisure");
+    expect(await within(nav).findByRole("link", { name: "Work" })).toBeInTheDocument();
+    expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
   });
 
   it("adds an area from the dialog and opens it", async () => {
-    const lifeArea = buildLifeArea({ name: "Garden", color: "lime", icon: "sprout", defaultSound: "wind" });
+    const lifeArea = buildLifeArea({ name: "Garden", color: "lime", emoji: "🌱", defaultSound: "wind" });
     vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
     const create = vi.spyOn(lifeAreasApi, "create").mockResolvedValue({ lifeArea });
     renderLifeAreas();
 
-    await userEvent.click(screen.getByRole("button", { name: "Add an area" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Add your own" }));
     const dialog = screen.getByRole("dialog", { name: "New area of life" });
     await userEvent.click(within(dialog).getByRole("button", { name: "Add area" }));
     expect(within(dialog).getByText("Give the area a name")).toBeInTheDocument();
@@ -157,13 +169,16 @@ describe("LifeAreas", () => {
 
     await userEvent.type(within(dialog).getByRole("textbox", { name: "Name" }), "  Garden ");
     await userEvent.click(within(dialog).getByRole("radio", { name: "Lime" }));
-    await userEvent.click(within(dialog).getByRole("radio", { name: "Sprout" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Emoji: sparkles" }));
+    await userEvent.type(screen.getByRole("searchbox", { name: "Search emojis" }), "seedling");
+    await userEvent.click(await screen.findByRole("gridcell", { name: "seedling" }));
+    expect(within(dialog).getByRole("button", { name: "Emoji: seedling" })).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole("radio", { name: "Wind" }));
     vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [lifeArea] });
     await userEvent.click(within(dialog).getByRole("button", { name: "Add area" }));
 
     expect(create).toHaveBeenCalledWith(
-      { name: "Garden", color: "lime", icon: "sprout", defaultSound: "wind" },
+      { name: "Garden", color: "lime", emoji: "🌱", defaultSound: "wind" },
       expect.anything(),
     );
     await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(areaPath(lifeArea.id)));
@@ -176,7 +191,7 @@ describe("LifeAreas", () => {
     vi.spyOn(lifeAreasApi, "create").mockRejectedValue(new ApiError(422, "Name has already been taken"));
     renderLifeAreas();
 
-    await userEvent.click(screen.getByRole("button", { name: "Add an area" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Add your own" }));
     const dialog = screen.getByRole("dialog", { name: "New area of life" });
     await userEvent.type(within(dialog).getByRole("textbox", { name: "Name" }), "Work");
     await userEvent.click(within(dialog).getByRole("button", { name: "Add area" }));
@@ -203,6 +218,57 @@ describe("LifeAreas", () => {
       { title: "Review the PRs", lifeAreaId: lifeArea.id },
       expect.anything(),
     );
+  });
+
+  it("shows how many tasks are in the Inbox and each area, and refreshes the counts when one is added", async () => {
+    const work = buildLifeArea();
+    const health = buildLifeArea({ name: "Health" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work, health] });
+    vi.spyOn(tasksApi, "create").mockResolvedValue({ task: buildTask() });
+    const fetchCounts = vi.spyOn(taskCountsApi, "fetchList").mockResolvedValue({
+      taskCounts: [
+        { lifeAreaId: null, tasksCount: 1 },
+        { lifeAreaId: work.id, tasksCount: 12 },
+      ],
+    });
+    renderLifeAreas();
+
+    const inbox = screen.getByRole("link", { name: "Inbox" });
+    await waitFor(() => expect(inbox).toHaveAccessibleDescription("1 task"));
+    expect(within(inbox).getByText("1")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Work" })).toHaveAccessibleDescription("12 tasks");
+    expect(screen.getByRole("link", { name: "Health" })).not.toHaveAccessibleDescription();
+
+    fetchCounts.mockResolvedValue({ taskCounts: [{ lifeAreaId: null, tasksCount: 2 }] });
+    await userEvent.type(screen.getByRole("textbox", { name: "New task" }), "Call the bank{Enter}");
+
+    await waitFor(() => expect(inbox).toHaveAccessibleDescription("2 tasks"));
+  });
+
+  it("leaves deleted areas out of the sidebar, and leads back to the Inbox from one", async () => {
+    const deleted = buildLifeArea({ isDeleted: true });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
+      lifeAreas: [deleted, buildLifeArea({ name: "Health" })],
+    });
+    renderLifeAreas(areaPath(deleted.id));
+
+    expect(await screen.findByRole("link", { name: "Health" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Work" })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index));
+  });
+
+  it("still shows a deleted area on a completed task in it, without offering it", async () => {
+    const deleted = buildLifeArea({ isDeleted: true });
+    const task = buildTask({ isCompleted: true, lifeAreaId: deleted.id });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [deleted] });
+    vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
+    renderLifeAreas(generatePath(routes.inbox.show, { taskId: task.id }));
+
+    await userEvent.click(await screen.findByRole("button", { name: "Area of life: Work" }));
+
+    const picker = await screen.findByRole("dialog", { name: "Areas of life" });
+    expect(within(picker).getByRole("button", { name: "Inbox" })).toHaveAttribute("aria-pressed", "false");
+    expect(within(picker).queryByRole("button", { name: "Work" })).not.toBeInTheDocument();
   });
 
   it("says so when an area has no tasks", async () => {
@@ -237,29 +303,15 @@ describe("LifeAreas", () => {
     expect(await screen.findByRole("heading", { name: "Inbox" })).toBeInTheDocument();
   });
 
-  it("searches the list by title", async () => {
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
-    const fetchTasks = vi
-      .spyOn(tasksApi, "fetchList")
-      .mockImplementation(({ searchTerm } = {}) =>
-        Promise.resolve(listOf(searchTerm ? [] : [buildTask({ title: "Call the bank" })])),
-      );
+  it("has a handle to reorder each area, but not the Inbox", async () => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
+      lifeAreas: [buildLifeArea(), buildLifeArea({ name: "Health" })],
+    });
     renderLifeAreas();
 
-    expect(await screen.findByRole("textbox", { name: "Call the bank" })).toBeInTheDocument();
-    await userEvent.type(screen.getByRole("searchbox", { name: "Search tasks" }), " dentist ");
-
-    expect(await screen.findByText("No tasks match “dentist”")).toBeInTheDocument();
-    expect(fetchTasks).toHaveBeenCalledWith({
-      isCompleted: false,
-      isInInbox: true,
-      searchTerm: "dentist",
-      page: 1,
-    });
-
-    await userEvent.type(screen.getByRole("searchbox", { name: "Search tasks" }), "{Escape}");
-
-    expect(await screen.findByRole("textbox", { name: "Call the bank" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Reorder Work" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reorder Health" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reorder Inbox" })).not.toBeInTheDocument();
   });
 
   it("edits an area from its right-click menu in the sidebar", async () => {
@@ -272,70 +324,131 @@ describe("LifeAreas", () => {
     await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
     const dialog = screen.getByRole("dialog", { name: "Edit Work" });
     expect(within(dialog).getByRole("radio", { name: "Indigo" })).toBeChecked();
-    expect(within(dialog).getByRole("radio", { name: "Briefcase" })).toBeChecked();
+    expect(within(dialog).getByRole("button", { name: "Emoji: briefcase" })).toBeInTheDocument();
     expect(within(dialog).getByRole("radio", { name: "Rain" })).toBeChecked();
 
     const name = within(dialog).getByRole("textbox", { name: "Name" });
     await userEvent.clear(name);
     await userEvent.type(name, "Career");
-    await userEvent.click(within(dialog).getByRole("radio", { name: "Keep the current sound" }));
+    await userEvent.click(within(dialog).getByRole("radio", { name: "None" }));
     await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
     expect(update).toHaveBeenCalledWith(
-      { id: lifeArea.id, name: "Career", color: "indigo", icon: "briefcase", defaultSound: "none" },
+      { id: lifeArea.id, name: "Career", color: "indigo", emoji: "💼", defaultSound: "none" },
       expect.anything(),
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("deletes an area after a second click and goes back to the Inbox", async () => {
-    const lifeArea = buildLifeArea();
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
+  const openDeleteDialog = async (name: string) => {
+    fireEvent.contextMenu(await screen.findByRole("link", { name }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+
+    return screen.getByRole("dialog", { name: `Delete ${name}?` });
+  };
+
+  const clickDelete = async (dialog: HTMLElement) => {
+    const button = within(dialog).getByRole("button", { name: "Delete area" });
+    await waitFor(() => expect(button).toBeEnabled());
+    await userEvent.click(button);
+  };
+
+  it("asks which list to move a deleted area's tasks to, and opens it", async () => {
+    const work = buildLifeArea();
+    const health = buildLifeArea({ name: "Health" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work, health] });
+    const fetchTasks = vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([buildTask()]));
     const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
-    renderLifeAreas(areaPath(lifeArea.id));
+    renderLifeAreas(areaPath(work.id));
 
     fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
     await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }));
-    const dialog = screen.getByRole("dialog", { name: "Edit Work" });
-    await userEvent.click(within(dialog).getByRole("button", { name: "Delete area" }));
+    await userEvent.click(
+      within(screen.getByRole("dialog", { name: "Edit Work" })).getByRole("button", { name: "Delete area" }),
+    );
+    const dialog = screen.getByRole("dialog", { name: "Delete Work?" });
     expect(destroy).not.toHaveBeenCalled();
-    expect(
-      within(dialog).getByText("Deleting the area moves its tasks back to the Inbox."),
-    ).toBeInTheDocument();
+    const picker = await within(dialog).findByRole("combobox", { name: "Move tasks to" });
+    expect(fetchTasks).toHaveBeenCalledWith({ isCompleted: false, lifeAreaId: work.id });
+    expect(picker).toHaveTextContent("Inbox");
+    await userEvent.click(picker);
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Inbox", "Health"]);
+    await userEvent.click(screen.getByRole("option", { name: "Health" }));
 
-    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [] });
-    await userEvent.click(within(dialog).getByRole("button", { name: "Delete area and move tasks" }));
+    vi.mocked(lifeAreasApi.fetchList).mockImplementation(async () => {
+      // A refresh takes a moment, as over a network; the router moves to the new list before it's in.
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(destroy).toHaveBeenCalledWith(lifeArea.id, expect.anything());
-    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index));
-    expect(await screen.findByText("Deleted Work. Its tasks are back in the Inbox.")).toBeInTheDocument();
+      return { lifeAreas: [health] };
+    });
+    await clickDelete(dialog);
+
+    expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: health.id }, expect.anything());
+    expect(await screen.findByText("Deleted Work and moved its tasks to Health")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(areaPath(health.id)));
   });
 
-  it("deletes an area from its right-click menu, staying on the list in view", async () => {
-    const lifeArea = buildLifeArea();
-    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [lifeArea] });
+  it("moves a deleted area's tasks to the Inbox when that's picked, staying on the list in view", async () => {
+    const work = buildLifeArea();
+    const health = buildLifeArea({ name: "Health" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work, health] });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([buildTask()]));
     const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
-    renderLifeAreas();
+    renderLifeAreas(areaPath(health.id));
 
-    fireEvent.contextMenu(await screen.findByRole("link", { name: "Work" }));
-    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
-    const dialog = screen.getByRole("dialog", { name: "Delete Work?" });
-    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    const cancelled = await openDeleteDialog("Work");
+    await userEvent.click(within(cancelled).getByRole("button", { name: "Cancel" }));
     expect(destroy).not.toHaveBeenCalled();
 
-    fireEvent.contextMenu(screen.getByRole("link", { name: "Work" }));
-    await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
-    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [] });
-    await userEvent.click(
-      within(screen.getByRole("dialog", { name: "Delete Work?" })).getByRole("button", {
-        name: "Delete area",
-      }),
-    );
+    const dialog = await openDeleteDialog("Work");
+    await within(dialog).findByRole("combobox", { name: "Move tasks to" });
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [health] });
+    await clickDelete(dialog);
 
-    expect(destroy).toHaveBeenCalledWith(lifeArea.id, expect.anything());
-    expect(await screen.findByText("Deleted Work. Its tasks are back in the Inbox.")).toBeInTheDocument();
-    expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index);
+    expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: undefined }, expect.anything());
+    expect(await screen.findByText("Deleted Work and moved its tasks to Inbox")).toBeInTheDocument();
+    expect(screen.getByTestId("path")).toHaveTextContent(areaPath(health.id));
     await waitFor(() => expect(screen.queryByRole("link", { name: "Work" })).not.toBeInTheDocument());
+  });
+
+  it("says a deleted area's tasks go to the Inbox when there's no other area", async () => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [buildLifeArea()] });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([buildTask()]));
+    renderLifeAreas();
+
+    const dialog = await openDeleteDialog("Work");
+
+    expect(await within(dialog).findByText("Its uncompleted tasks move to the Inbox.")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
+  });
+
+  it("deletes an empty area without asking where its tasks go", async () => {
+    const work = buildLifeArea();
+    const health = buildLifeArea({ name: "Health" });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [work, health] });
+    const destroy = vi.spyOn(lifeAreasApi, "destroy").mockResolvedValue({} as never);
+    renderLifeAreas(areaPath(work.id));
+
+    const dialog = await openDeleteDialog("Work");
+    expect(await within(dialog).findByText("It has no uncompleted tasks.")).toBeInTheDocument();
+    expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [health] });
+    await clickDelete(dialog);
+
+    expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: undefined }, expect.anything());
+    expect(await screen.findByText("Deleted Work")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent(routes.inbox.index));
+  });
+
+  it("shows the server's error when deleting an area fails", async () => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [buildLifeArea()] });
+    vi.spyOn(lifeAreasApi, "destroy").mockRejectedValue(new ApiError(404, "Record not found."));
+    renderLifeAreas();
+
+    const dialog = await openDeleteDialog("Work");
+    await clickDelete(dialog);
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Record not found.");
   });
 
   it("moves the open task to another area from its pane, which follows it", async () => {
@@ -350,7 +463,8 @@ describe("LifeAreas", () => {
     renderLifeAreas(generatePath(routes.inbox.show, { taskId: task.id }));
 
     const pane = await screen.findByRole("article");
-    await userEvent.click(await within(pane).findByRole("button", { name: "Area of life: Inbox" }));
+    await userEvent.click(within(pane).getByRole("button", { name: "More actions" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Move to area" }));
     const picker = await screen.findByRole("dialog", { name: "Areas of life" });
     expect(within(picker).getByRole("button", { name: "Inbox" })).toHaveAttribute("aria-pressed", "true");
     await userEvent.click(within(picker).getByRole("button", { name: "Work" }));

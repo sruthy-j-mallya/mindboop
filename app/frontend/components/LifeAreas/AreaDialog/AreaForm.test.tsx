@@ -60,7 +60,7 @@ describe("AreaForm", () => {
     await userEvent.click(screen.getByRole("radio", { name: "Waves" }));
     expect(playSound).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), "waves");
 
-    await userEvent.click(screen.getByRole("radio", { name: "Keep the current sound" }));
+    await userEvent.click(screen.getByRole("radio", { name: "None" }));
     expect(stopSound).toHaveBeenCalledTimes(1);
     expect(playSound).toHaveBeenCalledTimes(1);
 

@@ -256,7 +256,8 @@ const toTaskEvent = (task: Task): TaskEvent => ({
   task,
 });
 
-// A running session reaches up to now. Only a finished one inside the last 24 hours can be moved.
+// A running session reaches up to now. Only a manual log inside the last 24 hours can be moved: a timer or stopwatch
+// log records time the app measured.
 const toTimeLogEvent = (timeLog: TimeLog, now: number): TimeLogEvent => {
   const start = parseISO(timeLog.startedAt);
   const end = timeLog.completedAt ? parseISO(timeLog.completedAt) : new Date(now);
@@ -268,7 +269,7 @@ const toTimeLogEvent = (timeLog: TimeLog, now: number): TimeLogEvent => {
     start,
     end,
     allDay: false,
-    isEditable: !!timeLog.completedAt && isWithinLogWindow({ start, end }, now),
+    isEditable: timeLog.mode === "manual" && isWithinLogWindow({ start, end }, now),
     timeLog,
   };
 };

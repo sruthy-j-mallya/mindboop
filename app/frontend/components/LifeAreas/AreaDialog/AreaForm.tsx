@@ -2,15 +2,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { ReactNode } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
-import { NO_SOUND, SOUNDS } from "@/components/commons/Ambience/constants";
+import { SOUNDS } from "@/components/commons/Ambience/constants";
 import useSoundPreview from "@/components/commons/Ambience/useSoundPreview";
 import ChoiceField from "@/components/commons/ChoiceField";
 import FormField from "@/components/commons/FormField";
-import { LIFE_AREA_COLORS, LIFE_AREA_ICONS } from "@/components/commons/LifeArea/constants";
-import { toAreaColorStyle } from "@/components/commons/LifeArea/utils";
+import { LIFE_AREA_COLORS } from "@/components/commons/LifeArea/constants";
 import { Button } from "@/components/ui/button";
 
 import { LIFE_AREA_VALIDATION_SCHEMA, type LifeAreaFormValues } from "./constants";
+import EmojiField from "./EmojiField";
 
 type AreaFormProps = {
   initialValues: LifeAreaFormValues;
@@ -28,14 +28,13 @@ const COLOR_OPTIONS = LIFE_AREA_COLORS.map(({ id, label, value }) => ({
   content: <span className="size-5 rounded-full" style={{ background: value }} />,
 }));
 
-// An area without a sound of its own leaves the one playing as it is.
 const SOUND_OPTIONS = SOUNDS.map(({ id, label, icon: Icon }) => ({
   value: id,
-  label: id === NO_SOUND ? "Keep the current sound" : label,
+  label,
   content: <Icon className="size-4" />,
 }));
 
-// The add and edit dialogs' form: a name, a colour, an icon (shown in the colour picked) and the background sound.
+// The add and edit dialogs' form: a name, a colour, an emoji (shown on the colour picked) and the background sound.
 const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, children }: AreaFormProps) => {
   const {
     register,
@@ -47,19 +46,13 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
     resolver: zodResolver(LIFE_AREA_VALIDATION_SCHEMA),
   });
   const handleSoundChange = useSoundPreview();
-  const colorStyle = toAreaColorStyle(useWatch({ control, name: "color" }));
-  const iconOptions = LIFE_AREA_ICONS.map(({ id, label, icon: Icon }) => ({
-    value: id,
-    label,
-    style: colorStyle,
-    content: <Icon className="size-4 text-(--area-color)" />,
-  }));
+  const color = useWatch({ control, name: "color" });
 
   return (
     <form noValidate className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
       <FormField autoComplete="off" error={errors.name?.message} label="Name" {...register("name")} />
       <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
-      <ChoiceField legend="Icon" options={iconOptions} registration={register("icon")} />
+      <EmojiField color={color} control={control} />
       <ChoiceField
         hint="Plays when you start a session on one of the area’s tasks. Pick one to hear a few seconds."
         legend="Background sound"

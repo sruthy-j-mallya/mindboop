@@ -5,7 +5,7 @@ class CreateRoutines < ActiveRecord::Migration[8.1]
       t.string :title, null: false
       t.string :icon, null: false
       t.string :color, null: false
-      # The background sound a session on the routine starts with ("none" keeps the one picked last).
+      # The background sound a session on the routine starts with ("none" is silence).
       t.string :sound, null: false, default: "none"
       t.integer :duration_minutes, null: false
       # "HH:MM" in the browser's time zone; without one, the routine has no reminder.

@@ -17,11 +17,7 @@ const BoardHeading = ({ id, lifeArea }: BoardHeadingProps) => {
 
   return (
     <div className="flex items-center gap-3">
-      <LifeAreaBadge
-        className="size-8 rounded-lg [&_svg]:size-4.5"
-        color={lifeArea.color}
-        icon={lifeArea.icon}
-      />
+      <LifeAreaBadge className="size-8 rounded-lg text-lg" color={lifeArea.color} emoji={lifeArea.emoji} />
       <h1 className="min-w-0 truncate text-2xl font-semibold" id={id}>
         {lifeArea.name}
       </h1>

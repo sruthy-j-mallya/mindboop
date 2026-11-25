@@ -8,6 +8,7 @@ import { ApiError } from "@/apis/axios";
 import breaksApi from "@/apis/breaks";
 import checklistItemsApi from "@/apis/checklist_items";
 import currentTimeLogsApi from "@/apis/current_time_logs";
+import lifeAreasApi from "@/apis/life_areas";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
 import routinesApi from "@/apis/routines";
 import tasksApi from "@/apis/tasks";
@@ -172,17 +173,43 @@ describe("Timer", () => {
   it("shows the task and its steps", async () => {
     renderTimer(TIME_LOG);
 
-    expect(await screen.findByRole("heading", { name: "Draft permission" })).toBeVisible();
+    expect(await screen.findByRole("heading", { level: 1, name: "Draft permission" })).toBeVisible();
     expect(screen.getByRole("checkbox", { name: "Camera statistics" })).not.toBeChecked();
     expect(screen.getByRole("checkbox", { name: "Cuba economics" })).toBeChecked();
   });
 
-  it("offers the task's due date and estimate, but not deleting it", async () => {
+  it("offers the task's title, due date, estimate and area, but not completing, starting or deleting it", async () => {
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({
+      lifeAreas: [
+        {
+          id: crypto.randomUUID(),
+          name: "Work",
+          color: "teal",
+          emoji: "💼",
+          defaultSound: "none",
+          isDeleted: false,
+          createdAt: STARTED_AT,
+          updatedAt: STARTED_AT,
+        },
+      ],
+    });
     renderTimer(TIME_LOG, { ...TASK, estimatedMinutes: null });
 
-    expect(await screen.findByRole("button", { name: "Due date" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Estimate" })).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Delete task" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("textbox", { name: "Task title" })).toHaveValue("Draft permission");
+    expect(screen.queryByRole("checkbox", { name: "Mark as complete" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "On the clock" })).not.toBeInTheDocument();
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    expect(screen.getByRole("menuitem", { name: "Add due date" })).toBeVisible();
+    expect(screen.getByRole("menuitem", { name: "Add estimate" })).toBeVisible();
+    expect(await screen.findByRole("menuitem", { name: "Move to area" })).toBeVisible();
+    expect(screen.queryByRole("menuitem", { name: "Delete task" })).not.toBeInTheDocument();
+  });
+
+  it("hides the menu when there's nothing left to add", async () => {
+    renderTimer(TIME_LOG, { ...TASK, estimatedMinutes: 30, isAllDay: true, startsAt: STARTED_AT });
+
+    expect(await screen.findByRole("button", { name: "30 min" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "More actions" })).not.toBeInTheDocument();
   });
 
   it("sets the due date from the task details", async () => {
@@ -190,7 +217,8 @@ describe("Timer", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: TASK });
     renderTimer(TIME_LOG);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Due date" }));
+    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Add due date" }));
     const tomorrow = addDays(new Date(), 1);
     await userEvent.click(
       screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
@@ -252,7 +280,7 @@ describe("Timer", () => {
   it("leaves out the breadcrumbs when the task has none", async () => {
     renderTimer(TIME_LOG);
 
-    expect(await screen.findByRole("heading", { name: "Draft permission" })).toBeVisible();
+    expect(await screen.findByRole("heading", { level: 1, name: "Draft permission" })).toBeVisible();
     expect(screen.queryByRole("region", { name: "Breadcrumbs" })).not.toBeInTheDocument();
   });
 
@@ -288,27 +316,28 @@ describe("Timer", () => {
       expect(step).not.toBeChecked();
     });
 
-    it("offers the add button only while the task has no steps", async () => {
+    it("offers to add a step only while the task has no steps", async () => {
       renderTimer(TIME_LOG);
 
       expect(await screen.findByRole("checkbox", { name: FIRST_ITEM.title })).toBeVisible();
-      expect(screen.queryByRole("button", { name: "Add step" })).not.toBeInTheDocument();
+      await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+      expect(screen.queryByRole("menuitem", { name: "Add step" })).not.toBeInTheDocument();
     });
 
-    it("adds the first step from the button beside the title", async () => {
+    it("adds the first step from the menu beside the title", async () => {
       const newItem = { id: "0c3f7a24-5e6b-4a8d-b9cb-3e4f5a6b7c8d", title: "Conclusion", isCompleted: false };
       const create = vi
         .spyOn(checklistItemsApi, "create")
         .mockResolvedValue({ task: { ...TASK, checklistItems: [newItem] } });
       renderTimer(TIME_LOG, { ...TASK, checklistItems: [] });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Add step" }));
+      await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+      await userEvent.click(screen.getByRole("menuitem", { name: "Add step" }));
       await userEvent.keyboard("Conclusion{Enter}");
 
       expect(create).toHaveBeenCalledWith({ taskId: TASK.id, title: "Conclusion" }, expect.anything());
       expect(await screen.findByRole("checkbox", { name: "Conclusion" })).not.toBeChecked();
       expect(screen.getByRole("textbox", { name: "New step" })).toHaveFocus();
-      expect(screen.queryByRole("button", { name: "Add step" })).not.toBeInTheDocument();
     });
 
     it("shows a step added below another at once, at its place", async () => {
@@ -330,23 +359,12 @@ describe("Timer", () => {
       expect(screen.getByRole("textbox", { name: "New step" })).toHaveFocus();
     });
 
-    it("opens the first step row below the add button, which stays until a step is saved", async () => {
-      renderTimer(TIME_LOG, { ...TASK, checklistItems: [] });
-
-      const addButton = await screen.findByRole("button", { name: "Add step" });
-      await userEvent.click(addButton);
-      const newStep = screen.getByRole("textbox", { name: "New step" });
-
-      expect(newStep).toHaveFocus();
-      expect(addButton.compareDocumentPosition(newStep)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-      expect(screen.getByRole("button", { name: "Add step" })).toBeVisible();
-    });
-
     it("takes a new step back out when saving it fails", async () => {
       vi.spyOn(checklistItemsApi, "create").mockRejectedValue(new ApiError(500, "Something went wrong"));
       renderTimer(TIME_LOG, { ...TASK, checklistItems: [] });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Add step" }));
+      await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
+      await userEvent.click(screen.getByRole("menuitem", { name: "Add step" }));
       await userEvent.keyboard("Conclusion{Enter}");
 
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
@@ -413,7 +431,7 @@ describe("Timer", () => {
 
       await makeBulletList();
       expect(update).not.toHaveBeenCalled();
-      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
+      await userEvent.click(screen.getByRole("heading", { level: 1, name: "Draft permission" }));
 
       expect(update).toHaveBeenCalledOnce();
       expect(update).toHaveBeenCalledWith(
@@ -443,7 +461,7 @@ describe("Timer", () => {
       renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
       await userEvent.click(await screen.findByRole("textbox", { name: "Description" }));
-      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
+      await userEvent.click(screen.getByRole("heading", { level: 1, name: "Draft permission" }));
 
       expect(update).not.toHaveBeenCalled();
     });
@@ -453,7 +471,7 @@ describe("Timer", () => {
       renderTimer(TIME_LOG, { ...TASK, description: DESCRIPTION });
 
       await makeBulletList();
-      await userEvent.click(screen.getByRole("heading", { name: "Draft permission" }));
+      await userEvent.click(screen.getByRole("heading", { level: 1, name: "Draft permission" }));
 
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
       expect(
@@ -709,7 +727,7 @@ describe("Timer", () => {
         expect.anything(),
       );
       expect(await screen.findByRole("timer")).toBeVisible();
-      expect(screen.getByRole("heading", { name: TASK.title })).toBeVisible();
+      expect(screen.getByRole("heading", { level: 1, name: TASK.title })).toBeVisible();
       expect(screen.getByRole("region", { name: "Parking lot" })).toBeVisible();
     });
 

@@ -260,7 +260,7 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
 
   def test_that_update_moves_a_session_of_a_deleted_task
     freeze_time
-    time_log = create(:time_log, task: @task, started_at: 6.hours.ago, completed_at: 5.hours.ago)
+    time_log = create(:time_log, :manual, user: @user, task: @task, started_at: 6.hours.ago, completed_at: 5.hours.ago)
     @task.discard!
     sign_in @user
 
@@ -286,8 +286,25 @@ class Api::TimeLogsControllerTest < ActionDispatch::IntegrationTest
     patch api_time_log_path(@time_log), params: { started_at: 2.hours.ago, completed_at: 1.hour.ago }, as: :json
 
     assert_response :unprocessable_content
-    assert_equal "Only a finished session can be moved.", response.parsed_body["error"]
+    assert_equal "Only a manually logged session can be moved.", response.parsed_body["error"]
     assert_nil @time_log.reload.completed_at
+  end
+
+  def test_that_update_rejects_a_finished_timer_or_stopwatch_session
+    freeze_time
+    timer_log = create(:time_log, task: @task, mode: "timer", timer_preset: 25, started_at: 6.hours.ago,
+      completed_at: 5.hours.ago)
+    stopwatch_log = create(:time_log, task: @task, started_at: 4.hours.ago, completed_at: 3.hours.ago)
+    sign_in @user
+
+    [ timer_log, stopwatch_log ].each do |time_log|
+      patch api_time_log_path(time_log), params: { started_at: 2.hours.ago, completed_at: 1.hour.ago }, as: :json
+
+      assert_response :unprocessable_content
+      assert_equal "Only a manually logged session can be moved.", response.parsed_body["error"]
+    end
+    assert_equal 6.hours.ago, timer_log.reload.started_at
+    assert_equal 4.hours.ago, stopwatch_log.reload.started_at
   end
 
   def test_that_create_rejects_a_session_while_another_is_running
