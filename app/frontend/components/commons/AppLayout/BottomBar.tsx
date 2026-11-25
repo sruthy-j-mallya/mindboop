@@ -1,5 +1,5 @@
 import { cn } from "cn";
-import { CalendarDays, House, Inbox, Menu, Timer } from "lucide-react";
+import { CalendarDays, House, Menu, SquareCheckBig, Timer } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import { useSidebar } from "@/components/ui/sidebar";
@@ -9,7 +9,7 @@ import { findBottomBarPath } from "./utils";
 
 const LINKS = [
   { path: routes.root, label: "Home", icon: House },
-  { path: routes.inbox.index, label: "Tasks", icon: Inbox },
+  { path: routes.inbox.index, label: "Tasks", icon: SquareCheckBig },
   { path: routes.timer, label: "Timer", icon: Timer },
   { path: routes.calendar, label: "Calendar", icon: CalendarDays },
 ];

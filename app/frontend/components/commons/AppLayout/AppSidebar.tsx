@@ -1,4 +1,4 @@
-import { Boxes, CalendarDays, House, LogOut, Search, Settings, SunMoon, Timer } from "lucide-react";
+import { CalendarDays, House, LogOut, Search, Settings, SquareCheckBig, SunMoon, Timer } from "lucide-react";
 import { Link, useLocation, useMatch } from "react-router";
 
 import {
@@ -61,14 +61,10 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isInboxActive || isLifeAreaActive}
-                  tooltip="Areas of life"
-                >
+                <SidebarMenuButton asChild isActive={isInboxActive || isLifeAreaActive} tooltip="Tasks">
                   <Link to={routes.inbox.index} onClick={handleNavigate}>
-                    <Boxes />
-                    <span>Areas of life</span>
+                    <SquareCheckBig />
+                    <span>Tasks</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

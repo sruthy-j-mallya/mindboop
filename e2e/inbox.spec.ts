@@ -33,7 +33,7 @@ const addTasks = async (page: Page, titles: string[]) => {
 test("add tasks to the Inbox, open one, and complete it", async ({ page }) => {
   await signUp(page);
 
-  await page.getByRole("link", { name: "Areas of life" }).click();
+  await page.getByRole("link", { name: "Tasks", exact: true }).click();
   await expect(page).toHaveURL("/inbox");
   await expect(page.getByText("Your Inbox is empty")).toBeVisible();
 

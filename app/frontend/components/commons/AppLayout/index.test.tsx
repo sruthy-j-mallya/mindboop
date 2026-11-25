@@ -95,7 +95,7 @@ describe("AppLayout", () => {
     });
     renderWithProviders(<AppLayout />, undefined, "/areas/some-area");
 
-    await waitFor(() => expect(document.title).toBe("24:00 · Areas of life · Mindboop"));
+    await waitFor(() => expect(document.title).toBe("24:00 · Tasks · Mindboop"));
   });
 
   describe("on phones", () => {
@@ -179,14 +179,14 @@ describe("AppLayout", () => {
 
     expect(content.getAllByRole("link").map((link) => link.textContent)).toEqual([
       "Home",
-      "Areas of life",
+      "Tasks",
       "Calendar",
       "Routines",
       "Timer",
       "Parking lot",
     ]);
     expect(content.getByRole("link", { name: "Home" })).toHaveAttribute("href", routes.root);
-    expect(content.getByRole("link", { name: "Areas of life" })).toHaveAttribute("href", routes.inbox.index);
+    expect(content.getByRole("link", { name: "Tasks" })).toHaveAttribute("href", routes.inbox.index);
     expect(content.getByRole("link", { name: "Calendar" })).toHaveAttribute("href", routes.calendar);
     expect(content.getByRole("link", { name: "Timer" })).toHaveAttribute("href", routes.timer);
     expect(content.getByRole("link", { name: "Parking lot" })).toHaveAttribute("href", routes.parkingLot);
