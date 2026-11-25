@@ -121,7 +121,7 @@ const QuickStartForm = ({ isBeginning, error, onBegin }: QuickStartFormProps) =>
         )}
         <Button className="h-12 w-full text-base" disabled={isBeginning} type="submit">
           <Play />
-          Begin
+          Start
         </Button>
       </div>
     </form>

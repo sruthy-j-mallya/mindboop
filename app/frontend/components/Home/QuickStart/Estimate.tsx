@@ -39,7 +39,7 @@ const Estimate = ({ control }: EstimateProps) => {
   return (
     <div className="flex flex-col gap-3">
       <p id="estimate-label" className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-        Estimate
+        Focus for
       </p>
       <div aria-labelledby="estimate-label" className="flex gap-2" role="group">
         {TIMER_PRESETS.map((minutes) => (

@@ -133,7 +133,7 @@ test("write a formatted description and see it on the timer", async ({ page }) =
   await page.getByRole("textbox", { name: "Link address" }).fill("example.com");
   await page.getByRole("button", { name: "Apply" }).click();
   await page.getByRole("button", { name: "10 min" }).click();
-  await page.getByRole("button", { name: "Begin" }).click();
+  await page.getByRole("button", { name: "Start", exact: true }).click();
 
   await expect(page).toHaveURL("/timer");
   const shown = page.getByRole("region", { name: "Description" });
@@ -225,7 +225,7 @@ test("keep an unstarted task through a reload, and start fresh after beginning i
   await expect(description.locator("strong")).toHaveText("sources");
   await expect(page.getByRole("checkbox", { name: "Outline" })).toBeChecked();
 
-  await page.getByRole("button", { name: "Begin" }).click();
+  await page.getByRole("button", { name: "Start", exact: true }).click();
   await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("timer")).toBeVisible();
   await page.goto("/");

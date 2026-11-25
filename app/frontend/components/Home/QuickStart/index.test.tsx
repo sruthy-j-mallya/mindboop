@@ -20,7 +20,7 @@ const CUSTOM_LABEL = /set your own/i;
 const CUSTOM_ERROR = /pick a preset or enter/i;
 const TITLE_ERROR = /say what you want to get done/i;
 
-const beginSession = () => userEvent.click(screen.getByRole("button", { name: "Begin" }));
+const beginSession = () => userEvent.click(screen.getByRole("button", { name: "Start" }));
 const listedSteps = () =>
   within(screen.getByRole("list", { name: "Steps" }))
     .getAllByRole("listitem")
@@ -131,7 +131,7 @@ describe("QuickStart", () => {
     renderWithTimerRoute();
 
     const link = await screen.findByRole("link", { name: "Return to timer" });
-    expect(screen.queryByRole("button", { name: "Begin" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start" })).not.toBeInTheDocument();
     expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toContain("Draft submitted");
 
     await userEvent.click(link);

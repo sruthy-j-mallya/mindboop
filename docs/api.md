@@ -215,7 +215,7 @@ sessions don't.
 
 ## Quick starts
 
-`POST /api/quick_starts` creates a task and starts a timer on it, in one transaction. It's what Begin on the Home
+`POST /api/quick_starts` creates a task and starts a timer on it, in one transaction. It's what Start on the Home
 page calls. `POST /api/tasks` and `POST /api/time_logs` still do each step on its own.
 
 - It accepts `title`, `description`, `estimated_minutes` and `checklist_items_attributes`, with the same rules as
