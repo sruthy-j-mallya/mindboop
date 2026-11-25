@@ -80,3 +80,12 @@ export const getPageTitle = (pathname: string, timeLog: TimeLog | null | undefin
 
   return `${clock} · ${title}`;
 };
+
+// The page of the bottom bar a path belongs to: an area's tasks are under Tasks. Other pages are under More.
+export const findBottomBarPath = (pathname: string) => {
+  if (matchPath({ path: routes.lifeAreas.index, end: false }, pathname)) return routes.inbox.index;
+
+  return [routes.root, routes.inbox.index, routes.timer, routes.calendar].find((path) =>
+    matchPath({ path, end: path === routes.root }, pathname),
+  );
+};

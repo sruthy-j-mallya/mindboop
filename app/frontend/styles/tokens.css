@@ -25,6 +25,9 @@
   --brand-beige: #e5c9a8;
   --brand-yellow: #ffc757;
 
+  /* The bar of pages at the bottom of phones */
+  --bottom-bar-height: 3.75rem;
+
   /* Radius */
   --radius: 0.75rem;
 

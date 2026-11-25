@@ -7,7 +7,9 @@ import { Toaster } from "@/components/ui/sonner";
 import useApplyTheme from "@/hooks/useApplyTheme";
 
 import AppSidebar from "./AppSidebar";
+import BottomBar from "./BottomBar";
 import BreakAlarm from "./BreakAlarm";
+import { TOAST_MOBILE_OFFSET } from "./constants";
 import CuriosityAlarm from "./CuriosityAlarm";
 import CurrentSession from "./CurrentSession";
 import GlobalSearch from "./GlobalSearch";
@@ -30,21 +32,23 @@ const AppLayout = () => {
   return (
     <SidebarProvider open={isOpen} onOpenChange={handleOpenChange}>
       <AppSidebar onSearchOpen={handleSearchOpen} />
-      <SidebarInset>
+      <SidebarInset className="max-md:pb-(--bottom-bar-height)">
+        {/* On phones the bottom bar leads to the sidebar instead. */}
         <header className="flex items-center p-2">
-          <SidebarTrigger />
+          <SidebarTrigger className="max-md:hidden" />
         </header>
         <BreakAlarm />
         <CuriosityAlarm />
         <Outlet />
       </SidebarInset>
+      <BottomBar />
       <PageTitle />
       <CurrentSession />
       <RoutineReminders />
       {/* Outside the sidebar, which unmounts its content on narrow screens when it closes. */}
       <GlobalSearch isOpen={isSearchOpen} onOpenChange={setIsSearchOpen} />
       {/* Bottom centre, clear of the mini timer in the bottom-right corner. */}
-      <Toaster position="bottom-center" />
+      <Toaster mobileOffset={{ bottom: TOAST_MOBILE_OFFSET }} position="bottom-center" />
     </SidebarProvider>
   );
 };

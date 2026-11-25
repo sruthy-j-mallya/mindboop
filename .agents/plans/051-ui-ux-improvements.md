@@ -33,7 +33,7 @@ Tick an issue in the commit that fixes it.
 ## P1: High impact
 
 - [ ] 7. Start the sidebar expanded on desktop
-- [ ] 8. Add a bottom bar on phones: Home, Tasks, Timer, Calendar, More
+- [x] 8. Add a bottom bar on phones: Home, Tasks, Timer, Calendar, More
 - [ ] 9. Rename the "Areas of life" link "Tasks", as it opens the Inbox
 - [ ] 10. Move Sign out into an account section in Settings
 - [ ] 11. ⌘K opens search (the editor keeps it for links), plus a quick capture shortcut

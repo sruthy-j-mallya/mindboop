@@ -98,6 +98,24 @@ describe("AppLayout", () => {
     await waitFor(() => expect(document.title).toBe("24:00 · Areas of life · Mindboop"));
   });
 
+  describe("on phones", () => {
+    beforeEach(() => vi.stubGlobal("innerWidth", 390));
+
+    afterEach(() => vi.stubGlobal("innerWidth", 1024));
+
+    it("has a bar of the main pages, with the rest in the sidebar under More", async () => {
+      renderWithProviders(<AppLayout />, undefined, routes.calendar);
+
+      const bar = within(await screen.findByRole("navigation", { name: "Main pages" }));
+      expect(bar.getByRole("link", { name: "Calendar" })).toHaveAttribute("aria-current", "page");
+      expect(bar.getByRole("link", { name: "Tasks" })).toHaveAttribute("href", routes.inbox.index);
+
+      await userEvent.click(bar.getByRole("button", { name: "More" }));
+
+      expect(await screen.findByRole("link", { name: "Settings" })).toBeVisible();
+    });
+  });
+
   it("reminds about a routine once on its day, with a way to start it", async () => {
     localStorage.removeItem("routines.remindedOn");
     const now = new Date();

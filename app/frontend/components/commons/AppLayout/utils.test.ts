@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isReminderDue } from "./utils";
+import { findBottomBarPath, isReminderDue } from "./utils";
 
 // Thursday 19 November 2026, local time.
 const at = (hours: number, minutes: number) => new Date(2026, 10, 19, hours, minutes);
@@ -18,5 +18,15 @@ describe("isReminderDue", () => {
   it("isn't due on other days, or without a time", () => {
     expect(isReminderDue({ ...reminder, reminderDays: [1, 5] }, at(8, 45))).toBe(false);
     expect(isReminderDue({ reminderTime: null, reminderDays: [] }, at(8, 45))).toBe(false);
+  });
+});
+
+describe("findBottomBarPath", () => {
+  it("finds the page a path belongs to", () => {
+    expect(findBottomBarPath("/")).toBe("/");
+    expect(findBottomBarPath("/inbox/some-task")).toBe("/inbox");
+    expect(findBottomBarPath("/areas/some-area/some-task")).toBe("/inbox");
+    expect(findBottomBarPath("/calendar")).toBe("/calendar");
+    expect(findBottomBarPath("/settings")).toBeUndefined();
   });
 });
