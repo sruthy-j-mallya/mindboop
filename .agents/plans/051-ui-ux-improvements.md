@@ -66,7 +66,7 @@ Tick an issue in the commit that fixes it.
 - [x] 35. Skeletons while Home, lists and panes load
 - [x] 36. Respect `prefers-reduced-motion`
 - [x] 37. One look for "selected" (now yellow, coral, purple and grey)
-- [ ] 38. One look for Start (now a square icon, pill, triangle and bar)
+- [x] 38. One look for Start (now a square icon, pill, triangle and bar)
 - [ ] 39. One word each for Begin, Start, Resume; "Focus for" instead of "Estimate" where it sets the timer
 
 ## P3: Polish

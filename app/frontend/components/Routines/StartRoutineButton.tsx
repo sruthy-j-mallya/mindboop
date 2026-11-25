@@ -1,3 +1,4 @@
+import { cn } from "cn";
 import { Play, Timer } from "lucide-react";
 
 import type { Routine } from "@/apis/types";
@@ -21,7 +22,7 @@ const StartRoutineButton = ({ routine, hasLabel = false }: StartRoutineButtonPro
   return (
     <Button
       aria-label={hasLabel ? undefined : `${label}: ${routine.title}`}
-      className="shrink-0 rounded-full"
+      className={cn("shrink-0", !hasLabel && "text-primary")}
       disabled={isStarting}
       size={hasLabel ? "sm" : "icon-sm"}
       title={hasLabel ? undefined : label}
@@ -29,7 +30,7 @@ const StartRoutineButton = ({ routine, hasLabel = false }: StartRoutineButtonPro
       variant={hasLabel ? "default" : "ghost"}
       onClick={handleClick}
     >
-      {isOnTheClock ? <Timer /> : <Play className={hasLabel ? undefined : "fill-current text-primary"} />}
+      {isOnTheClock ? <Timer /> : <Play />}
       {hasLabel && label}
     </Button>
   );

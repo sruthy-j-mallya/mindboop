@@ -37,9 +37,10 @@ const ResumableRow = ({ task, isOnTheClock, isDisabled, onStart }: StartableRowP
       <Button
         aria-label={`${label}: ${task.title}`}
         disabled={isDisabled}
+        className="text-primary"
         size="sm"
         type="button"
-        variant="secondary"
+        variant="ghost"
         onClick={handleResume}
       >
         {isOnTheClock ? <Timer /> : <Play />}
