@@ -241,6 +241,11 @@ export type CreateParkingLotItemPayload = Pick<ParkingLotItem, "content"> &
 export type UpdateParkingLotItemPayload = Pick<ParkingLotItem, "id"> &
   Partial<Pick<ParkingLotItem, "content" | "status">>;
 
+// A bulk action on the Parking lot page names its items by `ids`; every one must be the user's, or nothing changes.
+export type UpdateParkingLotItemBatchPayload = { ids: string[] } & Pick<ParkingLotItem, "status">;
+
+export type ParkingLotItemBatchResponse = { parkingLotItems: ParkingLotItem[] };
+
 // The task's schedule is optional; without one the task lands in the Inbox undated.
 export type ConvertParkingLotItemPayload = { parkingLotItemId: string } & Partial<
   Pick<Task, "isDuration" | "isAllDay" | "startsAt" | "endsAt">

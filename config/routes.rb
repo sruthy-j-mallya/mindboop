@@ -30,6 +30,10 @@ Rails.application.routes.draw do
       resource :conversion, only: :create, controller: "parking_lot_item_conversions"
       resource :restoration, only: :create, controller: "parking_lot_item_restorations"
     end
+    # Bulk actions on the Parking lot page: `ids` names the items.
+    resource :parking_lot_item_batch, only: %i[ update destroy ] do
+      resource :restoration, only: :create, controller: "parking_lot_item_batch_restorations"
+    end
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

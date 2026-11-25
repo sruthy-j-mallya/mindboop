@@ -72,6 +72,9 @@ Every error response has one shape:
 | DELETE | `/api/parking_lot_items/:id`              | –                                                                                                   | 204, soft delete                    |
 | POST   | `/api/parking_lot_items/:id/conversion`   | Task schedule fields (optional)                                                                     | 201, adds a task                    |
 | POST   | `/api/parking_lot_items/:id/restoration`  | –                                                                                                   | 201, undoes discard                 |
+| PATCH  | `/api/parking_lot_item_batch`             | `ids`, `status`                                                                                     | 200 `{ parking_lot_items }`         |
+| DELETE | `/api/parking_lot_item_batch`             | `ids`                                                                                               | 204, soft deletes them all          |
+| POST   | `/api/parking_lot_item_batch/restoration` | `ids`                                                                                               | 201 `{ parking_lot_items }`         |
 | GET    | `/api/curiosity_time`                     | –                                                                                                   | 200 `{ parking_lot_item }`          |
 | POST   | `/api/curiosity_time`                     | `parking_lot_item_id`                                                                               | 201 `{ parking_lot_item }`          |
 | PATCH  | `/api/curiosity_time`                     | –                                                                                                   | 200, adds more time once            |
@@ -240,6 +243,17 @@ total_pages }`. `status` lists one status. `time_log_id` lists the items parked 
 - `DELETE` soft-deletes (discards) the item. `POST /api/parking_lot_items/:id/restoration` brings it back; an item that
   isn't discarded gets a 404.
 - Marking an item addressed, converting it or discarding it ends its curiosity time.
+
+### Bulk actions
+
+`/api/parking_lot_item_batch` acts on several items at once (the Parking lot page's bulk actions). `ids` (a JSON array)
+names them, and the request changes all of them or none.
+
+- `PATCH` sets every item's `status`, with the same rules as `PATCH /api/parking_lot_items/:id`. One invalid item gets
+  a 422 and nothing changes.
+- `DELETE` soft-deletes (discards) every item. `POST /api/parking_lot_item_batch/restoration` brings them back.
+- Missing or empty `ids` gets a 400. An unknown id (or one that's discarded; for the restoration, one that isn't) gets a
+  404, and another user's item a 403.
 
 ### Curiosity time
 
