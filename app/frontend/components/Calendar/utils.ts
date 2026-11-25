@@ -36,6 +36,7 @@ import {
   CALENDAR_VIEWS,
   DAY_COUNT_STORAGE_KEY,
   DEFAULT_MULTI_DAY_COUNT,
+  DEFAULT_PHONE_VIEW,
   DEFAULT_TASK_MINUTES,
   DEFAULT_VIEW,
   EVENT_CLASS_NAMES,
@@ -43,6 +44,7 @@ import {
   INITIAL_WHEEL_GESTURE,
   MOVE_ERRORS,
   MULTI_DAY_COUNT_OPTIONS,
+  PHONE_LAYOUT_QUERY,
   SELECTION_ERRORS,
   SLOT_MINUTES,
   TIME_LOG_WINDOW_HOURS,
@@ -74,8 +76,9 @@ const MILLISECONDS_PER_MINUTE = 60_000;
 // The view last picked, or the default when none was kept (or what was kept is no longer a view).
 export const readStoredView = (): CalendarView => {
   const stored = readStorage(VIEW_STORAGE_KEY);
+  const defaultView = window.matchMedia(PHONE_LAYOUT_QUERY).matches ? DEFAULT_PHONE_VIEW : DEFAULT_VIEW;
 
-  return VIEW_OPTIONS.find(({ value }) => value === stored)?.value ?? DEFAULT_VIEW;
+  return VIEW_OPTIONS.find(({ value }) => value === stored)?.value ?? defaultView;
 };
 
 // The multi-day view's day count last picked, or the default when none was kept (or it's no longer offered).
@@ -104,13 +107,14 @@ export const getLocalizer = (weekStartsOn: WeekStartsOn) =>
   });
 
 // How react-big-calendar writes its dates and times: the way the rest of the app does.
-export const getFormats = (timeFormat: TimeFormat): Formats => ({
+export const getFormats = (timeFormat: TimeFormat, isPhone = false): Formats => ({
   timeGutterFormat: (date: Date) => formatTime(date, timeFormat),
   eventTimeRangeFormat: ({ start, end }: DateRange) => formatTimeRange(start, end, timeFormat),
   eventTimeRangeStartFormat: ({ start }: DateRange) => `${formatTime(start, timeFormat)} –`,
   eventTimeRangeEndFormat: ({ end }: DateRange) => `– ${formatTime(end, timeFormat)}`,
   selectRangeFormat: ({ start, end }: DateRange) => formatTimeRange(start, end, timeFormat),
-  dayFormat: "EEE d",
+  // "Mon 23", or "M 23" where the columns are narrow.
+  dayFormat: isPhone ? "EEEEE d" : "EEE d",
   dayHeaderFormat: formatLongDate,
   dayRangeHeaderFormat: ({ start, end }: DateRange) => formatDayRange(start, end),
 });

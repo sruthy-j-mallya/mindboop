@@ -14,6 +14,7 @@ import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
 import useDatePreferences from "@/hooks/useDatePreferences";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { writeStorage } from "@/utils/storage";
 
 import {
@@ -21,6 +22,7 @@ import {
   DAY_COUNT_STORAGE_KEY,
   EVENT_KINDS,
   NOW_REFRESH_INTERVAL,
+  PHONE_LAYOUT_QUERY,
   SCROLL_BACK_HOURS,
   SLOT_CLASS_NAMES,
   SLOT_MINUTES,
@@ -79,7 +81,8 @@ const Calendar = () => {
   const { data: preference, isPending: isPreferencePending } = useUserPreference();
   const weekStartsOn = preference?.weekStartsOn ?? DEFAULT_WEEK_STARTS_ON;
   const { timeFormat } = useDatePreferences();
-  const formats = useMemo(() => getFormats(timeFormat), [timeFormat]);
+  const isPhone = useMediaQuery(PHONE_LAYOUT_QUERY);
+  const formats = useMemo(() => getFormats(timeFormat, isPhone), [timeFormat, isPhone]);
   const localizer = useMemo(() => getLocalizer(weekStartsOn), [weekStartsOn]);
   const params = useMemo(() => {
     const { start, end } = getVisibleRange(view, date, dayCount, weekStartsOn);
@@ -163,7 +166,10 @@ const Calendar = () => {
         </p>
       )}
       {/* The wrapper stays mounted while the preference loads, so useWheelPaging finds it on the first render. */}
-      <div ref={calendarRef} className="calendar h-[calc(100svh-5rem)] min-h-[36rem]">
+      <div
+        ref={calendarRef}
+        className="calendar h-[calc(100svh-5rem)] min-h-[36rem] max-md:h-[calc(100svh-6rem)] max-md:min-h-[28rem]"
+      >
         {!isPreferencePending && (
           <DragAndDropCalendar
             popup

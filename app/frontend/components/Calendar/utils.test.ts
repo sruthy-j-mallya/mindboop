@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Task, TimeLog } from "@/apis/types";
 
@@ -87,6 +87,16 @@ describe("readStoredView and readStoredDayCount", () => {
 
     expect(readStoredView()).toBe(CALENDAR_VIEWS.MONTH);
     expect(readStoredDayCount()).toBe(5);
+  });
+
+  it("opens on a day on phones, unless another view was picked", () => {
+    vi.spyOn(window, "matchMedia").mockReturnValue({ matches: true } as MediaQueryList);
+
+    expect(readStoredView()).toBe(CALENDAR_VIEWS.DAY);
+    localStorage.setItem(VIEW_STORAGE_KEY, CALENDAR_VIEWS.WEEK);
+    expect(readStoredView()).toBe(CALENDAR_VIEWS.WEEK);
+
+    vi.restoreAllMocks();
   });
 
   it("falls back to the defaults when nothing, or nothing valid, was kept", () => {
