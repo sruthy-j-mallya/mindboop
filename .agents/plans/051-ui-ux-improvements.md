@@ -81,7 +81,7 @@ Tick an issue in the commit that fixes it.
 - [x] 47. Step rows: reveal the delete icon on hover
 - [x] 48. Empty panes: the mascot and a next action
 - [x] 49. A first-run checklist
-- [ ] 50. Sign in: one-line description, autofocus, "Forgot password?" by its field
+- [x] 50. Sign in: one-line description, autofocus, "Forgot password?" by its field
 
 ## Decisions
 
