@@ -69,6 +69,12 @@ export type TaskCount = { lifeAreaId: string | null; tasksCount: number };
 
 export type TaskCountListResponse = { taskCounts: TaskCount[] };
 
+// The bounds of the user's day: its start and the next one's.
+export type HomeTasksParams = { from: string; to: string };
+
+// The Home page's lists of open tasks. `today` and `overdue` never share one; `resumable` can repeat either's.
+export type HomeTasksResponse = { today: Task[]; overdue: Task[]; resumable: Task[] };
+
 type TaskFields = Pick<Task, "title"> &
   Partial<
     Pick<

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { Task } from "@/apis/types";
+import RunningSession from "@/components/commons/SwitchSessionDialog/RunningSession";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DISCARD_BELOW_MINUTES } from "@/constants";
@@ -8,8 +9,6 @@ import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import { useDeleteTimeLog } from "@/hooks/reactQuery/useTimeLogsApi";
 import useDeleteTaskWithUndo from "@/hooks/useDeleteTaskWithUndo";
 import { isTooShortToKeep } from "@/utils/timeLogs";
-
-import RunningSession from "./SwitchSessionDialog/RunningSession";
 
 type DeleteTaskDialogProps = { task: Task; onClose: () => void; onDeleted?: () => void };
 

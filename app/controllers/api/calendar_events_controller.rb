@@ -21,11 +21,5 @@ module Api
 
         render json: { error: "Pick a range of up to #{MAX_RANGE_DAYS} days, with from before to." }, status: :unprocessable_content
       end
-
-      def parse_time(value)
-        Time.zone.iso8601(value.to_s)
-      rescue ArgumentError
-        nil
-      end
   end
 end

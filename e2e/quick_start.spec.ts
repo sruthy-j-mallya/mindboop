@@ -117,6 +117,7 @@ test("write a formatted description and see it on the timer", async ({ page }) =
   await signUp(page);
 
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "Add notes" }).click();
   const description = page.getByRole("textbox", { name: "Description" });
   await description.click();
   // Markdown shortcuts format as you type.
@@ -146,6 +147,7 @@ test("write a formatted description and see it on the timer", async ({ page }) =
 test("paste Markdown into the description and see it formatted", async ({ page }) => {
   await signUp(page);
 
+  await page.getByRole("button", { name: "Add notes" }).click();
   const description = page.getByRole("textbox", { name: "Description" });
   await description.click();
   // Code editors put the raw text in the HTML flavour too; the Markdown should still win.
@@ -170,6 +172,7 @@ test("open, edit and copy a description link from its hover menu", async ({ page
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await signUp(page);
 
+  await page.getByRole("button", { name: "Add notes" }).click();
   const description = page.getByRole("textbox", { name: "Description" });
   await description.click();
   await page.keyboard.type("See [the brief](www.example.com) ");
@@ -210,6 +213,7 @@ test("keep an unstarted task through a reload, and start fresh after beginning i
   await signUp(page);
 
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
+  await page.getByRole("button", { name: "Add notes" }).click();
   await page.getByRole("textbox", { name: "Description" }).click();
   await page.keyboard.type("Cite **sources** ");
   await addSteps(page, ["Outline"]);
@@ -223,6 +227,18 @@ test("keep an unstarted task through a reload, and start fresh after beginning i
 
   await page.getByRole("button", { name: "Begin" }).click();
   await expect(page).toHaveURL("/timer");
+  await expect(page.getByRole("timer")).toBeVisible();
+  await page.goto("/");
+
+  // A second session can't start, so the card leads back to the one running.
+  await expect(page.getByRole("link", { name: "Return to timer" })).toBeVisible();
+  await page.getByRole("link", { name: "Return to timer" }).click();
+  await page.getByRole("button", { name: "Bail" }).click();
+  await page
+    .getByRole("dialog", { name: "Discard this timer?" })
+    .getByRole("button", { name: "Discard timer" })
+    .click();
+  await expect(page.getByRole("heading", { name: "Start a session" })).toBeVisible();
   await page.goto("/");
 
   await expect(page.getByRole("textbox", { name: "Task" })).toHaveValue("");

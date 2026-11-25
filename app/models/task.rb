@@ -13,6 +13,21 @@ class Task < ApplicationRecord
     where(starts_at: ...to).where("COALESCE(tasks.ends_at, tasks.starts_at + INTERVAL '1 day') >= ?", from)
   }
 
+  # Scheduled tasks that touch the day `from...to`. A date counts only on its own day, with no estimate added.
+  scope :due_between, ->(from, to) {
+    where(starts_at: ...to).where("COALESCE(tasks.ends_at, tasks.starts_at) >= ?", from)
+  }
+  # Scheduled tasks that ended (or were due) before `from`, so never the ones `due_between` finds from there.
+  scope :overdue_at, ->(from) { where("COALESCE(tasks.ends_at, tasks.starts_at) < ?", from) }
+  # Soonest to end (or due) first; id breaks ties.
+  scope :by_end, -> { order(Arel.sql("COALESCE(tasks.ends_at, tasks.starts_at)"), :id) }
+  # Only tasks with breadcrumbs, by their newest one.
+  scope :by_latest_breadcrumb, -> {
+    latest = Breadcrumb.group(:task_id).select(:task_id, "MAX(breadcrumbs.created_at) AS created_at")
+    joins("INNER JOIN (#{latest.to_sql}) latest_breadcrumbs ON latest_breadcrumbs.task_id = tasks.id")
+      .order("latest_breadcrumbs.created_at DESC", id: :desc)
+  }
+
   # The description is Markdown written in the rich-text editor; an empty editor saves as nil.
   normalizes :description, with: ->(description) { description.strip.presence }
 

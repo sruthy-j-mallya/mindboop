@@ -224,7 +224,7 @@ test.describe("pausing", () => {
 
     await beginSession(page);
     await takeBreak(page);
-    await page.getByRole("link", { name: "Quick start" }).click();
+    await page.getByRole("link", { name: "Home" }).click();
     await expect(page.getByRole("button", { name: "I'm back" })).toBeHidden();
     expect(await getAlarm()).toMatchObject({ soundsStarted: 0 });
 

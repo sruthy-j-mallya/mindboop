@@ -136,21 +136,21 @@ describe("AppLayout", () => {
     await waitFor(() => expect(document.documentElement).not.toHaveClass("dark"));
   });
 
-  it("offers Quick start, Inbox, Calendar, Routines, Timer and Parking lot in the sidebar and settings in the footer", () => {
+  it("offers Home, Inbox, Calendar, Routines, Timer and Parking lot in the sidebar and settings in the footer", () => {
     const { container } = renderWithProviders(<AppLayout />);
 
     const content = within(container.querySelector<HTMLElement>('[data-slot="sidebar-content"]')!);
     const footer = within(container.querySelector<HTMLElement>('[data-slot="sidebar-footer"]')!);
 
     expect(content.getAllByRole("link").map((link) => link.textContent)).toEqual([
-      "Quick start",
+      "Home",
       "Areas of life",
       "Calendar",
       "Routines",
       "Timer",
       "Parking lot",
     ]);
-    expect(content.getByRole("link", { name: "Quick start" })).toHaveAttribute("href", routes.root);
+    expect(content.getByRole("link", { name: "Home" })).toHaveAttribute("href", routes.root);
     expect(content.getByRole("link", { name: "Areas of life" })).toHaveAttribute("href", routes.inbox.index);
     expect(content.getByRole("link", { name: "Calendar" })).toHaveAttribute("href", routes.calendar);
     expect(content.getByRole("link", { name: "Timer" })).toHaveAttribute("href", routes.timer);

@@ -24,6 +24,13 @@ module Api
         Current.user
       end
 
+      # nil for a missing or malformed time.
+      def parse_time(value)
+        Time.zone.iso8601(value.to_s)
+      rescue ArgumentError
+        nil
+      end
+
       def request_authentication
         render json: { error: "Not authenticated" }, status: :unauthorized
       end

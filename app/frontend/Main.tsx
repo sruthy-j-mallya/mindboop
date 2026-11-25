@@ -5,13 +5,13 @@ import AppLayout from "@/components/commons/AppLayout";
 import PrivateRoute from "@/components/commons/PrivateRoute";
 import CompleteSignup from "@/components/CompleteSignup";
 import ForgotPassword from "@/components/ForgotPassword";
+import Home from "@/components/Home";
 import LifeAreas from "@/components/LifeAreas";
 import TaskBoard from "@/components/LifeAreas/TaskBoard";
 import NoTaskSelected from "@/components/LifeAreas/TaskBoard/NoTaskSelected";
 import TaskPane from "@/components/LifeAreas/TaskBoard/TaskPane";
 import Login from "@/components/Login";
 import ParkingLot from "@/components/ParkingLot";
-import QuickStart from "@/components/QuickStart";
 import ResetPassword from "@/components/ResetPassword";
 import Routines from "@/components/Routines";
 import NoRoutineSelected from "@/components/Routines/NoRoutineSelected";
@@ -25,7 +25,7 @@ const Main = () => (
   <Routes>
     <Route element={<PrivateRoute />}>
       <Route element={<AppLayout />}>
-        <Route element={<QuickStart />} path={routes.root} />
+        <Route element={<Home />} path={routes.root} />
         <Route element={<Routines />} path={routes.routines.index}>
           <Route index element={<NoRoutineSelected />} />
           <Route element={<RoutinePane />} path={routes.routines.show} />

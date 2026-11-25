@@ -6,6 +6,9 @@ export const TIMER_PRESETS = [5, 10, 15];
 export const CUSTOM_TIMER_MIN = 20;
 export const CUSTOM_TIMER_MAX = 240; // 4 hours
 
+export const PICKED_ESTIMATE_CLASS_NAME =
+  "bg-brand-yellow font-semibold text-brand-purple-dark hover:bg-brand-yellow hover:text-brand-purple-dark dark:bg-brand-yellow dark:hover:bg-brand-yellow";
+
 export const isValidCustomMinutes = (customMinutes: string) => {
   const minutes = Number(customMinutes);
 
