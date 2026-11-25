@@ -35,7 +35,7 @@ const EmojiField = ({ field: { value, onChange, onBlur, ref }, color, error }: E
         <PopoverTrigger
           ref={ref}
           aria-label={`Emoji: ${getEmojiLabel(value) ?? value}`}
-          className="area-tint flex size-11 items-center justify-center rounded-lg text-2xl leading-none transition-[filter] outline-none hover:brightness-95 focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:hover:brightness-125"
+          className="area-tint flex size-11 items-center justify-center rounded-full text-2xl leading-none transition-[filter] outline-none hover:brightness-95 focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:hover:brightness-125"
           style={toAreaColorStyle(color)}
           type="button"
           onBlur={onBlur}

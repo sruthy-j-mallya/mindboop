@@ -43,11 +43,7 @@ const LifeAreaPicker = ({ lifeAreaId, className, onSave, ...openState }: LifeAre
           variant="ghost"
         >
           {lifeArea ? (
-            <LifeAreaBadge
-              className="size-4 rounded text-[0.625rem]"
-              color={lifeArea.color}
-              emoji={lifeArea.emoji}
-            />
+            <LifeAreaBadge className="size-4 text-[0.625rem]" color={lifeArea.color} emoji={lifeArea.emoji} />
           ) : (
             <Inbox />
           )}

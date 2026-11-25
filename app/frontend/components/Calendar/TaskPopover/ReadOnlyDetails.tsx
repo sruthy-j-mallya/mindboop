@@ -51,7 +51,7 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
             {lifeArea && (
               <span className={META_CLASS_NAME}>
                 <LifeAreaBadge
-                  className="size-4 rounded text-[0.625rem]"
+                  className="size-4 text-[0.625rem]"
                   color={lifeArea.color}
                   emoji={lifeArea.emoji}
                 />

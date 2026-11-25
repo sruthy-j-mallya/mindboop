@@ -73,7 +73,7 @@ const Suggestions = () => {
                 onClick={() => handleToggle(title)}
               >
                 {isPicked ? (
-                  <span className="flex size-7 items-center justify-center bg-primary text-primary-foreground">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Check className="size-4" />
                   </span>
                 ) : (
