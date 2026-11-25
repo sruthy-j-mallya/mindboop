@@ -40,7 +40,7 @@ Tick an issue in the commit that fixes it.
 - [x] 12. Name the page in the browser tab, with the time left during a session
 - [ ] 13. Agenda rows: Start button, area badge and estimate
 - [x] 14. Agenda rows: only the time, or "All day", instead of repeating "Today"
-- [ ] 15. Overdue: undo for moving a task, plus Tomorrow and Pick a date (bulk moves stay out of scope, as in 049)
+- [x] 15. Overdue: undo for moving a task, plus Tomorrow and Pick a date (bulk moves stay out of scope, as in 049)
 - [ ] 16. Show today's routines on Home (out of scope in 049; needs a decision)
 - [ ] 17. Home's running session card names the task and shows the time left
 - [x] 18. Timer: Done is the primary action; Bail and Discard are quiet

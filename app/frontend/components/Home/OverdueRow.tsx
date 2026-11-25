@@ -1,31 +1,63 @@
+import { addDays } from "date-fns";
+import { CalendarDays } from "lucide-react";
+
 import type { Task } from "@/apis/types";
 import ScheduleLabel from "@/components/commons/ScheduleLabel";
+import SchedulePicker from "@/components/commons/SchedulePicker";
 import { Button } from "@/components/ui/button";
-import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 
 import TaskRow from "./TaskRow";
-import { getTodaySchedule } from "./utils";
+import useRescheduleTask from "./useRescheduleTask";
+import { getDaySchedule } from "./utils";
 
 type OverdueRowProps = { task: Task };
 
 const OverdueRow = ({ task }: OverdueRowProps) => {
-  const { mutate: updateTask, isPending, error } = useUpdateTask();
+  const { title } = task;
+  const { rescheduleTask, isRescheduling, error } = useRescheduleTask(task);
 
-  const handleMoveToToday = () => updateTask({ id: task.id, ...getTodaySchedule(Date.now()) });
+  const handleMoveToToday = () => rescheduleTask(getDaySchedule(Date.now()));
+  const handleMoveToTomorrow = () => rescheduleTask(getDaySchedule(addDays(Date.now(), 1)));
 
   return (
     <TaskRow error={error?.message} task={task}>
       <ScheduleLabel className="text-xs" schedule={task} />
-      <Button
-        aria-label={`Move ${task.title} to today`}
-        disabled={isPending}
-        size="sm"
-        type="button"
-        variant="ghost"
-        onClick={handleMoveToToday}
-      >
-        Move to today
-      </Button>
+      <div className="flex items-center">
+        <Button
+          aria-label={`Move ${title} to today`}
+          disabled={isRescheduling}
+          size="sm"
+          title="Move to today"
+          type="button"
+          variant="ghost"
+          onClick={handleMoveToToday}
+        >
+          Today
+        </Button>
+        <Button
+          aria-label={`Move ${title} to tomorrow`}
+          disabled={isRescheduling}
+          size="sm"
+          title="Move to tomorrow"
+          type="button"
+          variant="ghost"
+          onClick={handleMoveToTomorrow}
+        >
+          Tomorrow
+        </Button>
+        <SchedulePicker align="end" clearLabel="Remove date" schedule={task} onSave={rescheduleTask}>
+          <Button
+            aria-label={`Pick a date for ${title}`}
+            disabled={isRescheduling}
+            size="icon-sm"
+            title="Pick a date"
+            type="button"
+            variant="ghost"
+          >
+            <CalendarDays />
+          </Button>
+        </SchedulePicker>
+      </div>
     </TaskRow>
   );
 };

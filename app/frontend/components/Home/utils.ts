@@ -14,10 +14,10 @@ export const getSummary = ({ today, overdue }: HomeTasksResponse) =>
     ? "Your day is clear."
     : `${today.length} on today's agenda, ${overdue.length} overdue`;
 
-// An all-day date for today, in place of whatever the task was scheduled for.
-export const getTodaySchedule = (now: number): SchedulePayload => ({
+// An all-day date for the day, in place of whatever the task was scheduled for.
+export const getDaySchedule = (day: Date | number): SchedulePayload => ({
   isDuration: false,
   isAllDay: true,
-  startsAt: startOfDay(now).toISOString(),
+  startsAt: startOfDay(day).toISOString(),
   endsAt: null,
 });

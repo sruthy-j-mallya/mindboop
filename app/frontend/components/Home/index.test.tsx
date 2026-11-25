@@ -3,6 +3,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { addDays, format, startOfDay, subDays } from "date-fns";
 import { Route, Routes, useLocation } from "react-router";
+import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
@@ -12,6 +13,7 @@ import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import type { Breadcrumb, HomeTasksResponse, Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
+import { Toaster } from "@/components/ui/sonner";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
 import { playCompletionSound } from "@/utils/completionSound";
@@ -112,10 +114,13 @@ const TimerPage = () => {
 
 const renderHome = () =>
   renderWithProviders(
-    <Routes>
-      <Route element={<Home />} path={routes.root} />
-      <Route element={<TimerPage />} path={routes.timer} />
-    </Routes>,
+    <>
+      <Routes>
+        <Route element={<Home />} path={routes.root} />
+        <Route element={<TimerPage />} path={routes.timer} />
+      </Routes>
+      <Toaster />
+    </>,
     new QueryClient({ defaultOptions: { queries: { retry: false } } }),
   );
 
@@ -124,6 +129,8 @@ const card = (name: string) => within(screen.getByRole("region", { name }));
 describe("Home", () => {
   beforeEach(() => {
     localStorage.clear();
+    // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
+    toast.dismiss();
     vi.spyOn(homeTasksApi, "fetchList").mockResolvedValue(LISTS);
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
     vi.spyOn(userPreferencesApi, "show").mockRejectedValue(new ApiError(500, "Not needed"));
@@ -214,6 +221,43 @@ describe("Home", () => {
       isAllDay: true,
       startsAt: TODAY.toISOString(),
       endsAt: null,
+    });
+  });
+
+  it("moves an overdue task to tomorrow", async () => {
+    renderHome();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Move Renew passport to tomorrow" }));
+
+    expect(vi.mocked(tasksApi.update).mock.lastCall?.[0]).toMatchObject({
+      id: "o",
+      isAllDay: true,
+      startsAt: addDays(TODAY, 1).toISOString(),
+    });
+  });
+
+  it("picks another date for an overdue task", async () => {
+    renderHome();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Pick a date for Renew passport" }));
+    await userEvent.click(screen.getByRole("button", { name: "Remove date" }));
+
+    expect(vi.mocked(tasksApi.update).mock.lastCall?.[0]).toMatchObject({ id: "o", startsAt: null });
+  });
+
+  it("undoes moving a task, putting back the schedule it had", async () => {
+    renderHome();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Move Renew passport to today" }));
+    expect(await screen.findByText("Rescheduled “Renew passport”")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+
+    expect(vi.mocked(tasksApi.update).mock.lastCall?.[0]).toEqual({
+      id: "o",
+      isDuration: true,
+      isAllDay: false,
+      startsAt: OVERDUE_TASK.startsAt,
+      endsAt: OVERDUE_TASK.endsAt,
     });
   });
 
