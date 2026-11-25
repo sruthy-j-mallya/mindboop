@@ -1,4 +1,13 @@
-import { CalendarDays, House, Search, Settings, SquareCheckBig, SunMoon, Timer } from "lucide-react";
+import {
+  CalendarDays,
+  CirclePlus,
+  House,
+  Search,
+  Settings,
+  SquareCheckBig,
+  SunMoon,
+  Timer,
+} from "lucide-react";
 import { Link, useLocation, useMatch } from "react-router";
 
 import {
@@ -15,11 +24,12 @@ import {
 import { useParkingLotItems } from "@/hooks/reactQuery/useParkingLotItemsApi";
 import routes from "@/routes";
 
+import { CAPTURE_SHORTCUT_LABEL, SEARCH_SHORTCUT_LABEL } from "./constants";
 import ParkingLotIcon from "./ParkingLotIcon";
 
-type AppSidebarProps = { onSearchOpen: () => void };
+type AppSidebarProps = { onSearchOpen: () => void; onCaptureOpen: () => void };
 
-const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
+const AppSidebar = ({ onSearchOpen, onCaptureOpen }: AppSidebarProps) => {
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();
   const { data: parkedItems } = useParkingLotItems({ status: "parked" });
@@ -30,6 +40,11 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
   const handleSearch = () => {
     setOpenMobile(false);
     onSearchOpen();
+  };
+
+  const handleCapture = () => {
+    setOpenMobile(false);
+    onCaptureOpen();
   };
 
   // The areas of life and the Inbox share one page, with a sidebar of their own to switch between them.
@@ -47,6 +62,18 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
                 <SidebarMenuButton aria-haspopup="dialog" tooltip="Search" onClick={handleSearch}>
                   <Search />
                   <span>Search</span>
+                  <kbd aria-hidden className="ml-auto text-xs text-muted-foreground">
+                    {SEARCH_SHORTCUT_LABEL}
+                  </kbd>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton aria-haspopup="dialog" tooltip="New task" onClick={handleCapture}>
+                  <CirclePlus />
+                  <span>New task</span>
+                  <kbd aria-hidden className="ml-auto text-xs text-muted-foreground">
+                    {CAPTURE_SHORTCUT_LABEL}
+                  </kbd>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

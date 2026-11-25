@@ -95,3 +95,15 @@ export const findBottomBarPath = (pathname: string) => {
     matchPath({ path, end: path === routes.root }, pathname),
   );
 };
+
+const isTyping = (target: EventTarget | null) =>
+  target instanceof HTMLElement &&
+  (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+
+// ⌘K, or Ctrl+K.
+export const isSearchShortcut = ({ key, metaKey, ctrlKey, altKey, shiftKey }: KeyboardEvent) =>
+  (metaKey || ctrlKey) && !altKey && !shiftKey && key.toLowerCase() === "k";
+
+// ⌥N, or Alt+N. By its place on the keyboard, as ⌥N types "˜" on a Mac; so it's left alone while typing.
+export const isCaptureShortcut = ({ code, altKey, metaKey, ctrlKey, shiftKey, target }: KeyboardEvent) =>
+  altKey && !metaKey && !ctrlKey && !shiftKey && code === "KeyN" && !isTyping(target);

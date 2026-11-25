@@ -14,6 +14,12 @@ export const PAGE_TITLES = [
 // Keeps toasts above the bottom bar and the mini timer on phones.
 export const TOAST_MOBILE_OFFSET = "calc(var(--bottom-bar-height) + 4.5rem)";
 
+const IS_MAC = navigator.platform.startsWith("Mac");
+
+// How the shortcuts (useShortcuts) are shown beside what they open.
+export const SEARCH_SHORTCUT_LABEL = IS_MAC ? "⌘K" : "Ctrl K";
+export const CAPTURE_SHORTCUT_LABEL = IS_MAC ? "⌥N" : "Alt N";
+
 export const HOME_TITLE = "Home";
 export const UNKNOWN_PAGE_TITLE = "Page not found";
 

@@ -7,7 +7,8 @@ import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
 import routinesApi from "@/apis/routines";
-import type { Routine, TimeLog } from "@/apis/types";
+import tasksApi from "@/apis/tasks";
+import type { Routine, Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import { playSound } from "@/components/commons/Ambience/utils";
 import AppLayout from "@/components/commons/AppLayout";
@@ -191,6 +192,40 @@ describe("AppLayout", () => {
     expect(content.getByRole("link", { name: "Parking lot" })).toHaveAttribute("href", routes.parkingLot);
     expect(footer.getByRole("link", { name: "Settings" })).toHaveAttribute("href", routes.settings);
     expect(screen.getAllByRole("link", { name: "Settings" })).toHaveLength(1);
+  });
+
+  it("opens the search with its shortcut", async () => {
+    renderWithProviders(<AppLayout />);
+
+    await userEvent.keyboard("{Meta>}k{/Meta}");
+
+    expect(await screen.findByRole("dialog", { name: "Search tasks" })).toBeVisible();
+  });
+
+  it("adds a task to the Inbox from any page with a shortcut", async () => {
+    const create = vi.spyOn(tasksApi, "create").mockResolvedValue({ task: { id: "t" } as Task });
+    renderWithProviders(<AppLayout />, undefined, routes.calendar);
+
+    await userEvent.keyboard("{Alt>}[KeyN]{/Alt}");
+    const dialog = within(await screen.findByRole("dialog", { name: "New task" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Add" }));
+    expect(await dialog.findByRole("alert")).toHaveTextContent("Say what you want to get done");
+
+    await userEvent.type(dialog.getByRole("textbox", { name: "Title" }), "Call the bank{Enter}");
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(create).toHaveBeenCalledWith({ title: "Call the bank", lifeAreaId: null }, expect.anything());
+    expect(await screen.findByText("Added to your Inbox")).toBeVisible();
+  });
+
+  it("leaves the shortcut's keys alone while typing", async () => {
+    renderWithProviders(<AppLayout />);
+    await userEvent.click(screen.getByRole("button", { name: "Search" }));
+    await userEvent.click(await screen.findByRole("combobox", { name: "Search tasks" }));
+
+    await userEvent.keyboard("{Alt>}[KeyN]{/Alt}");
+
+    expect(screen.queryByRole("dialog", { name: "New task" })).not.toBeInTheDocument();
   });
 
   it("opens the search from the sidebar", async () => {

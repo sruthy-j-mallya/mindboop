@@ -5,10 +5,10 @@ import { useForm } from "react-hook-form";
 import type { LifeArea } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { INITIAL_FORM_VALUES, TASK_VALIDATION_SCHEMA, type TaskFormValues } from "@/constants/taskForm";
 import { useCreateTask } from "@/hooks/reactQuery/useTasksApi";
 
 import { INBOX_NAME } from "../constants";
-import { INITIAL_FORM_VALUES, TASK_VALIDATION_SCHEMA, type TaskFormValues } from "./constants";
 
 type AddTaskFormProps = { lifeArea?: LifeArea };
 

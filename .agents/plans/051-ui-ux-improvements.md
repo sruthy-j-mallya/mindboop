@@ -36,7 +36,7 @@ Tick an issue in the commit that fixes it.
 - [x] 8. Add a bottom bar on phones: Home, Tasks, Timer, Calendar, More
 - [x] 9. Rename the "Areas of life" link "Tasks", as it opens the Inbox
 - [x] 10. Move Sign out into an account section in Settings
-- [ ] 11. ⌘K opens search (the editor keeps it for links), plus a quick capture shortcut
+- [x] 11. ⌘K opens search (the editor keeps it for links), plus a quick capture shortcut
 - [x] 12. Name the page in the browser tab, with the time left during a session
 - [ ] 13. Agenda rows: Start button, area badge and estimate
 - [x] 14. Agenda rows: only the time, or "All day", instead of repeating "Today"
