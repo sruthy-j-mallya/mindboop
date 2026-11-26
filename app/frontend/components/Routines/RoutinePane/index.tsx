@@ -13,6 +13,7 @@ import { describeReminder, formatLastDone, formatTotalTime } from "../utils";
 import ActionsMenu from "./ActionsMenu";
 import MonthActivity from "./MonthActivity";
 import StatTile from "./StatTile";
+import Steps from "./Steps";
 
 // How a routine is going: only what was done, never what wasn't.
 const RoutinePane = () => {
@@ -57,6 +58,7 @@ const RoutinePane = () => {
           <ActionsMenu routine={routine} />
         </div>
       </header>
+      <Steps key={routine.id} routine={routine} />
       <p className="text-sm text-muted-foreground">
         {sessionsCount === 0
           ? "Not started yet. Whenever you’re ready, it’s one click away."

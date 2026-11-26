@@ -1,5 +1,5 @@
 json.extract! time_log, :id, :task_id, :routine_id, :title, :mode, :timer_preset, :buffer_minutes, :accumulated_elapsed_seconds,
-  :is_running, :current_run_started_at, :started_at, :completed_at, :created_at, :updated_at
+  :is_running, :current_run_started_at, :started_at, :completed_at, :checked_routine_step_ids, :created_at, :updated_at
 json.task_title time_log.task&.title
 json.routine_title time_log.routine&.title
 # The Calendar colours a log by its task's area.

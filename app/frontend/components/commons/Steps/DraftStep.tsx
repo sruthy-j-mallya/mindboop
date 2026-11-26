@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import StepTextarea from "./StepTextarea";
 
 type DraftStepProps = {
+  showCheckbox: boolean;
   onSave: (text: string) => void;
   onSaveAndContinue: (text: string) => void;
   onDiscard: () => void;
@@ -15,7 +16,7 @@ type DraftStepProps = {
 
 // A new step row, looking like the saved ones. It saves when focus leaves it with some text in it, and goes away when
 // it's left empty.
-const DraftStep = ({ onSave, onSaveAndContinue, onDiscard }: DraftStepProps) => {
+const DraftStep = ({ showCheckbox, onSave, onSaveAndContinue, onDiscard }: DraftStepProps) => {
   const [draft, setDraft] = useState("");
   // The row can blur as it unmounts, after Enter or Escape has already dealt with it.
   const isClosedRef = useRef(false);
@@ -51,7 +52,7 @@ const DraftStep = ({ onSave, onSaveAndContinue, onDiscard }: DraftStepProps) => 
     <li className="flex items-center gap-2 rounded-md bg-card py-1" onBlur={handleBlur}>
       {/* Holds the drag handle's place, so the new row lines up with the saved ones. */}
       <span aria-hidden className="-mr-1 w-4 shrink-0" />
-      <Checkbox disabled aria-hidden className="border-muted-foreground/50" tabIndex={-1} />
+      {showCheckbox && <Checkbox disabled aria-hidden className="border-muted-foreground/50" tabIndex={-1} />}
       <StepTextarea
         autoFocus
         aria-label="New step"

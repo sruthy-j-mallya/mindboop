@@ -66,6 +66,7 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => {
     currentRunStartedAt: startedAt,
     startedAt,
     completedAt: null,
+    checkedRoutineStepIds: [],
     isFinishedEarly: false,
     currentBreak: null,
     createdAt: startedAt,

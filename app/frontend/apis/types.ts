@@ -125,6 +125,8 @@ export type TimeLog = {
   currentRunStartedAt: string | null;
   startedAt: string;
   completedAt: string | null;
+  // The routine's steps ticked off in this session; a new session starts with none.
+  checkedRoutineStepIds: string[];
   isFinishedEarly: boolean;
   currentBreak: Break | null;
   createdAt: string;
@@ -278,8 +280,11 @@ export type MoveLifeAreaPayload = Pick<LifeArea, "id"> & { position: number };
 // `tasksLifeAreaId` is the area its uncompleted tasks move to; without one, they go to the Inbox.
 export type DeleteLifeAreaPayload = Pick<LifeArea, "id"> & { tasksLifeAreaId?: string };
 
+// One thing to do in a routine. Ticking it off belongs to a session (`TimeLog.checkedRoutineStepIds`).
+export type RoutineStep = { id: string; title: string };
+
 // A timer started again and again (a shower, meditation). `reminderTime` ("HH:MM", local time) and `reminderDays`
-// (0 = Sunday … 6) set an optional reminder. The stats count its finished sessions.
+// (0 = Sunday … 6) set an optional reminder. `steps` is its checklist, in order. The stats count its finished sessions.
 export type Routine = {
   id: string;
   title: string;
@@ -289,6 +294,7 @@ export type Routine = {
   durationMinutes: number;
   reminderTime: string | null;
   reminderDays: number[];
+  steps: RoutineStep[];
   sessionsCount: number;
   totalSeconds: number;
   lastDoneAt: string | null;
@@ -306,6 +312,20 @@ export type CreateRoutinePayload = Pick<
 >;
 
 export type UpdateRoutinePayload = Partial<CreateRoutinePayload> & Pick<Routine, "id">;
+
+// `position` is the index the step lands on among the routine's steps; without it, a new step goes last.
+export type CreateRoutineStepPayload = Pick<RoutineStep, "title"> & { routineId: string; position?: number };
+
+export type UpdateRoutineStepPayload = Partial<Pick<RoutineStep, "title">> & {
+  routineId: string;
+  id: string;
+  position?: number;
+};
+
+export type DeleteRoutineStepPayload = { routineId: string; id: string };
+
+// Ticks a routine's step off (or back on) for one session.
+export type TimeLogStepCheckPayload = { timeLogId: string; routineStepId: string };
 
 export type RoutineTimeLogsParams = { routineId: string; from: string; to: string };
 

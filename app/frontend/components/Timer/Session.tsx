@@ -91,7 +91,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
     <>
       <SessionCard
         details={
-          task ? <TaskDetails isOnTimer task={task} /> : routineId && <RoutineDetails routineId={routineId} />
+          task ? <TaskDetails isOnTimer task={task} /> : routineId && <RoutineDetails timeLog={timeLog} />
         }
       >
         <header className="flex items-start justify-between gap-4">

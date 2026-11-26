@@ -4,6 +4,8 @@ export type StepItem = { id: string; text: string; isDone: boolean };
 // is held by the caller, since the button that opens the first one sits outside the list.
 export type StepsProps = {
   steps: StepItem[];
+  // Off where the steps are only a list to edit, as on a routine's pane: ticking them belongs to a session.
+  showCheckboxes?: boolean;
   draft: Draft | null;
   onDraftChange: (draft: Draft | null) => void;
   onAdd: (text: string, index?: number) => void;

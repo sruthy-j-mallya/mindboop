@@ -51,6 +51,7 @@ const timeLogWithBreak = (endsAt: number): TimeLog => ({
   currentRunStartedAt: null,
   startedAt: new Date(NOW).toISOString(),
   completedAt: null,
+  checkedRoutineStepIds: [],
   isFinishedEarly: false,
   currentBreak: {
     id: "c3f8a7b2-5e6d-4a81-9b0c-3e4f5a6b7c8d",

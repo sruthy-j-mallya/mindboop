@@ -1,9 +1,18 @@
 module SampleData
   module Seeders
-    # Routines with each kind of reminder (daily, weekly, custom days, none), and a deleted one. Their sessions, and so
-    # their stats, come from TimeLogsSeeder; the weekly review has none yet.
+    # Routines with each kind of reminder (daily, weekly, custom days, none), one with a checklist of steps, and a deleted
+    # one. Their sessions, and so their stats, come from TimeLogsSeeder; the weekly review and the morning routine have
+    # none yet.
     class RoutinesSeeder < BaseSeeder
       ROUTINES = {
+        # A longer routine made of steps, ticked off on the Timer.
+        morning: {
+          title: "Morning routine", emoji: "🌅", color: "amber", duration_minutes: 30,
+          steps: [
+            "Stretch in bed", "Breathing exercise", "Make bed", "Brush teeth", "Drink a glass of water",
+            "Get some sunlight", "Write the date in the journal"
+          ]
+        },
         meditate: {
           title: "Meditate", emoji: "🧘", color: "violet", sound: "waves", duration_minutes: 10,
           reminder_time: "07:30", reminder_days: (0..6).to_a
@@ -27,8 +36,9 @@ module SampleData
         user = context.users.fetch(:demo)
         ROUTINES.each do |key, attributes|
           context.routines[key] = user.routines.create!(
-            **attributes.except(:is_discarded), discarded_at: (context.now if attributes[:is_discarded])
+            **attributes.except(:is_discarded, :steps), discarded_at: (context.now if attributes[:is_discarded])
           )
+          attributes.fetch(:steps, []).each { context.routines[key].steps.create!(title: it) }
         end
       end
     end

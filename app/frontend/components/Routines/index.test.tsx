@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
+import routineStepsApi from "@/apis/routine_steps";
 import routineTimeLogsApi from "@/apis/routine_time_logs";
 import routinesApi from "@/apis/routines";
 import timeLogsApi from "@/apis/time_logs";
@@ -27,6 +28,7 @@ const buildRoutine = (overrides: Partial<Routine> = {}): Routine => ({
   durationMinutes: 10,
   reminderTime: null,
   reminderDays: [],
+  steps: [],
   sessionsCount: 0,
   totalSeconds: 0,
   lastDoneAt: null,
@@ -188,6 +190,43 @@ describe("Routines", () => {
     expect(screen.getByText("Time given").nextSibling).toHaveTextContent("1 h 59 min");
     expect(screen.getByText(/Every time counts/)).toBeVisible();
     expect(screen.queryByText(/streak/i)).not.toBeInTheDocument();
+  });
+
+  it("adds steps to a routine in the pane, as a list without ticks", async () => {
+    const routine = buildRoutine({ steps: [{ id: crypto.randomUUID(), title: "Stretch in bed" }] });
+    const create = vi.spyOn(routineStepsApi, "create").mockResolvedValue({
+      routine: { ...routine, steps: [...routine.steps, { id: crypto.randomUUID(), title: "Make bed" }] },
+    });
+    renderRoutines([routine], routinePath(routine.id));
+
+    expect(await screen.findByRole("button", { name: "Edit Stretch in bed" })).toBeVisible();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    // Enter in a step opens a new one right below it.
+    await userEvent.click(screen.getByRole("button", { name: "Edit Stretch in bed" }));
+    await userEvent.keyboard("{Enter}");
+    await userEvent.type(screen.getByRole("textbox", { name: "New step" }), "Make bed{Enter}");
+
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith(
+        { routineId: routine.id, title: "Make bed", position: 1 },
+        expect.anything(),
+      ),
+    );
+    expect(await screen.findByRole("button", { name: "Edit Make bed" })).toBeVisible();
+  });
+
+  it("offers to add the first step to a routine without any", async () => {
+    const routine = buildRoutine();
+    const create = vi.spyOn(routineStepsApi, "create").mockResolvedValue({ routine });
+    renderRoutines([routine], routinePath(routine.id));
+
+    expect(await screen.findByText(/Add the steps you go through/)).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: "Add step" }));
+    await userEvent.type(screen.getByRole("textbox", { name: "New step" }), "Brush teeth{Enter}");
+
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith({ routineId: routine.id, title: "Brush teeth" }, expect.anything()),
+    );
   });
 
   it("starts the routine's timer and opens the Timer", async () => {

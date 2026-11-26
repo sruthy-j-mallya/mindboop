@@ -18,7 +18,17 @@ import type { StepsProps } from "./types";
 import { STEP_ANNOUNCEMENTS } from "./utils";
 
 // Only shows the steps and reports changes; the caller decides where they're kept (form state or the API).
-const Steps = ({ steps, draft, onDraftChange, onAdd, onRename, onToggle, onRemove, onMove }: StepsProps) => {
+const Steps = ({
+  steps,
+  showCheckboxes = true,
+  draft,
+  onDraftChange,
+  onAdd,
+  onRename,
+  onToggle,
+  onRemove,
+  onMove,
+}: StepsProps) => {
   const listRef = useRef<HTMLUListElement>(null);
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -34,13 +44,14 @@ const Steps = ({ steps, draft, onDraftChange, onAdd, onRename, onToggle, onRemov
     );
   };
 
-  // The focused button goes away with its row, so focus moves to the next step's tick (or the one before it).
+  // The focused button goes away with its row, so focus moves to the next step's tick, or its text without ticks (or
+  // the one before it).
   const handleRemove = (id: string) => {
     const index = steps.findIndex((step) => step.id === id);
     const neighbour = steps.at(index + 1) ?? (index > 0 ? steps.at(index - 1) : undefined);
     if (neighbour) {
       listRef.current
-        ?.querySelector<HTMLElement>(`[data-step-id="${CSS.escape(neighbour.id)}"] [role="checkbox"]`)
+        ?.querySelector<HTMLElement>(`[data-step-id="${CSS.escape(neighbour.id)}"] [data-step-focus]`)
         ?.focus();
     }
     onRemove(id);
@@ -66,6 +77,7 @@ const Steps = ({ steps, draft, onDraftChange, onAdd, onRename, onToggle, onRemov
     <Step
       key={step.id}
       {...step}
+      showCheckbox={showCheckboxes}
       onInsertBelow={handleInsertBelow}
       onRemove={handleRemove}
       onRename={onRename}
@@ -78,6 +90,7 @@ const Steps = ({ steps, draft, onDraftChange, onAdd, onRename, onToggle, onRemov
         0,
         <DraftStep
           key={`draft-${draft.key}`}
+          showCheckbox={showCheckboxes}
           onDiscard={() => onDraftChange(null)}
           onSave={handleDraftSave}
           onSaveAndContinue={handleDraftSaveAndContinue}

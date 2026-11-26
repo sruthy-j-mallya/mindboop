@@ -14,9 +14,12 @@ import EditStep from "./EditStep";
 import type { StepItem, StepsProps } from "./types";
 
 type StepProps = StepItem &
-  Pick<StepsProps, "onRename" | "onToggle" | "onRemove"> & { onInsertBelow: (id: string) => void };
+  Pick<StepsProps, "onRename" | "onToggle" | "onRemove"> & {
+    showCheckbox: boolean;
+    onInsertBelow: (id: string) => void;
+  };
 
-const Step = ({ id, text, isDone, onRename, onToggle, onRemove, onInsertBelow }: StepProps) => {
+const Step = ({ id, text, isDone, showCheckbox, onRename, onToggle, onRemove, onInsertBelow }: StepProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const textButtonRef = useRef<HTMLButtonElement>(null);
   const { attributes, isDragging, listeners, setNodeRef, transform, transition } = useSortable({
@@ -65,12 +68,15 @@ const Step = ({ id, text, isDone, onRename, onToggle, onRemove, onInsertBelow }:
       >
         <GripVertical />
       </Button>
-      <Checkbox
-        aria-label={text}
-        checked={isDone}
-        className="border-muted-foreground/50"
-        onCheckedChange={handleCheckedChange}
-      />
+      {showCheckbox && (
+        <Checkbox
+          data-step-focus
+          aria-label={text}
+          checked={isDone}
+          className="border-muted-foreground/50"
+          onCheckedChange={handleCheckedChange}
+        />
+      )}
       {isEditing ? (
         <EditStep
           text={text}
@@ -82,6 +88,7 @@ const Step = ({ id, text, isDone, onRename, onToggle, onRemove, onInsertBelow }:
         <Button
           ref={textButtonRef}
           aria-label={`Edit ${text}`}
+          data-step-focus={showCheckbox ? undefined : true}
           className={cn(
             STEP_TEXT_CLASS_NAME,
             "h-auto cursor-text justify-start text-left font-normal whitespace-normal",

@@ -4,7 +4,7 @@ module Api
 
     # Not paged: a user keeps a handful of routines, and the page shows them all with their stats.
     def index
-      @routines = policy_scope(Routine).kept.with_stats.in_created_order
+      @routines = policy_scope(Routine).kept.with_stats.preload(:steps).in_created_order
     end
 
     def create
