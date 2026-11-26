@@ -17,6 +17,8 @@ export type TaskCardProps = TaskListProps & {
 
 export type TaskRowProps = {
   task: Task;
+  // Shown between the checkbox and the title.
+  leading?: ReactNode;
   // Shown under the title.
   details?: ReactNode;
   // Shown at the end of the row.

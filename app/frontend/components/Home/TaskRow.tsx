@@ -8,7 +8,7 @@ import { getTaskPath } from "@/utils";
 import type { TaskRowProps } from "./types";
 
 // The checkbox completes the task; the title opens it in its area or the Inbox.
-const TaskRow = ({ task, details, children, error }: TaskRowProps) => {
+const TaskRow = ({ task, leading, details, children, error }: TaskRowProps) => {
   const { id, title, lifeAreaId } = task;
   const { completeTask, isCompleting, error: completeError } = useCompleteTask(task);
   const message = completeError?.message ?? error;
@@ -30,6 +30,7 @@ const TaskRow = ({ task, details, children, error }: TaskRowProps) => {
           disabled={isCompleting}
           onCheckedChange={completeTask}
         />
+        {leading}
         {/* The end of the row wraps under the title rather than squeezing it. */}
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
           <div className="flex min-w-0 flex-[1_1_10rem] flex-col items-start gap-1">

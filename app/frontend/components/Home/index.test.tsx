@@ -198,7 +198,7 @@ describe("Home", () => {
     renderHome();
 
     const start = await screen.findByRole("button", { name: "Start: Pay the bill" });
-    expect(await card("Today's agenda").findByText("Finances")).toBeVisible();
+    expect(await card("Today's agenda").findByRole("img", { name: "Finances" })).toBeVisible();
     expect(card("Today's agenda").getByText("45 min")).toBeVisible();
 
     await userEvent.click(start);
