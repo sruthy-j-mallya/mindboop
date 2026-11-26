@@ -33,7 +33,10 @@ Tick an issue in the commit that fixes it.
 ## P1: High impact
 
 - [x] 7. Start the sidebar expanded on desktop
-- [x] 8. Add a bottom bar on phones: Home, Tasks, Timer, Calendar, More
+- [x] 8. Add a bottom bar on phones: Home, Calendar, Routines, Parking lot (with its count), More. Tasks and Timer
+  moved under More: Home lists today's tasks and starts sessions, and the mini timer leads back to the timer. No
+  quick-add button on phones: stray thoughts go to the Parking lot, to be dated later, instead of getting lost in the
+  Inbox
 - [x] 9. Rename the "Areas of life" link "Tasks", as it opens the Inbox
 - [x] 10. Move Sign out into an account section in Settings
 - [x] 11. ⌘K opens search (the editor keeps it for links), plus a quick capture shortcut

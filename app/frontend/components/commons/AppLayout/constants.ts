@@ -13,6 +13,9 @@ export const PAGE_TITLES = [
   { path: routes.settings, title: "Settings" },
 ];
 
+export const BOTTOM_BAR_ITEM_CLASS_NAME =
+  "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset";
+
 // Keeps toasts above the bottom bar and the mini timer on phones.
 export const TOAST_MOBILE_OFFSET = "calc(var(--bottom-bar-height) + 4.5rem)";
 

@@ -41,10 +41,14 @@ describe("isSidebarOpen", () => {
 describe("findBottomBarPath", () => {
   it("finds the page a path belongs to", () => {
     expect(findBottomBarPath("/")).toBe("/");
-    expect(findBottomBarPath("/inbox/some-task")).toBe("/inbox");
-    expect(findBottomBarPath("/areas/some-area/some-task")).toBe("/inbox");
-    expect(findBottomBarPath("/completed")).toBe("/inbox");
     expect(findBottomBarPath("/calendar")).toBe("/calendar");
+    expect(findBottomBarPath("/routines/some-routine")).toBe("/routines");
+    expect(findBottomBarPath("/parking-lot")).toBe("/parking-lot");
+  });
+
+  it("leaves the pages under More without one", () => {
+    expect(findBottomBarPath("/inbox/some-task")).toBeUndefined();
+    expect(findBottomBarPath("/timer")).toBeUndefined();
     expect(findBottomBarPath("/settings")).toBeUndefined();
   });
 });

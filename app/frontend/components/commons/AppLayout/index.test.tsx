@@ -108,11 +108,23 @@ describe("AppLayout", () => {
 
       const bar = within(await screen.findByRole("navigation", { name: "Main pages" }));
       expect(bar.getByRole("link", { name: "Calendar" })).toHaveAttribute("aria-current", "page");
-      expect(bar.getByRole("link", { name: "Tasks" })).toHaveAttribute("href", routes.inbox.index);
+      expect(bar.getByRole("link", { name: "Routines" })).toHaveAttribute("href", routes.routines.index);
+      expect(bar.queryByRole("link", { name: "Tasks" })).not.toBeInTheDocument();
 
       await userEvent.click(bar.getByRole("button", { name: "More" }));
 
       expect(await screen.findByRole("link", { name: "Settings" })).toBeVisible();
+    });
+
+    it("shows the parked count on the Parking lot link", async () => {
+      vi.mocked(parkingLotItemsApi.fetchList).mockResolvedValue(listWithCount(3));
+      renderWithProviders(<AppLayout />, undefined, routes.calendar);
+
+      const bar = within(await screen.findByRole("navigation", { name: "Main pages" }));
+      expect(await bar.findByRole("link", { name: "Parking lot (3 parked)" })).toHaveAttribute(
+        "href",
+        routes.parkingLot,
+      );
     });
   });
 
