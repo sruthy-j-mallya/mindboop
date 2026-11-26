@@ -6,10 +6,11 @@ import { Check, Plus, Search } from "lucide-react";
 
 import type { Task } from "@/apis/types";
 import { Input } from "@/components/ui/input";
+import { SEARCH_DEBOUNCE_DELAY } from "@/constants";
 import { useCreateTask, useTasks } from "@/hooks/reactQuery/useTasksApi";
 import useDebouncedValue from "@/hooks/useDebouncedValue";
 
-import { OPEN_TASK_FILTERS, TASK_SEARCH_DEBOUNCE } from "./constants";
+import { OPEN_TASK_FILTERS } from "./constants";
 
 type TaskSearchProps = { value?: Task; onChange: (task: Task) => void };
 
@@ -23,7 +24,7 @@ const TaskSearch = ({ value, onChange }: TaskSearchProps) => {
   const { mutate: createTask, isPending: isCreating, error: createError } = useCreateTask();
   const [activeIndex, setActiveIndex] = useState(0);
   const isOpen = query !== null;
-  const searchTerm = useDebouncedValue(query?.trim() ?? "", TASK_SEARCH_DEBOUNCE);
+  const searchTerm = useDebouncedValue(query?.trim() ?? "", SEARCH_DEBOUNCE_DELAY);
   // The previous matches stay listed while the next search loads, so the list doesn't flash empty between keys.
   const { data, isPending, isPlaceholderData, error } = useTasks(
     { ...OPEN_TASK_FILTERS, searchTerm: searchTerm || undefined },

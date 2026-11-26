@@ -39,6 +39,9 @@ export const DEFAULT_DATE_PREFERENCES: DatePreferences = {
   timeFormat: "12h",
 };
 
+// How long typing pauses before a search asks the server, so it isn't one request per key.
+export const SEARCH_DEBOUNCE_DELAY = 250; // a quarter second
+
 // Phones, below Tailwind's `sm`.
 export const PHONE_LAYOUT_QUERY = "(width < 40rem)";
 

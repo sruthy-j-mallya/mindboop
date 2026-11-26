@@ -1,23 +1,26 @@
-import { useDeferredValue } from "react";
-
 import { Link2 } from "lucide-react";
 
 import type { Task } from "@/apis/types";
 import { Button } from "@/components/ui/button";
+import { SEARCH_DEBOUNCE_DELAY } from "@/constants";
 import { useTasks } from "@/hooks/reactQuery/useTasksApi";
+import useDebouncedValue from "@/hooks/useDebouncedValue";
 
 import { TASK_SUGGESTION_LIMIT } from "./constants";
 
 type TaskSuggestionsProps = { searchTerm: string; onSelect: (task: Task) => void };
 
-// Existing tasks whose title matches what's typed, so the time can go to one of them instead.
+// Existing tasks whose title matches what's typed, so the time can go to one of them instead. Searched once typing
+// pauses, not on every key.
 const TaskSuggestions = ({ searchTerm, onSelect }: TaskSuggestionsProps) => {
-  const deferredSearchTerm = useDeferredValue(searchTerm.trim());
+  const trimmedSearchTerm = searchTerm.trim();
+  const debouncedSearchTerm = useDebouncedValue(trimmedSearchTerm, SEARCH_DEBOUNCE_DELAY);
   const { data: { tasks = [] } = {} } = useTasks(
-    { searchTerm: deferredSearchTerm },
-    { enabled: !!deferredSearchTerm },
+    { searchTerm: debouncedSearchTerm },
+    { enabled: !!debouncedSearchTerm },
   );
-  const suggestions = deferredSearchTerm ? tasks.slice(0, TASK_SUGGESTION_LIMIT) : [];
+  // A cleared field hides them at once, without waiting for the debounce.
+  const suggestions = trimmedSearchTerm && debouncedSearchTerm ? tasks.slice(0, TASK_SUGGESTION_LIMIT) : [];
 
   if (suggestions.length === 0) return null;
 

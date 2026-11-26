@@ -21,4 +21,3 @@ export const SUGGESTIONS_COUNT = 5;
 export const DAY_REFRESH_INTERVAL = 60_000; // 1 minute
 
 export const OPEN_TASK_FILTERS: TaskFilters = { isCompleted: false };
-export const TASK_SEARCH_DEBOUNCE = 250; // a quarter second

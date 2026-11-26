@@ -5,12 +5,13 @@ import { Search } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import type { Task } from "@/apis/types";
+import { SEARCH_DEBOUNCE_DELAY } from "@/constants";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useTasks } from "@/hooks/reactQuery/useTasksApi";
 import useDebouncedValue from "@/hooks/useDebouncedValue";
 import { getTaskPath } from "@/utils";
 
-import { SEARCH_DEBOUNCE_DELAY, SEARCH_FILTERS } from "./constants";
+import { SEARCH_FILTERS } from "./constants";
 import Result from "./Result";
 
 type SearchPanelProps = { onClose: () => void };

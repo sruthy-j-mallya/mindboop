@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
+import tasksApi from "@/apis/tasks";
 import timeLogsApi from "@/apis/time_logs";
 import userPreferencesApi from "@/apis/user_preferences";
 import { renderWithProviders } from "@/test/utils";
@@ -117,5 +118,20 @@ describe("TimeLogPopover", () => {
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(screen.queryByRole("dialog", { name: "Log time" })).not.toBeInTheDocument();
+  });
+
+  it("searches for matching tasks once typing pauses, not on every key", async () => {
+    const fetchList = vi
+      .spyOn(tasksApi, "fetchList")
+      .mockResolvedValue({ tasks: [{ id: "task-1", title: "Design the landing page" }] } as never);
+    renderPopover();
+
+    await userEvent.type(screen.getByRole("textbox", { name: "What did you work on?" }), "design");
+
+    expect(
+      await screen.findByRole("button", { name: "Link to Design the landing page" }),
+    ).toBeInTheDocument();
+    expect(fetchList).toHaveBeenCalledTimes(1);
+    expect(fetchList).toHaveBeenCalledWith(expect.objectContaining({ searchTerm: "design" }));
   });
 });
