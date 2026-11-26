@@ -1,5 +1,7 @@
 import { type FormEvent, type ReactElement, useState } from "react";
 
+import { parseISO } from "date-fns";
+
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,11 +41,18 @@ const SchedulePicker = ({
   ...openState
 }: SchedulePickerProps) => {
   const [isOpen, setIsOpen] = useOpenState(openState);
-  const [draft, setDraft] = useState<ScheduleDraft>(() => toDraft(schedule, Date.now()));
-  const draftError = getDraftError(draft);
+  // When the picker last opened: what "now" is for the days and times it offers.
+  const [now, setNow] = useState(Date.now);
+  const [draft, setDraft] = useState<ScheduleDraft>(() => toDraft(schedule, now));
+  const savedStart = schedule.startsAt ? parseISO(schedule.startsAt) : null;
+  const draftError = getDraftError(draft, savedStart, now);
 
   const handleOpenChange = (isOpening: boolean) => {
-    if (isOpening) setDraft(toDraft(schedule, Date.now()));
+    if (isOpening) {
+      const openedAt = Date.now();
+      setNow(openedAt);
+      setDraft(toDraft(schedule, openedAt));
+    }
     setIsOpen(isOpening);
   };
 
@@ -56,9 +65,12 @@ const SchedulePicker = ({
 
   const handleClear = () => saveSchedule(CLEARED_SCHEDULE);
 
+  // Checked again against the clock, in case the picker stayed open while the picked time went by.
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!draftError) saveSchedule(toPayload(draft));
+    const submittedAt = Date.now();
+    setNow(submittedAt);
+    if (!getDraftError(draft, savedStart, submittedAt)) saveSchedule(toPayload(draft));
   };
 
   return (
@@ -78,12 +90,17 @@ const SchedulePicker = ({
               <TabsTrigger value={DURATION_TAB}>Duration</TabsTrigger>
             </TabsList>
             <TabsContent value={DATE_TAB}>
-              <DateTab draft={draft} onChange={setDraft} />
+              <DateTab draft={draft} now={now} onChange={setDraft} />
             </TabsContent>
             <TabsContent value={DURATION_TAB}>
-              <DurationTab draft={draft} error={draftError} onChange={setDraft} />
+              <DurationTab draft={draft} now={now} onChange={setDraft} />
             </TabsContent>
           </Tabs>
+          {draftError && (
+            <p className="text-sm text-destructive" role="alert">
+              {draftError}
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <Button size="sm" type="button" variant="outline" onClick={handleClear}>
               {clearLabel}

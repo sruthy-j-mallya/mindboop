@@ -1,6 +1,7 @@
-import { addDays, format, isSameDay, isSameYear, startOfDay } from "date-fns";
+import { addDays, format, isSameDay, isSameYear, roundToNearestMinutes, startOfDay } from "date-fns";
 
 import type { HomeTasksParams, TimeFormat } from "@/apis/types";
+import { TASK_START_STEP_MINUTES } from "@/constants";
 
 // How dates and times read across the app. `timeFormat` is the clock picked in Settings (`useDatePreferences`).
 
@@ -44,3 +45,10 @@ export const getDayRange = (now: number): HomeTasksParams => ({
   from: startOfDay(now).toISOString(),
   to: startOfDay(addDays(now, 1)).toISOString(),
 });
+
+// The earliest a task can start: today for an all-day task, or the quarter hour now falls in for a timed one. Tasks are
+// planned from now on; only time logs go back. Mirrors Task#starts_at_is_not_in_the_past.
+export const getEarliestTaskStart = (isAllDay: boolean, now: number) =>
+  isAllDay
+    ? startOfDay(now)
+    : roundToNearestMinutes(now, { nearestTo: TASK_START_STEP_MINUTES, roundingMethod: "floor" });

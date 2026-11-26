@@ -18,6 +18,7 @@ import useDatePreferences from "@/hooks/useDatePreferences";
 import { DEFAULT_TIME_SLOT_INDEX, TIME_SLOTS } from "./constants";
 import {
   centerSelectedOption,
+  getFirstSlotIndex,
   parseTimeText,
   scrollIntoViewIfNeeded,
   toTimeLabel,
@@ -31,6 +32,8 @@ type TimePickerProps = {
   placeholder?: string;
   // Lets an emptied field set "" (no time); otherwise emptying it keeps the old time. A row shows its own clear button.
   isClearable?: boolean;
+  // Slots before this "HH:mm" time can't be picked from the list.
+  minTime?: string;
   // "field" is a plain input; "row" is a full-width row with a clock icon, and a chevron or a clear button at the end.
   variant?: "field" | "row";
   className?: string;
@@ -47,6 +50,7 @@ const TimePicker = ({
   value,
   placeholder,
   isClearable = false,
+  minTime,
   variant = "field",
   className,
   onChange,
@@ -60,11 +64,14 @@ const TimePicker = ({
   // What's being typed; null while the field shows the value.
   const [text, setText] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(DEFAULT_TIME_SLOT_INDEX);
+  const firstSlotIndex = getFirstSlotIndex(minTime);
+  const isSlotDisabled = (index: number) => index < firstSlotIndex;
+  const clampIndex = (index: number) => Math.min(Math.max(index, firstSlotIndex), LAST_SLOT_INDEX);
 
   const openList = () => {
     if (isOpen) return;
 
-    setActiveIndex(value ? toTimeSlotIndex(value) : DEFAULT_TIME_SLOT_INDEX);
+    setActiveIndex(clampIndex(value ? toTimeSlotIndex(value) : DEFAULT_TIME_SLOT_INDEX));
     setIsOpen(true);
   };
 
@@ -88,8 +95,7 @@ const TimePicker = ({
     setIsOpen(false);
   };
 
-  const moveActive = (step: number) =>
-    setActiveIndex((index) => Math.min(Math.max(index + step, 0), LAST_SLOT_INDEX));
+  const moveActive = (step: number) => setActiveIndex((index) => clampIndex(index + step));
 
   const handleFocus = (event: FocusEvent<HTMLInputElement>) => {
     event.target.select();
@@ -116,8 +122,9 @@ const TimePicker = ({
     } else if (event.key === "Enter" && (isOpen || text !== null)) {
       // Picks the time instead of submitting the surrounding form.
       event.preventDefault();
-      if (text === null) selectSlot(TIME_SLOTS.at(activeIndex) ?? value);
-      else {
+      if (text === null) {
+        if (!isSlotDisabled(activeIndex)) selectSlot(TIME_SLOTS.at(activeIndex) ?? value);
+      } else {
         commitText();
         setIsOpen(false);
       }
@@ -225,22 +232,25 @@ const TimePicker = ({
           {TIME_SLOTS.map((slot, index) => {
             const isSelected = slot === value;
             const isActive = index === activeIndex;
+            const isDisabled = isSlotDisabled(index);
 
             return (
               <li
+                aria-disabled={isDisabled || undefined}
                 aria-selected={isSelected}
                 className={cn(
                   "flex cursor-default items-center justify-between rounded-sm px-2 py-1.5 text-sm tabular-nums select-none",
                   isActive && "bg-accent text-accent-foreground",
                   isSelected && "text-primary",
+                  isDisabled && "pointer-events-none text-muted-foreground/50",
                 )}
                 data-active={isActive}
                 id={`${listId}-${index}`}
                 key={slot}
                 ref={isActive ? scrollIntoViewIfNeeded : undefined}
                 role="option"
-                onClick={() => selectSlot(slot)}
-                onMouseEnter={() => setActiveIndex(index)}
+                onClick={isDisabled ? undefined : () => selectSlot(slot)}
+                onMouseEnter={isDisabled ? undefined : () => setActiveIndex(index)}
               >
                 {toTimeLabel(slot, timeFormat)}
                 {isSelected && <Check className="size-4" />}

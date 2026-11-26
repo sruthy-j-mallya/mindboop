@@ -38,6 +38,8 @@ export const CLEARED_SCHEDULE: Omit<UpdateTaskPayload, "id"> = {
 
 export const END_BEFORE_START_ERROR = "The end can't be before the start";
 
+export const START_IN_PAST_ERROR = "Tasks can only be scheduled from now on";
+
 export const UNSCHEDULED: Schedule = { isDuration: false, isAllDay: false, startsAt: null, endsAt: null };
 
 // A compact calendar, shared by the Date tab and the Duration tab's date fields, so the picker fits above or below its

@@ -14,11 +14,13 @@ type DatePickerProps = {
   label: string;
   value: Date;
   className?: string;
+  // Days before this one can't be picked.
+  fromDay?: Date;
   onChange: (day: Date) => void;
 };
 
 // A date field that opens the same calendar as the Date tab. Picking a day closes it.
-const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
+const DatePicker = ({ label, value, className, fromDay, onChange }: DatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [month, setMonth] = useState(value);
   const weekStartsOn = useWeekStartsOn();
@@ -50,6 +52,7 @@ const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
           required
           className={CALENDAR_CLASS_NAME}
           classNames={CALENDAR_CLASS_NAMES}
+          disabled={fromDay && { before: fromDay }}
           mode="single"
           month={month}
           selected={value}

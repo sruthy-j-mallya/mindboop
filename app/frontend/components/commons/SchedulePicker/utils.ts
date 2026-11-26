@@ -16,13 +16,15 @@ import {
 
 import type { TimeFormat, UpdateTaskPayload, WeekStartsOn } from "@/apis/types";
 import { MINUTES_PER_HOUR } from "@/constants";
-import { formatTime } from "@/utils/dateTime";
+import { formatTime, getEarliestTaskStart } from "@/utils/dateTime";
 
 import {
   DEFAULT_START_HOUR,
   END_BEFORE_START_ERROR,
+  START_IN_PAST_ERROR,
   TIME_INPUT_FORMAT,
   TIME_SLOT_MINUTES,
+  TIME_SLOTS,
   TIME_TEXT_PATTERN,
 } from "./constants";
 import type { Schedule, ScheduleDraft } from "./types";
@@ -72,6 +74,15 @@ export const parseTimeText = (text: string) => {
   if (hours === null || minutes >= MINUTES_PER_HOUR) return null;
 
   return format(new Date(2000, 0, 1, hours, minutes), TIME_INPUT_FORMAT);
+};
+
+// The first slot at or after `minTime`, past the last one when none is left. "HH:mm" strings sort as times.
+export const getFirstSlotIndex = (minTime?: string) => {
+  if (!minTime) return 0;
+
+  const index = TIME_SLOTS.findIndex((slot) => slot >= minTime);
+
+  return index === -1 ? TIME_SLOTS.length : index;
 };
 
 // Callback refs for the time picker's list. Module-level so React attaches them once, not on every render.
@@ -152,8 +163,25 @@ export const toPayload = ({
   endsAt: isDuration ? endsAt.toISOString() : null,
 });
 
-export const getDraftError = ({ isDuration, startsAt, endsAt }: ScheduleDraft) =>
-  isDuration && isBefore(endsAt, startsAt) ? END_BEFORE_START_ERROR : null;
+// Why the draft can't be saved, or null. Tasks start from now on, but a start left where it was saved may stay in the
+// past, so an overdue task can still have its end changed. Mirrors Task#starts_at_is_not_in_the_past.
+export const getDraftError = (
+  { isDuration, isAllDay, startsAt, endsAt }: ScheduleDraft,
+  savedStart: Date | null,
+  now: number,
+) => {
+  const isStartMoved = savedStart?.getTime() !== startsAt.getTime();
+  if (isStartMoved && isBefore(startsAt, getEarliestTaskStart(isAllDay, now))) return START_IN_PAST_ERROR;
+
+  return isDuration && isBefore(endsAt, startsAt) ? END_BEFORE_START_ERROR : null;
+};
+
+// The first time a timed task can start on `day` ("HH:mm"): from now on today, and any time on another day.
+export const getMinStartTime = (day: Date, now: number) => {
+  const earliest = getEarliestTaskStart(false, now);
+
+  return isSameDay(day, earliest) ? toTimeInputValue(earliest) : undefined;
+};
 
 // Next week is its first day.
 export const getQuickDays = (today: Date, weekStartsOn: WeekStartsOn) => [

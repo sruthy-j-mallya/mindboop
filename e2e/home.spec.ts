@@ -20,7 +20,8 @@ const signUp = async (page: Page) => {
 // An overdue task and one with a breadcrumb, which take days or minutes of focus to come by in the app.
 const SEED_TASKS = `
   user = User.find_by!(email_address: ARGV[0])
-  user.tasks.create!(title: "Renew passport", is_all_day: true, starts_at: 3.days.ago)
+  # Planned back when the day was still ahead; a new start can't be in the past.
+  user.tasks.new(title: "Renew passport", is_all_day: true, starts_at: 3.days.ago).save!(validate: false)
   task = user.tasks.create!(title: "Write the report")
   task.breadcrumbs.create!(restart_description: "Chapter 2")
 `;

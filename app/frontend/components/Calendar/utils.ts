@@ -30,7 +30,13 @@ import { getLifeAreaColor } from "@/components/commons/LifeArea/utils";
 import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
 import { DEFAULT_WEEK_STARTS_ON, PHONE_LAYOUT_QUERY } from "@/constants";
-import { formatDayRange, formatLongDate, formatTime, formatTimeRange } from "@/utils/dateTime";
+import {
+  formatDayRange,
+  formatLongDate,
+  formatTime,
+  formatTimeRange,
+  getEarliestTaskStart,
+} from "@/utils/dateTime";
 import { readStorage } from "@/utils/storage";
 
 import {
@@ -373,7 +379,7 @@ export const getMoveError = (event: CalendarEvent, times: EventTimes, isResize: 
     return isWithinLogWindow(times, now) ? null : MOVE_ERRORS.TIME_LOG_OUTSIDE_WINDOW;
   }
 
-  const earliest = times.allDay ? startOfDay(now) : getCurrentSlotStart(now);
+  const earliest = getEarliestTaskStart(times.allDay, now);
   const isStartAllowed = times.start >= earliest;
   if (!isResize) return isStartAllowed ? null : MOVE_ERRORS.TASK_IN_PAST;
 

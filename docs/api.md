@@ -130,6 +130,12 @@ with days but no times; the client then sends the start of each day in the user'
 422 (for example an `ends_at` without `is_duration`, or a duration that ends before it starts). Send `starts_at: null`,
 `ends_at: null` and `is_duration: false` to clear the schedule.
 
+Tasks are scheduled from now on: a new or changed `starts_at` in the past gets a 422 (`Starts at can't be in the past`).
+A timed start may be up to 20 minutes back (the current quarter hour, plus clock skew), and an all-day start up to a
+day back, since the server doesn't know the user's midnight. A `starts_at` that isn't changed isn't checked, so an
+overdue task can still be edited, completed or have its end moved. This also applies to the schedule given when
+converting a parked thought.
+
 `description` is Markdown, as written in the rich-text editor, up to 10,000 characters (longer gets a 422). It's stripped,
 and a blank description is saved as `null`. The API stores it as given; the client renders it through the editor's schema,
 which leaves out anything the editor can't write, such as raw HTML.
