@@ -19,14 +19,27 @@ Requires [mise](https://mise.jdx.dev) and a local PostgreSQL server.
 
 ```sh
 mise install
-bin/setup        # bundle, pnpm install, db:prepare, then starts bin/dev
+bin/setup        # bundle, pnpm install, db:prepare, sample data, then starts bin/dev
 ```
+
+`bin/setup` loads sample data (`bin/rails sample_data:load`, skip it with `--skip-sample-data`). Sign in with password
+`password123` as:
+
+| User                  | Shows                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| `demo@mindboop.test`  | A few weeks of use: areas, tasks in every state, sessions, routines, breadcrumbs, parking lot |
+| `focus@mindboop.test` | A focus session in progress: a running timer after a break, parked thoughts, curiosity time   |
+| `new@mindboop.test`   | A new account: every empty state                                                              |
+
+Re-run `bin/rails sample_data:load` at any time to reset these users; dates are relative to today. Each resource has its
+own seeder in `app/services/sample_data/seeders/`, run in order by `SampleData::SeederService`.
 
 ## Common commands
 
 | Command                                                           | What it does                                               |
 | ----------------------------------------------------------------- | ---------------------------------------------------------- |
 | `bin/dev`                                                         | Rails on :3000 + Vite dev server (HMR)                     |
+| `bin/rails sample_data:load`                                      | Replace the sample users and their data                    |
 | `bin/rails test`                                                  | Backend tests (Minitest)                                   |
 | `pnpm test`                                                       | Vitest component/unit tests                                |
 | `pnpm e2e`                                                        | Playwright end-to-end tests (boots a test server on :5100) |
