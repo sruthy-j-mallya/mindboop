@@ -5,7 +5,7 @@ export const PAGE_TITLES = [
   { path: routes.inbox.index, title: "Inbox" },
   { path: routes.lifeAreas.index, title: "Tasks" },
   { path: routes.completedTasks, title: "Completed tasks" },
-  { path: routes.deletedTasks, title: "Deleted tasks" },
+  { path: routes.deletedTasks, title: "Trash" },
   { path: routes.calendar, title: "Calendar" },
   { path: routes.routines.index, title: "Routines" },
   { path: routes.timer, title: "Timer" },

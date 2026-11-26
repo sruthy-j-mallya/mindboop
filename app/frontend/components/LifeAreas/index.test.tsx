@@ -136,7 +136,7 @@ describe("LifeAreas", () => {
     ).toEqual([
       "Inbox",
       "Completed",
-      "Deleted",
+      "Trash",
       expect.stringContaining("Work"),
       expect.stringContaining("Health"),
     ]);

@@ -85,7 +85,7 @@ describe("TaskArchive", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task: { ...task, isCompleted: false } });
     renderArchive(routes.completedTasks);
 
-    const list = await screen.findByRole("list", { name: "Completed tasks" });
+    const list = await screen.findByRole("list", { name: "Completed" });
     expect(await within(list).findByText("Work")).toBeVisible();
     expect(fetchList).toHaveBeenCalledWith({ isCompleted: true, page: 1 });
     await userEvent.click(within(list).getByRole("button", { name: "Reopen Pay rent" }));
@@ -105,14 +105,14 @@ describe("TaskArchive", () => {
     const restore = vi.spyOn(taskRestorationsApi, "create").mockResolvedValue({ task: TASK });
     renderArchive(routes.deletedTasks);
 
-    const list = await screen.findByRole("list", { name: "Deleted tasks" });
+    const list = await screen.findByRole("list", { name: "Trash" });
     expect(fetchList).toHaveBeenCalledWith({ isDeleted: true, page: 1 });
     expect(within(list).getByText(/^Deleted \d/)).toBeVisible();
     await userEvent.click(within(list).getByRole("button", { name: "Restore Pay rent" }));
 
     expect(await screen.findByText("Restored “Pay rent” to your Inbox")).toBeVisible();
     expect(restore.mock.lastCall?.[0]).toBe(task.id);
-    expect(await screen.findByText("Nothing deleted")).toBeVisible();
+    expect(await screen.findByText("Trash is empty")).toBeVisible();
   });
 
   it("says when a restored task is still completed", async () => {
@@ -143,8 +143,8 @@ describe("TaskArchive", () => {
 
     const nav = within(screen.getByRole("navigation", { name: "Areas of life" }));
     expect(nav.getByRole("link", { name: "Completed" })).toHaveAttribute("aria-current", "page");
-    await userEvent.click(nav.getByRole("link", { name: "Deleted" }));
+    await userEvent.click(nav.getByRole("link", { name: "Trash" }));
 
-    expect(await screen.findByRole("heading", { name: "Deleted" })).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "Trash" })).toBeVisible();
   });
 });

@@ -19,7 +19,7 @@ const Deleted = () => {
   return (
     <ArchiveList
       emptyHint="Tasks you delete wait here, in case you want one back."
-      emptyTitle="Nothing deleted"
+      emptyTitle="Trash is empty"
       error={error?.message}
       filters={DELETED_FILTERS}
       icon={Trash2}

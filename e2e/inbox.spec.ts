@@ -161,10 +161,10 @@ test("reopen a completed task and restore a deleted one from their pages", async
   await page.getByRole("button", { name: "Reopen Cancel the gym" }).click();
   await expect(page.getByText("Nothing completed yet")).toBeVisible();
 
-  await nav.getByRole("link", { name: "Deleted" }).click();
+  await nav.getByRole("link", { name: "Trash" }).click();
   await page.getByRole("button", { name: "Restore Sort the mail" }).click();
   await expect(page.getByText("Restored “Sort the mail” to your Inbox")).toBeVisible();
-  await expect(page.getByText("Nothing deleted")).toBeVisible();
+  await expect(page.getByText("Trash is empty")).toBeVisible();
 
   await nav.getByRole("link", { name: "Inbox" }).click();
   await expectTasks(page, ["Sort the mail", "Cancel the gym"]);

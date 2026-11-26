@@ -48,7 +48,7 @@ const ArchiveList = ({
         <EmptyList hint={emptyHint} icon={icon} title={emptyTitle} />
       )}
       {tasks.length > 0 && (
-        <ul aria-label={`${title} tasks`} className="flex flex-col divide-y">
+        <ul aria-labelledby="task-archive-heading" className="flex flex-col divide-y">
           {tasks.map((task) =>
             renderTask(
               task,
