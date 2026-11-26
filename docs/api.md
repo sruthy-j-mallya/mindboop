@@ -64,8 +64,9 @@ Every error response has one shape:
 | GET    | `/api/current_time_log`                   | –                                                                                                   | 200 `{ time_log }` or `null`        |
 | GET    | `/api/calendar_events`                    | `from`, `to` query params (ISO 8601)                                                                | 200 `{ tasks, time_logs }`          |
 | GET    | `/api/home_tasks`                         | `from`, `to` query params (ISO 8601)                                                                | 200 `{ today, overdue, resumable }` |
+| GET    | `/api/onboarding`                         | –                                                                                                   | 200 `{ onboarding }`                |
 | GET    | `/api/user_preference`                    | –                                                                                                   | 200 `{ user_preference }`           |
-| PATCH  | `/api/user_preference`                    | `theme`, `completion_sound`, `break_alarm_sound`, `week_starts_on` (any)                            | 200 `{ user_preference }`           |
+| PATCH  | `/api/user_preference`                    | `theme`, `completion_sound`, `break_alarm_sound`, `week_starts_on`, `time_format` (any)             | 200 `{ user_preference }`           |
 | GET    | `/api/parking_lot_items`                  | `page`, `status`, `time_log_id` query params (optional)                                             | 200 list (see below)                |
 | POST   | `/api/parking_lot_items`                  | `content`, `time_log_id` (optional)                                                                 | 201 `{ parking_lot_item }`          |
 | PATCH  | `/api/parking_lot_items/:id`              | `content`, `status` (both optional)                                                                 | 200 `{ parking_lot_item }`          |
@@ -88,7 +89,8 @@ with undated tasks last; ties go to the newest task. Another user's task gets a 
 stay on the Calendar. A session still running on it ends at that moment, the way a completion ends it but without
 completing the task. One with under 2 minutes of focus is discarded instead.
 
-`POST /api/tasks/:task_id/restoration` brings back a deleted task (the Inbox's Undo). A task that isn't deleted gets a 404.
+`POST /api/tasks/:task_id/restoration` brings back a deleted task (Undo, and the Deleted page), as it was: a
+completed task is still completed, and an uncompleted one whose area was deleted goes to the Inbox. A task that isn't deleted gets a 404.
 A session that ended when the task was deleted stays ended.
 
 The list returns 20 tasks per page, as `{ tasks, tasks_count, page, total_pages }`. `tasks_count` is the total across all
@@ -98,8 +100,12 @@ pages. A missing or invalid `page` returns the first page, and a page past the e
 `{ task_counts: [{ life_area_id, tasks_count }] }`. A `null` `life_area_id` is the Inbox; an area (or Inbox) with no such
 tasks is left out.
 
-`is_completed=false` lists only incomplete tasks (the Inbox and area lists), and `is_completed=true` only completed ones.
+`is_completed=false` lists only incomplete tasks (the Inbox and area lists), and `is_completed=true` only completed ones,
+most recently changed first (the Completed page).
 Leaving it out lists every task.
+
+`is_deleted=true` lists only deleted tasks, latest deletion (`discarded_at`) first (the Deleted page). It combines with
+the other filters and paging; without it, deleted tasks are left out.
 
 `is_in_inbox=true` lists only tasks in no area of life (the Inbox), and `life_area_id` only the tasks in that area. Both
 combine with the other filters and paging; leaving them out lists tasks from every area.
@@ -123,6 +129,12 @@ A duration has both, with `is_duration: true` and `ends_at` no earlier than `sta
 with days but no times; the client then sends the start of each day in the user's time zone. Any other combination gets a
 422 (for example an `ends_at` without `is_duration`, or a duration that ends before it starts). Send `starts_at: null`,
 `ends_at: null` and `is_duration: false` to clear the schedule.
+
+Tasks are scheduled from now on: a new or changed `starts_at` in the past gets a 422 (`Starts at can't be in the past`).
+A timed start may be up to 20 minutes back (the current quarter hour, plus clock skew), and an all-day start up to a
+day back, since the server doesn't know the user's midnight. A `starts_at` that isn't changed isn't checked, so an
+overdue task can still be edited, completed or have its end moved. This also applies to the schedule given when
+converting a parked thought.
 
 `description` is Markdown, as written in the rich-text editor, up to 10,000 characters (longer gets a 422). It's stripped,
 and a blank description is saved as `null`. The API stores it as given; the client renders it through the editor's schema,
@@ -205,9 +217,15 @@ shape as `GET /api/tasks/:id`, since a move also changes the other items' order.
   nothing saved. Items keep their stored positions among themselves, so a discarded item never shares one with a kept item.
 - `DELETE` soft-deletes the item (Discard).
 
+## Onboarding
+
+`GET /api/onboarding` says which first steps the signed-in user has taken, as
+`{ has_life_areas, has_tasks, has_sessions }`, for the checklist on Home. Deleted areas and tasks count; discarded
+sessions don't.
+
 ## Quick starts
 
-`POST /api/quick_starts` creates a task and starts a timer on it, in one transaction. It's what Begin on the Home
+`POST /api/quick_starts` creates a task and starts a timer on it, in one transaction. It's what Start on the Home
 page calls. `POST /api/tasks` and `POST /api/time_logs` still do each step on its own.
 
 - It accepts `title`, `description`, `estimated_minutes` and `checklist_items_attributes`, with the same rules as
@@ -394,7 +412,7 @@ malformed time, gets a 422.
 ## User preference
 
 The signed-in user's settings, one per account (`UserPreference`), returned as
-`{ theme, completion_sound, break_alarm_sound, week_starts_on }`.
+`{ theme, completion_sound, break_alarm_sound, week_starts_on, time_format }`.
 
 | Field               | Values                                                                                     | Default   |
 | ------------------- | ------------------------------------------------------------------------------------------ | --------- |
@@ -402,6 +420,7 @@ The signed-in user's settings, one per account (`UserPreference`), returned as
 | `completion_sound`  | `rising`, `crisp`, `wood`, `soft`, `glass`, `triple`, `tick_ding`, `bell`, `chime`, `none` | `rising`  |
 | `break_alarm_sound` | `classic`, `digital`, `chimes`, `marimba`, `bell`                                          | `classic` |
 | `week_starts_on`    | `0` (Sunday) to `6` (Saturday): the day the Calendar's weeks start on                      | `1`       |
+| `time_format`       | `12h` ("5:30pm"), `24h` ("17:30")                                                          | `12h`     |
 
 - `GET` returns the defaults until the user first changes something; no row is saved by reading.
 - `PATCH` changes only the fields it's given, saving the row on the first change. An unknown value gets a 422 and

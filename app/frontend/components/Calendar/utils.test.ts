@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { addHours } from "date-fns";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Task, TimeLog } from "@/apis/types";
 
@@ -87,6 +88,16 @@ describe("readStoredView and readStoredDayCount", () => {
 
     expect(readStoredView()).toBe(CALENDAR_VIEWS.MONTH);
     expect(readStoredDayCount()).toBe(5);
+  });
+
+  it("opens on a day on phones, unless another view was picked", () => {
+    vi.spyOn(window, "matchMedia").mockReturnValue({ matches: true } as MediaQueryList);
+
+    expect(readStoredView()).toBe(CALENDAR_VIEWS.DAY);
+    localStorage.setItem(VIEW_STORAGE_KEY, CALENDAR_VIEWS.WEEK);
+    expect(readStoredView()).toBe(CALENDAR_VIEWS.WEEK);
+
+    vi.restoreAllMocks();
   });
 
   it("falls back to the defaults when nothing, or nothing valid, was kept", () => {
@@ -297,19 +308,29 @@ describe("getEventProps", () => {
     },
   ]);
   const [timeLogEvent, taskEvent] = toCalendarEvents(
-    { tasks: [buildTask({ lifeAreaId: "area-1" })], timeLogs: [buildTimeLog({ lifeAreaId: "area-1" })] },
+    {
+      tasks: [buildTask({ lifeAreaId: "area-1", estimatedMinutes: 60 })],
+      timeLogs: [buildTimeLog({ lifeAreaId: "area-1" })],
+    },
     NOW,
     {},
-  );
+  ).map((event) => ({ ...event, end: addHours(event.start, 1) }));
+
+  it("marks an event too short for its times", () => {
+    const short = { ...taskEvent, start: at(12, 10), end: at(12, 10, 30) };
+
+    expect(getEventProps(short, new Map()).className).toContain("calendar-event-short");
+    expect(getEventProps({ ...short, end: at(12, 11) }, new Map()).className).not.toContain("short");
+  });
 
   it("colours tasks and time logs by their area of life", () => {
     expect(getEventProps(taskEvent, lifeAreaColors)).toEqual({
       className: "calendar-event-task calendar-event-area",
-      style: { "--area-color": "#0f766e" },
+      style: { "--area-color": "#3f716e" },
     });
     expect(getEventProps(timeLogEvent, lifeAreaColors)).toEqual({
       className: "calendar-event-time-log calendar-event-area",
-      style: { "--area-color": "#0f766e" },
+      style: { "--area-color": "#3f716e" },
     });
   });
 

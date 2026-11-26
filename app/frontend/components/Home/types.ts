@@ -17,6 +17,8 @@ export type TaskCardProps = TaskListProps & {
 
 export type TaskRowProps = {
   task: Task;
+  // Shown between the checkbox and the title.
+  leading?: ReactNode;
   // Shown under the title.
   details?: ReactNode;
   // Shown at the end of the row.
@@ -24,9 +26,10 @@ export type TaskRowProps = {
   error?: string;
 };
 
-export type ResumableRowProps = {
+// A row with a button that starts its task.
+export type StartableRowProps = {
   task: Task;
   isOnTheClock: boolean;
   isDisabled: boolean;
-  onResume: (taskId: string) => void;
+  onStart: (taskId: string) => void;
 };

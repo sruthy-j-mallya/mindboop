@@ -225,3 +225,31 @@
     color: color-mix(in oklab, var(--area-color) 70%, var(--foreground));
   }
 }
+
+/*
+ * In the dark theme, an edge around what's filled with the primary purple. Not in a layer, as the components' own
+ * `outline-none` would win; focus rings are box shadows, so the outline doesn't get in their way.
+ */
+.dark
+  :is(
+    [data-slot="button"][data-variant="default"],
+    [data-slot="checkbox"][data-state="checked"],
+    [data-slot="switch"][data-state="checked"]
+  ) {
+  outline: 1px solid var(--primary-edge);
+  outline-offset: -1px;
+}
+
+/* For people who ask for less motion, changes are immediate. Spinners keep turning, as they say something is going on. */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin),
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

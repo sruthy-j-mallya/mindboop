@@ -8,6 +8,9 @@ export const CALENDAR_VIEWS = {
 
 export const DEFAULT_VIEW = CALENDAR_VIEWS.WEEK;
 
+// A week's columns are too narrow to read on phones, so there the Calendar opens on a day, until another view is picked.
+export const DEFAULT_PHONE_VIEW = CALENDAR_VIEWS.DAY;
+
 // The toolbar's view picker options, in order.
 export const VIEW_OPTIONS = [
   { value: CALENDAR_VIEWS.DAY, label: "Day" },
@@ -31,6 +34,9 @@ export const SLOT_MINUTES = 15;
 export const SLOTS_PER_HOUR = 4;
 
 // A task with only a date (no end) is drawn as long as its estimate, or this long without one.
+// In the time grid, an event shorter than this has no room for its times under its title.
+export const SHORT_EVENT_MINUTES = 45;
+
 export const DEFAULT_TASK_MINUTES = 30;
 
 // How far back time can be logged or moved to. Keep in sync with TimeLog::LOGGING_WINDOW.
@@ -79,6 +85,7 @@ export const EVENT_CLASS_NAMES = {
   // Added to an event in an area of life, coloured by `--area-color`.
   LIFE_AREA: "calendar-event-area",
   TIME_LOG: "calendar-event-time-log",
+  SHORT: "calendar-event-short",
 } as const;
 
 export const SLOT_CLASS_NAMES = { PAST: "calendar-slot-past", LOCKED: "calendar-slot-locked" } as const;

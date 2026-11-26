@@ -13,10 +13,12 @@ import DeleteTaskDialog from "@/components/commons/TaskDetails/DeleteTaskDialog"
 import TitleInput from "@/components/commons/TitleInput";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PHONE_LAYOUT_QUERY } from "@/constants";
 import { useCurrentTimeLog } from "@/hooks/reactQuery/useCurrentTimeLogsApi";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 import useCompleteTask from "@/hooks/useCompleteTask";
 import useDeleteTaskWithUndo from "@/hooks/useDeleteTaskWithUndo";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import useRenameTask from "@/hooks/useRenameTask";
 import { getTaskPath } from "@/utils";
 
@@ -28,7 +30,8 @@ type TaskRowProps = { task: Task };
 const TaskRow = ({ task }: TaskRowProps) => {
   const { id } = task;
   const navigate = useNavigate();
-  const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(id);
+  const isPhone = useMediaQuery(PHONE_LAYOUT_QUERY);
+  const { completeTask, isCompleting, isSelected, error: completeError } = useCompleteTask(task);
   const { data: timeLog } = useCurrentTimeLog();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { deleteTask, isDeleting, error: deleteError } = useDeleteTaskWithUndo(task);
@@ -61,7 +64,7 @@ const TaskRow = ({ task }: TaskRowProps) => {
       <div
         className={cn(
           "group flex items-center gap-3 rounded-md pr-3 pl-1 transition-colors focus-within:bg-muted hover:bg-muted",
-          isSelected && "bg-muted",
+          isSelected && "bg-accent focus-within:bg-accent hover:bg-accent",
           (isDeleting || isDragging) && "opacity-50",
         )}
       >
@@ -81,33 +84,40 @@ const TaskRow = ({ task }: TaskRowProps) => {
         <Checkbox
           aria-label={`Complete ${title}`}
           checked={isCompleting}
-          className="border-muted-foreground/50"
           disabled={isCompleting || isDeleting}
           onCheckedChange={completeTask}
         />
-        <TitleInput
-          className="min-w-0 flex-1 py-2 text-sm"
-          isSelected={isSelected}
-          label={title}
-          title={title}
-          onFocus={handleTitleFocus}
-          onSave={renameTask}
-        />
-        {/* Opens the same picker as the pane. Hidden on phones to leave the title room; the pane still shows it. */}
-        {task.startsAt && (
-          <SchedulePicker align="end" schedule={task} onSave={handleScheduleSave}>
-            {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
-            <Button
-              className="h-6 shrink-0 gap-1 rounded-full border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 max-sm:hidden dark:bg-background dark:hover:bg-background"
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <CalendarDays className="size-3.5 text-muted-foreground" />
-              <span className="sr-only">Due date of {title}:</span> <ScheduleLabel schedule={task} />
-            </Button>
-          </SchedulePicker>
-        )}
+        {/* The date wraps under the title rather than squeezing it. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 py-1.5">
+          <div className="flex min-w-0 flex-[1_1_9rem] flex-col py-0.5">
+            <TitleInput
+              className="text-sm"
+              isSelected={isSelected}
+              label={title}
+              title={title}
+              onFocus={handleTitleFocus}
+              onSave={renameTask}
+            />
+            {/* On phones the date is only read here, under the title; the pane changes it. */}
+            {isPhone && <ScheduleLabel className="text-xs" schedule={task} />}
+          </div>
+          {/* Opens the same picker as the pane. */}
+          {task.startsAt && !isPhone && (
+            <SchedulePicker align="end" schedule={task} onSave={handleScheduleSave}>
+              {/* A bordered chip with a calendar icon, so it reads as something to click rather than plain text. */}
+              <Button
+                className="h-6 max-w-full min-w-0 gap-1 rounded-full border-border bg-background px-2 text-xs font-normal shadow-none hover:border-muted-foreground/40 hover:bg-background has-[>svg]:px-2 dark:bg-background dark:hover:bg-background"
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <CalendarDays className="size-3.5 text-muted-foreground" />
+                <span className="sr-only">Due date of {title}:</span>{" "}
+                <ScheduleLabel className="min-w-0 truncate" schedule={task} />
+              </Button>
+            </SchedulePicker>
+          )}
+        </div>
         {/* With a mouse, it shows on hover or focus to keep the list calm; touch screens always show it. No confirmation:
             the toast offers to undo instead. The task on the clock is the exception. */}
         <Button

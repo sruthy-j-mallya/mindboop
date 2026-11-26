@@ -4,18 +4,33 @@ module SampleData
     # time, or over a span (overdue, today, upcoming); with an estimate and a Markdown description; completed; deleted.
     # Steps, sessions and breadcrumbs come from the seeders after this one.
     class TasksSeeder < BaseSeeder
+      SCHEDULE_ATTRIBUTES = %i[ is_all_day is_duration starts_at ends_at ].freeze
+
       def process!
         { demo: demo_tasks, focus: focus_tasks }.each do |user_key, tasks|
           user = context.users.fetch(user_key)
           tasks.each do |key, attributes|
             life_area = context.life_areas[attributes[:life_area]]
-            context.tasks[key] = user.tasks.create!(**attributes, life_area:)
+            context.tasks[key] = create_task(user, attributes, life_area)
           end
         end
         delete_side_project
       end
 
       private
+        # A task only becomes overdue after it was scheduled, and a new start can't be in the past
+        # (Task#starts_at_is_not_in_the_past). So a past schedule is written after the task is saved, as time would have.
+        def create_task(user, attributes, life_area)
+          return user.tasks.create!(**attributes, life_area:) unless starts_in_the_past?(attributes)
+
+          schedule = attributes.slice(*SCHEDULE_ATTRIBUTES)
+          user.tasks.create!(**attributes.except(*SCHEDULE_ATTRIBUTES), life_area:).tap { |task| task.update_columns(schedule) }
+        end
+
+        def starts_in_the_past?(attributes)
+          attributes[:starts_at].present? && attributes[:starts_at] < Time.current
+        end
+
         def demo_tasks
           [ inbox_tasks, work_tasks, health_tasks, home_tasks, learning_tasks, family_tasks, side_project_tasks ].reduce(:merge)
         end

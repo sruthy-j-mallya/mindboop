@@ -13,7 +13,7 @@ const EditorPlaceholder = () => (
   <div
     aria-busy="true"
     aria-label="Loading editor"
-    className="flex-1 rounded-md border border-input shadow-xs"
+    className="flex-1 rounded-md border border-transparent bg-input-background"
     role="status"
   >
     <div className="grid min-h-28 content-start gap-2 px-3 py-3">

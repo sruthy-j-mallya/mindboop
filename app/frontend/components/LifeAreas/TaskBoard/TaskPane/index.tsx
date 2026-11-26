@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router";
 
+import ListSkeleton from "@/components/commons/ListSkeleton";
 import TaskDetails from "@/components/commons/TaskDetails";
 import { Button } from "@/components/ui/button";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
@@ -24,6 +25,7 @@ const TaskPane = () => {
           {listName}
         </Link>
       </Button>
+      {isPending && <ListSkeleton />}
       {!isPending && !task && (
         <p className="text-sm text-destructive" role="alert">
           {error?.message}

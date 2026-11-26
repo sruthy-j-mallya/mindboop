@@ -1,15 +1,22 @@
 import {
   type QueryClient,
   useMutation,
+  useMutationState,
   useQuery,
   useQueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
 
 import lifeAreasApi from "@/apis/life_areas";
-import type { CreateLifeAreaPayload, LifeArea, MoveLifeAreaPayload } from "@/apis/types";
+import type {
+  CreateLifeAreaPayload,
+  DeleteLifeAreaPayload,
+  LifeArea,
+  MoveLifeAreaPayload,
+} from "@/apis/types";
 import { QUERY_KEYS } from "@/constants/query";
 
+const DELETE_LIFE_AREA_MUTATION_KEY = ["lifeAreas", "delete"];
 const MOVE_LIFE_AREA_MUTATION_KEY = ["lifeAreas", "move"];
 
 // Deleted areas too, to show (as on the Calendar) the one a completed task or a time log is in.
@@ -100,11 +107,12 @@ export const useMoveLifeArea = () => {
 };
 
 // The area's uncompleted tasks move to another area or the Inbox, so every task query and the Calendar refresh too. The refresh isn't
-// waited for: the caller has to leave the deleted area's page before its list is found gone.
+// waited for, so the caller can leave the deleted area's page at once.
 export const useDeleteLifeArea = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: DELETE_LIFE_AREA_MUTATION_KEY,
     mutationFn: lifeAreasApi.destroy,
     onSuccess: () => {
       void invalidateLifeAreas(queryClient);
@@ -114,3 +122,10 @@ export const useDeleteLifeArea = () => {
     },
   });
 };
+
+// The area that a deleted area's tasks were moved to in this tab, if they were.
+export const useTasksMovedTo = (lifeAreaId?: string) =>
+  useMutationState({
+    filters: { mutationKey: DELETE_LIFE_AREA_MUTATION_KEY, status: "success" },
+    select: ({ state }) => state.variables as DeleteLifeAreaPayload,
+  }).find(({ id }) => id === lifeAreaId)?.tasksLifeAreaId;

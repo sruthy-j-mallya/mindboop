@@ -26,6 +26,8 @@ type NavItemProps = {
   handle?: ReactNode;
   // A menu's content (ContextMenuContent), opened by a right click or a long press on the link.
   menu?: ReactNode;
+  // A button at its end, in place of the count while it shows.
+  action?: ReactNode;
 };
 
 // A link to an area's tasks (or the Inbox's) that a dragged task can be dropped on to move it there. How many
@@ -42,6 +44,7 @@ const NavItem = ({
   style,
   handle,
   menu,
+  action,
 }: NavItemProps) => {
   const countId = useId();
   const hasTasks = tasksCount > 0;
@@ -56,7 +59,8 @@ const NavItem = ({
       to={to}
       className={cn(
         "flex items-center gap-2 rounded-md py-1.5 pr-2 pl-5 text-sm whitespace-nowrap transition-colors outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        isActive && "bg-muted font-medium",
+        isActive && "bg-accent font-medium",
+        action && "pointer-coarse:pr-8",
         canDrop && "ring-1 ring-border ring-inset",
         canDrop && isOver && "bg-accent ring-2 ring-primary",
       )}
@@ -64,7 +68,13 @@ const NavItem = ({
       {icon}
       <span className="truncate">{target.name}</span>
       {hasTasks && (
-        <span aria-hidden className="ml-auto pl-1 text-xs font-normal text-muted-foreground tabular-nums">
+        <span
+          aria-hidden
+          className={cn(
+            "ml-auto pl-1 text-xs font-normal text-muted-foreground tabular-nums",
+            action && "pointer-fine:group-focus-within:opacity-0 pointer-fine:group-hover:opacity-0",
+          )}
+        >
           {tasksCount}
         </span>
       )}
@@ -82,6 +92,7 @@ const NavItem = ({
         link
       )}
       {handle}
+      {action}
       {hasTasks && (
         <span hidden id={countId}>
           {getTasksCountLabel(tasksCount)}

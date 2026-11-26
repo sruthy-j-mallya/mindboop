@@ -20,7 +20,7 @@ const CUSTOM_LABEL = /set your own/i;
 const CUSTOM_ERROR = /pick a preset or enter/i;
 const TITLE_ERROR = /say what you want to get done/i;
 
-const beginSession = () => userEvent.click(screen.getByRole("button", { name: "Begin" }));
+const beginSession = () => userEvent.click(screen.getByRole("button", { name: "Start" }));
 const listedSteps = () =>
   within(screen.getByRole("list", { name: "Steps" }))
     .getAllByRole("listitem")
@@ -103,6 +103,25 @@ describe("QuickStart", () => {
     expect(screen.queryByRole("button", { name: "Add notes" })).not.toBeInTheDocument();
   });
 
+  it("names what's on the clock and its time", async () => {
+    vi.mocked(currentTimeLogsApi.show).mockResolvedValue({
+      timeLog: {
+        ...TIME_LOG,
+        taskTitle: "Write the report",
+        mode: "timer",
+        timerPreset: 25,
+        bufferMinutes: 0,
+        accumulatedElapsedSeconds: 60,
+        isRunning: false,
+        currentBreak: null,
+      },
+    });
+    renderWithTimerRoute();
+
+    expect(await screen.findByText("Write the report")).toBeVisible();
+    expect(screen.getByRole("timer")).toHaveTextContent("24:00 left");
+  });
+
   it("leads back to the timer while a session is running, and keeps the draft", async () => {
     localStorage.setItem(
       DRAFT_STORAGE_KEY,
@@ -112,7 +131,7 @@ describe("QuickStart", () => {
     renderWithTimerRoute();
 
     const link = await screen.findByRole("link", { name: "Return to timer" });
-    expect(screen.queryByRole("button", { name: "Begin" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start" })).not.toBeInTheDocument();
     expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toContain("Draft submitted");
 
     await userEvent.click(link);
@@ -456,7 +475,7 @@ describe("QuickStart", () => {
     expect(screen.getByRole("button", { name: "5 min" })).toHaveAttribute("aria-pressed", "false");
   });
 
-  it.each(["19", "241", "25.5"])("rejects %s custom minutes", async (minutes) => {
+  it.each(["1", "241", "25.5"])("rejects %s custom minutes", async (minutes) => {
     renderWithProviders(<QuickStart />);
     await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), minutes);
     await beginSession();
@@ -464,7 +483,7 @@ describe("QuickStart", () => {
     expect(await screen.findByText(CUSTOM_ERROR)).toBeVisible();
   });
 
-  it.each(["20", "240"])("accepts %s custom minutes", async (minutes) => {
+  it.each(["2", "12", "18", "240"])("accepts %s custom minutes", async (minutes) => {
     renderWithProviders(<QuickStart />);
     await userEvent.type(screen.getByRole("textbox", { name: "Task" }), "Draft submitted");
     await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), minutes);
@@ -495,7 +514,7 @@ describe("QuickStart", () => {
 
   it("clears a custom minutes error when a preset is picked", async () => {
     renderWithProviders(<QuickStart />);
-    await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), "19");
+    await userEvent.type(screen.getByRole("spinbutton", { name: CUSTOM_LABEL }), "1");
     await beginSession();
     await screen.findByText(CUSTOM_ERROR);
 

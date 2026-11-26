@@ -7,10 +7,13 @@ import CompleteSignup from "@/components/CompleteSignup";
 import ForgotPassword from "@/components/ForgotPassword";
 import Home from "@/components/Home";
 import LifeAreas from "@/components/LifeAreas";
+import CompletedTasks from "@/components/LifeAreas/TaskArchive/Completed";
+import DeletedTasks from "@/components/LifeAreas/TaskArchive/Deleted";
 import TaskBoard from "@/components/LifeAreas/TaskBoard";
 import NoTaskSelected from "@/components/LifeAreas/TaskBoard/NoTaskSelected";
 import TaskPane from "@/components/LifeAreas/TaskBoard/TaskPane";
 import Login from "@/components/Login";
+import NotFound from "@/components/NotFound";
 import ParkingLot from "@/components/ParkingLot";
 import ResetPassword from "@/components/ResetPassword";
 import Routines from "@/components/Routines";
@@ -35,6 +38,8 @@ const Main = () => (
             <Route index element={<NoTaskSelected />} />
             <Route element={<TaskPane />} path={routes.inbox.show} />
           </Route>
+          <Route element={<CompletedTasks />} path={routes.completedTasks} />
+          <Route element={<DeletedTasks />} path={routes.deletedTasks} />
           <Route element={<TaskBoard />} path={routes.lifeAreas.show}>
             <Route index element={<NoTaskSelected />} />
             <Route element={<TaskPane />} path={routes.lifeAreas.task} />
@@ -45,6 +50,7 @@ const Main = () => (
         <Route element={<ParkingLot />} path={routes.parkingLot} />
         <Route element={<Calendar />} path={routes.calendar} />
         <Route element={<Settings />} path={routes.settings} />
+        <Route element={<NotFound />} path="*" />
       </Route>
     </Route>
     <Route element={<Login />} path={routes.login} />

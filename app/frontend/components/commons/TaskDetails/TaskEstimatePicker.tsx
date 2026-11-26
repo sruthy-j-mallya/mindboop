@@ -8,22 +8,15 @@ import { formatMinutes } from "@/utils";
 import { DETAIL_BUTTON_CLASS_NAME } from "./constants";
 import type { DetailPickerProps } from "./types";
 
-// A task's estimate. Hidden while unset, unless it's being picked or couldn't be saved.
-const TaskEstimatePicker = ({ task, isOpen, onOpenChange }: DetailPickerProps) => {
-  const { mutate: updateTask, isPending, error } = useUpdateTask();
+// A task's estimate, or a quiet offer to add one.
+const TaskEstimatePicker = ({ task }: DetailPickerProps) => {
+  const { mutate: updateTask, error } = useUpdateTask();
 
   const handleSave = (estimatedMinutes: number | null) => updateTask({ id: task.id, estimatedMinutes });
 
-  if (!task.estimatedMinutes && !isOpen && !isPending && !error) return null;
-
   return (
     <div className="flex flex-col gap-1">
-      <EstimatePicker
-        estimatedMinutes={task.estimatedMinutes}
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        onSave={handleSave}
-      >
+      <EstimatePicker estimatedMinutes={task.estimatedMinutes} onSave={handleSave}>
         <Button className={DETAIL_BUTTON_CLASS_NAME} size="sm" type="button" variant="ghost">
           <Hourglass />
           {task.estimatedMinutes ? formatMinutes(task.estimatedMinutes) : "Estimate"}

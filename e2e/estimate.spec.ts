@@ -10,14 +10,13 @@ test("estimate an Inbox task, change it, then clear it", async ({ page }) => {
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Areas of life" }).click();
+  await page.getByRole("link", { name: "Tasks", exact: true }).click();
   const input = page.getByRole("textbox", { name: "New task" });
   await input.fill("Plan the week");
   await input.press("Enter");
   await page.getByRole("textbox", { name: "Plan the week" }).click();
 
-  await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Add estimate" }).click();
+  await page.getByRole("button", { name: "Estimate", exact: true }).click();
   await page.getByLabel("Minutes").fill("45");
   await page.getByRole("button", { name: "OK" }).click();
 

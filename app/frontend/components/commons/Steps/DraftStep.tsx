@@ -51,7 +51,7 @@ const DraftStep = ({ onSave, onSaveAndContinue, onDiscard }: DraftStepProps) => 
     <li className="flex items-center gap-2 rounded-md bg-card py-1" onBlur={handleBlur}>
       {/* Holds the drag handle's place, so the new row lines up with the saved ones. */}
       <span aria-hidden className="-mr-1 w-4 shrink-0" />
-      <Checkbox disabled aria-hidden className="border-muted-foreground/50" tabIndex={-1} />
+      <Checkbox disabled aria-hidden tabIndex={-1} />
       <StepTextarea
         autoFocus
         aria-label="New step"

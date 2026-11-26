@@ -1,4 +1,13 @@
-import { Boxes, CalendarDays, House, LogOut, Search, Settings, SunMoon, Timer } from "lucide-react";
+import {
+  CalendarDays,
+  CirclePlus,
+  House,
+  Search,
+  Settings,
+  SquareCheckBig,
+  SunMoon,
+  Timer,
+} from "lucide-react";
 import { Link, useLocation, useMatch } from "react-router";
 
 import {
@@ -13,21 +22,20 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useParkingLotItems } from "@/hooks/reactQuery/useParkingLotItemsApi";
-import { useLogout } from "@/hooks/reactQuery/useSessionsApi";
 import routes from "@/routes";
 
+import { CAPTURE_SHORTCUT_LABEL, SEARCH_SHORTCUT_LABEL } from "./constants";
 import ParkingLotIcon from "./ParkingLotIcon";
+import { isTasksPath } from "./utils";
 
-type AppSidebarProps = { onSearchOpen: () => void };
+type AppSidebarProps = { onSearchOpen: () => void; onCaptureOpen: () => void };
 
-const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
+const AppSidebar = ({ onSearchOpen, onCaptureOpen }: AppSidebarProps) => {
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();
-  const { mutate: logout, isPending } = useLogout();
   const { data: parkedItems } = useParkingLotItems({ status: "parked" });
   const parkedCount = parkedItems?.parkingLotItemsCount ?? 0;
 
-  const handleLogout = () => logout();
   const handleNavigate = () => setOpenMobile(false);
 
   const handleSearch = () => {
@@ -35,9 +43,11 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
     onSearchOpen();
   };
 
-  // The areas of life and the Inbox share one page, with a sidebar of their own to switch between them.
-  const isInboxActive = !!useMatch({ path: routes.inbox.index, end: false });
-  const isLifeAreaActive = !!useMatch({ path: routes.lifeAreas.index, end: false });
+  const handleCapture = () => {
+    setOpenMobile(false);
+    onCaptureOpen();
+  };
+
   const isRoutinesActive = !!useMatch({ path: routes.routines.index, end: false });
 
   return (
@@ -50,6 +60,18 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
                 <SidebarMenuButton aria-haspopup="dialog" tooltip="Search" onClick={handleSearch}>
                   <Search />
                   <span>Search</span>
+                  <kbd aria-hidden className="ml-auto text-xs text-muted-foreground">
+                    {SEARCH_SHORTCUT_LABEL}
+                  </kbd>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton aria-haspopup="dialog" tooltip="New task" onClick={handleCapture}>
+                  <CirclePlus />
+                  <span>New task</span>
+                  <kbd aria-hidden className="ml-auto text-xs text-muted-foreground">
+                    {CAPTURE_SHORTCUT_LABEL}
+                  </kbd>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -61,14 +83,10 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isInboxActive || isLifeAreaActive}
-                  tooltip="Areas of life"
-                >
+                <SidebarMenuButton asChild isActive={isTasksPath(pathname)} tooltip="Tasks">
                   <Link to={routes.inbox.index} onClick={handleNavigate}>
-                    <Boxes />
-                    <span>Areas of life</span>
+                    <SquareCheckBig />
+                    <span>Tasks</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -124,12 +142,6 @@ const AppSidebar = ({ onSearchOpen }: AppSidebarProps) => {
                 <Settings />
                 <span>Settings</span>
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton disabled={isPending} tooltip="Sign out" onClick={handleLogout}>
-              <LogOut />
-              <span>Sign out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

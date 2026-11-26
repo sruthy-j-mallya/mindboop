@@ -116,6 +116,29 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ completed_task.id, @task.id ], response.parsed_body["tasks"].pluck("id")
   end
 
+  def test_that_index_orders_completed_tasks_by_their_latest_change
+    older = create(:task, :backdated, user: @user, is_completed: true, starts_at: 1.day.ago, updated_at: 2.days.ago)
+    latest = create(:task, user: @user, is_completed: true, updated_at: 1.day.ago)
+    sign_in @user
+
+    get api_tasks_path, params: { is_completed: true }
+
+    assert_equal [ latest.id, older.id ], response.parsed_body["tasks"].pluck("id")
+  end
+
+  def test_that_index_can_list_only_deleted_tasks_latest_first
+    older = create(:task, user: @user, discarded_at: 2.days.ago)
+    latest = create(:task, user: @user, is_completed: true, discarded_at: 1.day.ago)
+    create(:task, discarded_at: 1.hour.ago)
+    sign_in @user
+
+    get api_tasks_path, params: { is_deleted: true }
+
+    assert_response :ok
+    assert_equal [ latest.id, older.id ], response.parsed_body["tasks"].pluck("id")
+    assert_equal latest.reload.discarded_at.as_json, response.parsed_body["tasks"].first["discarded_at"]
+  end
+
   def test_that_index_can_list_the_inbox_or_one_area
     life_area = create(:life_area, user: @user)
     task_in_area = create(:task, user: @user, life_area:)
@@ -514,6 +537,26 @@ class Api::TasksControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_match "Ends at", response.parsed_body["error"]
+  end
+
+  def test_that_create_rejects_a_start_in_the_past
+    sign_in @user
+
+    assert_no_difference "Task.count" do
+      post api_tasks_path, params: { title: @title, starts_at: 1.day.ago }, as: :json
+    end
+
+    assert_response :unprocessable_content
+    assert_equal "Starts at can't be in the past", response.parsed_body["error"]
+  end
+
+  def test_that_update_rejects_moving_the_start_into_the_past
+    sign_in @user
+
+    patch api_task_path(@task), params: { starts_at: 2.hours.ago }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Starts at can't be in the past", response.parsed_body["error"]
   end
 
   def test_that_update_returns_401_when_signed_out

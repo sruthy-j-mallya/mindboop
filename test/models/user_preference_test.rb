@@ -10,6 +10,7 @@ class UserPreferenceTest < ActiveSupport::TestCase
     assert_equal "rising", @user_preference.completion_sound
     assert_equal "classic", @user_preference.break_alarm_sound
     assert_equal 1, @user_preference.week_starts_on
+    assert_equal "12h", @user_preference.time_format
     assert @user_preference.valid?
   end
 
@@ -54,6 +55,13 @@ class UserPreferenceTest < ActiveSupport::TestCase
 
     assert_not @user_preference.valid?
     assert_includes @user_preference.errors[:week_starts_on], "is not a number"
+  end
+
+  def test_that_an_unknown_time_format_is_invalid
+    @user_preference.time_format = "metric"
+
+    assert_not @user_preference.valid?
+    assert_includes @user_preference.errors[:time_format], "is not included in the list"
   end
 
   def test_that_a_user_has_only_one_preference

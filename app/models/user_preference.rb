@@ -3,6 +3,8 @@ class UserPreference < ApplicationRecord
   THEMES = %w[ system light dark ].freeze
   COMPLETION_SOUNDS = %w[ rising crisp wood soft glass triple tick_ding bell chime none ].freeze
   ALARM_SOUNDS = %w[ classic digital chimes marimba bell ].freeze
+  # The 12-hour ("5:30pm") or 24-hour ("17:30") clock.
+  TIME_FORMATS = %w[ 12h 24h ].freeze
   # The day the Calendar's weeks start on: 0 is Sunday and 6 Saturday, as in date-fns's `weekStartsOn`.
   WEEK_START_DAYS = 0..6
 
@@ -12,4 +14,5 @@ class UserPreference < ApplicationRecord
   validates :completion_sound, inclusion: { in: COMPLETION_SOUNDS }
   validates :break_alarm_sound, inclusion: { in: ALARM_SOUNDS }
   validates :week_starts_on, numericality: { only_integer: true, in: WEEK_START_DAYS }
+  validates :time_format, inclusion: { in: TIME_FORMATS }
 end

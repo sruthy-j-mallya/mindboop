@@ -1,68 +1,76 @@
-import {
-  addDays,
-  format,
-  isBefore,
-  isSameDay,
-  isSameWeek,
-  isSameYear,
-  parseISO,
-  startOfDay,
-  subDays,
-} from "date-fns";
+import { addDays, isBefore, isSameDay, isSameWeek, parseISO, startOfDay, subDays } from "date-fns";
+
+import type { DatePreferences } from "@/apis/types";
+import { DEFAULT_DATE_PREFERENCES } from "@/constants";
+import { formatDate, formatTime, formatTimeRange, formatWeekdayDate } from "@/utils/dateTime";
 
 import type { Schedule, ScheduleTone } from "./types";
 
-// Weeks start on Monday, as in the date picker.
-const WEEK_OPTIONS = { weekStartsOn: 1 } as const;
-
-// "5:30" or, on the hour, "5".
-const formatClock = (date: Date) => format(date, date.getMinutes() === 0 ? "h" : "h:mm");
-
-// "5:30pm", "12pm".
-const formatTime = (date: Date) => `${formatClock(date)}${format(date, "aaa")}`;
-
-// "10 – 11am", "11am – 1pm": am or pm shows once when both times share it.
-const formatTimeRange = (start: Date, end: Date) => {
-  const isSameHalf = format(start, "aaa") === format(end, "aaa");
-
-  return `${isSameHalf ? formatClock(start) : formatTime(start)} – ${formatTime(end)}`;
-};
-
-// "Today", "Tomorrow", "Yesterday", "Fri, Nov 5" within this week, "12 Aug" this year, "12 Aug 2027" otherwise.
-const formatDay = (date: Date, now: Date) => {
+// "Today", "Tomorrow", "Yesterday", "Fri, 5 Nov" within this week, "12 Aug" this year, "12 Aug 2027" otherwise.
+const formatDay = (date: Date, now: Date, preferences: DatePreferences) => {
   if (isSameDay(date, now)) return "Today";
 
   if (isSameDay(date, addDays(now, 1))) return "Tomorrow";
 
   if (isSameDay(date, subDays(now, 1))) return "Yesterday";
 
-  if (isSameWeek(date, now, WEEK_OPTIONS)) return format(date, "EEE, MMM d");
+  if (isSameWeek(date, now, { weekStartsOn: preferences.weekStartsOn })) return formatWeekdayDate(date);
 
-  return format(date, isSameYear(date, now) ? "d MMM" : "d MMM yyyy");
+  return formatDate(date, now);
 };
 
-const formatMoment = (date: Date, hasTime: boolean, now: Date) =>
-  hasTime ? `${formatDay(date, now)}, ${formatTime(date)}` : formatDay(date, now);
+const formatMoment = (date: Date, hasTime: boolean, now: Date, preferences: DatePreferences) => {
+  const day = formatDay(date, now, preferences);
+
+  return hasTime ? `${day}, ${formatTime(date, preferences.timeFormat)}` : day;
+};
 
 // A human-readable date or duration for a scheduled task ("Today, 5:30pm", "Tomorrow, 1 – 2am",
 // "12 Aug – 15 Aug"), or null when the task isn't scheduled.
-export const formatSchedule = ({ isDuration, isAllDay, startsAt, endsAt }: Schedule, now: number) => {
+export const formatSchedule = (
+  { isDuration, isAllDay, startsAt, endsAt }: Schedule,
+  now: number,
+  preferences: DatePreferences = DEFAULT_DATE_PREFERENCES,
+) => {
   if (!startsAt) return null;
 
   const today = new Date(now);
   const start = parseISO(startsAt);
-  if (!isDuration || !endsAt) return formatMoment(start, !isAllDay, today);
+  if (!isDuration || !endsAt) return formatMoment(start, !isAllDay, today, preferences);
 
   const end = parseISO(endsAt);
   if (isAllDay) {
     return isSameDay(start, end)
-      ? formatDay(start, today)
-      : `${formatDay(start, today)} – ${formatDay(end, today)}`;
+      ? formatDay(start, today, preferences)
+      : `${formatDay(start, today, preferences)} – ${formatDay(end, today, preferences)}`;
   }
 
-  if (isSameDay(start, end)) return `${formatDay(start, today)}, ${formatTimeRange(start, end)}`;
+  if (isSameDay(start, end))
+    return `${formatDay(start, today, preferences)}, ${formatTimeRange(start, end, preferences.timeFormat)}`;
 
-  return `${formatMoment(start, true, today)} – ${formatMoment(end, true, today)}`;
+  return `${formatMoment(start, true, today, preferences)} – ${formatMoment(end, true, today, preferences)}`;
+};
+
+// A schedule in a list of today's tasks: only the time, or "All day". One that reaches into other days keeps them.
+export const formatTodaySchedule = (
+  schedule: Schedule,
+  now: number,
+  preferences: DatePreferences = DEFAULT_DATE_PREFERENCES,
+) => {
+  const { isDuration, isAllDay, startsAt, endsAt } = schedule;
+  if (!startsAt) return null;
+
+  const start = parseISO(startsAt);
+  const end = isDuration && endsAt ? parseISO(endsAt) : start;
+  if (!isSameDay(start, now) || !isSameDay(end, now)) {
+    return formatSchedule(schedule, now, preferences);
+  }
+
+  if (isAllDay) return "All day";
+
+  return isDuration
+    ? formatTimeRange(start, end, preferences.timeFormat)
+    : formatTime(start, preferences.timeFormat);
 };
 
 export const getScheduleTone = (

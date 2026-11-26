@@ -24,6 +24,7 @@ test("confirm email, sign up, sign out and sign back in", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 
+  await page.getByRole("link", { name: "Settings" }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login$/);
 

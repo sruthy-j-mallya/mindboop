@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { NotebookPen, Timer } from "lucide-react";
+import { NotebookPen, Play } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 
 import RichTextEditor from "@/components/commons/RichText/LazyEditor";
@@ -120,8 +120,8 @@ const QuickStartForm = ({ isBeginning, error, onBegin }: QuickStartFormProps) =>
           </p>
         )}
         <Button className="h-12 w-full text-base" disabled={isBeginning} type="submit">
-          <Timer />
-          Begin
+          <Play />
+          Start
         </Button>
       </div>
     </form>

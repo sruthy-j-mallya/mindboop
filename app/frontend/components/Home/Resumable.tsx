@@ -22,7 +22,7 @@ const Resumable = ({ tasks }: TaskListProps) => {
             isDisabled={isLoadingSession}
             isOnTheClock={runningTaskId === task.id}
             task={task}
-            onResume={startTask}
+            onStart={startTask}
           />
         )}
       />

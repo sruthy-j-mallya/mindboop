@@ -39,6 +39,7 @@ const renderAlarm = async (parkingLotItem: ParkingLotItem | null) => {
       completionSound: "rising",
       breakAlarmSound: "marimba",
       weekStartsOn: 1,
+      timeFormat: "12h",
     },
   });
   renderWithProviders(<CuriosityAlarm />);

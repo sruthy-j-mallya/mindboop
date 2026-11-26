@@ -6,6 +6,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { CALENDAR_VIEWS, MULTI_DAY_COUNT_OPTIONS, VIEW_OPTIONS } from "./constants";
+import Legend from "./Legend";
 import type { CalendarEvent, CalendarView } from "./types";
 
 type ToolbarComponentProps = ToolbarProps<CalendarEvent> & {
@@ -26,9 +27,12 @@ const Toolbar = ({ label, view, dayCount, onNavigate, onView, onDayCountChange }
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
-      <h2 aria-live="polite" className="text-lg font-semibold">
-        {label}
-      </h2>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <h2 aria-live="polite" className="text-lg font-semibold">
+          {label}
+        </h2>
+        <Legend />
+      </div>
       <div className="flex items-center gap-2">
         <ButtonGroup aria-label="Navigate dates">
           <Button
