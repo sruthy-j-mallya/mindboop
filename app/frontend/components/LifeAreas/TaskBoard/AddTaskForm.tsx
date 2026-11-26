@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form";
 import type { LifeArea } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { INITIAL_FORM_VALUES, TASK_VALIDATION_SCHEMA, type TaskFormValues } from "@/constants/taskForm";
 import { useCreateTask } from "@/hooks/reactQuery/useTasksApi";
 
 import { INBOX_NAME } from "../constants";
-import { INITIAL_FORM_VALUES, TASK_VALIDATION_SCHEMA, type TaskFormValues } from "./constants";
+import { NEW_TASK_INPUT_ID } from "./constants";
 
 type AddTaskFormProps = { lifeArea?: LifeArea };
 
@@ -48,6 +49,7 @@ const AddTaskForm = ({ lifeArea }: AddTaskFormProps) => {
           aria-describedby={errorMessage ? "new-task-error" : undefined}
           aria-invalid={!!errors.title}
           aria-label="New task"
+          id={NEW_TASK_INPUT_ID}
           autoComplete="off"
           placeholder={`Add a task to ${listName}`}
           {...register("title", { onBlur: handleBlur })}

@@ -38,7 +38,7 @@ const useRoutineReminders = () => {
   useEffect(() => {
     const remind = (routine: Routine) => {
       const { id, title, durationMinutes } = routine;
-      const body = `${formatMinutes(durationMinutes)}, whenever you’re ready. Skipping is fine too.`;
+      const body = `${formatMinutes(durationMinutes)}, whenever you’re ready.`;
       toast(`Time for ${title}?`, {
         id: `routine-reminder-${id}`,
         description: body,

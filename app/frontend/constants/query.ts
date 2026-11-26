@@ -21,6 +21,8 @@ export const QUERY_KEYS = {
     COUNTS: ["tasks", "list", "counts"],
     // Under LISTS too: whatever refreshes the task lists refreshes Home.
     HOME: (params: HomeTasksParams) => ["tasks", "list", "home", params],
+    // Under LISTS too: a first task is one of the steps.
+    ONBOARDING: ["tasks", "list", "onboarding"],
     DETAIL: (id: string) => ["tasks", "detail", id],
   },
   PARKING_LOT_ITEMS: {

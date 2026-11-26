@@ -8,14 +8,14 @@ type AddStepButtonProps = { onClick: () => void };
 // none.
 const AddStepButton = ({ onClick }: AddStepButtonProps) => (
   <Button
-    aria-label="Add step"
     className="shrink-0 text-muted-foreground"
-    size="icon-sm"
+    size="sm"
     type="button"
     variant="ghost"
     onClick={onClick}
   >
     <ListTodo />
+    Add step
   </Button>
 );
 

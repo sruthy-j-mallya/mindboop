@@ -1,18 +1,20 @@
 import emojiCategories from "./emojis.json";
 import type { LifeAreaColor, LifeAreaEmojiCategory } from "./types";
 
-// Deep enough for white text on the Calendar's solid task blocks, in light and dark mode alike (Tailwind's 700s).
+// Muted, matte tones (low chroma) that stay calm on screen, yet deep enough for white text on the Calendar's solid
+// task blocks in light and dark mode alike (each 5:1 or better against white).
+// A settled design choice: keep this palette (see .agents/plans/053-matte-area-colors.md).
 export const LIFE_AREA_COLORS: LifeAreaColor[] = [
-  { id: "rose", label: "Rose", value: "#be123c" },
-  { id: "orange", label: "Orange", value: "#c2410c" },
-  { id: "amber", label: "Amber", value: "#b45309" },
-  { id: "lime", label: "Lime", value: "#4d7c0f" },
-  { id: "emerald", label: "Emerald", value: "#047857" },
-  { id: "teal", label: "Teal", value: "#0f766e" },
-  { id: "sky", label: "Sky", value: "#0369a1" },
-  { id: "indigo", label: "Indigo", value: "#4338ca" },
-  { id: "violet", label: "Violet", value: "#6d28d9" },
-  { id: "slate", label: "Slate", value: "#475569" },
+  { id: "rose", label: "Rose", value: "#a34f61" },
+  { id: "orange", label: "Orange", value: "#a35a3c" },
+  { id: "amber", label: "Amber", value: "#8a6a32" },
+  { id: "lime", label: "Lime", value: "#5f7340" },
+  { id: "emerald", label: "Emerald", value: "#43755e" },
+  { id: "teal", label: "Teal", value: "#3f716e" },
+  { id: "sky", label: "Sky", value: "#466e8c" },
+  { id: "indigo", label: "Indigo", value: "#585f99" },
+  { id: "violet", label: "Violet", value: "#715b94" },
+  { id: "slate", label: "Slate", value: "#5c6570" },
 ];
 
 // The emojis on offer for areas and routines, each listed once. The server reads the same file (`LifeArea::EMOJIS`).

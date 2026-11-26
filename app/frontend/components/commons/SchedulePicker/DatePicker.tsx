@@ -1,29 +1,26 @@
 import { useState } from "react";
 
 import { cn } from "cn";
-import { format, isSameYear } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import useWeekStartsOn from "@/hooks/useWeekStartsOn";
+import { formatDate } from "@/utils/dateTime";
 
-import {
-  CALENDAR_CLASS_NAME,
-  CALENDAR_CLASS_NAMES,
-  DATE_LABEL_FORMAT,
-  OTHER_YEAR_DATE_LABEL_FORMAT,
-} from "./constants";
+import { CALENDAR_CLASS_NAME, CALENDAR_CLASS_NAMES } from "./constants";
 
 type DatePickerProps = {
   label: string;
   value: Date;
   className?: string;
+  // Days before this one can't be picked.
+  fromDay?: Date;
   onChange: (day: Date) => void;
 };
 
 // A date field that opens the same calendar as the Date tab. Picking a day closes it.
-const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
+const DatePicker = ({ label, value, className, fromDay, onChange }: DatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [month, setMonth] = useState(value);
   const weekStartsOn = useWeekStartsOn();
@@ -47,7 +44,7 @@ const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
           type="button"
           variant="outline"
         >
-          {format(value, isSameYear(value, new Date()) ? DATE_LABEL_FORMAT : OTHER_YEAR_DATE_LABEL_FORMAT)}
+          {formatDate(value, new Date())}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-3">
@@ -55,6 +52,7 @@ const DatePicker = ({ label, value, className, onChange }: DatePickerProps) => {
           required
           className={CALENDAR_CLASS_NAME}
           classNames={CALENDAR_CLASS_NAMES}
+          disabled={fromDay && { before: fromDay }}
           mode="single"
           month={month}
           selected={value}

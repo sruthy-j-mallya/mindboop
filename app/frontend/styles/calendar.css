@@ -348,3 +348,17 @@ html:has(.calendar) body {
     display: flex;
   }
 }
+
+/* Room between the day names and the all-day events under them. */
+.calendar .rbc-time-header-cell {
+  min-height: 2.25rem;
+}
+
+/* Too short for its times under the title (the cut-off line read as a glitch). Still there for screen readers. */
+.calendar .rbc-day-slot .calendar-event-short .rbc-event-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

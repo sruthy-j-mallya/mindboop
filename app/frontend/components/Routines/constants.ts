@@ -66,7 +66,7 @@ export const ROUTINE_SUGGESTIONS: CreateRoutinePayload[] = [
   { title: "Exercise", emoji: "🏋️", color: "slate", sound: "none", durationMinutes: 30, ...NO_REMINDER },
 ];
 
-// Monday first, as the month grid lays weeks out. `value` is the server's weekday (0 = Sunday).
+// Monday first; `getWeekdays` puts them in the order picked in Settings. `value` is the server's weekday (0 = Sunday).
 export const WEEKDAYS = [
   { value: 1, short: "M", label: "Monday" },
   { value: 2, short: "T", label: "Tuesday" },

@@ -24,6 +24,7 @@ const PREFERENCE: UserPreference = {
   completionSound: "rising",
   breakAlarmSound: "chimes",
   weekStartsOn: 1,
+  timeFormat: "12h",
 };
 
 // The preference loads with the app, before any break, so it's already cached here.

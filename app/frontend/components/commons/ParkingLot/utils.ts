@@ -1,9 +1,12 @@
-import { format, isSameDay, isSameYear, parseISO } from "date-fns";
+import { isSameDay, isSameYear, parseISO } from "date-fns";
 
-// "15:28" today, "12 Nov, 15:28" earlier this year, "12 Nov 2025" before that.
-export const formatParkedAt = (createdAt: string, now: number) => {
+import type { TimeFormat } from "@/apis/types";
+import { formatDate, formatDateTime, formatTime } from "@/utils/dateTime";
+
+// "3:28pm" today, "12 Nov, 3:28pm" earlier this year, "12 Nov 2025" before that.
+export const formatParkedAt = (createdAt: string, now: number, timeFormat: TimeFormat) => {
   const date = parseISO(createdAt);
-  if (isSameDay(date, now)) return format(date, "HH:mm");
+  if (isSameDay(date, now)) return formatTime(date, timeFormat);
 
-  return format(date, isSameYear(date, now) ? "d MMM, HH:mm" : "d MMM yyyy");
+  return isSameYear(date, now) ? formatDateTime(date, now, timeFormat) : formatDate(date, now);
 };

@@ -6,7 +6,7 @@ class Api::CalendarEventsControllerTest < ActionDispatch::IntegrationTest
     @user = create(:user)
     @from = Time.current.beginning_of_week
     @to = @from + 1.week
-    @task = create(:task, user: @user, starts_at: @from + 1.day)
+    @task = create(:task, :backdated, user: @user, starts_at: @from + 1.day)
     @time_log = create(:time_log, :manual, user: @user, started_at: 2.hours.ago, completed_at: 1.hour.ago)
   end
 
@@ -14,7 +14,7 @@ class Api::CalendarEventsControllerTest < ActionDispatch::IntegrationTest
     task_log = create(:time_log, task: @task, started_at: 30.minutes.ago)
     create(:task, user: @user, starts_at: @to + 1.day)
     create(:task, user: @user)
-    create(:task, user: @user, starts_at: @from + 2.days, is_completed: true)
+    create(:task, :backdated, user: @user, starts_at: @from + 2.days, is_completed: true)
     create(:time_log, :manual, user: @user, started_at: 4.hours.ago, completed_at: 3.hours.ago).discard!
     sign_in @user
 
@@ -54,7 +54,7 @@ class Api::CalendarEventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_that_a_duration_started_before_the_range_is_listed
-    task = create(:task, user: @user, is_duration: true, starts_at: @from - 2.days, ends_at: @from + 1.day)
+    task = create(:task, :backdated, user: @user, is_duration: true, starts_at: @from - 2.days, ends_at: @from + 1.day)
     sign_in @user
 
     get api_calendar_events_path, params: { from: @from.iso8601, to: @to.iso8601 }
@@ -63,7 +63,7 @@ class Api::CalendarEventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_that_it_leaves_out_other_users_events
-    create(:task, starts_at: @from + 1.day)
+    create(:task, :backdated, starts_at: @from + 1.day)
     create(:time_log, :manual, started_at: 2.hours.ago, completed_at: 1.hour.ago)
     sign_in @user
 

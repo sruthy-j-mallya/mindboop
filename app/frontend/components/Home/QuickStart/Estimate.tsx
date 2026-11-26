@@ -4,14 +4,9 @@ import { type Control, useController } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PICKED_CLASS_NAME } from "@/constants";
 
-import {
-  CUSTOM_TIMER_MAX,
-  CUSTOM_TIMER_MIN,
-  PICKED_ESTIMATE_CLASS_NAME,
-  type QuickStartFormValues,
-  TIMER_PRESETS,
-} from "./constants";
+import { CUSTOM_TIMER_MAX, CUSTOM_TIMER_MIN, type QuickStartFormValues, TIMER_PRESETS } from "./constants";
 import { getCustomMinutesHint } from "./utils";
 
 type EstimateProps = { control: Control<QuickStartFormValues> };
@@ -44,7 +39,7 @@ const Estimate = ({ control }: EstimateProps) => {
   return (
     <div className="flex flex-col gap-3">
       <p id="estimate-label" className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-        Estimate
+        Focus for
       </p>
       <div aria-labelledby="estimate-label" className="flex gap-2" role="group">
         {TIMER_PRESETS.map((minutes) => (
@@ -55,7 +50,7 @@ const Estimate = ({ control }: EstimateProps) => {
             variant="ghost"
             className={cn(
               "h-11 min-w-0 flex-1 bg-muted px-2",
-              presetMinutes === minutes && PICKED_ESTIMATE_CLASS_NAME,
+              presetMinutes === minutes && PICKED_CLASS_NAME,
             )}
             onClick={() => handlePresetSelect(minutes)}
           >
@@ -74,7 +69,7 @@ const Estimate = ({ control }: EstimateProps) => {
           type="number"
           className={cn(
             "h-11 flex-[1.5] [appearance:textfield] px-1 text-center placeholder:text-xs sm:placeholder:text-sm [&::-webkit-inner-spin-button]:appearance-none",
-            isCustomPicked && PICKED_ESTIMATE_CLASS_NAME,
+            isCustomPicked && PICKED_CLASS_NAME,
           )}
           onChange={handleCustomChange}
         />

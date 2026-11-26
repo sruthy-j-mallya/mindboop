@@ -1,11 +1,12 @@
 module Api
+  # Changes to a task's items are made one at a time (the task is locked), so two can't work out the same position.
   # Every action answers with the whole task, since a move also changes its siblings' order.
   class ChecklistItemsController < BaseController
     before_action :set_task
     before_action :set_checklist_item, only: %i[ update destroy ]
 
     def create
-      ChecklistItem.transaction do
+      @task.with_lock do
         checklist_item = @task.checklist_items.create!(checklist_item_params)
         checklist_item.move_to!(params[:position]) if params.key?(:position)
       end
@@ -13,7 +14,7 @@ module Api
     end
 
     def update
-      ChecklistItem.transaction do
+      @task.with_lock do
         @checklist_item.update!(checklist_item_params)
         @checklist_item.move_to!(params[:position]) if params.key?(:position)
       end

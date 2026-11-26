@@ -4,6 +4,7 @@ import {
   addMonths,
   addWeeks,
   addYears,
+  differenceInMinutes,
   endOfMonth,
   endOfWeek,
   format,
@@ -22,19 +23,27 @@ import {
 } from "date-fns";
 import { enUS } from "date-fns/locale";
 import type { CSSProperties, SyntheticEvent } from "react";
-import { dateFnsLocalizer } from "react-big-calendar";
+import { dateFnsLocalizer, type DateRange, type Formats } from "react-big-calendar";
 
-import type { LifeArea, Task, TimeLog, WeekStartsOn } from "@/apis/types";
+import type { LifeArea, Task, TimeFormat, TimeLog, WeekStartsOn } from "@/apis/types";
 import { getLifeAreaColor } from "@/components/commons/LifeArea/utils";
 import type { Schedule } from "@/components/commons/ScheduleLabel/types";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
-import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
+import { DEFAULT_WEEK_STARTS_ON, PHONE_LAYOUT_QUERY } from "@/constants";
+import {
+  formatDayRange,
+  formatLongDate,
+  formatTime,
+  formatTimeRange,
+  getEarliestTaskStart,
+} from "@/utils/dateTime";
 import { readStorage } from "@/utils/storage";
 
 import {
   CALENDAR_VIEWS,
   DAY_COUNT_STORAGE_KEY,
   DEFAULT_MULTI_DAY_COUNT,
+  DEFAULT_PHONE_VIEW,
   DEFAULT_TASK_MINUTES,
   DEFAULT_VIEW,
   EVENT_CLASS_NAMES,
@@ -43,6 +52,7 @@ import {
   MOVE_ERRORS,
   MULTI_DAY_COUNT_OPTIONS,
   SELECTION_ERRORS,
+  SHORT_EVENT_MINUTES,
   SLOT_MINUTES,
   TIME_LOG_WINDOW_HOURS,
   VIEW_OPTIONS,
@@ -74,8 +84,9 @@ const MILLISECONDS_PER_MINUTE = 60_000;
 // The view last picked, or the default when none was kept (or what was kept is no longer a view).
 export const readStoredView = (): CalendarView => {
   const stored = readStorage(VIEW_STORAGE_KEY);
+  const defaultView = window.matchMedia(PHONE_LAYOUT_QUERY).matches ? DEFAULT_PHONE_VIEW : DEFAULT_VIEW;
 
-  return VIEW_OPTIONS.find(({ value }) => value === stored)?.value ?? DEFAULT_VIEW;
+  return VIEW_OPTIONS.find(({ value }) => value === stored)?.value ?? defaultView;
 };
 
 // The multi-day view's day count last picked, or the default when none was kept (or it's no longer offered).
@@ -102,6 +113,19 @@ export const getLocalizer = (weekStartsOn: WeekStartsOn) =>
     getDay,
     locales: { "en-US": enUS },
   });
+
+// How react-big-calendar writes its dates and times: the way the rest of the app does.
+export const getFormats = (timeFormat: TimeFormat, isPhone = false): Formats => ({
+  timeGutterFormat: (date: Date) => formatTime(date, timeFormat),
+  eventTimeRangeFormat: ({ start, end }: DateRange) => formatTimeRange(start, end, timeFormat),
+  eventTimeRangeStartFormat: ({ start }: DateRange) => `${formatTime(start, timeFormat)} –`,
+  eventTimeRangeEndFormat: ({ end }: DateRange) => `– ${formatTime(end, timeFormat)}`,
+  selectRangeFormat: ({ start, end }: DateRange) => formatTimeRange(start, end, timeFormat),
+  // "Mon 23", or "M 23" where the columns are narrow.
+  dayFormat: isPhone ? "EEEEE d" : "EEE d",
+  dayHeaderFormat: formatLongDate,
+  dayRangeHeaderFormat: ({ start, end }: DateRange) => formatDayRange(start, end),
+});
 
 // The days a view shows, as a half-open range: what the Calendar asks the API for. `dayCount` is how many days the
 // multi-day view shows, and `weekStartsOn` the day the week and month views' weeks start on.
@@ -386,7 +410,7 @@ export const getMoveError = (event: CalendarEvent, times: EventTimes, isResize: 
     return isWithinLogWindow(times, now) ? null : MOVE_ERRORS.TIME_LOG_OUTSIDE_WINDOW;
   }
 
-  const earliest = times.allDay ? startOfDay(now) : getCurrentSlotStart(now);
+  const earliest = getEarliestTaskStart(times.allDay, now);
   const isStartAllowed = times.start >= earliest;
   if (!isResize) return isStartAllowed ? null : MOVE_ERRORS.TASK_IN_PAST;
 
@@ -449,7 +473,9 @@ export const getEventProps = (event: CalendarEvent, lifeAreaColors: Map<string, 
   const isTask = event.kind === EVENT_KINDS.TASK;
   const lifeAreaId = isTask ? event.task.lifeAreaId : event.timeLog.lifeAreaId;
   const color = lifeAreaId ? lifeAreaColors.get(lifeAreaId) : undefined;
-  const className = isTask ? EVENT_CLASS_NAMES.TASK : EVENT_CLASS_NAMES.TIME_LOG;
+  const isShort = differenceInMinutes(event.end, event.start) < SHORT_EVENT_MINUTES;
+  const kindClassName = isTask ? EVENT_CLASS_NAMES.TASK : EVENT_CLASS_NAMES.TIME_LOG;
+  const className = isShort ? `${kindClassName} ${EVENT_CLASS_NAMES.SHORT}` : kindClassName;
 
   if (!color) return { className };
 

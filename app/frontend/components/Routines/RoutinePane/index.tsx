@@ -5,6 +5,7 @@ import { SOUNDS } from "@/components/commons/Ambience/constants";
 import RoutineBadge from "@/components/commons/Routine/Badge";
 import { Button } from "@/components/ui/button";
 import { useRoutines } from "@/hooks/reactQuery/useRoutinesApi";
+import useDatePreferences from "@/hooks/useDatePreferences";
 import routes from "@/routes";
 import { formatMinutes } from "@/utils";
 
@@ -18,6 +19,7 @@ import StatTile from "./StatTile";
 const RoutinePane = () => {
   const { routineId } = useParams();
   const { data: routines, isPending } = useRoutines();
+  const { timeFormat } = useDatePreferences();
   const routine = routines?.find(({ id }) => id === routineId);
 
   if (isPending) return null;
@@ -27,19 +29,19 @@ const RoutinePane = () => {
 
   const { title, color, emoji, durationMinutes, sound, sessionsCount, totalSeconds, lastDoneAt } = routine;
   const soundLabel = SOUNDS.find(({ id }) => id === sound)?.label;
-  const reminder = describeReminder(routine);
+  const reminder = describeReminder(routine, timeFormat);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4">
       <Button asChild className="w-fit lg:hidden" size="sm" variant="ghost">
         <Link to={routes.routines.index}>
           <ChevronLeft />
           All routines
         </Link>
       </Button>
-      <header className="flex items-start gap-4">
-        <RoutineBadge className="size-14 text-3xl" color={color} emoji={emoji} />
-        <div className="grid min-w-0 flex-1 gap-1">
+      <header className="flex items-start gap-3">
+        <RoutineBadge className="size-12 text-2xl" color={color} emoji={emoji} />
+        <div className="grid min-w-0 flex-1 gap-0.5">
           <h2 className="text-2xl font-semibold wrap-anywhere">{title}</h2>
           <p className="text-sm text-muted-foreground">
             {formatMinutes(durationMinutes)}
@@ -62,7 +64,7 @@ const RoutinePane = () => {
           ? "Not started yet. Whenever you’re ready, it’s one click away."
           : "Every time counts. Days you skip don’t undo any of it."}
       </p>
-      <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <dl className="grid grid-cols-3 gap-2 sm:gap-3">
         <StatTile label="Times done" value={String(sessionsCount)} />
         <StatTile label="Time given" value={formatTotalTime(totalSeconds)} />
         <StatTile label="Last time" value={lastDoneAt ? formatLastDone(lastDoneAt, new Date()) : "Not yet"} />

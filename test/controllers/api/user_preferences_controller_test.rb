@@ -30,7 +30,8 @@ class Api::UserPreferencesControllerTest < ActionDispatch::IntegrationTest
         "theme" => "system",
         "completion_sound" => "rising",
         "break_alarm_sound" => "classic",
-        "week_starts_on" => 1
+        "week_starts_on" => 1,
+        "time_format" => "12h"
       },
       response.parsed_body["user_preference"]
     )
@@ -90,6 +91,26 @@ class Api::UserPreferencesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_content
     assert_equal "Week starts on must be in 0..6", response.parsed_body["error"]
+    assert_nil @user.reload.preference
+  end
+
+  def test_that_update_changes_the_time_format
+    sign_in @user
+
+    patch api_user_preference_path, params: { time_format: "24h" }, as: :json
+
+    assert_response :ok
+    assert_equal "24h", response.parsed_body["user_preference"]["time_format"]
+    assert_equal "24h", @user.reload.preference.time_format
+  end
+
+  def test_that_update_rejects_an_unknown_time_format
+    sign_in @user
+
+    patch api_user_preference_path, params: { time_format: "metric" }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Time format is not included in the list", response.parsed_body["error"]
     assert_nil @user.reload.preference
   end
 

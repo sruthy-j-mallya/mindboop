@@ -71,7 +71,7 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
 
   const event = page.locator(".calendar-event-task", { hasText: "Plan the week" });
   await expect(event).toBeVisible();
-  await expect(event).toContainText("10:00 AM – 10:30 AM");
+  await expect(event).toContainText("10 – 10:30am");
 
   await event.click();
   const editTask = page.getByRole("dialog", { name: "Edit task" });
@@ -99,13 +99,15 @@ test("add, edit and move a task from the calendar", async ({ page }) => {
   await page.mouse.move(x, to.y + grabOffset, { steps: 2 });
   const saved = waitForTaskSave(page);
   await page.mouse.up();
-  await expect(renamed).toContainText("12:00 PM – 12:30 PM");
+  await expect(renamed).toContainText("12 – 12:30pm");
   await saved;
 
   await page.reload();
   await chooseView(page, "Day");
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.locator(".calendar-event-task", { hasText: "Plan the month" })).toContainText("12:00 PM");
+  await expect(page.locator(".calendar-event-task", { hasText: "Plan the month" })).toContainText(
+    "12 – 12:30pm",
+  );
 });
 
 // Presses the middle of the event's top or bottom resize handle and drags it to the given slot.
@@ -137,20 +139,18 @@ test("stretch a task from its start and its end", async ({ page }) => {
   await expect(newTask).toBeHidden();
 
   const event = page.locator(".calendar-event-task", { hasText: "Deep work" });
-  await expect(event).toContainText("10:00 AM – 10:30 AM");
+  await expect(event).toContainText("10 – 10:30am");
 
   await dragEdge(page, event, "top", 9);
-  await expect(event).toContainText("9:00 AM – 10:30 AM");
+  await expect(event).toContainText("9 – 10:30am");
 
   await dragEdge(page, event, "bottom", 12);
-  await expect(event).toContainText("9:00 AM – 12:00 PM");
+  await expect(event).toContainText("9am – 12pm");
 
   await page.reload();
   await chooseView(page, "Day");
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.locator(".calendar-event-task", { hasText: "Deep work" })).toContainText(
-    "9:00 AM – 12:00 PM",
-  );
+  await expect(page.locator(".calendar-event-task", { hasText: "Deep work" })).toContainText("9am – 12pm");
 });
 
 test("log time in the last 24 hours with only a title, then delete it", async ({ page }) => {

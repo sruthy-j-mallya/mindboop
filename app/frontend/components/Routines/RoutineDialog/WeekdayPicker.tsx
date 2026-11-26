@@ -1,6 +1,9 @@
 import { cn } from "cn";
 
-import { WEEKDAYS } from "../constants";
+import { PICKED_CLASS_NAME } from "@/constants";
+import useWeekStartsOn from "@/hooks/useWeekStartsOn";
+
+import { getWeekdays } from "../utils";
 
 type WeekdayPickerProps = {
   value: number[];
@@ -9,8 +12,10 @@ type WeekdayPickerProps = {
   onChange: (days: number[]) => void;
 };
 
-// A row of round day buttons, Monday first.
+// A row of round day buttons, in the order of the week picked in Settings.
 const WeekdayPicker = ({ value, isMultiple, onChange }: WeekdayPickerProps) => {
+  const weekStartsOn = useWeekStartsOn();
+
   const handleToggle = (day: number) => {
     if (!isMultiple) onChange([day]);
     else onChange(value.includes(day) ? value.filter((picked) => picked !== day) : [...value, day]);
@@ -18,7 +23,7 @@ const WeekdayPicker = ({ value, isMultiple, onChange }: WeekdayPickerProps) => {
 
   return (
     <div className="flex gap-1.5">
-      {WEEKDAYS.map(({ value: day, short, label }) => {
+      {getWeekdays(weekStartsOn).map(({ value: day, short, label }) => {
         const isPicked = value.includes(day);
 
         return (
@@ -28,7 +33,7 @@ const WeekdayPicker = ({ value, isMultiple, onChange }: WeekdayPickerProps) => {
             aria-pressed={isPicked}
             className={cn(
               "flex size-9 items-center justify-center rounded-full text-sm font-medium transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-              isPicked ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-accent",
+              isPicked ? PICKED_CLASS_NAME : "bg-muted hover:bg-accent",
             )}
             title={label}
             type="button"
