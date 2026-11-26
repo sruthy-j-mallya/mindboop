@@ -13,3 +13,9 @@ if time_log.current_break
 else
   json.current_break nil
 end
+# Every break taken in the session, oldest first, which the Calendar draws inside the log. A break starts when it's
+# created, and an open one has no `ended_at` yet.
+json.breaks time_log.breaks.sort_by(&:created_at) do |break_record|
+  json.extract! break_record, :id, :intention, :duration_minutes, :ends_at, :ended_at
+  json.started_at break_record.created_at
+end

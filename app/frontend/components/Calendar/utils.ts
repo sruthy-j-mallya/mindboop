@@ -66,6 +66,7 @@ import {
 } from "./constants";
 import type {
   AnchorRect,
+  BreakBand,
   CalendarEvent,
   CalendarView,
   EventTimes,
@@ -309,6 +310,36 @@ export const toCalendarEvents = (
     ...timeLogs.map((timeLog) => toTimeLogEvent(timeLog, now)),
     ...tasks.filter(({ startsAt }) => !!startsAt).map(toTaskEvent),
   ].map((event) => ({ ...event, ...movedTimes[event.id] }));
+
+const toPercent = (part: number, whole: number) => (part / whole) * 100;
+
+// The breaks taken in a time log, placed inside it on the time grid. A break still open reaches up to the log's end
+// (now, for a running session). A log that crosses midnight is split across two columns, which the event's renderer
+// can't tell apart, so it shows none.
+export const getBreakBands = ({ start, end, timeLog }: TimeLogEvent): BreakBand[] => {
+  const span = end.getTime() - start.getTime();
+  if (span <= 0 || !isSameDay(start, subMilliseconds(end, 1))) return [];
+
+  return timeLog.breaks.flatMap(({ id, intention, startedAt, endsAt, endedAt }) => {
+    const breakStart = max([parseISO(startedAt), start]).getTime();
+    const breakEnd = min([endedAt ? parseISO(endedAt) : end, end]).getTime();
+    const length = breakEnd - breakStart;
+    if (length <= 0) return [];
+
+    const overrun = breakEnd - Math.max(parseISO(endsAt).getTime(), breakStart);
+
+    return [
+      {
+        id,
+        intention,
+        minutes: Math.max(Math.round(length / MILLISECONDS_PER_MINUTE), 1),
+        top: toPercent(breakStart - start.getTime(), span),
+        height: toPercent(length, span),
+        overrunShare: toPercent(Math.max(overrun, 0), length),
+      },
+    ];
+  });
+};
 
 const isMidnight = (date: Date) => date.getTime() === startOfDay(date).getTime();
 

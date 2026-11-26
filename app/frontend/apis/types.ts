@@ -108,6 +108,10 @@ export type TimeLogMode = StartableTimeLogMode | "manual";
 
 export type Break = { id: string; intention: string; durationMinutes: number; endsAt: string };
 
+// A break taken in a session, from `startedAt`. `endsAt` is when it was planned to end; `endedAt` is when it did, and
+// is null while it's still open.
+export type SessionBreak = Break & { startedAt: string; endedAt: string | null };
+
 // A manual log can go without a task (it then has a `title` of its own), and so can a session on a routine.
 // `taskTitle` and `routineTitle` are its task's and routine's titles.
 export type TimeLog = {
@@ -131,6 +135,8 @@ export type TimeLog = {
   completedAt: string | null;
   isFinishedEarly: boolean;
   currentBreak: Break | null;
+  // Every break taken in the session, oldest first.
+  breaks: SessionBreak[];
   createdAt: string;
   updatedAt: string;
 };

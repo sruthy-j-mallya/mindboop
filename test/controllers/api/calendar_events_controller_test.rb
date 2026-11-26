@@ -38,6 +38,21 @@ class Api::CalendarEventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, listed["is_task_deleted"]
   end
 
+  def test_that_time_logs_list_their_breaks_oldest_first
+    time_log = create(:time_log, task: @task, started_at: 50.minutes.ago)
+    open_break = create(:break, time_log:, created_at: 5.minutes.ago)
+    ended_break = create(:break, time_log:, created_at: 30.minutes.ago, ended_at: 22.minutes.ago)
+    sign_in @user
+
+    get api_calendar_events_path, params: { from: @from.iso8601, to: @to.iso8601 }
+
+    breaks = response.parsed_body["time_logs"].find { |log| log["id"] == time_log.id }["breaks"]
+    assert_equal [ ended_break.id, open_break.id ], breaks.pluck("id")
+    assert_equal 30.minutes.ago, Time.zone.parse(breaks.first["started_at"])
+    assert_equal 22.minutes.ago, Time.zone.parse(breaks.first["ended_at"])
+    assert_nil breaks.last["ended_at"]
+  end
+
   def test_that_a_duration_started_before_the_range_is_listed
     task = create(:task, :backdated, user: @user, is_duration: true, starts_at: @from - 2.days, ends_at: @from + 1.day)
     sign_in @user

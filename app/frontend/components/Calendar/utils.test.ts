@@ -1,7 +1,7 @@
 import { addHours } from "date-fns";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { Task, TimeLog } from "@/apis/types";
+import type { SessionBreak, Task, TimeLog } from "@/apis/types";
 
 import {
   CALENDAR_VIEWS,
@@ -15,6 +15,7 @@ import {
 } from "./constants";
 import type { CalendarEvent, CalendarView, TimeLogEvent, WheelInput } from "./types";
 import {
+  getBreakBands,
   getCurrentSlotStart,
   getEventProps,
   getMovedTaskSchedule,
@@ -74,8 +75,35 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => ({
   completedAt: at(12, 8, 30).toISOString(),
   isFinishedEarly: false,
   currentBreak: null,
+  breaks: [],
   createdAt: "2026-11-12T08:30:00.000Z",
   updatedAt: "2026-11-12T08:30:00.000Z",
+  ...overrides,
+});
+
+const buildBreak = (overrides: Partial<SessionBreak> = {}): SessionBreak => ({
+  id: "break-1",
+  intention: "Stretch",
+  durationMinutes: 10,
+  startedAt: at(12, 9, 30).toISOString(),
+  endsAt: at(12, 9, 40).toISOString(),
+  endedAt: at(12, 9, 40).toISOString(),
+  ...overrides,
+});
+
+// A two-hour session, 9:00 to 11:00, as the time grid draws it.
+const buildSessionEvent = (
+  overrides: Partial<TimeLogEvent> = {},
+  breaks: SessionBreak[] = [],
+): TimeLogEvent => ({
+  id: "log-1",
+  kind: "timeLog",
+  title: "Write spec",
+  start: at(12, 9),
+  end: at(12, 11),
+  allDay: false,
+  isEditable: false,
+  timeLog: buildTimeLog({ mode: "timer", breaks }),
   ...overrides,
 });
 
@@ -535,6 +563,65 @@ describe("getMoveError", () => {
     ).toBe(MOVE_ERRORS.TIME_LOG_OUTSIDE_WINDOW);
     expect(getMoveError(timeLogEvent, { start: at(12), end: at(13), allDay: true }, false, NOW)).toBe(
       MOVE_ERRORS.TIME_LOG_ALL_DAY,
+    );
+  });
+});
+
+describe("getBreakBands", () => {
+  it("places each break where it happened, with the time past its plan as an overrun", () => {
+    const event = buildSessionEvent({}, [
+      buildBreak(),
+      buildBreak({
+        id: "break-2",
+        intention: "Water",
+        startedAt: at(12, 10, 15).toISOString(),
+        endsAt: at(12, 10, 25).toISOString(),
+        endedAt: at(12, 10, 28).toISOString(),
+      }),
+    ]);
+
+    const [stretch, water] = getBreakBands(event);
+
+    expect(stretch).toEqual({
+      id: "break-1",
+      intention: "Stretch",
+      minutes: 10,
+      top: 25,
+      height: (10 / 120) * 100,
+      overrunShare: 0,
+    });
+    expect(water).toMatchObject({ id: "break-2", intention: "Water", minutes: 13, top: 62.5 });
+    expect(water.height).toBeCloseTo((13 / 120) * 100);
+    expect(water.overrunShare).toBeCloseTo((3 / 13) * 100);
+  });
+
+  it("runs a break still open up to the end of the session", () => {
+    const event = buildSessionEvent({}, [
+      buildBreak({
+        startedAt: at(12, 10, 50).toISOString(),
+        endsAt: at(12, 11, 5).toISOString(),
+        endedAt: null,
+      }),
+    ]);
+
+    expect(getBreakBands(event)).toEqual([
+      {
+        id: "break-1",
+        intention: "Stretch",
+        minutes: 10,
+        top: (110 / 120) * 100,
+        height: (10 / 120) * 100,
+        overrunShare: 0,
+      },
+    ]);
+  });
+
+  it("draws nothing for a session across midnight, or for a break outside it", () => {
+    const breaks = [buildBreak({ startedAt: at(12, 7).toISOString(), endedAt: at(12, 8).toISOString() })];
+
+    expect(getBreakBands(buildSessionEvent({}, breaks))).toEqual([]);
+    expect(getBreakBands(buildSessionEvent({ start: at(12, 23), end: at(13, 1) }, [buildBreak()]))).toEqual(
+      [],
     );
   });
 });
