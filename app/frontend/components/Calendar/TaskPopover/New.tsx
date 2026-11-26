@@ -23,7 +23,7 @@ type NewProps = { anchor: AnchorRect; schedule: Schedule; onClose: () => void };
 // asks for one.
 const New = ({ anchor, schedule, onClose }: NewProps) => {
   const [stepDraft, setStepDraft] = useState<Draft | null>(null);
-  const { mutate: createTask } = useCreateTask();
+  const { mutateAsync: createTask } = useCreateTask();
   const {
     control,
     register,
@@ -38,11 +38,12 @@ const New = ({ anchor, schedule, onClose }: NewProps) => {
 
   const handleAddStep = () => setStepDraft((draft) => draft ?? NEW_STEP_DRAFT);
 
-  // The popover is gone by the time a save fails, so the error shows as a toast.
+  // The popover is gone by the time a save fails, so the error shows as a toast. The promise carries it: mutate's own
+  // callbacks don't run once the popover has unmounted.
   const handleCreateFailed = (error: ApiError) => toast.error(error.message);
 
   const handleSave = (values: TaskFormValues) => {
-    createTask(buildCreatePayload(values), { onError: handleCreateFailed });
+    createTask(buildCreatePayload(values)).catch(handleCreateFailed);
     onClose();
   };
 

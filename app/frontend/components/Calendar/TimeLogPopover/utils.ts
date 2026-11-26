@@ -19,8 +19,14 @@ export const formatLoggedRange = ({ start, end }: TimeRange, timeFormat: TimeFor
   return `${startLabel} – ${endLabel}`;
 };
 
+// "Thu, 26 Nov", or "Thu, 26 Nov – Fri, 27 Nov" when the range crosses midnight.
+export const formatLoggedDays = ({ start, end }: TimeRange) =>
+  isSameDay(start, end)
+    ? formatWeekdayDate(start)
+    : `${formatWeekdayDate(start)} – ${formatWeekdayDate(end)}`;
+
 // A linked task wins over a typed title. Returns null when there's neither, so nothing is saved.
-export const buildLogTimePayload = ({ title, task }: TimeLogFormValues, { start, end }: TimeRange) => {
+export const buildLogTimePayload = ({ title, task, start, end }: TimeLogFormValues) => {
   const times = { mode: "manual", startedAt: start.toISOString(), completedAt: end.toISOString() } as const;
   if (task) return { ...times, taskId: task.id } satisfies LogTimePayload;
 
