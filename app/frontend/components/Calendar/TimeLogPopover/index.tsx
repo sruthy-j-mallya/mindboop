@@ -81,7 +81,7 @@ const TimeLogPopover = ({ anchor, range, onClose }: TimeLogPopoverProps) => {
     <AnchoredPopover
       anchor={anchor}
       isTopPinned
-      className="flex w-80 flex-col gap-3 p-4"
+      className="flex max-h-(--radix-popover-content-available-height) w-80 flex-col gap-3 overflow-y-auto p-4"
       label="Log time"
       onDismiss={handleDismiss}
     >
