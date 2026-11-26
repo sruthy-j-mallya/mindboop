@@ -93,11 +93,15 @@ export const isTasksPath = (pathname: string) =>
     matchPath({ path, end: false }, pathname),
   );
 
-// The page of the bottom bar a path belongs to. Other pages, the lists of tasks and the timer among them, are under More.
-export const findBottomBarPath = (pathname: string) =>
-  [routes.root, routes.calendar, routes.routines.index, routes.parkingLot].find((path) =>
+// The page of the bottom bar a path belongs to: every list of tasks is under Tasks. Other pages, the Calendar and the
+// timer among them, are under More.
+export const findBottomBarPath = (pathname: string) => {
+  if (isTasksPath(pathname)) return routes.inbox.index;
+
+  return [routes.root, routes.routines.index, routes.parkingLot].find((path) =>
     matchPath({ path, end: path === routes.root }, pathname),
   );
+};
 
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
