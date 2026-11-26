@@ -1,34 +1,20 @@
 import { toast } from "sonner";
 
-import type { ApiError } from "@/apis/axios";
 import type { Task } from "@/apis/types";
 import type { SchedulePayload } from "@/components/commons/SchedulePicker/types";
-import UndoLabel from "@/components/commons/UndoLabel";
-import { UNDO_TOAST_DURATION } from "@/constants";
 import { useUpdateTask } from "@/hooks/reactQuery/useTasksApi";
 
-// Gives an overdue task another date, then offers to undo it in a toast. The row goes once the task isn't overdue, so
-// promises (mutateAsync) are used: they settle even after it has unmounted, which mutate's callbacks wouldn't.
-const useRescheduleTask = ({ id, title, isDuration, isAllDay, startsAt, endsAt }: Task) => {
+// Gives an overdue task another date, then confirms it in a toast. There is no undo: the old schedule is in the past,
+// which the server no longer accepts. The row goes once the task isn't overdue, so a promise (mutateAsync) is used: it
+// settles even after the row has unmounted, which mutate's callbacks wouldn't.
+const useRescheduleTask = ({ id, title }: Task) => {
   const { mutateAsync: updateTask, isPending, error } = useUpdateTask();
-  // Apart from the rescheduling, so a failed undo shows only in its toast.
-  const { mutateAsync: restoreSchedule } = useUpdateTask();
 
-  const handleUndoFailed = (undoError: ApiError) => toast.error(undoError.message);
-
-  const handleUndo = () =>
-    restoreSchedule({ id, isDuration, isAllDay, startsAt, endsAt }).catch(handleUndoFailed);
+  const handleRescheduled = () => toast(`Rescheduled “${title}”`);
 
   // A failed save shows through `error`, so the rejection needs no handling here.
-  const rescheduleTask = (schedule: SchedulePayload) => {
-    const handleRescheduled = () =>
-      toast(`Rescheduled “${title}”`, {
-        action: { label: <UndoLabel />, onClick: handleUndo },
-        duration: UNDO_TOAST_DURATION,
-      });
-
+  const rescheduleTask = (schedule: SchedulePayload) =>
     void updateTask({ id, ...schedule }).then(handleRescheduled, () => undefined);
-  };
 
   return { rescheduleTask, isRescheduling: isPending, error };
 };

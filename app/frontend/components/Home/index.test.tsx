@@ -286,20 +286,13 @@ describe("Home", () => {
     expect(vi.mocked(tasksApi.update).mock.lastCall?.[0]).toMatchObject({ id: "o", startsAt: null });
   });
 
-  it("undoes moving a task, putting back the schedule it had", async () => {
+  it("confirms moving a task without offering to undo it", async () => {
     renderHome();
 
     await userEvent.click(await screen.findByRole("button", { name: "Move Renew passport to today" }));
-    expect(await screen.findByText("Rescheduled “Renew passport”")).toBeVisible();
-    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
 
-    expect(vi.mocked(tasksApi.update).mock.lastCall?.[0]).toEqual({
-      id: "o",
-      isDuration: true,
-      isAllDay: false,
-      startsAt: OVERDUE_TASK.startsAt,
-      endsAt: OVERDUE_TASK.endsAt,
-    });
+    expect(await screen.findByText("Rescheduled “Renew passport”")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
 
   it("shows why a task couldn't be moved", async () => {
