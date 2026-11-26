@@ -46,7 +46,7 @@ Tick an issue in the commit that fixes it.
 - [x] 15. Overdue: undo for moving a task, plus Tomorrow and Pick a date (bulk moves stay out of scope, as in 049)
 - [ ] ~~16. Show today's routines on Home~~ Dropped: not wanted there
 - [x] 17. Home's running session card names the task and shows the time left
-- [x] 18. Timer: Done is the primary action; Bail and Discard are quiet
+- [x] 18. Timer: Done is the primary action; Bail and Discard are quiet (replaced by 056: End session, then ask)
 - [x] 19. Timer: the task's title shows once during a session
 - [x] 20. Timer setup: list today's and recent tasks, and create a task when nothing matches
 - [x] 21. Timer setup: duration presets

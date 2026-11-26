@@ -1,11 +1,10 @@
 import { useState } from "react";
 
 import { cn } from "cn";
-import { LogOut, PartyPopper, Pause, Plus, X } from "lucide-react";
+import { Flag, Pause, Plus, X } from "lucide-react";
 
 import type { CreateCompletionPayload, TimeLog } from "@/apis/types";
 import AmbiencePicker from "@/components/commons/Ambience/Picker";
-import BailDialog from "@/components/commons/BailDialog";
 import BreakBanner from "@/components/commons/BreakBanner";
 import TaskDetails from "@/components/commons/TaskDetails";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import { getOverrunSeconds, isTooShortToKeep } from "@/utils/timeLogs";
 import Clock from "./Clock";
 import { ACTION_GRID_CLASSES } from "./constants";
 import DiscardDialog from "./DiscardDialog";
+import EndSessionDialog from "./EndSessionDialog";
 import ExtendDialog from "./ExtendDialog";
 import { MAX_EXTENSION_MINUTES } from "./ExtendDialog/constants";
 import PauseDialog from "./PauseDialog";
@@ -23,7 +23,7 @@ import RoutineDetails from "./RoutineDetails";
 import SessionCard from "./SessionCard";
 import SessionTitle from "./SessionTitle";
 
-type DiscardedBy = "bail" | "done" | "discard";
+type DiscardedBy = "end" | "discard";
 
 type SessionProps = {
   timeLog: TimeLog;
@@ -42,7 +42,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   } = useTask(timeLog.taskId ?? "", { enabled: !routineId && !!timeLog.taskId });
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [showExtendDialog, setShowExtendDialog] = useState(false);
-  const [showBailDialog, setShowBailDialog] = useState(false);
+  const [showEndDialog, setShowEndDialog] = useState(false);
   // What the discard dialog was opened by; null while it's closed.
   const [discardedBy, setDiscardedBy] = useState<DiscardedBy | null>(null);
   const [isOverrunIncluded, setIsOverrunIncluded] = useState(false);
@@ -55,19 +55,28 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
   // A stopwatch has no end to push back.
   const canExtend = timeLog.mode === "timer" && !hasOverrun;
   const extensionMinutesLeft = MAX_EXTENSION_MINUTES - timeLog.bufferMinutes;
-  // A routine has no task to leave breadcrumbs on, so instead of Bail it can be discarded at any time.
-  const canBail = !routineId;
-  const actionCount = Number(canExtend) + Number(!hasOverrun) + 2;
+  // A routine has no task to leave breadcrumbs on, so it can be discarded at any time instead.
+  const canDiscard = !!routineId;
+  const actionCount = Number(canExtend) + Number(!hasOverrun) + Number(canDiscard) + 1;
 
-  // A session too short to log can only be discarded, whether it's ended with Bail or Done. Decided on the click, so
-  // the open dialog doesn't change when the elapsed time crosses the limit.
+  // A session too short to log can only be discarded (its task can still be finished). Decided on the click, so the
+  // open dialog doesn't change when the elapsed time crosses the limit.
   const isTooShort = () => isTooShortToKeep(timeLog, Date.now(), { discardOverrun });
-  const handleBail = () => (isTooShort() ? setDiscardedBy("bail") : setShowBailDialog(true));
-  const handleBailDialogClose = () => setShowBailDialog(false);
+  const handleFinish = () => {
+    setShowEndDialog(false);
+    onDone({ timeLogId: timeLog.id, discardOverrun });
+  };
+
+  // Ending a session doesn't finish its task: the end dialog asks about that. A routine has no task to ask about.
+  const handleEnd = () => {
+    if (isTooShort()) setDiscardedBy("end");
+    else if (routineId) handleFinish();
+    else setShowEndDialog(true);
+  };
+
+  const handleEndDialogClose = () => setShowEndDialog(false);
   const handleDiscardDialogClose = () => setDiscardedBy(null);
   const handleDiscard = () => setDiscardedBy("discard");
-  const handleDone = () =>
-    isTooShort() ? setDiscardedBy("done") : onDone({ timeLogId: timeLog.id, discardOverrun });
   const handleOverrunToggle = () => setIsOverrunIncluded((isIncluded) => !isIncluded);
   const handleExtend = () => setShowExtendDialog(true);
   const handleExtendDialogClose = () => setShowExtendDialog(false);
@@ -139,20 +148,15 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
               Pause
             </Button>
           )}
-          {canBail ? (
-            <Button size="lg" type="button" variant="ghost" onClick={handleBail}>
-              <LogOut />
-              Bail
-            </Button>
-          ) : (
+          {canDiscard && (
             <Button size="lg" type="button" variant="ghost" onClick={handleDiscard}>
               <X />
               Discard
             </Button>
           )}
-          <Button disabled={isCompleting} size="lg" type="button" onClick={handleDone}>
-            <PartyPopper />
-            Done
+          <Button disabled={isCompleting} size="lg" type="button" onClick={handleEnd}>
+            <Flag />
+            End session
           </Button>
         </div>
       </SessionCard>
@@ -164,12 +168,17 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
         />
       )}
       {showPauseDialog && <PauseDialog timeLogId={timeLog.id} onClose={handlePauseDialogClose} />}
-      {showBailDialog && (
-        <BailDialog discardOverrun={discardOverrun} timeLogId={timeLog.id} onClose={handleBailDialogClose} />
+      {showEndDialog && (
+        <EndSessionDialog
+          discardOverrun={discardOverrun}
+          timeLogId={timeLog.id}
+          onClose={handleEndDialogClose}
+          onFinish={handleFinish}
+        />
       )}
       {discardedBy && (
         <DiscardDialog
-          finishedTaskId={discardedBy === "done" ? timeLog.taskId : null}
+          finishedTaskId={discardedBy === "end" ? timeLog.taskId : null}
           isChosen={discardedBy === "discard"}
           timeLogId={timeLog.id}
           onClose={handleDiscardDialogClose}

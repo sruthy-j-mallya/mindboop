@@ -121,6 +121,17 @@ const renderTimer = (
   renderWithProviders(<Timer />, undefined, initialPath);
 };
 
+const endSession = async () => userEvent.click(await screen.findByRole("button", { name: "End session" }));
+
+// Ends the session, then answers the end dialog's question about the task.
+const endSessionAnswering = async (answer: RegExp) => {
+  await endSession();
+  await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: answer }));
+};
+
+const finishTask = () => endSessionAnswering(/Yes, it’s finished/);
+const leaveBreadcrumbs = () => endSessionAnswering(/Not yet/);
+
 describe("Timer", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
@@ -133,7 +144,8 @@ describe("Timer", () => {
     vi.clearAllMocks();
   });
 
-  it("runs a routine's session without a task, ending with Done or Discard instead of Bail", async () => {
+  // A routine's session, with the routine listed for its details.
+  const renderRoutineSession = (timeLog: Partial<TimeLog> = {}) => {
     const routineId = crypto.randomUUID();
     vi.spyOn(routinesApi, "fetchList").mockResolvedValue({
       routines: [
@@ -154,12 +166,22 @@ describe("Timer", () => {
         },
       ],
     });
-    renderTimer({ ...TIME_LOG, taskId: null, routineId, routineTitle: "Meditation", timerPreset: 10 });
+    renderTimer({
+      ...TIME_LOG,
+      taskId: null,
+      routineId,
+      routineTitle: "Meditation",
+      timerPreset: 10,
+      ...timeLog,
+    });
+  };
+
+  it("runs a routine's session without a task, ending it or discarding it", async () => {
+    renderRoutineSession();
 
     expect(await screen.findByRole("heading", { name: "Meditation" })).toBeVisible();
     expect(screen.getByText(/Any time you give this counts/)).toBeVisible();
-    expect(screen.getByRole("button", { name: "Done" })).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Bail" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "End session" })).toBeVisible();
     expect(tasksApi.show).not.toHaveBeenCalled();
 
     // Past the two minutes a session needs to be logged, it can still be discarded.
@@ -171,6 +193,21 @@ describe("Timer", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
 
     await waitFor(() => expect(destroy).toHaveBeenCalledWith(TIME_LOG.id, expect.anything()));
+  });
+
+  it("ends a routine's session without asking about a task", async () => {
+    const create = vi.spyOn(timeLogCompletionsApi, "create").mockImplementation(() => {
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+
+      return Promise.resolve({ timeLog: { ...TIME_LOG, isRunning: false, completedAt: STARTED_AT } });
+    });
+    renderRoutineSession({ accumulatedElapsedSeconds: 5 * 60 });
+
+    await endSession();
+
+    expect(await screen.findByRole("dialog", { name: /Finished/ })).toBeVisible();
+    expect(screen.queryByRole("dialog", { name: "Is the task finished?" })).not.toBeInTheDocument();
+    expect(create).toHaveBeenCalledWith({ timeLogId: TIME_LOG.id, discardOverrun: false }, expect.anything());
   });
 
   it("shows the task and its steps", async () => {
@@ -590,15 +627,14 @@ describe("Timer", () => {
       expect(screen.getByRole("timer")).toHaveTextContent("00:00");
     });
 
-    it("offers only Bail and Done", async () => {
+    it("offers only to end the session", async () => {
       renderTimer(OVERRUN_TIME_LOG);
 
       await overrunToggle();
 
       expect(screen.queryByRole("button", { name: "Extend" })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Pause" })).not.toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Bail" })).toBeEnabled();
-      expect(screen.getByRole("button", { name: "Done" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "End session" })).toBeEnabled();
     });
 
     it("shows no extra time before zero", async () => {
@@ -616,7 +652,7 @@ describe("Timer", () => {
 
       expect(await overrunToggle()).toHaveAccessibleName("Add the extra time to the log");
       expect(screen.getByText("extra time not logged")).toBeVisible();
-      await userEvent.click(screen.getByRole("button", { name: "Done" }));
+      await finishTask();
 
       await screen.findByRole("dialog", { name: /Finished/ });
       expect(create).toHaveBeenCalledWith(
@@ -637,7 +673,7 @@ describe("Timer", () => {
       expect(await overrunToggle()).toHaveAccessibleName("Add the extra time to the log");
 
       await userEvent.click(await overrunToggle());
-      await userEvent.click(screen.getByRole("button", { name: "Done" }));
+      await finishTask();
 
       await screen.findByRole("dialog", { name: /Finished/ });
       expect(create).toHaveBeenCalledWith(
@@ -657,7 +693,7 @@ describe("Timer", () => {
       renderTimer(OVERRUN_TIME_LOG);
 
       await overrunToggle();
-      await userEvent.click(screen.getByRole("button", { name: "Bail" }));
+      await leaveBreadcrumbs();
       const dialog = await screen.findByRole("dialog", { name: "Leave breadcrumbs" });
       await userEvent.type(within(dialog).getByLabelText("Very next step"), "Finish paragraph 2");
       await userEvent.click(within(dialog).getByRole("button", { name: "Save & exit" }));
@@ -674,7 +710,7 @@ describe("Timer", () => {
       renderTimer({ ...OVERRUN_TIME_LOG, timerPreset: 1, accumulatedElapsedSeconds: 90 });
 
       await overrunToggle();
-      await userEvent.click(screen.getByRole("button", { name: "Done" }));
+      await endSession();
 
       expect(await screen.findByRole("dialog", { name: "Discard this timer?" })).toBeVisible();
       expect(create).not.toHaveBeenCalled();
@@ -992,8 +1028,7 @@ describe("Timer", () => {
       renderTimer(STOPWATCH);
 
       expect(await screen.findByRole("button", { name: "Pause" })).toBeVisible();
-      expect(screen.getByRole("button", { name: "Bail" })).toBeVisible();
-      expect(screen.getByRole("button", { name: "Done" })).toBeVisible();
+      expect(screen.getByRole("button", { name: "End session" })).toBeVisible();
       expect(screen.queryByRole("button", { name: "Extend" })).not.toBeInTheDocument();
       expect(screen.getByRole("region", { name: "Parking lot" })).toBeVisible();
     });
@@ -1193,9 +1228,9 @@ describe("Timer", () => {
     });
   });
 
-  describe("when bailing out before two minutes", () => {
+  describe("when ending before two minutes", () => {
     const openDialog = async () => {
-      await userEvent.click(await screen.findByRole("button", { name: "Bail" }));
+      await endSession();
 
       return screen.findByRole("dialog", { name: "Discard this timer?" });
     };
@@ -1210,8 +1245,6 @@ describe("Timer", () => {
       renderTimer(TIME_LOG);
 
       const dialog = await openDialog();
-      // Bailing means the task isn't finished.
-      expect(within(dialog).queryByRole("button", { name: /Mark task done/ })).not.toBeInTheDocument();
       await userEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
 
       expect(await screen.findByRole("heading", { name: "Start a session" })).toBeVisible();
@@ -1260,9 +1293,9 @@ describe("Timer", () => {
     });
   });
 
-  describe("when bailing out after two minutes", () => {
+  describe("when the task isn't finished after two minutes", () => {
     const openDialog = async () => {
-      await userEvent.click(await screen.findByRole("button", { name: "Bail" }));
+      await leaveBreadcrumbs();
 
       return screen.findByRole("dialog", { name: "Leave breadcrumbs" });
     };
@@ -1358,9 +1391,7 @@ describe("Timer", () => {
     });
   });
 
-  describe("when the session is done", () => {
-    const clickDone = async () => userEvent.click(await screen.findByRole("button", { name: "Done" }));
-
+  describe("when the task is finished", () => {
     const mockCompletion = (isFinishedEarly: boolean) =>
       vi.spyOn(timeLogCompletionsApi, "create").mockImplementation(() => {
         vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
@@ -1369,6 +1400,33 @@ describe("Timer", () => {
           timeLog: { ...TIME_LOG, isRunning: false, completedAt: STARTED_AT, isFinishedEarly },
         });
       });
+
+    it("asks whether the task is finished before ending anything", async () => {
+      const create = vi.spyOn(timeLogCompletionsApi, "create");
+      const bailOut = vi.spyOn(timeLogBailOutsApi, "create");
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
+
+      await endSession();
+
+      const dialog = await screen.findByRole("dialog", { name: "Is the task finished?" });
+      expect(within(dialog).getByRole("button", { name: /Not yet/ })).toBeVisible();
+      expect(within(dialog).getByRole("button", { name: /Yes, it’s finished/ })).toBeVisible();
+      expect(create).not.toHaveBeenCalled();
+      expect(bailOut).not.toHaveBeenCalled();
+    });
+
+    it("keeps the session going when the question is dismissed", async () => {
+      const create = vi.spyOn(timeLogCompletionsApi, "create");
+      renderTimer(TIME_LOG_AT_TWO_MINUTES);
+
+      await endSession();
+      await screen.findByRole("dialog", { name: "Is the task finished?" });
+      await userEvent.click(screen.getByRole("button", { name: "Close" }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(screen.getByRole("timer")).toBeVisible();
+      expect(create).not.toHaveBeenCalled();
+    });
 
     it.each([
       ["timer", TIME_LOG],
@@ -1382,7 +1440,7 @@ describe("Timer", () => {
       });
       renderTimer({ ...timeLog, accumulatedElapsedSeconds: 82 });
 
-      await clickDone();
+      await endSession();
       const dialog = await screen.findByRole("dialog", { name: "Discard this timer?" });
       expect(dialog).toHaveTextContent("too short to log");
       await userEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
@@ -1402,7 +1460,7 @@ describe("Timer", () => {
       });
       renderTimer(TIME_LOG);
 
-      await clickDone();
+      await endSession();
       await userEvent.click(await screen.findByRole("button", { name: /Mark task done/ }));
 
       expect(await screen.findByRole("heading", { name: "Start a session" })).toBeVisible();
@@ -1416,7 +1474,7 @@ describe("Timer", () => {
       const destroy = vi.spyOn(timeLogsApi, "destroy");
       renderTimer(TIME_LOG);
 
-      await clickDone();
+      await endSession();
       await userEvent.click(await screen.findByRole("button", { name: /Mark task done/ }));
 
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
@@ -1427,7 +1485,7 @@ describe("Timer", () => {
       const create = mockCompletion(false);
       renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
-      await clickDone();
+      await finishTask();
 
       expect(await screen.findByRole("dialog", { name: /Finished!/ })).toBeVisible();
       expect(create).toHaveBeenCalledOnce();
@@ -1437,7 +1495,7 @@ describe("Timer", () => {
       const create = mockCompletion(true);
       renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
-      await clickDone();
+      await finishTask();
 
       const dialog = await screen.findByRole("dialog", { name: /Finished early!/ });
       expect(create).toHaveBeenCalledWith(
@@ -1452,7 +1510,7 @@ describe("Timer", () => {
       mockCompletion(false);
       renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
-      await clickDone();
+      await finishTask();
 
       const dialog = await screen.findByRole("dialog", { name: /Finished!/ });
       expect(within(dialog).queryByText("+1 early-finish boost")).not.toBeInTheDocument();
@@ -1462,7 +1520,7 @@ describe("Timer", () => {
       mockCompletion(true);
       renderTimer(TIME_LOG_AT_TWO_MINUTES, TASK, [buildParkingLotItem(), buildParkingLotItem()]);
 
-      await clickDone();
+      await finishTask();
 
       const dialog = await screen.findByRole("dialog", { name: /Finished early!/ });
       expect(await within(dialog).findByRole("link", { name: "Review parking lot · 2" })).toHaveAttribute(
@@ -1482,7 +1540,7 @@ describe("Timer", () => {
       const renderFinished = async () => {
         mockCompletion(true);
         renderTimer(TIME_LOG_AT_TWO_MINUTES);
-        await clickDone();
+        await finishTask();
 
         return screen.findByRole("dialog", { name: /Finished early!/ });
       };
@@ -1507,7 +1565,7 @@ describe("Timer", () => {
       it("waits while the pointer is over the dialog", async () => {
         const dialog = await renderFinished();
 
-        fireEvent.pointerEnter(dialog);
+        fireEvent.pointerMove(dialog);
         act(() => {
           vi.advanceTimersByTime(10_000);
         });
@@ -1525,7 +1583,7 @@ describe("Timer", () => {
       mockCompletion(true);
       renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
-      await clickDone();
+      await finishTask();
       await userEvent.click(await screen.findByRole("button", { name: "Close" }));
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -1536,7 +1594,7 @@ describe("Timer", () => {
       vi.spyOn(timeLogCompletionsApi, "create").mockRejectedValue(new ApiError(500, "Something went wrong"));
       renderTimer(TIME_LOG_AT_TWO_MINUTES);
 
-      await clickDone();
+      await finishTask();
 
       expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
       expect(screen.getByRole("timer")).toBeVisible();

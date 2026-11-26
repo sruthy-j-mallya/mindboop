@@ -58,7 +58,11 @@ test("finish a session early, and watch the dialog fade away with nothing parked
   await focusForTwoMinutes(page, email);
   await expect(page.getByRole("timer")).toHaveText(/^0[78]:[0-5]\d$/);
 
-  await page.getByRole("button", { name: "Done" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
+  await page
+    .getByRole("dialog", { name: "Is the task finished?" })
+    .getByRole("button", { name: /Yes, it’s finished/ })
+    .click();
 
   const dialog = page.getByRole("dialog", { name: /Finished early!/ });
   await expect(dialog.getByText("+1 early-finish boost")).toBeVisible();
@@ -91,7 +95,11 @@ test("run past the timer, leave the extra time out, and finish", async ({ page }
   await expect(page.getByText("extra time not logged")).toBeVisible();
 
   const completion = page.waitForResponse((response) => response.url().endsWith("/completion"));
-  await page.getByRole("button", { name: "Done" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
+  await page
+    .getByRole("dialog", { name: "Is the task finished?" })
+    .getByRole("button", { name: /Yes, it’s finished/ })
+    .click();
   const { time_log: timeLog } = await (await completion).json();
 
   expect(timeLog.accumulated_elapsed_seconds).toBe(10 * 60);
@@ -111,7 +119,11 @@ test("finish a session with a parked thought and go review the parking lot", asy
   await expect(page.getByRole("list", { name: "Parked thoughts" }).getByText("Book a dentist")).toBeVisible();
   await focusForTwoMinutes(page, email);
 
-  await page.getByRole("button", { name: "Done" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
+  await page
+    .getByRole("dialog", { name: "Is the task finished?" })
+    .getByRole("button", { name: /Yes, it’s finished/ })
+    .click();
   await page
     .getByRole("dialog", { name: /Finished/ })
     .getByRole("link", { name: "Review parking lot · 1" })
@@ -121,7 +133,7 @@ test("finish a session with a parked thought and go review the parking lot", asy
   await expect(page.getByRole("list", { name: "Parked" }).getByText("Book a dentist")).toBeVisible();
 });
 
-test("Done in the first two minutes of a stopwatch only discards it", async ({ page }) => {
+test("ending a stopwatch in its first two minutes only discards it", async ({ page }) => {
   await signUp(page);
   await page.getByRole("link", { name: "Tasks", exact: true }).click();
   await page.getByRole("textbox", { name: "New task" }).fill("Draft permission");
@@ -135,7 +147,7 @@ test("Done in the first two minutes of a stopwatch only discards it", async ({ p
   await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("timer")).toBeVisible();
 
-  await page.getByRole("button", { name: "Done" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
 
   const dialog = page.getByRole("dialog", { name: "Discard this timer?" });
   await expect(dialog).toContainText("too short to log");
@@ -284,7 +296,7 @@ test("extend a session up to the limit, and keep the extra time through a reload
   await expect(page.getByRole("button", { name: "Extend" })).toBeDisabled();
 });
 
-test("bail out of a session, leaving breadcrumbs", async ({ page }) => {
+test("end a session with the task not finished, leaving breadcrumbs", async ({ page }) => {
   const email = await signUp(page);
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
   await page.getByRole("button", { name: "10 min" }).click();
@@ -293,7 +305,11 @@ test("bail out of a session, leaving breadcrumbs", async ({ page }) => {
   await expect(page.getByRole("timer")).toBeVisible();
   await focusForTwoMinutes(page, email);
 
-  await page.getByRole("button", { name: "Bail" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
+  await page
+    .getByRole("dialog", { name: "Is the task finished?" })
+    .getByRole("button", { name: /Not yet/ })
+    .click();
 
   const dialog = page.getByRole("dialog", { name: "Leave breadcrumbs" });
   await expect(dialog.getByRole("button", { name: "Save & exit" })).toBeDisabled();
@@ -308,7 +324,7 @@ test("bail out of a session, leaving breadcrumbs", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Start a session" })).toBeVisible();
 });
 
-test("bail out in the first two minutes, discarding the timer", async ({ page }) => {
+test("end a session in its first two minutes, discarding the timer", async ({ page }) => {
   await signUp(page);
   await page.getByRole("textbox", { name: "Task" }).fill("Draft permission");
   await page.getByRole("button", { name: "10 min" }).click();
@@ -317,12 +333,12 @@ test("bail out in the first two minutes, discarding the timer", async ({ page })
   await expect(page.getByRole("timer")).toBeVisible();
 
   const dialog = page.getByRole("dialog", { name: "Discard this timer?" });
-  await page.getByRole("button", { name: "Bail" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
   await dialog.getByRole("button", { name: "Keep going" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByRole("timer")).toBeVisible();
 
-  await page.getByRole("button", { name: "Bail" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
   await dialog.getByRole("button", { name: "Discard timer" }).click();
 
   await expect(page.getByRole("heading", { name: "Start a session" })).toBeVisible();

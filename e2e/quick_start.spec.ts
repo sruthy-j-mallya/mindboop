@@ -233,7 +233,7 @@ test("keep an unstarted task through a reload, and start fresh after beginning i
   // A second session can't start, so the card leads back to the one running.
   await expect(page.getByRole("link", { name: "Return to timer" })).toBeVisible();
   await page.getByRole("link", { name: "Return to timer" }).click();
-  await page.getByRole("button", { name: "Bail" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
   await page
     .getByRole("dialog", { name: "Discard this timer?" })
     .getByRole("button", { name: "Discard timer" })
