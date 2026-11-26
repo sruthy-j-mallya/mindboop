@@ -15,6 +15,8 @@ type TaskFormProps = {
   control: Control<TaskFormValues>;
   register: UseFormRegister<TaskFormValues>;
   errors: FieldErrors<TaskFormValues>;
+  // While the task is being saved.
+  isPending: boolean;
   // The steps list, kept in the form until the task is created.
   steps: ReactNode;
   showAddStep: boolean;
@@ -25,7 +27,16 @@ type TaskFormProps = {
 
 // A new task's form, laid out like a task's details: the title, then the schedule, area of life and estimate, the steps and the
 // description. All of them show from the start, as setting them is what the form is for. Saved only once the popover is left, since there's no task to save to until then.
-const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, onSubmit }: TaskFormProps) => {
+const TaskForm = ({
+  control,
+  register,
+  errors,
+  isPending,
+  steps,
+  showAddStep,
+  onAddStep,
+  onSubmit,
+}: TaskFormProps) => {
   // The schedule and estimate pickers have forms of their own, whose submits bubble up here through their portals.
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,6 +67,12 @@ const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, on
           <EstimateField control={control} />
           {showAddStep && <AddStepButton onClick={onAddStep} />}
         </div>
+        {/* A save the server refused, as a start that's passed since the popover opened. */}
+        {errors.root?.serverError && (
+          <p className="text-sm text-destructive" role="alert">
+            {errors.root.serverError.message}
+          </p>
+        )}
       </header>
       {steps}
       <div className="flex min-h-32 flex-col gap-2">
@@ -79,7 +96,7 @@ const TaskForm = ({ control, register, errors, steps, showAddStep, onAddStep, on
           </p>
         )}
       </div>
-      <Button className="self-end" type="submit">
+      <Button className="self-end" disabled={isPending} type="submit">
         Add task
       </Button>
     </form>
