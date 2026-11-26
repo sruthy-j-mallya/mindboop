@@ -105,12 +105,13 @@ describe("AppLayout", () => {
     afterEach(() => vi.stubGlobal("innerWidth", 1024));
 
     it("has a bar of the main pages, with the rest in the sidebar under More", async () => {
-      renderWithProviders(<AppLayout />, undefined, routes.calendar);
+      renderWithProviders(<AppLayout />, undefined, "/areas/some-area");
 
       const bar = within(await screen.findByRole("navigation", { name: "Main pages" }));
-      expect(bar.getByRole("link", { name: "Calendar" })).toHaveAttribute("aria-current", "page");
+      expect(bar.getByRole("link", { name: "Tasks" })).toHaveAttribute("aria-current", "page");
+      expect(bar.getByRole("link", { name: "Tasks" })).toHaveAttribute("href", routes.inbox.index);
       expect(bar.getByRole("link", { name: "Routines" })).toHaveAttribute("href", routes.routines.index);
-      expect(bar.queryByRole("link", { name: "Tasks" })).not.toBeInTheDocument();
+      expect(bar.queryByRole("link", { name: "Calendar" })).not.toBeInTheDocument();
 
       await userEvent.click(bar.getByRole("button", { name: "More" }));
 

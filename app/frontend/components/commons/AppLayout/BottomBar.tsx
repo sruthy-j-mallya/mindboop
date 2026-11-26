@@ -1,5 +1,5 @@
 import { cn } from "cn";
-import { CalendarDays, House, Menu, SunMoon } from "lucide-react";
+import { House, Menu, SquareCheckBig, SunMoon } from "lucide-react";
 import { useLocation } from "react-router";
 
 import { useSidebar } from "@/components/ui/sidebar";
@@ -13,12 +13,12 @@ import { findBottomBarPath } from "./utils";
 
 const LINKS = [
   { path: routes.root, label: "Home", icon: House },
-  { path: routes.calendar, label: "Calendar", icon: CalendarDays },
+  { path: routes.inbox.index, label: "Tasks", icon: SquareCheckBig },
   { path: routes.routines.index, label: "Routines", icon: SunMoon },
 ];
 
-// What's needed on the go, within a thumb's reach on phones, where the sidebar is tucked away. The lists of tasks and
-// the timer, reached from Home and the mini timer, are under More with the rest; More opens the sidebar.
+// What's needed on the go, within a thumb's reach on phones, where the sidebar is tucked away. The Calendar, too wide
+// for a phone, and the timer, reached from Home and the mini timer, are under More with the rest; More opens the sidebar.
 const BottomBar = () => {
   const { pathname } = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
