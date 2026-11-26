@@ -163,7 +163,7 @@ describe("Calendar", () => {
 
     const event = (await screen.findByTitle("Plan the week")).closest<HTMLElement>(".rbc-event");
     await waitFor(() => expect(event).toHaveClass("calendar-event-area"));
-    expect(event?.style.getPropertyValue("--area-color")).toBe("#0f766e");
+    expect(event?.style.getPropertyValue("--area-color")).toBe("#3f716e");
   });
 
   it("moves a task to an area of life from its popover", async () => {

@@ -326,11 +326,11 @@ describe("getEventProps", () => {
   it("colours tasks and time logs by their area of life", () => {
     expect(getEventProps(taskEvent, lifeAreaColors)).toEqual({
       className: "calendar-event-task calendar-event-area",
-      style: { "--area-color": "#0f766e" },
+      style: { "--area-color": "#3f716e" },
     });
     expect(getEventProps(timeLogEvent, lifeAreaColors)).toEqual({
       className: "calendar-event-time-log calendar-event-area",
-      style: { "--area-color": "#0f766e" },
+      style: { "--area-color": "#3f716e" },
     });
   });
 
