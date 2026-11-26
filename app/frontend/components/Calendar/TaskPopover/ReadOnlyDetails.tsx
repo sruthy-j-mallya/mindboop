@@ -4,6 +4,7 @@ import { Hourglass } from "lucide-react";
 import type { Task } from "@/apis/types";
 import Breadcrumbs from "@/components/commons/Breadcrumbs";
 import LifeAreaBadge from "@/components/commons/LifeArea/Badge";
+import LinkifiedText from "@/components/commons/LinkifiedText";
 import LazyRichTextViewer from "@/components/commons/RichText/LazyViewer";
 import { formatSchedule } from "@/components/commons/ScheduleLabel/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -46,7 +47,9 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
               aria-label="Completed"
               className="mt-1.5 size-5 disabled:opacity-100"
             />
-            <h2 className="min-w-0 py-0.5 text-lg font-semibold wrap-anywhere">{title}</h2>
+            <h2 className="min-w-0 py-0.5 text-lg font-semibold wrap-anywhere">
+              <LinkifiedText text={title} />
+            </h2>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 pl-8 empty:hidden">
             {schedule && <span className={META_CLASS_NAME}>{schedule}</span>}

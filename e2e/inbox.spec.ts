@@ -169,3 +169,30 @@ test("reopen a completed task and restore a deleted one from their pages", async
   await nav.getByRole("link", { name: "Inbox" }).click();
   await expectTasks(page, ["Sort the mail", "Cancel the gym"]);
 });
+
+test("open a link in a task's title in a new tab, and still edit the title", async ({ page, context }) => {
+  await signUp(page);
+  await page.goto("/inbox");
+
+  const title = "Read https://example.com/";
+  await addTasks(page, [title]);
+
+  const list = page.getByRole("list", { name: "Tasks" });
+  const link = list.getByRole("link", { name: "https://example.com/" });
+  await expect(link).toHaveAttribute("target", "_blank");
+
+  // Stub the address so the test doesn't reach the internet.
+  await context.route("https://example.com/**", (route) => route.fulfill({ body: "Example" }));
+  const [popup] = await Promise.all([context.waitForEvent("page"), link.click()]);
+  await expect(popup).toHaveURL("https://example.com/");
+  await popup.close();
+
+  // Clicking the words rather than the link edits the title.
+  await list.getByText("Read").click();
+  const input = list.getByRole("textbox", { name: title });
+  await expect(input).toBeFocused();
+  await input.press("End");
+  await input.pressSequentially(" again");
+  await input.press("Enter");
+  await expect(list.getByRole("textbox", { name: `${title} again` })).toBeVisible();
+});

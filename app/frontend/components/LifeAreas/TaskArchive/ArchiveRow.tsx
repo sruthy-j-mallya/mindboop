@@ -3,6 +3,7 @@ import { parseISO } from "date-fns";
 import { Inbox, RotateCcw } from "lucide-react";
 
 import LifeAreaBadge from "@/components/commons/LifeArea/Badge";
+import LinkifiedText from "@/components/commons/LinkifiedText";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateTime";
 
@@ -20,7 +21,7 @@ const ArchiveRow = ({ task, lifeArea, actionLabel, isBusy, onAction }: ArchiveRo
     <li className={cn("flex items-center gap-3 py-2", isBusy && "opacity-50")}>
       <div className="grid min-w-0 flex-1 gap-1">
         <p className={cn("text-sm wrap-anywhere", isCompleted && "text-muted-foreground line-through")}>
-          {title}
+          <LinkifiedText text={title} />
         </p>
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
