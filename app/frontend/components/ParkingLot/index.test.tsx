@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, waitForElementToBeRemoved, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router";
 import { toast } from "sonner";
@@ -58,6 +58,13 @@ const renderParkingLot = () =>
     routes.parkingLot,
   );
 
+// Sonner unmounts a toast on a 200 ms timer once its action is clicked. Waiting for that keeps the timer from firing
+// after the test file ends and jsdom is torn down, where React's state update crashes on the missing `window`.
+const clickToastAction = async (name: string, message: string) => {
+  await userEvent.click(screen.getByRole("button", { name }));
+  await waitForElementToBeRemoved(() => screen.queryByText(message));
+};
+
 describe("ParkingLot", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -116,7 +123,8 @@ describe("ParkingLot", () => {
       { parkingLotItemId: item.id, isDuration: false, isAllDay: false, startsAt: null, endsAt: null },
       expect.anything(),
     );
-    await userEvent.click(await screen.findByRole("button", { name: "Open" }));
+    await screen.findByText("Added to your Inbox");
+    await clickToastAction("Open", "Added to your Inbox");
     expect(await screen.findByText("Inbox task")).toBeVisible();
   });
 
@@ -176,7 +184,7 @@ describe("ParkingLot", () => {
     expect(update).toHaveBeenCalledWith({ id: item.id, status: "addressed" }, expect.anything());
     expect(await screen.findByText("Marked as addressed")).toBeVisible();
 
-    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await clickToastAction("Undo", "Marked as addressed");
 
     expect(update).toHaveBeenLastCalledWith({ id: item.id, status: "parked" }, expect.anything());
   });
@@ -195,7 +203,7 @@ describe("ParkingLot", () => {
     expect(destroy).toHaveBeenCalledWith(item.id, expect.anything());
     expect(await screen.findByText("Let go")).toBeVisible();
 
-    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await clickToastAction("Undo", "Let go");
 
     await waitFor(() => expect(restore).toHaveBeenCalledWith(item.id, expect.anything()));
   });
@@ -267,7 +275,7 @@ describe("ParkingLot", () => {
       expect(await screen.findByText("2 thoughts marked as addressed")).toBeVisible();
       expect(within(toolbar).getByText("Select all")).toBeVisible();
 
-      await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+      await clickToastAction("Undo", "2 thoughts marked as addressed");
 
       expect(update).toHaveBeenLastCalledWith(
         { ids: [first.id, second.id], status: "parked" },
@@ -295,7 +303,7 @@ describe("ParkingLot", () => {
       expect(destroy).toHaveBeenCalledWith(ids, expect.anything());
       expect(await screen.findByText("Let go of 2 thoughts")).toBeVisible();
 
-      await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+      await clickToastAction("Undo", "Let go of 2 thoughts");
 
       await waitFor(() => expect(restore).toHaveBeenCalledWith(ids, expect.anything()));
     });
