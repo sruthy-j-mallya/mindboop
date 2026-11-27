@@ -59,6 +59,31 @@ class TaskTest < ActiveSupport::TestCase
     assert_not build(:task, is_duration: true, starts_at:, ends_at: starts_at - 1.minute).valid?
   end
 
+  def test_that_a_timed_start_cannot_be_in_the_past
+    freeze_time
+
+    assert build(:task, starts_at: Time.current).valid?
+    assert build(:task, starts_at: Task::TIMED_START_GRACE.ago).valid?
+
+    task = build(:task, starts_at: Task::TIMED_START_GRACE.ago - 1.minute)
+    assert_not task.valid?
+    assert_includes task.errors[:starts_at], "can't be in the past"
+  end
+
+  def test_that_an_all_day_start_may_be_earlier_today_where_the_user_is
+    freeze_time
+
+    assert build(:task, is_all_day: true, starts_at: 12.hours.ago).valid?
+    assert_not build(:task, is_all_day: true, starts_at: Task::ALL_DAY_START_GRACE.ago - 1.minute).valid?
+  end
+
+  def test_that_an_overdue_task_can_be_edited_without_moving_its_start
+    task = create(:task, :backdated, is_duration: true, starts_at: 2.days.ago, ends_at: 1.day.ago)
+
+    assert task.update(title: Faker::Lorem.sentence, ends_at: 1.day.from_now, is_completed: true)
+    assert_not task.update(starts_at: 1.day.ago)
+  end
+
   def test_that_discarding_sets_discarded_at_and_keeps_the_checklist_items
     item = create(:checklist_item, task: @task)
 
@@ -200,11 +225,11 @@ class TaskTest < ActiveSupport::TestCase
   def test_that_due_between_and_overdue_at_never_share_a_task
     from = Time.zone.local(2026, 11, 25)
     to = from + 1.day
-    today = create(:task, starts_at: from, is_all_day: true)
-    ends_today = create(:task, is_duration: true, starts_at: from - 3.days, ends_at: from)
-    late_today = create(:task, starts_at: to - 1.second)
-    yesterday = create(:task, starts_at: from - 1.day, is_all_day: true)
-    tomorrow = create(:task, starts_at: to)
+    today = create(:task, :backdated, starts_at: from, is_all_day: true)
+    ends_today = create(:task, :backdated, is_duration: true, starts_at: from - 3.days, ends_at: from)
+    late_today = create(:task, :backdated, starts_at: to - 1.second)
+    yesterday = create(:task, :backdated, starts_at: from - 1.day, is_all_day: true)
+    tomorrow = create(:task, :backdated, starts_at: to)
 
     assert_equal [ today, ends_today, late_today ].to_set, Task.due_between(from, to).to_set
     assert_equal [ yesterday ], Task.overdue_at(from).to_a
@@ -212,9 +237,9 @@ class TaskTest < ActiveSupport::TestCase
   end
 
   def test_that_by_end_puts_the_task_that_ended_first_first
-    due_later = create(:task, starts_at: 2.days.ago)
-    ended_earlier = create(:task, is_duration: true, starts_at: 6.days.ago, ends_at: 4.days.ago)
-    due_between = create(:task, starts_at: 3.days.ago)
+    due_later = create(:task, :backdated, starts_at: 2.days.ago)
+    ended_earlier = create(:task, :backdated, is_duration: true, starts_at: 6.days.ago, ends_at: 4.days.ago)
+    due_between = create(:task, :backdated, starts_at: 3.days.ago)
 
     assert_equal [ ended_earlier, due_between, due_later ], Task.where.not(starts_at: nil).by_end.to_a
   end

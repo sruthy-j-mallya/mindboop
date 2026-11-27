@@ -2,16 +2,18 @@ import { Play, Timer } from "lucide-react";
 
 import { formatBreadcrumbTime } from "@/components/commons/Breadcrumbs/utils";
 import { Button } from "@/components/ui/button";
+import useDatePreferences from "@/hooks/useDatePreferences";
 
 import TaskRow from "./TaskRow";
-import type { ResumableRowProps } from "./types";
+import type { StartableRowProps } from "./types";
 
-const ResumableRow = ({ task, isOnTheClock, isDisabled, onResume }: ResumableRowProps) => {
+const ResumableRow = ({ task, isOnTheClock, isDisabled, onStart }: StartableRowProps) => {
+  const { timeFormat } = useDatePreferences();
   // Newest first, so the first is the latest one left.
   const breadcrumb = task.breadcrumbs.at(0);
   const label = isOnTheClock ? "On the clock" : "Resume";
 
-  const handleResume = () => onResume(task.id);
+  const handleResume = () => onStart(task.id);
 
   return (
     <TaskRow
@@ -26,7 +28,7 @@ const ResumableRow = ({ task, isOnTheClock, isDisabled, onResume }: ResumableRow
               className="rounded-lg bg-brand-yellow px-2 py-0.5 text-xs font-semibold text-brand-purple-dark"
               dateTime={breadcrumb.createdAt}
             >
-              {formatBreadcrumbTime(breadcrumb.createdAt)}
+              {formatBreadcrumbTime(breadcrumb.createdAt, timeFormat)}
             </time>
           </>
         )
@@ -35,9 +37,10 @@ const ResumableRow = ({ task, isOnTheClock, isDisabled, onResume }: ResumableRow
       <Button
         aria-label={`${label}: ${task.title}`}
         disabled={isDisabled}
+        className="text-primary"
         size="sm"
         type="button"
-        variant="secondary"
+        variant="ghost"
         onClick={handleResume}
       >
         {isOnTheClock ? <Timer /> : <Play />}

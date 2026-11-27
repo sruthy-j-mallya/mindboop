@@ -51,7 +51,7 @@ class Api::HomeTasksControllerTest < ActionDispatch::IntegrationTest
 
   def test_that_completed_deleted_and_other_users_tasks_are_left_out
     tasks = [ @from, @from - 1.day ].flat_map do |starts_at|
-      [ create_task(starts_at:, is_completed: true), create_task(starts_at:), create(:task, starts_at:) ]
+      [ create_task(starts_at:, is_completed: true), create_task(starts_at:), create(:task, :backdated, starts_at:) ]
     end
     tasks.each { |task| create(:breadcrumb, task:) }
     tasks.values_at(1, 4).each(&:discard!)
@@ -88,7 +88,7 @@ class Api::HomeTasksControllerTest < ActionDispatch::IntegrationTest
 
   private
     def create_task(**attributes)
-      create(:task, user: @user, **attributes)
+      create(:task, :backdated, user: @user, **attributes)
     end
 
     def fetch_home(from: @from, to: @to)

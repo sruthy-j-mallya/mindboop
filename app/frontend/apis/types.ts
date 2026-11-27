@@ -43,6 +43,8 @@ export type Task = {
   lifeAreaId: string | null;
   createdAt: string;
   updatedAt: string;
+  // When it was deleted; only a deleted task has it.
+  discardedAt?: string;
   checklistItems: ChecklistItem[];
   breadcrumbs: Breadcrumb[];
 };
@@ -52,6 +54,8 @@ export type Task = {
 // only those in that area.
 export type TaskFilters = {
   isCompleted?: boolean;
+  // Only deleted tasks, which are otherwise left out.
+  isDeleted?: boolean;
   searchTerm?: string;
   isSearchingDetails?: boolean;
   isInInbox?: boolean;
@@ -104,6 +108,10 @@ export type TimeLogMode = StartableTimeLogMode | "manual";
 
 export type Break = { id: string; intention: string; durationMinutes: number; endsAt: string };
 
+// A break taken in a session, from `startedAt`. `endsAt` is when it was planned to end; `endedAt` is when it did, and
+// is null while it's still open.
+export type SessionBreak = Break & { startedAt: string; endedAt: string | null };
+
 // A manual log can go without a task (it then has a `title` of its own), and so can a session on a routine.
 // `taskTitle` and `routineTitle` are its task's and routine's titles.
 export type TimeLog = {
@@ -127,6 +135,8 @@ export type TimeLog = {
   completedAt: string | null;
   isFinishedEarly: boolean;
   currentBreak: Break | null;
+  // Every break taken in the session, oldest first.
+  breaks: SessionBreak[];
   createdAt: string;
   updatedAt: string;
 };
@@ -193,12 +203,19 @@ export type Theme = "system" | "light" | "dark";
 // The day the Calendar's weeks start on: 0 is Sunday and 6 Saturday, as date-fns numbers them.
 export type WeekStartsOn = Day;
 
+// The 12-hour ("5:30pm") or 24-hour ("17:30") clock.
+export type TimeFormat = "12h" | "24h";
+
 export type UserPreference = {
   theme: Theme;
   completionSound: CompletionSoundId;
   breakAlarmSound: AlarmSoundId;
   weekStartsOn: WeekStartsOn;
+  timeFormat: TimeFormat;
 };
+
+// How dates and times read.
+export type DatePreferences = Pick<UserPreference, "weekStartsOn" | "timeFormat">;
 
 export type UserPreferenceResponse = { userPreference: UserPreference };
 
@@ -315,3 +332,8 @@ export type UpdateRoutinePayload = Partial<CreateRoutinePayload> & Pick<Routine,
 export type RoutineTimeLogsParams = { routineId: string; from: string; to: string };
 
 export type RoutineTimeLogsResponse = { timeLogs: TimeLog[] };
+
+// The first steps a user has taken, for the checklist on Home.
+export type Onboarding = { hasLifeAreas: boolean; hasTasks: boolean; hasSessions: boolean };
+
+export type OnboardingResponse = { onboarding: Onboarding };

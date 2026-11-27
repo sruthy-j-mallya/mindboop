@@ -21,7 +21,7 @@ type ItemRowProps = {
   onSelectedChange: (id: string, isSelected: boolean) => void;
 };
 
-// Labels hide on narrow screens, where the buttons keep them as their accessible names. While a curiosity time runs
+// On phones the actions share a row of tall buttons, each with its label under the icon. While a curiosity time runs
 // (on this row or another), Look into it waits; the running row gets an accent stripe and a note, so colour isn't the
 // only signal. The checkbox picks the row for the bulk actions above the list.
 const ItemRow = ({ item, isCuriosityRunning, isSelected, isBulkPending, onSelectedChange }: ItemRowProps) => {

@@ -4,11 +4,13 @@ import { Hourglass } from "lucide-react";
 import type { Task } from "@/apis/types";
 import Breadcrumbs from "@/components/commons/Breadcrumbs";
 import LifeAreaBadge from "@/components/commons/LifeArea/Badge";
+import LinkifiedText from "@/components/commons/LinkifiedText";
 import LazyRichTextViewer from "@/components/commons/RichText/LazyViewer";
 import { formatSchedule } from "@/components/commons/ScheduleLabel/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
+import useDatePreferences from "@/hooks/useDatePreferences";
 import { formatMinutes } from "@/utils";
 
 type ReadOnlyDetailsProps = { task: Task };
@@ -31,7 +33,8 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
   const now = useCurrentTime(false);
   const { data: lifeAreas = [] } = useAllLifeAreas();
   const lifeArea = lifeAreas.find(({ id }) => id === lifeAreaId);
-  const schedule = formatSchedule(task, now);
+  const preferences = useDatePreferences();
+  const schedule = formatSchedule(task, now, preferences);
 
   return (
     <article className="flex flex-1 flex-col gap-5">
@@ -42,9 +45,11 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
               disabled
               checked={isTaskCompleted}
               aria-label="Completed"
-              className="mt-1.5 size-5 border-muted-foreground/50 disabled:opacity-100"
+              className="mt-1.5 size-5 disabled:opacity-100"
             />
-            <h2 className="min-w-0 py-0.5 text-lg font-semibold wrap-anywhere">{title}</h2>
+            <h2 className="min-w-0 py-0.5 text-lg font-semibold wrap-anywhere">
+              <LinkifiedText text={title} />
+            </h2>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 pl-8 empty:hidden">
             {schedule && <span className={META_CLASS_NAME}>{schedule}</span>}
@@ -74,7 +79,7 @@ const ReadOnlyDetails = ({ task }: ReadOnlyDetailsProps) => {
                   disabled
                   aria-label={stepTitle}
                   checked={isCompleted}
-                  className="border-muted-foreground/50 disabled:opacity-100"
+                  className="disabled:opacity-100"
                 />
                 <span
                   className={cn(

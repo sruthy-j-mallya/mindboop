@@ -21,6 +21,7 @@ import TaskBoard from "@/components/LifeAreas/TaskBoard";
 import NoTaskSelected from "@/components/LifeAreas/TaskBoard/NoTaskSelected";
 import TaskPane from "@/components/LifeAreas/TaskBoard/TaskPane";
 import { Toaster } from "@/components/ui/sonner";
+import { PHONE_LAYOUT_QUERY } from "@/constants";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
 import { playCompletionSound } from "@/utils/completionSound";
@@ -68,6 +69,7 @@ const buildTimeLog = (overrides: Partial<TimeLog> = {}): TimeLog => {
     completedAt: null,
     isFinishedEarly: false,
     currentBreak: null,
+    breaks: [],
     createdAt: startedAt,
     updatedAt: startedAt,
     ...overrides,
@@ -115,6 +117,7 @@ describe("Inbox", () => {
         completionSound: "bell",
         breakAlarmSound: "classic",
         weekStartsOn: 1,
+        timeFormat: "12h",
       },
     });
     // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
@@ -134,6 +137,37 @@ describe("Inbox", () => {
     expect(await screen.findByRole("textbox", { name: "First" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Second" })).toBeInTheDocument();
     expect(fetchList).toHaveBeenCalledWith({ isCompleted: false, isInInbox: true, page: 1 });
+  });
+
+  it("leads from the empty pane to adding a task", async () => {
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([]));
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Or add a new one" }));
+
+    expect(screen.getByRole("textbox", { name: "New task" })).toHaveFocus();
+  });
+
+  it("shows the date under the title on phones", async () => {
+    vi.spyOn(window, "matchMedia").mockImplementation(
+      (query) =>
+        ({
+          matches: query === PHONE_LAYOUT_QUERY,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        }) as unknown as MediaQueryList,
+    );
+    const task = buildTask({
+      title: "Pay rent",
+      isAllDay: true,
+      startsAt: startOfDay(new Date()).toISOString(),
+    });
+    vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
+
+    renderInbox();
+
+    expect(await screen.findByText("Today")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Due date of/ })).not.toBeInTheDocument();
   });
 
   it("says so when there are no tasks", async () => {
@@ -296,6 +330,25 @@ describe("Inbox", () => {
     expect(playCompletionSound).toHaveBeenCalledExactlyOnceWith("bell");
   });
 
+  it("undoes completing a task from the toast", async () => {
+    const task = buildTask({ title: "Pay rent" });
+    vi.spyOn(tasksApi, "fetchList")
+      .mockResolvedValueOnce(listOf([task]))
+      .mockResolvedValueOnce(listOf([]))
+      .mockResolvedValue(listOf([task]));
+    const update = vi
+      .spyOn(tasksApi, "update")
+      .mockImplementation(({ isCompleted = false }) => Promise.resolve({ task: { ...task, isCompleted } }));
+    renderInbox();
+
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Complete Pay rent" }));
+    expect(await screen.findByText("Completed “Pay rent”")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+
+    expect(await screen.findByRole("checkbox", { name: "Complete Pay rent" })).not.toBeChecked();
+    expect(update.mock.lastCall?.[0]).toEqual({ id: task.id, isCompleted: false });
+  });
+
   it("deletes the open task after confirming and closes its pane", async () => {
     const task = buildTask({ title: "Cancel the gym" });
     vi.spyOn(tasksApi, "fetchList")
@@ -439,8 +492,7 @@ describe("Inbox", () => {
     vi.spyOn(tasksApi, "update").mockRejectedValue(new ApiError(422, "Not allowed"));
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Estimate" }));
     await userEvent.type(screen.getByLabelText("Minutes"), "30");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
@@ -448,16 +500,14 @@ describe("Inbox", () => {
     expect(screen.getByRole("button", { name: "Estimate" })).toBeInTheDocument();
   });
 
-  it("leaves a set detail out of the menu", async () => {
+  it("shows a set detail, and offers the rest beside it", async () => {
     const task = buildTask({ title: "Plan the week", estimatedMinutes: 30 });
     vi.spyOn(tasksApi, "fetchList").mockResolvedValue(listOf([task]));
     vi.spyOn(tasksApi, "show").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-
-    expect(screen.getByRole("menuitem", { name: "Add due date" })).toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: "Add estimate" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "30 min" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Due date" })).toBeInTheDocument();
   });
 
   describe("when deleting the task on the clock", () => {
@@ -724,14 +774,13 @@ describe("Inbox", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Add due date" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Due date" }));
     const tomorrow = addDays(new Date(), 1);
     await userEvent.click(
       screen.getByRole("button", { name: (name) => name.includes(format(tomorrow, "EEEE, MMMM do, yyyy")) }),
     );
     await userEvent.click(screen.getByRole("combobox", { name: "Time" }));
-    await userEvent.click(screen.getByRole("option", { name: "5:30 PM" }));
+    await userEvent.click(screen.getByRole("option", { name: "5:30pm" }));
     await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
     const startsAt = set(tomorrow, { hours: 17, minutes: 30, seconds: 0, milliseconds: 0 });
@@ -757,7 +806,7 @@ describe("Inbox", () => {
     await userEvent.click(within(pane).getByRole("button", { name: /Today, 9am/ }));
     await userEvent.click(screen.getByRole("tab", { name: "Duration" }));
     const endTime = screen.getByRole("combobox", { name: "End time" });
-    expect(endTime).toHaveValue("10:00 AM");
+    expect(endTime).toHaveValue("10am");
 
     await userEvent.clear(endTime);
     await userEvent.type(endTime, "8am{Enter}");
@@ -823,8 +872,7 @@ describe("Inbox", () => {
     const update = vi.spyOn(tasksApi, "update").mockResolvedValue({ task });
     renderInbox(generatePath(routes.inbox.show, { taskId: task.id }));
 
-    await userEvent.click(await screen.findByRole("button", { name: "More actions" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Estimate" }));
     await userEvent.type(screen.getByLabelText("Hours"), "1");
     await userEvent.type(screen.getByLabelText("Minutes"), "30");
     await userEvent.click(screen.getByRole("button", { name: "OK" }));

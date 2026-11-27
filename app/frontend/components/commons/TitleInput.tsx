@@ -1,6 +1,17 @@
-import { type ChangeEvent, type KeyboardEvent, useState } from "react";
+import {
+  type ChangeEvent,
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { cn } from "cn";
+
+import LinkifiedText from "@/components/commons/LinkifiedText";
+import { hasLinks } from "@/components/commons/LinkifiedText/utils";
 
 type TitleInputProps = {
   title: string;
@@ -12,12 +23,26 @@ type TitleInputProps = {
 };
 
 // A task's title as a field that reads as plain text, growing to wrap long titles. Enter or leaving it saves; Escape puts
-// the title back.
+// the title back. A title with a web address in it shows the address as a link until the field is entered: clicking the
+// link opens it in a new tab, clicking anywhere else edits.
 const TitleInput = ({ title, label, className, isSelected = false, onFocus, onSave }: TitleInputProps) => {
   // Null while nothing has been typed, so the input follows the saved title until an edit starts.
   const [draft, setDraft] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const showLinks = !isEditing && draft === null && hasLinks(title);
+
+  // Coming from the links view, the field takes focus with the caret at the end, as if it had been clicked.
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!isEditing || !input || document.activeElement === input) return;
+
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  }, [isEditing]);
 
   const handleSave = () => {
+    setIsEditing(false);
     if (draft === null) return;
 
     onSave(draft.trim());
@@ -36,8 +61,41 @@ const TitleInput = ({ title, label, className, isSelected = false, onFocus, onSa
     handleSave();
   };
 
+  const handleInputFocus = () => {
+    setIsEditing(true);
+    onFocus?.();
+  };
+
+  // Only focus on the title itself edits; a link inside it keeps its own focus.
+  const handleLinksFocus = (event: FocusEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) setIsEditing(true);
+  };
+
+  // Browsers that don't focus links on click (Safari) would otherwise focus the title, swapping in the field before
+  // the link's click lands.
+  const handleLinksMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest("a")) event.preventDefault();
+  };
+
+  if (showLinks) {
+    return (
+      <div
+        aria-current={isSelected ? "page" : undefined}
+        aria-label={label}
+        className={cn("cursor-text wrap-anywhere outline-none", className)}
+        role="textbox"
+        tabIndex={0}
+        onFocus={handleLinksFocus}
+        onMouseDown={handleLinksMouseDown}
+      >
+        <LinkifiedText text={title} />
+      </div>
+    );
+  }
+
   return (
     <textarea
+      ref={inputRef}
       aria-current={isSelected ? "page" : undefined}
       aria-label={label}
       autoComplete="off"
@@ -46,7 +104,7 @@ const TitleInput = ({ title, label, className, isSelected = false, onFocus, onSa
       value={draft ?? title}
       onBlur={handleSave}
       onChange={handleChange}
-      onFocus={onFocus}
+      onFocus={handleInputFocus}
       onKeyDown={handleKeyDown}
     />
   );

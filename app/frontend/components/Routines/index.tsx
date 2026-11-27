@@ -14,7 +14,7 @@ const Routines = () => {
     <div className="flex flex-1 flex-col lg:basis-0 lg:flex-row lg:overflow-hidden">
       <RoutineList
         className={cn(
-          "lg:w-96 lg:shrink-0 lg:overflow-y-auto lg:border-r",
+          "lg:w-80 lg:shrink-0 lg:overflow-y-auto lg:border-r",
           isRoutineOpen && "hidden lg:flex",
         )}
       />

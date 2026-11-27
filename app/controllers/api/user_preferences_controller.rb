@@ -17,7 +17,7 @@ module Api
       end
 
       def user_preference_params
-        params.permit(:theme, :completion_sound, :break_alarm_sound, :week_starts_on)
+        params.permit(:theme, :completion_sound, :break_alarm_sound, :week_starts_on, :time_format)
       end
   end
 end

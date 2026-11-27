@@ -24,6 +24,7 @@ const PREFERENCE: UserPreference = {
   completionSound: "rising",
   breakAlarmSound: "chimes",
   weekStartsOn: 1,
+  timeFormat: "12h",
 };
 
 // The preference loads with the app, before any break, so it's already cached here.
@@ -58,6 +59,7 @@ const timeLogWithBreak = (endsAt: number): TimeLog => ({
     durationMinutes: 5,
     endsAt: new Date(endsAt).toISOString(),
   },
+  breaks: [],
   createdAt: new Date(NOW).toISOString(),
   updatedAt: new Date(NOW).toISOString(),
 });

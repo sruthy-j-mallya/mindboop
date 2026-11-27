@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { cn } from "cn";
 import { Play } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 
@@ -7,6 +8,7 @@ import type { StartableTimeLogMode, Task } from "@/apis/types";
 import TaskDetails from "@/components/commons/TaskDetails";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PICKED_CLASS_NAME } from "@/constants";
 import { useTask } from "@/hooks/reactQuery/useTasksApi";
 import { useCreateTimeLog } from "@/hooks/reactQuery/useTimeLogsApi";
 import routes from "@/routes";
@@ -14,8 +16,9 @@ import routes from "@/routes";
 import Dial from "../Dial";
 import SessionCard from "../SessionCard";
 import type { TimerLocationState } from "../types";
-import { DEFAULT_MODE, DEFAULT_TIMER_MINUTES, MODES } from "./constants";
+import { DEFAULT_MODE, DEFAULT_TIMER_MINUTES, MODES, TIMER_PRESETS } from "./constants";
 import MinutesInput from "./MinutesInput";
+import Suggestions from "./Suggestions";
 import TaskSearch from "./TaskSearch";
 import { buildTimeLogPayload, findMode, getEstimatedTimerMinutes } from "./utils";
 
@@ -59,9 +62,7 @@ const Setup = () => {
   const details = task ? (
     <TaskDetails key={task.id} isOnTimer task={task} />
   ) : (
-    <p className="m-auto py-12 text-center text-muted-foreground">
-      Pick a task to see its steps and description.
-    </p>
+    <Suggestions onPick={setPickedTask} />
   );
 
   return (
@@ -96,6 +97,25 @@ const Setup = () => {
             <MinutesInput minutes={timerMinutes} onChange={setTimerMinutes} />
             <p className="text-muted-foreground">minutes</p>
           </Dial>
+          <div
+            aria-label="Common lengths"
+            className="mt-4 flex flex-wrap justify-center gap-1.5"
+            role="group"
+          >
+            {TIMER_PRESETS.map((minutes) => (
+              <Button
+                key={minutes}
+                aria-pressed={timerMinutes === minutes}
+                className={cn(timerMinutes === minutes && PICKED_CLASS_NAME)}
+                size="sm"
+                type="button"
+                variant="ghost"
+                onClick={() => setTimerMinutes(minutes)}
+              >
+                {minutes} min
+              </Button>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
       {error && (

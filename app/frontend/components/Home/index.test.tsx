@@ -3,15 +3,19 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { addDays, format, startOfDay, subDays } from "date-fns";
 import { Route, Routes, useLocation } from "react-router";
+import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
 import currentTimeLogsApi from "@/apis/current_time_logs";
 import homeTasksApi from "@/apis/home_tasks";
+import lifeAreasApi from "@/apis/life_areas";
+import sessionsApi from "@/apis/sessions";
 import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import type { Breadcrumb, HomeTasksResponse, Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
+import { Toaster } from "@/components/ui/sonner";
 import routes from "@/routes";
 import { renderWithProviders } from "@/test/utils";
 import { playCompletionSound } from "@/utils/completionSound";
@@ -99,6 +103,7 @@ const runningOn = (taskId: string): TimeLog => {
     completedAt: null,
     isFinishedEarly: false,
     currentBreak: null,
+    breaks: [],
     createdAt: startedAt,
     updatedAt: startedAt,
   };
@@ -112,10 +117,13 @@ const TimerPage = () => {
 
 const renderHome = () =>
   renderWithProviders(
-    <Routes>
-      <Route element={<Home />} path={routes.root} />
-      <Route element={<TimerPage />} path={routes.timer} />
-    </Routes>,
+    <>
+      <Routes>
+        <Route element={<Home />} path={routes.root} />
+        <Route element={<TimerPage />} path={routes.timer} />
+      </Routes>
+      <Toaster />
+    </>,
     new QueryClient({ defaultOptions: { queries: { retry: false } } }),
   );
 
@@ -124,8 +132,12 @@ const card = (name: string) => within(screen.getByRole("region", { name }));
 describe("Home", () => {
   beforeEach(() => {
     localStorage.clear();
+    // Sonner keeps its toasts in module state and replays the active ones to each new Toaster.
+    toast.dismiss();
     vi.spyOn(homeTasksApi, "fetchList").mockResolvedValue(LISTS);
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
+    vi.spyOn(lifeAreasApi, "fetchList").mockResolvedValue({ lifeAreas: [] });
+    vi.spyOn(sessionsApi, "show").mockRejectedValue(new ApiError(500, "Not needed"));
     vi.spyOn(userPreferencesApi, "show").mockRejectedValue(new ApiError(500, "Not needed"));
     vi.spyOn(tasksApi, "update").mockImplementation(({ id }) => Promise.resolve({ task: buildTask(id) }));
     vi.spyOn(tasksApi, "show").mockImplementation((id) => Promise.resolve({ task: buildTask(id) }));
@@ -152,7 +164,7 @@ describe("Home", () => {
       "href",
       `/areas/${LIFE_AREA_ID}/a`,
     );
-    expect(agenda.getByText("Today")).toBeVisible();
+    expect(agenda.getByText("All day")).toBeVisible();
     expect(agenda.getByRole("link", { name: "Today's agenda" })).toHaveAttribute("href", routes.calendar);
 
     const overdue = card("Overdue");
@@ -162,7 +174,44 @@ describe("Home", () => {
     const resumable = card("Pick up where you left off");
     expect(resumable.getByText("Pick up from: Chapter 2")).toBeVisible();
     expect(resumable.queryByText(/Chapter 1/)).not.toBeInTheDocument();
-    expect(resumable.getByText("Nov 5 2025, 5:30pm")).toBeVisible();
+    expect(resumable.getByText("5 Nov 2025, 5:30pm")).toBeVisible();
+  });
+
+  it("shows an agenda task's area and estimate, and starts it on the Timer", async () => {
+    vi.mocked(homeTasksApi.fetchList).mockResolvedValue({
+      ...LISTS,
+      today: [{ ...AGENDA_TASK, estimatedMinutes: 45 }],
+    });
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({
+      lifeAreas: [
+        {
+          id: LIFE_AREA_ID,
+          name: "Finances",
+          color: "teal",
+          emoji: "💰",
+          defaultSound: "none",
+          isDeleted: false,
+          createdAt: TODAY.toISOString(),
+          updatedAt: TODAY.toISOString(),
+        },
+      ],
+    });
+    renderHome();
+
+    const start = await screen.findByRole("button", { name: "Start: Pay the bill" });
+    expect(await card("Today's agenda").findByRole("img", { name: "Finances" })).toBeVisible();
+    expect(card("Today's agenda").getByText("45 min")).toBeVisible();
+
+    await userEvent.click(start);
+
+    expect(screen.getByText("Timer with a picked")).toBeVisible();
+  });
+
+  it("holds the lists' places while they load", async () => {
+    vi.mocked(homeTasksApi.fetchList).mockReturnValue(new Promise(() => undefined));
+    renderHome();
+
+    expect(await screen.findAllByTestId("list-skeleton")).toHaveLength(3);
   });
 
   it("says when there's nothing in a list", async () => {
@@ -215,6 +264,36 @@ describe("Home", () => {
       startsAt: TODAY.toISOString(),
       endsAt: null,
     });
+  });
+
+  it("moves an overdue task to tomorrow", async () => {
+    renderHome();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Move Renew passport to tomorrow" }));
+
+    expect(vi.mocked(tasksApi.update).mock.lastCall?.[0]).toMatchObject({
+      id: "o",
+      isAllDay: true,
+      startsAt: addDays(TODAY, 1).toISOString(),
+    });
+  });
+
+  it("picks another date for an overdue task", async () => {
+    renderHome();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Pick a date for Renew passport" }));
+    await userEvent.click(screen.getByRole("button", { name: "Remove date" }));
+
+    expect(vi.mocked(tasksApi.update).mock.lastCall?.[0]).toMatchObject({ id: "o", startsAt: null });
+  });
+
+  it("confirms moving a task without offering to undo it", async () => {
+    renderHome();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Move Renew passport to today" }));
+
+    expect(await screen.findByText("Rescheduled “Renew passport”")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
   });
 
   it("shows why a task couldn't be moved", async () => {

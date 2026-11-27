@@ -40,7 +40,7 @@ const Toolbar = ({ editor, onLinkClick }: ToolbarProps) => {
         aria-label="Formatting"
         // Room on the right for the formatting toggle, which sits in the editor's bottom-right corner. min-h-10
         // matches the editor's pb-10 while the toolbar is hidden, so toggling it doesn't shift the layout.
-        className="flex min-h-10 flex-wrap items-center gap-0.5 border-t border-input py-0.5 pr-10 pl-1"
+        className="flex min-h-10 flex-wrap items-center gap-0.5 border-t border-border py-0.5 pr-10 pl-1"
         role="toolbar"
         onMouseDown={handleMouseDown}
       >

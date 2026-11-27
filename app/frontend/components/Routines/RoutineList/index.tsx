@@ -3,6 +3,7 @@ import { useState } from "react";
 import { cn } from "cn";
 import { Plus } from "lucide-react";
 
+import ListSkeleton from "@/components/commons/ListSkeleton";
 import { Button } from "@/components/ui/button";
 import { useRoutines } from "@/hooks/reactQuery/useRoutinesApi";
 
@@ -44,6 +45,7 @@ const RoutineList = ({ className }: RoutineListProps) => {
           {error.message}
         </p>
       )}
+      {isPending && <ListSkeleton className="px-2" />}
       {!isPending && routines.length > 0 && (
         <ul aria-label="Routines" className="grid gap-0.5">
           {routines.map((routine) => (

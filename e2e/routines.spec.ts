@@ -34,11 +34,11 @@ test("add a routine from an idea, run it, see it counted, then edit and delete i
   await page.getByRole("button", { name: "Start", exact: true }).click();
   await expect(page).toHaveURL("/timer");
   await expect(page.getByRole("heading", { name: "Meditation" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Bail" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Discard" })).toBeVisible();
 
   backdateSession(email, 3 * 60);
   await page.reload();
-  await page.getByRole("button", { name: "Done" }).click();
+  await page.getByRole("button", { name: "End session" }).click();
   await expect(page.getByText("Finished", { exact: false })).toBeVisible();
 
   await page.getByRole("link", { name: "Routines" }).click();
@@ -47,11 +47,11 @@ test("add a routine from an idea, run it, see it counted, then edit and delete i
   await expect(page.getByText("1 day with it")).toBeVisible();
 
   await page.getByRole("button", { name: "Previous month" }).click();
-  await page.getByRole("button", { name: /^Log time on \w+ 15 / }).click();
+  await page.getByRole("button", { name: /^Log time on \w+, 15 / }).click();
   await page.getByRole("dialog").getByLabel("Minutes").fill("25");
   await page.getByRole("dialog").getByRole("button", { name: "Log time" }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(page.getByRole("button", { name: /^Log time on \w+ 15 .*25 min/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Log time on \w+, 15 .*25 min/ })).toBeVisible();
   await expect(page.getByText("Times done").locator("..")).toContainText("2");
 
   await page.getByRole("button", { name: "More actions" }).click();

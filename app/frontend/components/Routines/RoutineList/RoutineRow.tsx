@@ -4,6 +4,7 @@ import { Bell, Pencil, Trash2 } from "lucide-react";
 import { NavLink } from "react-router";
 
 import type { Routine } from "@/apis/types";
+import EditDeleteMenu from "@/components/commons/EditDeleteMenu";
 import RoutineBadge from "@/components/commons/Routine/Badge";
 import {
   ContextMenu,
@@ -11,6 +12,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import useDatePreferences from "@/hooks/useDatePreferences";
 import { formatMinutes } from "@/utils";
 
 import DeleteRoutineDialog from "../RoutineDialog/Delete";
@@ -28,7 +30,8 @@ type Dialog = (typeof DIALOGS)[keyof typeof DIALOGS];
 // long press) opens a menu to edit or delete it.
 const RoutineRow = ({ routine, now }: RoutineRowProps) => {
   const { id, title, color, emoji, durationMinutes, lastDoneAt } = routine;
-  const reminder = describeReminder(routine);
+  const { timeFormat } = useDatePreferences();
+  const reminder = describeReminder(routine, timeFormat);
   const [dialog, setDialog] = useState<Dialog | null>(null);
 
   const handleEdit = () => setDialog(DIALOGS.EDIT);
@@ -39,13 +42,13 @@ const RoutineRow = ({ routine, now }: RoutineRowProps) => {
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <li className="group flex items-center gap-2 rounded-xl pr-2 hover:bg-muted/60 has-[a[aria-current=page]]:bg-muted data-[state=open]:bg-muted/60">
+          <li className="group flex items-center gap-2 rounded-xl pr-2 hover:bg-muted/60 has-[a[aria-current=page]]:bg-accent data-[state=open]:bg-muted/60">
             <NavLink
-              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl py-2.5 pl-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-2 pl-2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               to={getRoutinePath(id)}
             >
-              <RoutineBadge color={color} emoji={emoji} />
-              <span className="grid min-w-0 gap-0.5">
+              <RoutineBadge className="size-9 text-lg" color={color} emoji={emoji} />
+              <span className="grid min-w-0">
                 <span className="truncate font-medium">{title}</span>
                 <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   {formatMinutes(durationMinutes)}
@@ -55,6 +58,7 @@ const RoutineRow = ({ routine, now }: RoutineRowProps) => {
                 </span>
               </span>
             </NavLink>
+            <EditDeleteMenu name={title} onDelete={handleDelete} onEdit={handleEdit} />
             <StartRoutineButton routine={routine} />
           </li>
         </ContextMenuTrigger>

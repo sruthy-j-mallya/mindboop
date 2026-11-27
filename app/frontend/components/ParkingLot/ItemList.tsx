@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SquareParking } from "lucide-react";
 
 import type { ParkingLotItemStatus } from "@/apis/types";
+import ListSkeleton from "@/components/commons/ListSkeleton";
 import { Button } from "@/components/ui/button";
 import { useCuriosityTime } from "@/hooks/reactQuery/useCuriosityTimesApi";
 import { useInfiniteParkingLotItems } from "@/hooks/reactQuery/useParkingLotItemsApi";
@@ -36,7 +37,7 @@ const ItemList = ({ status, label, emptyMessage }: ItemListProps) => {
   const handleMarkAddressed = () => markAddressed(selectedIds).then(clearSelection, ignore);
   const handleLetGo = () => letGo(selectedIds).then(clearSelection, ignore);
 
-  if (isPending) return null;
+  if (isPending) return <ListSkeleton rows={3} />;
 
   if (error) {
     return (

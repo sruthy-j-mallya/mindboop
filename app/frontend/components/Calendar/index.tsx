@@ -5,14 +5,16 @@ import "@/styles/calendar.css";
 import { type SyntheticEvent, useCallback, useMemo, useRef, useState } from "react";
 
 import { startOfDay, subHours } from "date-fns";
-import type { SlotInfo, ToolbarProps, View, ViewsProps } from "react-big-calendar";
+import type { Components, SlotInfo, ToolbarProps, View, ViewsProps } from "react-big-calendar";
 import { toast } from "sonner";
 
-import { DEFAULT_WEEK_STARTS_ON } from "@/constants";
+import { DEFAULT_WEEK_STARTS_ON, PHONE_LAYOUT_QUERY } from "@/constants";
 import { useCalendarEvents } from "@/hooks/reactQuery/useCalendarEventsApi";
 import { useAllLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useUserPreference } from "@/hooks/reactQuery/useUserPreferencesApi";
 import useCurrentTime from "@/hooks/useCurrentTime";
+import useDatePreferences from "@/hooks/useDatePreferences";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { writeStorage } from "@/utils/storage";
 
 import {
@@ -30,6 +32,7 @@ import DragAndDropCalendar from "./DragAndDropCalendar";
 import MultiDayView from "./MultiDayView";
 import EditTaskPopover from "./TaskPopover/Edit";
 import NewTaskPopover from "./TaskPopover/New";
+import TimeGridEvent from "./TimeGridEvent";
 import TimeLogPopover from "./TimeLogPopover";
 import ShowTimeLogPopover from "./TimeLogPopover/Show";
 import Toolbar from "./Toolbar";
@@ -40,6 +43,7 @@ import {
   eventToAnchorRect,
   getCurrentSlotStart,
   getEventProps,
+  getFormats,
   getLocalizer,
   getLogWindowStart,
   getSelectionIntent,
@@ -76,6 +80,9 @@ const Calendar = () => {
   const now = useCurrentTime(true, NOW_REFRESH_INTERVAL);
   const { data: preference, isPending: isPreferencePending } = useUserPreference();
   const weekStartsOn = preference?.weekStartsOn ?? DEFAULT_WEEK_STARTS_ON;
+  const { timeFormat } = useDatePreferences();
+  const isPhone = useMediaQuery(PHONE_LAYOUT_QUERY);
+  const formats = useMemo(() => getFormats(timeFormat, isPhone), [timeFormat, isPhone]);
   const localizer = useMemo(() => getLocalizer(weekStartsOn), [weekStartsOn]);
   const params = useMemo(() => {
     const { start, end } = getVisibleRange(view, date, dayCount, weekStartsOn);
@@ -98,13 +105,18 @@ const Calendar = () => {
     writeStorage(DAY_COUNT_STORAGE_KEY, String(nextDayCount));
   }, []);
 
-  // react-big-calendar only hands its toolbar its own props, so the day count goes in through a wrapper.
+  // react-big-calendar only hands its toolbar its own props, so the day count goes in through a wrapper. The time grid
+  // views draw a time log's breaks inside it; the month view keeps its one-line events.
   const components = useMemo(
-    () => ({
-      toolbar: (toolbarProps: ToolbarProps<CalendarEvent>) => (
-        <Toolbar {...toolbarProps} dayCount={dayCount} onDayCountChange={handleDayCountChange} />
-      ),
-    }),
+    () =>
+      ({
+        toolbar: (toolbarProps: ToolbarProps<CalendarEvent>) => (
+          <Toolbar {...toolbarProps} dayCount={dayCount} onDayCountChange={handleDayCountChange} />
+        ),
+        [CALENDAR_VIEWS.DAY]: { event: TimeGridEvent },
+        [CALENDAR_VIEWS.MULTI_DAY]: { event: TimeGridEvent },
+        [CALENDAR_VIEWS.WEEK]: { event: TimeGridEvent },
+      }) as Components<CalendarEvent>,
     [dayCount, handleDayCountChange],
   );
 
@@ -159,7 +171,10 @@ const Calendar = () => {
         </p>
       )}
       {/* The wrapper stays mounted while the preference loads, so useWheelPaging finds it on the first render. */}
-      <div ref={calendarRef} className="calendar h-[calc(100svh-5rem)] min-h-[36rem]">
+      <div
+        ref={calendarRef}
+        className="calendar h-[calc(100svh-5rem)] min-h-[36rem] max-md:h-[calc(100svh-6rem)] max-md:min-h-[28rem]"
+      >
         {!isPreferencePending && (
           <DragAndDropCalendar
             popup
@@ -172,6 +187,7 @@ const Calendar = () => {
             draggableAccessor="isEditable"
             eventPropGetter={getAreaEventProps}
             events={events}
+            formats={formats}
             length={dayCount}
             localizer={localizer}
             resizableAccessor="isEditable"

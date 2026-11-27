@@ -4,6 +4,7 @@ import type { ApiError } from "@/apis/axios";
 import checklistItemsApi from "@/apis/checklist_items";
 import type {
   CreateChecklistItemPayload,
+  DeleteChecklistItemPayload,
   Task,
   TaskResponse,
   UpdateChecklistItemPayload,
@@ -11,6 +12,16 @@ import type {
 import { QUERY_KEYS } from "@/constants/query";
 
 const CHECKLIST_ITEMS_MUTATION_KEY = ["checklistItems"];
+
+// The task before a change was shown, and as it was shown with it.
+type OptimisticContext = { previousTask?: Task; shownTask?: Task };
+
+// Changes to the steps reach the server one at a time (`scope`), in the order made: each position counts on the changes
+// before it.
+const CHECKLIST_ITEMS_MUTATION = {
+  mutationKey: CHECKLIST_ITEMS_MUTATION_KEY,
+  scope: { id: "checklistItems" },
+};
 
 // While another change to the steps is still in flight, this older answer would undo its optimistic update, so the
 // last one to finish writes the cache.
@@ -31,6 +42,24 @@ const applyUpdate = (task: Task, { id, position, ...changes }: UpdateChecklistIt
   return { ...task, checklistItems: moved ? rest.toSpliced(position, 0, moved) : items };
 };
 
+// The real ids of items that were shown under a stand-in one while they were being created.
+const realIds = new Map<string, string>();
+
+// Looked up as a change is sent: by then, the item's own creation has been answered.
+const toRealId = <Payload extends { id: string }>(payload: Payload): Payload => ({
+  ...payload,
+  id: realIds.get(payload.id) ?? payload.id,
+});
+
+// Items are created one at a time, so the one just created is the only one in the answer that wasn't known before.
+const rememberRealId = ({ task }: TaskResponse, { previousTask, shownTask }: OptimisticContext) => {
+  const knownIds = new Set(previousTask?.checklistItems.map(({ id }) => id));
+  const createdIds = new Set(realIds.values());
+  const standIn = shownTask?.checklistItems.find(({ id }) => !knownIds.has(id));
+  const created = task.checklistItems.find(({ id }) => !knownIds.has(id) && !createdIds.has(id));
+  if (standIn && created) realIds.set(standIn.id, created.id);
+};
+
 // The new item gets a stand-in id until the server answers with the whole task.
 const applyCreate = (task: Task, { title, position }: CreateChecklistItemPayload): Task => {
   const item = { id: `new-${crypto.randomUUID()}`, title, isCompleted: false };
@@ -45,18 +74,19 @@ const optimisticallyUpdate =
     queryClient: QueryClient,
     apply: (task: Task, payload: Payload) => Task,
   ) =>
-  async (payload: Payload) => {
+  async (payload: Payload): Promise<OptimisticContext> => {
     const queryKey = QUERY_KEYS.TASKS.DETAIL(payload.taskId);
     await queryClient.cancelQueries({ queryKey });
     const previousTask = queryClient.getQueryData<Task>(queryKey);
-    if (previousTask) queryClient.setQueryData(queryKey, apply(previousTask, payload));
+    const shownTask = previousTask && apply(previousTask, payload);
+    if (shownTask) queryClient.setQueryData(queryKey, shownTask);
 
-    return { previousTask };
+    return { previousTask, shownTask };
   };
 
 const rollBack =
   (queryClient: QueryClient) =>
-  (_: ApiError, { taskId }: { taskId: string }, context?: { previousTask?: Task }) => {
+  (_: ApiError, { taskId }: { taskId: string }, context?: OptimisticContext) => {
     if (context?.previousTask)
       queryClient.setQueryData(QUERY_KEYS.TASKS.DETAIL(taskId), context.previousTask);
   };
@@ -66,11 +96,15 @@ export const useCreateChecklistItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: CHECKLIST_ITEMS_MUTATION_KEY,
+    ...CHECKLIST_ITEMS_MUTATION,
     mutationFn: checklistItemsApi.create,
     onMutate: optimisticallyUpdate(queryClient, applyCreate),
     onError: rollBack(queryClient),
-    onSuccess: (response) => saveTask(queryClient, response),
+    onSuccess: (response, _payload, context) => {
+      rememberRealId(response, context);
+
+      return saveTask(queryClient, response);
+    },
   });
 };
 
@@ -80,8 +114,8 @@ export const useUpdateChecklistItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: CHECKLIST_ITEMS_MUTATION_KEY,
-    mutationFn: checklistItemsApi.update,
+    ...CHECKLIST_ITEMS_MUTATION,
+    mutationFn: (payload: UpdateChecklistItemPayload) => checklistItemsApi.update(toRealId(payload)),
     onMutate: optimisticallyUpdate(queryClient, applyUpdate),
     onError: rollBack(queryClient),
     onSuccess: (response) => saveTask(queryClient, response),
@@ -92,8 +126,8 @@ export const useDeleteChecklistItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: CHECKLIST_ITEMS_MUTATION_KEY,
-    mutationFn: checklistItemsApi.destroy,
+    ...CHECKLIST_ITEMS_MUTATION,
+    mutationFn: (payload: DeleteChecklistItemPayload) => checklistItemsApi.destroy(toRealId(payload)),
     onSuccess: (response) => saveTask(queryClient, response),
   });
 };

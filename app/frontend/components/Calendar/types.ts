@@ -18,6 +18,17 @@ export type TimeLogEvent = EventBase & { kind: typeof EVENT_KINDS.TIME_LOG; time
 
 export type CalendarEvent = TaskEvent | TimeLogEvent;
 
+// Where a break sits inside its time log on the time grid, as percentages of the log's height. `overrunShare` is the
+// part of the band (in percent) taken past the break's planned end.
+export type BreakBand = {
+  id: string;
+  intention: string;
+  minutes: number;
+  top: number;
+  height: number;
+  overrunShare: number;
+};
+
 // The on-screen box a popover opens beside: the slot or event clicked, or the point of a click.
 export type AnchorRect = { top: number; left: number; width: number; height: number };
 

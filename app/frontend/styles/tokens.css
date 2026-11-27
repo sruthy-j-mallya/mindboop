@@ -25,6 +25,9 @@
   --brand-beige: #e5c9a8;
   --brand-yellow: #ffc757;
 
+  /* The bar of pages at the bottom of phones */
+  --bottom-bar-height: 3.75rem;
+
   /* Radius */
   --radius: 0.75rem;
 
@@ -49,7 +52,8 @@
   --destructive-text: #c01f1f;
   --destructive-foreground: #ffffff;
   --border: #dfd1cc;
-  --input: transparent;
+  /* 3:1 or more on every light surface fields sit on. */
+  --input: #948480;
   --input-background: #f4eeea;
   --switch-background: #cbbab5;
   --ring: #5a2855;
@@ -98,6 +102,8 @@
   --popover-foreground: #e8e2db;
   --primary: var(--brand-purple);
   --primary-text: #c78bc2;
+  /* The deep purple barely stands out on brown, so what's filled with it gets this edge: 3:1 on every dark surface. */
+  --primary-edge: #a565a0;
   /* Mauve, so the time left stands out from the ring's track. */
   --timer-ring: #b99ab0;
   --primary-foreground: #ffffff;

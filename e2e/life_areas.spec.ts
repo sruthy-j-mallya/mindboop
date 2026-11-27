@@ -33,7 +33,7 @@ const drag = async (page: Page, from: Locator, to: Locator) => {
 test("add areas from the suggestions, move a task into it, search and edit it", async ({ page }) => {
   await signUp(page);
 
-  await page.getByRole("link", { name: "Areas of life" }).click();
+  await page.getByRole("link", { name: "Tasks", exact: true }).click();
   await expect(page).toHaveURL("/inbox");
   const nav = page.getByRole("navigation", { name: "Areas of life" });
   await nav.getByRole("button", { name: "Work" }).click();
@@ -120,7 +120,7 @@ test("add areas from the suggestions, move a task into it, search and edit it", 
   await expect(nav.getByRole("link", { name: "Career" })).toBeHidden();
   await nav.getByRole("link", { name: "Health" }).click();
   await expect(page.getByRole("textbox", { name: "Review the PRs" })).toBeVisible();
-  await page.getByRole("link", { name: "Areas of life" }).click();
+  await page.getByRole("link", { name: "Tasks", exact: true }).click();
   await expect(page).toHaveURL("/inbox");
   await expect(page.getByRole("textbox", { name: "Plan the sprint" })).toBeVisible();
 });
@@ -128,7 +128,7 @@ test("add areas from the suggestions, move a task into it, search and edit it", 
 test("reorder areas by dragging and by keyboard, also in the narrow layout", async ({ page }) => {
   await signUp(page);
 
-  await page.getByRole("link", { name: "Areas of life" }).click();
+  await page.getByRole("link", { name: "Tasks", exact: true }).click();
   const nav = page.getByRole("navigation", { name: "Areas of life" });
   for (const name of ["Work", "Health", "Leisure"]) await nav.getByRole("button", { name }).click();
   await nav.getByRole("button", { name: "Add 3 areas" }).click();

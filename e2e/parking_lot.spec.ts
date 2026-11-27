@@ -18,7 +18,7 @@ test("park thoughts during a session, then deal with them on the Parking lot pag
 
   await page.getByRole("textbox", { name: "Task" }).fill("Write the report");
   await page.getByRole("button", { name: "10 min" }).click();
-  await page.getByRole("button", { name: "Begin" }).click();
+  await page.getByRole("button", { name: "Start", exact: true }).click();
   await expect(page).toHaveURL("/timer");
 
   const parkingLot = page.getByRole("region", { name: "Parking lot" });

@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Pencil, Trash2 } from "lucide-react";
 
 import type { LifeArea } from "@/apis/types";
+import EditDeleteMenu from "@/components/commons/EditDeleteMenu";
 import LifeAreaBadge from "@/components/commons/LifeArea/Badge";
 import { Button } from "@/components/ui/button";
 import { ContextMenuContent, ContextMenuItem } from "@/components/ui/context-menu";
@@ -70,6 +71,14 @@ const AreaItem = ({ lifeArea, tasksCount }: AreaItemProps) => {
           >
             <GripVertical />
           </Button>
+        }
+        action={
+          <EditDeleteMenu
+            className="absolute inset-y-0 right-1 my-auto"
+            name={name}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+          />
         }
         menu={
           <ContextMenuContent aria-label={`${name} actions`} className="w-40">
