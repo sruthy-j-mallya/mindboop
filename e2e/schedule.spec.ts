@@ -11,18 +11,17 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("heading", { name: "What do you want to get done?" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Areas of life" }).click();
+  await page.getByRole("link", { name: "Tasks", exact: true }).click();
   const input = page.getByRole("textbox", { name: "New task" });
   await input.fill("Renew passport");
   await input.press("Enter");
   await page.getByRole("textbox", { name: "Renew passport" }).click();
 
-  await page.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Add due date" }).click();
+  await page.getByRole("button", { name: "Due date", exact: true }).click();
   const tomorrow = format(addDays(new Date(), 1), "EEEE, MMMM do, yyyy");
   await page.getByRole("button", { name: tomorrow }).click();
   await page.getByRole("combobox", { name: "Time" }).click();
-  await page.getByRole("option", { name: "5:30 PM" }).click();
+  await page.getByRole("option", { name: "5:30pm" }).click();
   await page.getByRole("button", { name: "OK" }).click();
 
   const rowDate = page.getByRole("button", { name: /^Due date of Renew passport:/ });
@@ -34,7 +33,7 @@ test("schedule an Inbox task for a date, then a duration, then clear it", async 
   await rowDate.click();
   await page.getByRole("tab", { name: "Duration" }).click();
   const endTime = page.getByRole("combobox", { name: "End time" });
-  await expect(endTime).toHaveValue("6:30 PM");
+  await expect(endTime).toHaveValue("6:30pm");
   await endTime.fill("7pm");
   await endTime.press("Enter");
   await page.getByRole("button", { name: "OK" }).click();

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, waitForElementToBeRemoved, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router";
 import { toast } from "sonner";
@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/apis/axios";
 import curiosityTimesApi from "@/apis/curiosity_times";
+import parkingLotItemBatchRestorationsApi from "@/apis/parking_lot_item_batch_restorations";
+import parkingLotItemBatchesApi from "@/apis/parking_lot_item_batches";
 import parkingLotItemConversionsApi from "@/apis/parking_lot_item_conversions";
 import parkingLotItemRestorationsApi from "@/apis/parking_lot_item_restorations";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
@@ -55,6 +57,13 @@ const renderParkingLot = () =>
     undefined,
     routes.parkingLot,
   );
+
+// Sonner unmounts a toast on a 200 ms timer once its action is clicked. Waiting for that keeps the timer from firing
+// after the test file ends and jsdom is torn down, where React's state update crashes on the missing `window`.
+const clickToastAction = async (name: string, message: string) => {
+  await userEvent.click(screen.getByRole("button", { name }));
+  await waitForElementToBeRemoved(() => screen.queryByText(message));
+};
 
 describe("ParkingLot", () => {
   beforeEach(() => {
@@ -114,7 +123,8 @@ describe("ParkingLot", () => {
       { parkingLotItemId: item.id, isDuration: false, isAllDay: false, startsAt: null, endsAt: null },
       expect.anything(),
     );
-    await userEvent.click(await screen.findByRole("button", { name: "Open" }));
+    await screen.findByText("Added to your Inbox");
+    await clickToastAction("Open", "Added to your Inbox");
     expect(await screen.findByText("Inbox task")).toBeVisible();
   });
 
@@ -174,7 +184,7 @@ describe("ParkingLot", () => {
     expect(update).toHaveBeenCalledWith({ id: item.id, status: "addressed" }, expect.anything());
     expect(await screen.findByText("Marked as addressed")).toBeVisible();
 
-    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await clickToastAction("Undo", "Marked as addressed");
 
     expect(update).toHaveBeenLastCalledWith({ id: item.id, status: "parked" }, expect.anything());
   });
@@ -193,7 +203,7 @@ describe("ParkingLot", () => {
     expect(destroy).toHaveBeenCalledWith(item.id, expect.anything());
     expect(await screen.findByText("Let go")).toBeVisible();
 
-    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await clickToastAction("Undo", "Let go");
 
     await waitFor(() => expect(restore).toHaveBeenCalledWith(item.id, expect.anything()));
   });
@@ -237,5 +247,91 @@ describe("ParkingLot", () => {
     const list = await screen.findByRole("list", { name: "Added as tasks" });
 
     expect(within(list).getByRole("link", { name: "Open task" })).toHaveAttribute("href", `/inbox/${taskId}`);
+  });
+
+  describe("bulk actions", () => {
+    it("marks the selected thoughts addressed and can undo it", async () => {
+      const first = buildItem({ content: "Who wrote Dune?" });
+      const second = buildItem({ content: "Renew passport" });
+      stubList({ parked: [first, second, buildItem({ content: "Clean my scooter" })] });
+      const update = vi.spyOn(parkingLotItemBatchesApi, "update").mockResolvedValue({ parkingLotItems: [] });
+      renderParkingLot();
+
+      await userEvent.click(await screen.findByRole("checkbox", { name: "Select Who wrote Dune?" }));
+      await userEvent.click(screen.getByRole("checkbox", { name: "Select Renew passport" }));
+      const toolbar = screen.getByRole("toolbar", { name: "Bulk actions" });
+      expect(within(toolbar).getByText("2 thoughts selected")).toBeVisible();
+      expect(within(toolbar).getByRole("checkbox", { name: "Select all" })).toHaveAttribute(
+        "data-state",
+        "indeterminate",
+      );
+
+      await userEvent.click(within(toolbar).getByRole("button", { name: "Mark addressed" }));
+
+      expect(update).toHaveBeenCalledWith(
+        { ids: [first.id, second.id], status: "addressed" },
+        expect.anything(),
+      );
+      expect(await screen.findByText("2 thoughts marked as addressed")).toBeVisible();
+      expect(within(toolbar).getByText("Select all")).toBeVisible();
+
+      await clickToastAction("Undo", "2 thoughts marked as addressed");
+
+      expect(update).toHaveBeenLastCalledWith(
+        { ids: [first.id, second.id], status: "parked" },
+        expect.anything(),
+      );
+    });
+
+    it("lets go of every thought and can restore them", async () => {
+      const items = [buildItem(), buildItem({ content: "Renew passport" })];
+      stubList({ parked: items });
+      const destroy = vi.spyOn(parkingLotItemBatchesApi, "destroy").mockResolvedValue({} as never);
+      const restore = vi
+        .spyOn(parkingLotItemBatchRestorationsApi, "create")
+        .mockResolvedValue({ parkingLotItems: items });
+      renderParkingLot();
+
+      await userEvent.click(await screen.findByRole("checkbox", { name: "Select all" }));
+      for (const { content } of items) {
+        expect(screen.getByRole("checkbox", { name: `Select ${content}` })).toBeChecked();
+      }
+      const toolbar = screen.getByRole("toolbar", { name: "Bulk actions" });
+      await userEvent.click(within(toolbar).getByRole("button", { name: "Let it go" }));
+
+      const ids = items.map(({ id }) => id);
+      expect(destroy).toHaveBeenCalledWith(ids, expect.anything());
+      expect(await screen.findByText("Let go of 2 thoughts")).toBeVisible();
+
+      await clickToastAction("Undo", "Let go of 2 thoughts");
+
+      await waitFor(() => expect(restore).toHaveBeenCalledWith(ids, expect.anything()));
+    });
+
+    it("keeps the selection and shows the error when a bulk action fails", async () => {
+      stubList({ parked: [buildItem()] });
+      vi.spyOn(parkingLotItemBatchesApi, "destroy").mockRejectedValue(new ApiError(404, "Record not found."));
+      renderParkingLot();
+
+      await userEvent.click(await screen.findByRole("checkbox", { name: "Select Build an aeroplane" }));
+      const toolbar = screen.getByRole("toolbar", { name: "Bulk actions" });
+      await userEvent.click(within(toolbar).getByRole("button", { name: "Let it go" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Record not found.");
+      expect(screen.getByRole("checkbox", { name: "Select Build an aeroplane" })).toBeChecked();
+      expect(within(toolbar).getByRole("button", { name: "Let it go" })).toBeEnabled();
+    });
+
+    it("only offers Let it go for thoughts that aren't parked", async () => {
+      stubList({ addressed: [buildItem({ status: "addressed" })] });
+      renderParkingLot();
+
+      await userEvent.click(await screen.findByRole("tab", { name: "Addressed" }));
+      await userEvent.click(await screen.findByRole("checkbox", { name: "Select all" }));
+      const toolbar = screen.getByRole("toolbar", { name: "Bulk actions" });
+
+      expect(within(toolbar).getByRole("button", { name: "Let it go" })).toBeVisible();
+      expect(within(toolbar).queryByRole("button", { name: "Mark addressed" })).not.toBeInTheDocument();
+    });
   });
 });

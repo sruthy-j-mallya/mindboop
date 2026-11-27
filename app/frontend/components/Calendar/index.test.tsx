@@ -60,6 +60,7 @@ const TIME_LOG: TimeLog = {
   checkedRoutineStepIds: [],
   isFinishedEarly: false,
   currentBreak: null,
+  breaks: [],
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
 };
@@ -69,6 +70,7 @@ const PREFERENCE: UserPreference = {
   completionSound: "bell",
   breakAlarmSound: "classic",
   weekStartsOn: 1,
+  timeFormat: "12h",
 };
 
 const chooseView = async (view: string) => {
@@ -112,6 +114,35 @@ describe("Calendar", () => {
     expect(task.closest(".rbc-event")).toHaveClass("calendar-event-task");
     expect(screen.getByTitle("Answer emails").closest(".rbc-event")).toHaveClass("calendar-event-time-log");
     expect(fetchList).toHaveBeenLastCalledWith({ from: expect.any(String), to: expect.any(String) });
+  });
+
+  it("draws the breaks taken in a time log as waves in the time grid", async () => {
+    const breakStart = new Date(loggedAt.getTime() + 10 * 60_000);
+    vi.spyOn(calendarEventsApi, "fetchList").mockResolvedValue({
+      tasks: [],
+      timeLogs: [
+        {
+          ...TIME_LOG,
+          mode: "timer",
+          breaks: [
+            {
+              id: "break-1",
+              intention: "Stretch",
+              durationMinutes: 10,
+              startedAt: breakStart.toISOString(),
+              endsAt: new Date(breakStart.getTime() + 10 * 60_000).toISOString(),
+              endedAt: new Date(breakStart.getTime() + 10 * 60_000).toISOString(),
+            },
+          ],
+        },
+      ],
+    });
+    renderWithProviders(<Calendar />);
+    await chooseView("Day");
+
+    const wave = await screen.findByTitle("Stretch · 10 min");
+    expect(wave).toHaveTextContent("Break: Stretch · 10 min");
+    expect(wave).toHaveStyle({ top: `${(10 / 30) * 100}%`, height: `${(10 / 30) * 100}%` });
   });
 
   it("starts the week on the day picked in Settings", async () => {
@@ -163,7 +194,7 @@ describe("Calendar", () => {
 
     const event = (await screen.findByTitle("Plan the week")).closest<HTMLElement>(".rbc-event");
     await waitFor(() => expect(event).toHaveClass("calendar-event-area"));
-    expect(event?.style.getPropertyValue("--area-color")).toBe("#0f766e");
+    expect(event?.style.getPropertyValue("--area-color")).toBe("#3f716e");
   });
 
   it("moves a task to an area of life from its popover", async () => {
@@ -172,8 +203,7 @@ describe("Calendar", () => {
       .mockResolvedValue({ task: { ...TASK, lifeAreaId: LIFE_AREA.id } });
     const dialog = await openTask();
 
-    await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
-    await userEvent.click(await screen.findByRole("menuitem", { name: "Move to area" }));
+    await userEvent.click(await within(dialog).findByRole("button", { name: "Area of life: Inbox" }));
     await userEvent.click(await screen.findByRole("button", { name: "Work" }));
 
     await waitFor(() =>
@@ -181,17 +211,14 @@ describe("Calendar", () => {
     );
   });
 
-  it("hides an unset estimate until it's picked from the menu, and again when the picker is left", async () => {
+  it("offers an unset estimate, and keeps the popover when its picker is left", async () => {
     const dialog = await openTask({ ...TASK, estimatedMinutes: null });
 
-    expect(within(dialog).queryByRole("button", { name: "Estimate" })).not.toBeInTheDocument();
-    await userEvent.click(within(dialog).getByRole("button", { name: "More actions" }));
-    await userEvent.click(screen.getByRole("menuitem", { name: "Add estimate" }));
+    await userEvent.click(await within(dialog).findByRole("button", { name: "Estimate" }));
     expect(await screen.findByLabelText("Hours")).toBeInTheDocument();
 
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByLabelText("Hours")).not.toBeInTheDocument());
-    expect(screen.queryByRole("button", { name: "Estimate" })).not.toBeInTheDocument();
     expect(screen.getByRole("dialog", { name: "Edit task" })).toBeInTheDocument();
   });
 

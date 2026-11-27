@@ -30,7 +30,8 @@ const FinishedDialog = ({ isFinishedEarly, timeLogId, onClose }: FinishedDialogP
     return () => clearTimeout(timeout);
   }, [isFadeDue]);
 
-  const handlePointerEnter = () => setIsHovered(true);
+  // Moving, not entering: the dialog opens under the pointer that just ended the session, which isn't a hover.
+  const handlePointerMove = () => setIsHovered(true);
   const handlePointerLeave = () => setIsHovered(false);
 
   const description = <DialogDescription>You did the thing you said you&apos;d do.</DialogDescription>;
@@ -44,7 +45,7 @@ const FinishedDialog = ({ isFinishedEarly, timeLogId, onClose }: FinishedDialogP
           isFadingAway && "data-[state=closed]:duration-700",
         )}
         onCloseAutoFocus={onClose}
-        onPointerEnter={handlePointerEnter}
+        onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
       >
         <DialogHeader className="text-left">

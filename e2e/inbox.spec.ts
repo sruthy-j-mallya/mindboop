@@ -33,7 +33,7 @@ const addTasks = async (page: Page, titles: string[]) => {
 test("add tasks to the Inbox, open one, and complete it", async ({ page }) => {
   await signUp(page);
 
-  await page.getByRole("link", { name: "Areas of life" }).click();
+  await page.getByRole("link", { name: "Tasks", exact: true }).click();
   await expect(page).toHaveURL("/inbox");
   await expect(page.getByText("Your Inbox is empty")).toBeVisible();
 
@@ -143,4 +143,56 @@ test("rename a task from its pane", async ({ page }) => {
 
   await page.reload();
   await expect(page.getByRole("textbox", { name: "Task title" })).toHaveValue("Cancel the gym membership");
+});
+
+test("reopen a completed task and restore a deleted one from their pages", async ({ page }) => {
+  await signUp(page);
+  await page.goto("/inbox");
+  await addTasks(page, ["Cancel the gym", "Sort the mail"]);
+  const nav = page.getByRole("navigation", { name: "Areas of life" });
+
+  await page.getByRole("checkbox", { name: "Complete Cancel the gym" }).click();
+  await expectTasks(page, ["Sort the mail"]);
+  await page.getByRole("textbox", { name: "Sort the mail" }).hover();
+  await page.getByRole("button", { name: "Delete Sort the mail" }).click();
+  await expect(page.getByText("Your Inbox is empty")).toBeVisible();
+
+  await nav.getByRole("link", { name: "Completed" }).click();
+  await page.getByRole("button", { name: "Reopen Cancel the gym" }).click();
+  await expect(page.getByText("Nothing completed yet")).toBeVisible();
+
+  await nav.getByRole("link", { name: "Trash" }).click();
+  await page.getByRole("button", { name: "Restore Sort the mail" }).click();
+  await expect(page.getByText("Restored “Sort the mail” to your Inbox")).toBeVisible();
+  await expect(page.getByText("Trash is empty")).toBeVisible();
+
+  await nav.getByRole("link", { name: "Inbox" }).click();
+  await expectTasks(page, ["Sort the mail", "Cancel the gym"]);
+});
+
+test("open a link in a task's title in a new tab, and still edit the title", async ({ page, context }) => {
+  await signUp(page);
+  await page.goto("/inbox");
+
+  const title = "Read https://example.com/";
+  await addTasks(page, [title]);
+
+  const list = page.getByRole("list", { name: "Tasks" });
+  const link = list.getByRole("link", { name: "https://example.com/" });
+  await expect(link).toHaveAttribute("target", "_blank");
+
+  // Stub the address so the test doesn't reach the internet.
+  await context.route("https://example.com/**", (route) => route.fulfill({ body: "Example" }));
+  const [popup] = await Promise.all([context.waitForEvent("page"), link.click()]);
+  await expect(popup).toHaveURL("https://example.com/");
+  await popup.close();
+
+  // Clicking the words rather than the link edits the title.
+  await list.getByText("Read").click();
+  const input = list.getByRole("textbox", { name: title });
+  await expect(input).toBeFocused();
+  await input.press("End");
+  await input.pressSequentially(" again");
+  await input.press("Enter");
+  await expect(list.getByRole("textbox", { name: `${title} again` })).toBeVisible();
 });

@@ -31,28 +31,30 @@ const Login = () => {
     <AuthCard
       error={error?.message}
       title="Sign in"
-      footer={
-        <>
-          <TextLink to={routes.passwords.new}>Forgot password?</TextLink>
-          <TextLink to={routes.signup.new}>Create an account</TextLink>
-        </>
-      }
+      description="Pick one thing, give it your focus, and leave yourself a trail back."
+      footer={<TextLink to={routes.signup.new}>Create an account</TextLink>}
       onSubmit={handleSubmit(handleLogin)}
     >
       <FormField
+        autoFocus
         autoComplete="username"
         error={errors.emailAddress?.message}
         label="Email"
         type="email"
         {...register("emailAddress")}
       />
-      <FormField
-        autoComplete="current-password"
-        error={errors.password?.message}
-        label="Password"
-        type="password"
-        {...register("password")}
-      />
+      <div className="grid gap-1.5">
+        <FormField
+          autoComplete="current-password"
+          error={errors.password?.message}
+          label="Password"
+          type="password"
+          {...register("password")}
+        />
+        <p className="text-right text-sm">
+          <TextLink to={routes.passwords.new}>Forgot password?</TextLink>
+        </p>
+      </div>
       <Button disabled={isPending} type="submit">
         Sign in
       </Button>

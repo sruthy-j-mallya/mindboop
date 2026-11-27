@@ -1,4 +1,5 @@
 import type { Breadcrumb } from "@/apis/types";
+import useDatePreferences from "@/hooks/useDatePreferences";
 
 import { formatBreadcrumbTime } from "./utils";
 
@@ -6,6 +7,8 @@ type BreadcrumbsProps = { breadcrumbs: Breadcrumb[] };
 
 // The notes left on each bail out, newest first, as a timeline: a yellow rail with a dot per breadcrumb.
 const Breadcrumbs = ({ breadcrumbs }: BreadcrumbsProps) => {
+  const { timeFormat } = useDatePreferences();
+
   if (breadcrumbs.length === 0) return null;
 
   return (
@@ -35,7 +38,7 @@ const Breadcrumbs = ({ breadcrumbs }: BreadcrumbsProps) => {
                 className="rounded-lg bg-brand-yellow px-2 py-0.5 text-xs font-semibold text-brand-purple-dark"
                 dateTime={createdAt}
               >
-                {formatBreadcrumbTime(createdAt)}
+                {formatBreadcrumbTime(createdAt, timeFormat)}
               </time>
               <dl className="flex flex-col gap-1.5 text-sm">
                 <div>

@@ -69,13 +69,7 @@ const Step = ({ id, text, isDone, showCheckbox, onRename, onToggle, onRemove, on
         <GripVertical />
       </Button>
       {showCheckbox && (
-        <Checkbox
-          data-step-focus
-          aria-label={text}
-          checked={isDone}
-          className="border-muted-foreground/50"
-          onCheckedChange={handleCheckedChange}
-        />
+        <Checkbox data-step-focus aria-label={text} checked={isDone} onCheckedChange={handleCheckedChange} />
       )}
       {isEditing ? (
         <EditStep
@@ -102,7 +96,8 @@ const Step = ({ id, text, isDone, showCheckbox, onRename, onToggle, onRemove, on
       )}
       <Button
         aria-label={`Remove ${text}`}
-        className="text-muted-foreground"
+        // With a mouse, it shows on hover or focus to keep the list calm; touch screens always show it.
+        className="text-muted-foreground group-focus-within:opacity-100 group-hover:opacity-100 pointer-fine:opacity-0"
         size="icon-sm"
         type="button"
         variant="ghost"

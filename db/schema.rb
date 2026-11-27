@@ -327,7 +327,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_120001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "week_starts_on", default: 1, null: false
-    t.string "color_theme", default: "pebble", null: false
     t.string "time_format", default: "12h", null: false
     t.index ["user_id"], name: "index_user_preferences_on_user_id", unique: true
   end

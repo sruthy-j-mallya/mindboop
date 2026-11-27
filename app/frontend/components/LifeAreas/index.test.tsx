@@ -89,6 +89,7 @@ describe("LifeAreas", () => {
         completionSound: "bell",
         breakAlarmSound: "classic",
         weekStartsOn: 1,
+        timeFormat: "12h",
       },
     });
     vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({ timeLog: null });
@@ -132,7 +133,13 @@ describe("LifeAreas", () => {
       within(nav)
         .getAllByRole("link")
         .map((link) => link.textContent),
-    ).toEqual(["Inbox", expect.stringContaining("Work"), expect.stringContaining("Health")]);
+    ).toEqual([
+      "Inbox",
+      "Completed",
+      "Trash",
+      expect.stringContaining("Work"),
+      expect.stringContaining("Health"),
+    ]);
     expect(within(nav).queryByRole("list", { name: "Suggested areas" })).not.toBeInTheDocument();
     expect(within(nav).getByRole("button", { name: "Add an area" })).toBeInTheDocument();
     expect(within(nav).queryByRole("button", { name: "Suggested areas" })).not.toBeInTheDocument();
@@ -403,12 +410,8 @@ describe("LifeAreas", () => {
     expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Inbox", "Health"]);
     await userEvent.click(screen.getByRole("option", { name: "Health" }));
 
-    vi.mocked(lifeAreasApi.fetchList).mockImplementation(async () => {
-      // A refresh takes a moment, as over a network; the router moves to the new list before it's in.
-      await new Promise((resolve) => setTimeout(resolve, 20));
-
-      return { lifeAreas: [health] };
-    });
+    // At once, so the list can refresh before the router has moved to the new one.
+    vi.mocked(lifeAreasApi.fetchList).mockResolvedValue({ lifeAreas: [health] });
     await clickDelete(dialog);
 
     expect(destroy).toHaveBeenCalledWith({ id: work.id, tasksLifeAreaId: health.id }, expect.anything());
@@ -491,8 +494,7 @@ describe("LifeAreas", () => {
     renderLifeAreas(generatePath(routes.inbox.show, { taskId: task.id }));
 
     const pane = await screen.findByRole("article");
-    await userEvent.click(within(pane).getByRole("button", { name: "More actions" }));
-    await userEvent.click(await screen.findByRole("menuitem", { name: "Move to area" }));
+    await userEvent.click(await within(pane).findByRole("button", { name: "Area of life: Inbox" }));
     const picker = await screen.findByRole("dialog", { name: "Areas of life" });
     expect(within(picker).getByRole("button", { name: "Inbox" })).toHaveAttribute("aria-pressed", "true");
     await userEvent.click(within(picker).getByRole("button", { name: "Work" }));

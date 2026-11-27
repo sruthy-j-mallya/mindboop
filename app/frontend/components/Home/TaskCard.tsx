@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 
 import { Link } from "react-router";
 
+import ListSkeleton from "@/components/commons/ListSkeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -30,6 +31,7 @@ const TaskCard = ({ title, titlePath, tasks, emptyMessage, renderTask }: TaskCar
               title
             )}
           </h2>
+          {!tasks && <ListSkeleton rows={3} />}
           {tasks?.length === 0 && <p className="text-sm text-muted-foreground">{emptyMessage}</p>}
           {!!shownTasks?.length && (
             <ul aria-labelledby={headingId} className="flex flex-col divide-y">

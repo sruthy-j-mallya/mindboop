@@ -55,6 +55,7 @@ const AreaForm = ({ initialValues, submitLabel, isSubmitting, error, onSubmit, c
       <ChoiceField legend="Colour" options={COLOR_OPTIONS} registration={register("color")} />
       <EmojiField color={color} error={errors.emoji?.message} field={emojiField} />
       <ChoiceField
+        hasLabels
         hint="Plays when you start a session on one of the area’s tasks. Pick one to hear a few seconds."
         legend="Background sound"
         options={SOUND_OPTIONS}

@@ -3,8 +3,8 @@ module Api
     before_action :set_task, only: %i[ show update destroy ]
 
     def index
-      tasks = Tasks::FilterService.new(policy_scope(Task).kept, params.slice(*Tasks::FilterService::FILTERS)).process
-      @pagy, @tasks = pagy(tasks.includes(:checklist_items, :breadcrumbs).by_due_date)
+      tasks = Tasks::FilterService.new(listed_tasks, params.slice(*Tasks::FilterService::FILTERS)).process
+      @pagy, @tasks = pagy(in_order(tasks.includes(:checklist_items, :breadcrumbs)))
     end
 
     def show
@@ -27,6 +27,27 @@ module Api
     end
 
     private
+      # Deleted tasks are listed only on their own.
+      def listed_tasks
+        tasks = policy_scope(Task)
+        only_deleted? ? tasks.discarded : tasks.kept
+      end
+
+      # A list of only deleted or completed tasks is for finding one again, so the latest comes first.
+      def in_order(tasks)
+        return tasks.by_latest_deletion if only_deleted?
+
+        only_completed? ? tasks.by_latest_change : tasks.by_due_date
+      end
+
+      def only_deleted?
+        ActiveModel::Type::Boolean.new.cast(params[:is_deleted])
+      end
+
+      def only_completed?
+        ActiveModel::Type::Boolean.new.cast(params[:is_completed])
+      end
+
       def set_task
         @task = Task.kept.includes(:checklist_items, :breadcrumbs).find(params[:id])
         authorize @task

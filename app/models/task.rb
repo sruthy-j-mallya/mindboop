@@ -3,10 +3,18 @@ class Task < ApplicationRecord
 
   MAX_DESCRIPTION_LENGTH = 10_000
   MAX_ESTIMATED_MINUTES = 24 * 60
+  # A task is scheduled from now on; only time logs go back in time. A timed start may sit in the quarter hour now falls
+  # in, as on the Calendar, plus a little clock skew. An all-day start is midnight where the user is, which the server
+  # doesn't know, so it may be up to a day back.
+  TIMED_START_GRACE = 20.minutes
+  ALL_DAY_START_GRACE = 1.day
 
   # Soonest due first, undated tasks last; ties go to the newest task. id breaks created_at ties, so a task can't repeat
   # or go missing across pages.
   scope :by_due_date, -> { order(arel_table[:starts_at].asc.nulls_last, created_at: :desc, id: :desc) }
+  # Most recently changed first, the order completed tasks are listed in. id breaks ties.
+  scope :by_latest_change, -> { order(updated_at: :desc, id: :desc) }
+  scope :by_latest_deletion, -> { order(discarded_at: :desc, id: :desc) }
   # Scheduled tasks that overlap `from...to`. A task with only a date reaches a day past it, which covers the estimate the
   # Calendar draws it with.
   scope :scheduled_between, ->(from, to) {
@@ -56,6 +64,8 @@ class Task < ApplicationRecord
   validates :ends_at, presence: true, if: :is_duration
   validates :ends_at, absence: true, unless: :is_duration
   validates :ends_at, comparison: { greater_than_or_equal_to: :starts_at }, if: -> { starts_at? && ends_at? }
+  # Only a new or moved start is checked, so an overdue task can still be edited, completed or stretched at its end.
+  validate :starts_at_is_not_in_the_past, if: -> { starts_at? && starts_at_changed? }
   validate :life_area_belongs_to_user, if: :life_area_id?
   validate :life_area_is_not_deleted, if: -> { life_area_id? && life_area_id_changed? }
 
@@ -63,6 +73,11 @@ class Task < ApplicationRecord
   before_discard :stop_running_session
 
   private
+    def starts_at_is_not_in_the_past
+      grace = is_all_day ? ALL_DAY_START_GRACE : TIMED_START_GRACE
+      errors.add(:starts_at, "can't be in the past") if starts_at < Time.current - grace
+    end
+
     # An unknown area and another user's read the same, so an id gives nothing away.
     def life_area_belongs_to_user
       errors.add(:life_area, "must exist") if life_area&.user_id != user_id

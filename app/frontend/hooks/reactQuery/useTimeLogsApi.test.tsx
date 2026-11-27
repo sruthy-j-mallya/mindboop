@@ -29,6 +29,7 @@ const TIME_LOG: TimeLog = {
   checkedRoutineStepIds: [],
   isFinishedEarly: false,
   currentBreak: null,
+  breaks: [],
   createdAt: "2026-11-05T10:00:00.000Z",
   updatedAt: "2026-11-05T10:00:00.000Z",
 };

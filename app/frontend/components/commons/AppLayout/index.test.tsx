@@ -7,8 +7,8 @@ import currentTimeLogsApi from "@/apis/current_time_logs";
 import lifeAreasApi from "@/apis/life_areas";
 import parkingLotItemsApi from "@/apis/parking_lot_items";
 import routinesApi from "@/apis/routines";
-import sessionsApi from "@/apis/sessions";
-import type { Routine, TimeLog } from "@/apis/types";
+import tasksApi from "@/apis/tasks";
+import type { Routine, Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
 import { playSound } from "@/components/commons/Ambience/utils";
 import AppLayout from "@/components/commons/AppLayout";
@@ -45,6 +45,7 @@ const TIME_LOG: TimeLog = {
   checkedRoutineStepIds: [],
   isFinishedEarly: false,
   currentBreak: null,
+  breaks: [],
   createdAt: STARTED_AT,
   updatedAt: STARTED_AT,
 };
@@ -76,12 +77,59 @@ describe("AppLayout", () => {
         completionSound: "rising",
         breakAlarmSound: "classic",
         weekStartsOn: 1,
+        timeFormat: "12h",
       },
     });
     vi.spyOn(routinesApi, "fetchList").mockResolvedValue({ routines: [] });
   });
 
   afterEach(() => document.documentElement.classList.remove("dark"));
+
+  it("names the page in the browser's tab", async () => {
+    renderWithProviders(<AppLayout />, undefined, routes.calendar);
+
+    await waitFor(() => expect(document.title).toBe("Calendar · Mindboop"));
+  });
+
+  it("leads the tab's title with a session's time left", async () => {
+    vi.mocked(currentTimeLogsApi.show).mockResolvedValue({
+      timeLog: { ...TIME_LOG, isRunning: false, currentRunStartedAt: null, accumulatedElapsedSeconds: 60 },
+    });
+    renderWithProviders(<AppLayout />, undefined, "/areas/some-area");
+
+    await waitFor(() => expect(document.title).toBe("24:00 · Tasks · Mindboop"));
+  });
+
+  describe("on phones", () => {
+    beforeEach(() => vi.stubGlobal("innerWidth", 390));
+
+    afterEach(() => vi.stubGlobal("innerWidth", 1024));
+
+    it("has a bar of the main pages, with the rest in the sidebar under More", async () => {
+      renderWithProviders(<AppLayout />, undefined, "/areas/some-area");
+
+      const bar = within(await screen.findByRole("navigation", { name: "Main pages" }));
+      expect(bar.getByRole("link", { name: "Tasks" })).toHaveAttribute("aria-current", "page");
+      expect(bar.getByRole("link", { name: "Tasks" })).toHaveAttribute("href", routes.inbox.index);
+      expect(bar.getByRole("link", { name: "Routines" })).toHaveAttribute("href", routes.routines.index);
+      expect(bar.queryByRole("link", { name: "Calendar" })).not.toBeInTheDocument();
+
+      await userEvent.click(bar.getByRole("button", { name: "More" }));
+
+      expect(await screen.findByRole("link", { name: "Settings" })).toBeVisible();
+    });
+
+    it("shows the parked count on the Parking lot link", async () => {
+      vi.mocked(parkingLotItemsApi.fetchList).mockResolvedValue(listWithCount(3));
+      renderWithProviders(<AppLayout />, undefined, routes.calendar);
+
+      const bar = within(await screen.findByRole("navigation", { name: "Main pages" }));
+      expect(await bar.findByRole("link", { name: "Parking lot (3 parked)" })).toHaveAttribute(
+        "href",
+        routes.parkingLot,
+      );
+    });
+  });
 
   it("reminds about a routine once on its day, with a way to start it", async () => {
     localStorage.removeItem("routines.remindedOn");
@@ -121,6 +169,7 @@ describe("AppLayout", () => {
         completionSound: "rising",
         breakAlarmSound: "classic",
         weekStartsOn: 1,
+        timeFormat: "12h",
       },
     });
 
@@ -146,19 +195,53 @@ describe("AppLayout", () => {
 
     expect(content.getAllByRole("link").map((link) => link.textContent)).toEqual([
       "Home",
-      "Areas of life",
+      "Tasks",
       "Calendar",
       "Routines",
       "Timer",
       "Parking lot",
     ]);
     expect(content.getByRole("link", { name: "Home" })).toHaveAttribute("href", routes.root);
-    expect(content.getByRole("link", { name: "Areas of life" })).toHaveAttribute("href", routes.inbox.index);
+    expect(content.getByRole("link", { name: "Tasks" })).toHaveAttribute("href", routes.inbox.index);
     expect(content.getByRole("link", { name: "Calendar" })).toHaveAttribute("href", routes.calendar);
     expect(content.getByRole("link", { name: "Timer" })).toHaveAttribute("href", routes.timer);
     expect(content.getByRole("link", { name: "Parking lot" })).toHaveAttribute("href", routes.parkingLot);
     expect(footer.getByRole("link", { name: "Settings" })).toHaveAttribute("href", routes.settings);
     expect(screen.getAllByRole("link", { name: "Settings" })).toHaveLength(1);
+  });
+
+  it("opens the search with its shortcut", async () => {
+    renderWithProviders(<AppLayout />);
+
+    await userEvent.keyboard("{Meta>}k{/Meta}");
+
+    expect(await screen.findByRole("dialog", { name: "Search tasks" })).toBeVisible();
+  });
+
+  it("adds a task to the Inbox from any page with a shortcut", async () => {
+    const create = vi.spyOn(tasksApi, "create").mockResolvedValue({ task: { id: "t" } as Task });
+    renderWithProviders(<AppLayout />, undefined, routes.calendar);
+
+    await userEvent.keyboard("{Alt>}[KeyN]{/Alt}");
+    const dialog = within(await screen.findByRole("dialog", { name: "New task" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Add" }));
+    expect(await dialog.findByRole("alert")).toHaveTextContent("Say what you want to get done");
+
+    await userEvent.type(dialog.getByRole("textbox", { name: "Title" }), "Call the bank{Enter}");
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(create).toHaveBeenCalledWith({ title: "Call the bank", lifeAreaId: null }, expect.anything());
+    expect(await screen.findByText("Added to your Inbox")).toBeVisible();
+  });
+
+  it("leaves the shortcut's keys alone while typing", async () => {
+    renderWithProviders(<AppLayout />);
+    await userEvent.click(screen.getByRole("button", { name: "Search" }));
+    await userEvent.click(await screen.findByRole("combobox", { name: "Search tasks" }));
+
+    await userEvent.keyboard("{Alt>}[KeyN]{/Alt}");
+
+    expect(screen.queryByRole("dialog", { name: "New task" })).not.toBeInTheDocument();
   });
 
   it("opens the search from the sidebar", async () => {
@@ -227,15 +310,6 @@ describe("AppLayout", () => {
 
     const { container: collapsed } = renderWithProviders(<AppLayout />);
     expect(collapsed.querySelector('[data-slot="sidebar"]')).toHaveAttribute("data-state", "collapsed");
-  });
-
-  it("signs out from the sidebar footer", async () => {
-    const destroy = vi.spyOn(sessionsApi, "destroy").mockResolvedValue(undefined as never);
-    renderWithProviders(<AppLayout />);
-
-    await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
-
-    await waitFor(() => expect(destroy).toHaveBeenCalled());
   });
 
   describe("with a session on the clock", () => {
@@ -362,6 +436,27 @@ describe("AppLayout", () => {
       await userEvent.click(within(session).getByRole("link", { name: "Back to timer" }));
 
       expect(screen.queryByRole("region", { name: "Current session" })).not.toBeInTheDocument();
+    });
+
+    it("names what's on the clock in the mini timer, and says when it's paused", async () => {
+      vi.spyOn(currentTimeLogsApi, "show").mockResolvedValue({
+        timeLog: {
+          ...TIME_LOG,
+          taskTitle: "Write the report",
+          isRunning: false,
+          currentBreak: {
+            id: crypto.randomUUID(),
+            intention: "Snack",
+            durationMinutes: 10,
+            endsAt: new Date(Date.now() + 600_000).toISOString(),
+          },
+        },
+      });
+      renderWithProviders(<AppLayout />, undefined, routes.inbox.index);
+
+      const session = await screen.findByRole("region", { name: "Current session" });
+      expect(within(session).getByText("Write the report")).toBeVisible();
+      expect(within(session).getByText("Paused")).toBeVisible();
     });
 
     it("keeps the background sound playing across pages", async () => {

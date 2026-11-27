@@ -12,14 +12,15 @@ const PREFERENCE: UserPreference = {
   completionSound: "rising",
   breakAlarmSound: "classic",
   weekStartsOn: 1,
+  timeFormat: "12h",
 };
 
-const renderPicker = async (preference: Partial<UserPreference> = {}) => {
+const renderPicker = async (preference: Partial<UserPreference> = {}, onSave = vi.fn()) => {
   vi.spyOn(userPreferencesApi, "show").mockResolvedValue({
     userPreference: { ...PREFERENCE, ...preference },
   });
   renderWithProviders(
-    <SchedulePicker onSave={vi.fn()}>
+    <SchedulePicker onSave={onSave}>
       <button type="button">Schedule</button>
     </SchedulePicker>,
   );
@@ -32,7 +33,30 @@ const firstWeekday = async (container: HTMLElement) =>
 
 describe("SchedulePicker", () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
+  });
+
+  it("offers no days before today", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 12, 10, 20));
+    await renderPicker();
+
+    expect(await screen.findByRole("button", { name: /November 11th, 2026/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /November 12th, 2026/ })).toBeEnabled();
+  });
+
+  it("won't save a time earlier today", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 12, 10, 20));
+    const onSave = vi.fn();
+    await renderPicker({}, onSave);
+
+    await userEvent.type(await screen.findByRole("combobox", { name: "Time" }), "9am{Enter}");
+    await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Tasks can only be scheduled from now on");
+    expect(onSave).not.toHaveBeenCalled();
   });
 
   it("starts the week on Monday by default", async () => {

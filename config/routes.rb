@@ -15,6 +15,7 @@ Rails.application.routes.draw do
       resources :time_logs, only: :index, controller: "routine_time_logs"
       resources :steps, only: %i[ create update destroy ], controller: "routine_steps"
     end
+    resource :onboarding, only: :show
     resources :quick_starts, only: :create
     resources :time_logs, only: %i[ create update destroy ] do
       resource :completion, only: :create, controller: "time_log_completions"
@@ -31,6 +32,10 @@ Rails.application.routes.draw do
     resources :parking_lot_items, only: %i[ index create update destroy ] do
       resource :conversion, only: :create, controller: "parking_lot_item_conversions"
       resource :restoration, only: :create, controller: "parking_lot_item_restorations"
+    end
+    # Bulk actions on the Parking lot page: `ids` names the items.
+    resource :parking_lot_item_batch, only: %i[ update destroy ] do
+      resource :restoration, only: :create, controller: "parking_lot_item_batch_restorations"
     end
   end
 

@@ -18,7 +18,7 @@ test("park thoughts during a session, then deal with them on the Parking lot pag
 
   await page.getByRole("textbox", { name: "Task" }).fill("Write the report");
   await page.getByRole("button", { name: "10 min" }).click();
-  await page.getByRole("button", { name: "Begin" }).click();
+  await page.getByRole("button", { name: "Start", exact: true }).click();
   await expect(page).toHaveURL("/timer");
 
   const parkingLot = page.getByRole("region", { name: "Parking lot" });
@@ -71,4 +71,41 @@ test("park thoughts during a session, then deal with them on the Parking lot pag
   await page.getByRole("tab", { name: "Added as tasks" }).click();
   await page.getByRole("link", { name: "Open task" }).click();
   await expect(page.getByRole("heading", { name: "Clean my scooter" })).toBeVisible();
+});
+
+test("mark several thoughts addressed, then let them all go", async ({ page }) => {
+  await signUp(page);
+  await page.goto("/parking-lot");
+
+  const input = page.getByRole("textbox", { name: "Thought to park" });
+  const parked = page.getByRole("list", { name: "Parked" });
+  for (const thought of ["Build an aeroplane", "Renew passport", "Who wrote Dune?"]) {
+    await input.fill(thought);
+    await input.press("Enter");
+    await expect(parked.getByText(thought)).toBeVisible();
+  }
+
+  await page.getByRole("checkbox", { name: "Select Build an aeroplane" }).check();
+  await page.getByRole("checkbox", { name: "Select Who wrote Dune?" }).check();
+  const toolbar = page.getByRole("toolbar", { name: "Bulk actions" });
+  await expect(toolbar).toContainText("2 thoughts selected");
+  await toolbar.getByRole("button", { name: "Mark addressed" }).click();
+  await expect(page.getByText("2 thoughts marked as addressed")).toBeVisible();
+  await expect(parked.getByRole("listitem")).toHaveText([/Renew passport/]);
+
+  await page.getByRole("tab", { name: "Addressed" }).click();
+  const addressed = page.getByRole("list", { name: "Addressed" });
+  await expect(addressed.getByRole("listitem")).toHaveCount(2);
+  await page.getByRole("checkbox", { name: "Select all" }).check();
+  await toolbar.getByRole("button", { name: "Let it go" }).click();
+  await expect(page.getByText("Let go of 2 thoughts")).toBeVisible();
+  await expect(page.getByText("Thoughts you mark as addressed land here.")).toBeVisible();
+
+  // The earlier toast may still be up, so pick the Undo on this one.
+  await page
+    .getByRole("listitem")
+    .filter({ hasText: "Let go of 2 thoughts" })
+    .getByRole("button", { name: "Undo" })
+    .click();
+  await expect(addressed.getByRole("listitem")).toHaveCount(2);
 });
