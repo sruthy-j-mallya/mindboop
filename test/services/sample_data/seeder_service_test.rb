@@ -43,6 +43,7 @@ class SampleData::SeederServiceTest < ActiveSupport::TestCase
     assert tasks.where(is_completed: false).by_latest_breadcrumb.exists?, "a task to pick up"
     assert ChecklistItem.discarded.exists?(task: demo.tasks), "a deleted step"
     assert demo.life_areas.discarded.exists?, "a deleted area"
+    assert RoutineStep.kept.exists?(routine: demo.routines), "a routine with steps"
   end
 
   def test_that_the_demo_user_covers_the_session_scenarios

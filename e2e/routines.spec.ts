@@ -71,3 +71,46 @@ test("add a routine from an idea, run it, see it counted, then edit and delete i
   await expect(list.getByRole("link", { name: /Evening meditation/ })).toBeHidden();
   await expect(list.getByRole("link", { name: /Shower/ })).toBeVisible();
 });
+
+test("build a routine's checklist, tick it off on the Timer, and start fresh next time", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("link", { name: "Routines" }).click();
+  await page.getByRole("button", { name: /Shower/ }).click();
+  await page.getByRole("button", { name: /^Add 1 routine/ }).click();
+  await page
+    .getByRole("list", { name: "Routines" })
+    .getByRole("link", { name: /Shower/ })
+    .click();
+
+  await page.getByRole("button", { name: "Add step" }).click();
+  await page.getByRole("textbox", { name: "New step" }).fill("Wash hair");
+  await page.keyboard.press("Enter");
+  await page.getByRole("textbox", { name: "New step" }).fill("Moisturise");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Escape");
+  const steps = page.getByRole("list", { name: "Steps" });
+  await expect(steps.getByRole("button", { name: "Edit Moisturise" })).toBeVisible();
+  await expect(steps.getByRole("checkbox")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(page).toHaveURL("/timer");
+  await page.getByRole("checkbox", { name: "Wash hair" }).click();
+  await expect(page.getByText("1 of 2 done")).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: "Wash hair" })).toBeChecked();
+
+  await page.getByRole("button", { name: "Discard" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: /^Discard/ })
+    .click();
+  await page.getByRole("link", { name: "Routines" }).click();
+  await page
+    .getByRole("list", { name: "Routines" })
+    .getByRole("link", { name: /Shower/ })
+    .click();
+  await page.getByRole("button", { name: "Start", exact: true }).click();
+  await expect(page.getByRole("checkbox", { name: "Wash hair" })).not.toBeChecked();
+  await expect(page.getByText("0 of 2 done")).toBeVisible();
+});

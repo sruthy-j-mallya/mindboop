@@ -30,6 +30,7 @@ class Routine < ApplicationRecord
   # Routines are only soft deleted, so their sessions keep them; a hard delete goes with the user.
   has_many :time_logs, dependent: :destroy
   has_many :finished_time_logs, -> { kept.where.not(completed_at: nil) }, class_name: "TimeLog"
+  has_many :steps, -> { kept.in_position_order }, class_name: "RoutineStep", inverse_of: :routine
 
   validates :title, presence: true, length: { maximum: MAX_TITLE_LENGTH }
   validates :emoji, inclusion: { in: LifeArea::EMOJIS }

@@ -100,7 +100,7 @@ const Session = ({ timeLog, isCompleting, completionError, onDone }: SessionProp
           task ? (
             <TaskDetails isOnTimer isTitleHidden task={task} />
           ) : (
-            routineId && <RoutineDetails routineId={routineId} />
+            routineId && <RoutineDetails timeLog={timeLog} />
           )
         }
       >

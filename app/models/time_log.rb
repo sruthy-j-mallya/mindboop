@@ -161,6 +161,18 @@ class TimeLog < ApplicationRecord
     task_id? && completed_at? && !is_bailed_out? && timer? && timer_preset? && accumulated_elapsed_seconds < timer_preset.minutes.to_i
   end
 
+  # Ticks one of the routine's steps off for this session. A step of another routine, or a deleted one, isn't found.
+  # Locked, so two quick ticks don't overwrite each other.
+  def check_routine_step!(step_id)
+    step = RoutineStep.kept.find_by!(id: step_id, routine_id:)
+    with_lock { update!(checked_routine_step_ids: checked_routine_step_ids | [ step.id ]) }
+  end
+
+  # Unticks a step, even one deleted since, so a session never keeps a tick it can't take back.
+  def uncheck_routine_step!(step_id)
+    with_lock { update!(checked_routine_step_ids: checked_routine_step_ids - [ step_id ]) }
+  end
+
   private
     # An unknown routine and another user's read the same, so an id gives nothing away.
     def routine_belongs_to_user

@@ -57,6 +57,7 @@ const TIME_LOG: TimeLog = {
   currentRunStartedAt: null,
   startedAt: loggedAt.toISOString(),
   completedAt: new Date(loggedAt.getTime() + 30 * 60_000).toISOString(),
+  checkedRoutineStepIds: [],
   isFinishedEarly: false,
   currentBreak: null,
   breaks: [],

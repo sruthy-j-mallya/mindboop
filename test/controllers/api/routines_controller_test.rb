@@ -16,6 +16,9 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_that_index_returns_the_users_kept_routines_oldest_first_with_stats
+    second_step, first_step = create_list(:routine_step, 2, routine: @routine)
+    first_step.move_to!(0)
+    create(:routine_step, routine: @routine).discard!
     newer = create(:routine, user: @user)
     create(:routine, user: @user).discard!
     create(:time_log, :routine, routine: @routine, started_at: 1.hour.ago, completed_at: 50.minutes.ago,
@@ -28,9 +31,12 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
     routines = response.parsed_body["routines"]
     assert_equal [ @routine.id, newer.id ], routines.pluck("id")
     assert_equal %w[
-      id title emoji color sound duration_minutes reminder_time reminder_days sessions_count total_seconds last_done_at
-      created_at updated_at
+      id title emoji color sound duration_minutes reminder_time reminder_days steps sessions_count total_seconds
+      last_done_at created_at updated_at
     ].sort, routines.first.keys.sort
+    assert_equal [ { "id" => first_step.id, "title" => first_step.title }, { "id" => second_step.id, "title" => second_step.title } ],
+      routines.first["steps"]
+    assert_equal [], routines.second["steps"]
     assert_equal [ 1, 600 ], routines.first.values_at("sessions_count", "total_seconds")
     assert_equal [ 0, 0, nil ], routines.second.values_at("sessions_count", "total_seconds", "last_done_at")
   end

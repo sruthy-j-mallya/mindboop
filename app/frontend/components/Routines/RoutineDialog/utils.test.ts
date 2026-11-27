@@ -14,6 +14,7 @@ const ROUTINE: Routine = {
   durationMinutes: 15,
   reminderTime: null,
   reminderDays: [],
+  steps: [],
   sessionsCount: 0,
   totalSeconds: 0,
   lastDoneAt: null,

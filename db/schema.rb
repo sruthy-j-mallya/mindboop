@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_26_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -87,6 +87,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_130000) do
     t.index ["task_id"], name: "index_parking_lot_items_on_task_id"
     t.index ["time_log_id"], name: "index_parking_lot_items_on_time_log_id"
     t.index ["user_id"], name: "index_parking_lot_items_on_user_id"
+  end
+
+  create_table "routine_steps", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "routine_id", null: false
+    t.string "title", null: false
+    t.integer "position", null: false
+    t.datetime "discarded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["routine_id", "position"], name: "index_routine_steps_on_routine_id_and_position"
   end
 
   create_table "routines", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -301,6 +311,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_130000) do
     t.uuid "user_id", null: false
     t.string "title"
     t.uuid "routine_id"
+    t.uuid "checked_routine_step_ids", default: [], null: false, array: true
     t.index ["discarded_at"], name: "index_time_logs_on_discarded_at"
     t.index ["routine_id"], name: "index_time_logs_on_routine_id"
     t.index ["task_id"], name: "index_time_logs_on_task_id"
@@ -336,6 +347,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_130000) do
   add_foreign_key "parking_lot_items", "tasks", on_delete: :nullify
   add_foreign_key "parking_lot_items", "time_logs", on_delete: :nullify
   add_foreign_key "parking_lot_items", "users"
+  add_foreign_key "routine_steps", "routines", on_delete: :cascade
   add_foreign_key "routines", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade

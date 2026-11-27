@@ -35,6 +35,7 @@ const TIME_LOG: TimeLog = {
   currentRunStartedAt: STARTED_AT,
   startedAt: STARTED_AT,
   completedAt: null,
+  checkedRoutineStepIds: [],
   isFinishedEarly: false,
   currentBreak: null,
   breaks: [],

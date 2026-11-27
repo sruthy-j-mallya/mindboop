@@ -13,6 +13,7 @@ Rails.application.routes.draw do
     resources :life_areas, only: %i[ index create update destroy ]
     resources :routines, only: %i[ index create update destroy ] do
       resources :time_logs, only: :index, controller: "routine_time_logs"
+      resources :steps, only: %i[ create update destroy ], controller: "routine_steps"
     end
     resource :onboarding, only: :show
     resources :quick_starts, only: :create
@@ -22,6 +23,7 @@ Rails.application.routes.draw do
       resource :bail_out, only: :create, controller: "time_log_bail_outs"
       resource :restoration, only: :create, controller: "time_log_restorations"
       resource :break, only: %i[ create update ]
+      resources :step_checks, only: %i[ create destroy ], param: :routine_step_id, controller: "time_log_step_checks"
     end
     resource :current_time_log, only: :show
     resources :calendar_events, only: :index

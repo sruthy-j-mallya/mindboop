@@ -16,6 +16,7 @@ import tasksApi from "@/apis/tasks";
 import timeLogBailOutsApi from "@/apis/time_log_bail_outs";
 import timeLogCompletionsApi from "@/apis/time_log_completions";
 import timeLogExtensionsApi from "@/apis/time_log_extensions";
+import timeLogStepChecksApi from "@/apis/time_log_step_checks";
 import timeLogsApi from "@/apis/time_logs";
 import type { ParkingLotItem, Task, TimeLog } from "@/apis/types";
 import userPreferencesApi from "@/apis/user_preferences";
@@ -47,6 +48,7 @@ const TIME_LOG: TimeLog = {
   currentRunStartedAt: STARTED_AT,
   startedAt: STARTED_AT,
   completedAt: null,
+  checkedRoutineStepIds: [],
   isFinishedEarly: false,
   currentBreak: null,
   breaks: [],
@@ -159,6 +161,7 @@ describe("Timer", () => {
           durationMinutes: 10,
           reminderTime: null,
           reminderDays: [],
+          steps: [],
           sessionsCount: 0,
           totalSeconds: 0,
           lastDoneAt: null,
@@ -194,6 +197,58 @@ describe("Timer", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Discard timer" }));
 
     await waitFor(() => expect(destroy).toHaveBeenCalledWith(TIME_LOG.id, expect.anything()));
+  });
+
+  it("ticks a routine's steps off for this session", async () => {
+    const routineId = crypto.randomUUID();
+    const steps = [
+      { id: crypto.randomUUID(), title: "Make bed" },
+      { id: crypto.randomUUID(), title: "Drink a glass of water" },
+    ];
+    vi.spyOn(routinesApi, "fetchList").mockResolvedValue({
+      routines: [
+        {
+          id: routineId,
+          title: "Morning routine",
+          emoji: "🧘",
+          color: "violet",
+          sound: "none",
+          durationMinutes: 30,
+          reminderTime: null,
+          reminderDays: [],
+          steps,
+          sessionsCount: 0,
+          totalSeconds: 0,
+          lastDoneAt: null,
+          createdAt: STARTED_AT,
+          updatedAt: STARTED_AT,
+        },
+      ],
+    });
+    const timeLog = {
+      ...TIME_LOG,
+      taskId: null,
+      routineId,
+      routineTitle: "Morning routine",
+      checkedRoutineStepIds: [steps[0].id],
+    };
+    const create = vi
+      .spyOn(timeLogStepChecksApi, "create")
+      .mockResolvedValue({ timeLog: { ...timeLog, checkedRoutineStepIds: steps.map(({ id }) => id) } });
+    renderTimer(timeLog);
+
+    expect(await screen.findByRole("checkbox", { name: "Make bed" })).toBeChecked();
+    expect(screen.getByText("1 of 2 done")).toBeVisible();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Drink a glass of water" }));
+
+    await waitFor(() =>
+      expect(create).toHaveBeenCalledWith(
+        { timeLogId: TIME_LOG.id, routineStepId: steps[1].id },
+        expect.anything(),
+      ),
+    );
+    expect(await screen.findByText("2 of 2 done")).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: "Drink a glass of water" })).toBeChecked();
   });
 
   it("ends a routine's session without asking about a task", async () => {

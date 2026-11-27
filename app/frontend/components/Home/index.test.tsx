@@ -101,6 +101,7 @@ const runningOn = (taskId: string): TimeLog => {
     currentRunStartedAt: startedAt,
     startedAt,
     completedAt: null,
+    checkedRoutineStepIds: [],
     isFinishedEarly: false,
     currentBreak: null,
     breaks: [],
