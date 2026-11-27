@@ -11,6 +11,11 @@ module Api
       render json: { error: error.record.errors.full_messages.to_sentence }, status: :unprocessable_content
     end
 
+    # A missing or empty required param, such as the `ids` of a batch.
+    rescue_from ActionController::ParameterMissing do |error|
+      render json: { error: error.message }, status: :bad_request
+    end
+
     rescue_from ActiveRecord::RecordNotFound do
       render json: { error: "Record not found." }, status: :not_found
     end
