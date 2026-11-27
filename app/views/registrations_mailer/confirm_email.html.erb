@@ -1,6 +1,18 @@
-<p>
-  Confirm your email address and choose a password on
-  <%= link_to "this sign-up page", complete_signup_url(@token) %>.
+<% signup_url = complete_signup_url(@token) %>
+<% expires_in = distance_of_time_in_words(0, User::SIGNUP_TOKEN_EXPIRES_IN) %>
+<% content_for :preheader, "Confirm your email address and choose a password to finish signing up." %>
 
-  This link will expire in <%= distance_of_time_in_words(0, User::SIGNUP_TOKEN_EXPIRES_IN) %>.
-</p>
+<%= email_heading "Confirm your email" %>
+
+<%= email_paragraph do %>
+  Thanks for signing up for Mindboop! Confirm your email address and choose a password to finish setting up your
+  account.
+<% end %>
+
+<%= email_button "Confirm email and set password", signup_url %>
+
+<%= email_note do %>
+  This link expires in <%= expires_in %>. If you didn't sign up for Mindboop, you can ignore this email.
+<% end %>
+
+<%= email_fallback_link signup_url %>

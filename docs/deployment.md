@@ -24,14 +24,14 @@ The Dockerfile has three stages:
 
 Set these on the Railway app service.
 
-| Variable              | Value                                                               |
-| --------------------- | ------------------------------------------------------------------- |
-| `DATABASE_URL`        | `${{Postgres.DATABASE_URL}}` (Railway reference variable)           |
-| `RAILS_MASTER_KEY`    | Contents of `config/master.key`                                     |
-| `SOLID_QUEUE_IN_PUMA` | `1`                                                                 |
-| `APP_HOST`            | Public hostname, e.g. `app.example.com` (used in mail links)        |
-| `MAILER_FROM`         | Sender on a verified domain, e.g. `Mindboop <no-reply@example.com>` |
-| `RESEND_API_KEY`      | Resend API key with sending access                                  |
+| Variable              | Value                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| `DATABASE_URL`        | `${{Postgres.DATABASE_URL}}` (Railway reference variable)                              |
+| `RAILS_MASTER_KEY`    | Contents of `config/master.key`                                                        |
+| `SOLID_QUEUE_IN_PUMA` | `1`                                                                                    |
+| `APP_HOST`            | Public hostname, e.g. `app.example.com` (used in mail links)                           |
+| `MAILER_FROM`         | Sender address on a verified domain, e.g. `no-reply@example.com` (shown as "Mindboop") |
+| `RESEND_API_KEY`      | Resend API key with sending access                                                     |
 
 Railway sets `PORT`; Puma reads it. Production boot fails fast if `APP_HOST`, `MAILER_FROM` or `RESEND_API_KEY` is
 missing.
