@@ -39,7 +39,7 @@ const LifeAreas = () => {
   const [dragged, setDragged] = useState<DragData | null>(null);
   const isTaskOpen = !!useOpenTask().openTaskId;
   const moveTask = useMoveTask();
-  const moveArea = useMoveArea();
+  const { lifeAreas, moveArea } = useMoveArea();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_DISTANCE } }),
     useSensor(KeyboardSensor, { coordinateGetter: getKeyboardCoordinates }),
@@ -68,7 +68,7 @@ const LifeAreas = () => {
     >
       <div className="flex flex-1 flex-col lg:basis-0 lg:flex-row lg:overflow-hidden">
         {/* On narrow screens an open task takes the whole page, with a way back to its list. */}
-        <AreaNav className={isTaskOpen ? "max-lg:hidden" : undefined} />
+        <AreaNav className={isTaskOpen ? "max-lg:hidden" : undefined} lifeAreas={lifeAreas} />
         <Outlet />
       </div>
       <DragOverlay dropAnimation={null}>

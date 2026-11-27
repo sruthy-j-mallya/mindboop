@@ -16,18 +16,15 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import type { ApiError } from "@/apis/axios";
-import type { Routine } from "@/apis/types";
 import ListSkeleton from "@/components/commons/ListSkeleton";
 import { Button } from "@/components/ui/button";
 import { useMoveRoutine, useRoutines } from "@/hooks/reactQuery/useRoutinesApi";
+import useDroppedOrder from "@/hooks/useDroppedOrder";
 
 import NewRoutineDialog from "../RoutineDialog/New";
 import RoutineRow from "./RoutineRow";
 import Suggestions from "./Suggestions";
-import { orderByIds, ROUTINE_ANNOUNCEMENTS } from "./utils";
-
-// The order of a drop, kept until the routines it was made on change.
-type DroppedOrder = { ids: string[]; routines: Routine[] };
+import { ROUTINE_ANNOUNCEMENTS } from "./utils";
 
 type RoutineListProps = { className?: string };
 
@@ -37,14 +34,7 @@ const RoutineList = ({ className }: RoutineListProps) => {
   const { data: fetchedRoutines = [], isPending, error } = useRoutines();
   const { mutate: moveRoutine } = useMoveRoutine();
   const [showNewDialog, setShowNewDialog] = useState(false);
-  // The move's optimistic update reaches the list a moment after the drop (TanStack Query notifies on a timeout), and
-  // dnd-kit clears the row's offset at once, so the row would flash back to its old place first. Rendering the dropped
-  // order in the same render as the drop keeps it still; once the cache answers (or rolls back), its list wins.
-  const [droppedOrder, setDroppedOrder] = useState<DroppedOrder | null>(null);
-  const routines =
-    droppedOrder?.routines === fetchedRoutines
-      ? orderByIds(fetchedRoutines, droppedOrder.ids)
-      : fetchedRoutines;
+  const [routines, showMove] = useDroppedOrder(fetchedRoutines);
   // Read once per render, so "Today" and "Yesterday" agree across rows.
   const now = new Date();
 
@@ -64,8 +54,7 @@ const RoutineList = ({ className }: RoutineListProps) => {
     const position = routines.findIndex((routine) => routine.id === over.id);
     if (position === -1) return;
 
-    const ids = routines.map((routine) => routine.id).filter((routineId) => routineId !== id);
-    setDroppedOrder({ ids: ids.toSpliced(position, 0, id), routines: fetchedRoutines });
+    showMove(id, position);
     moveRoutine({ id, position }, { onError: handleMoveError });
   };
 
