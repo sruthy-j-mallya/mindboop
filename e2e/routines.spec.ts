@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { backdateSession, signupTokenFor } from "./helpers";
 
@@ -14,6 +14,50 @@ const signUp = async (page: Page) => {
 
   return email;
 };
+
+// Drags with the mouse in small steps, as dnd-kit only starts a drag once the pointer has moved a little.
+const drag = async (page: Page, from: Locator, to: Locator) => {
+  await from.hover();
+  await page.mouse.down();
+  const box = await to.boundingBox();
+  if (!box) throw new Error("No drop target on the page");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 12 });
+  await page.mouse.up();
+};
+
+test("put routines in order by dragging them, with the mouse or the keyboard", async ({ page }) => {
+  await signUp(page);
+
+  await page.getByRole("link", { name: "Routines" }).click();
+  for (const name of [/Shower/, /Meditation/, /Reading/]) await page.getByRole("button", { name }).click();
+  await page.getByRole("button", { name: "Add 3 routines" }).click();
+  const list = page.getByRole("list", { name: "Routines" });
+  const routineLink = (name: string) => list.getByRole("link").filter({ hasText: name });
+  const expectOrder = (names: string[]) => expect(list.getByRole("link")).toContainText(names);
+  await expectOrder(["Shower", "Meditation", "Reading"]);
+
+  await routineLink("Reading").hover();
+  const dragged = page.waitForResponse((response) => response.request().method() === "PATCH");
+  await drag(page, list.getByRole("button", { name: "Reorder Reading" }), routineLink("Shower"));
+  expect((await dragged).ok()).toBe(true);
+  await expectOrder(["Reading", "Shower", "Meditation"]);
+  await page.reload();
+  await expectOrder(["Reading", "Shower", "Meditation"]);
+
+  const announcement = page.getByRole("status").filter({ hasText: "Reading" });
+  await list.getByRole("button", { name: "Reorder Reading" }).focus();
+  await page.keyboard.press("Space");
+  await expect(announcement).toContainText("Picked up Reading");
+  // dnd-kit listens for keys a moment after the pick up, so the arrow is pressed until it's heard.
+  await expect(async () => {
+    await page.keyboard.press("ArrowDown");
+    await expect(announcement).toContainText("Reading moved over Shower.", { timeout: 300 });
+  }).toPass();
+  const saved = page.waitForResponse((response) => response.request().method() === "PATCH");
+  await page.keyboard.press("Space");
+  expect((await saved).ok()).toBe(true);
+  await expectOrder(["Shower", "Reading", "Meditation"]);
+});
 
 test("add a routine from an idea, run it, see it counted, then edit and delete it", async ({ page }) => {
   const email = await signUp(page);

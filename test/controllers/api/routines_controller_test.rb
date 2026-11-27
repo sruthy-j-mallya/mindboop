@@ -15,12 +15,13 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
-  def test_that_index_returns_the_users_kept_routines_oldest_first_with_stats
+  def test_that_index_returns_the_users_kept_routines_in_order_with_stats
     second_step, first_step = create_list(:routine_step, 2, routine: @routine)
     first_step.move_to!(0)
     create(:routine_step, routine: @routine).discard!
-    newer = create(:routine, user: @user)
     create(:routine, user: @user).discard!
+    newer = create(:routine, user: @user)
+    newer.move_to!(0)
     create(:time_log, :routine, routine: @routine, started_at: 1.hour.ago, completed_at: 50.minutes.ago,
       accumulated_elapsed_seconds: 600)
     sign_in @user
@@ -29,16 +30,16 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     routines = response.parsed_body["routines"]
-    assert_equal [ @routine.id, newer.id ], routines.pluck("id")
+    assert_equal [ newer.id, @routine.id ], routines.pluck("id")
     assert_equal %w[
       id title emoji color sound duration_minutes reminder_time reminder_days steps sessions_count total_seconds
       last_done_at created_at updated_at
-    ].sort, routines.first.keys.sort
+    ].sort, routines.second.keys.sort
     assert_equal [ { "id" => first_step.id, "title" => first_step.title }, { "id" => second_step.id, "title" => second_step.title } ],
-      routines.first["steps"]
-    assert_equal [], routines.second["steps"]
-    assert_equal [ 1, 600 ], routines.first.values_at("sessions_count", "total_seconds")
-    assert_equal [ 0, 0, nil ], routines.second.values_at("sessions_count", "total_seconds", "last_done_at")
+      routines.second["steps"]
+    assert_equal [], routines.first["steps"]
+    assert_equal [ 1, 600 ], routines.second.values_at("sessions_count", "total_seconds")
+    assert_equal [ 0, 0, nil ], routines.first.values_at("sessions_count", "total_seconds", "last_done_at")
   end
 
   def test_that_user_can_create_a_routine_with_a_reminder
@@ -88,6 +89,39 @@ class Api::RoutinesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     assert_equal [ @title, 25, nil ], @routine.reload.values_at(:title, :duration_minutes, :reminder_time)
+  end
+
+  def test_that_update_moves_the_routine_and_saves_its_fields
+    newer = create(:routine, user: @user)
+    sign_in @user
+
+    assert_no_changes -> { @other_routine.reload.position } do
+      patch api_routine_path(newer), params: { title: @title, position: 0 }, as: :json
+    end
+
+    assert_response :ok
+    assert_equal @title, newer.reload.title
+    assert_equal [ newer, @routine ], @user.routines.in_position_order.to_a
+  end
+
+  def test_that_update_saves_nothing_with_an_invalid_position
+    sign_in @user
+
+    patch api_routine_path(@routine), params: { title: @title, position: -1 }, as: :json
+
+    assert_response :unprocessable_content
+    assert_equal "Position must be a whole number of 0 or more", response.parsed_body["error"]
+    assert_not_equal @title, @routine.reload.title
+  end
+
+  def test_that_update_returns_403_when_moving_another_users_routine
+    sign_in @user
+
+    assert_no_changes -> { @other_routine.reload.position } do
+      patch api_routine_path(@other_routine), params: { position: 0 }, as: :json
+    end
+
+    assert_response :forbidden
   end
 
   def test_that_update_rejects_an_unknown_emoji

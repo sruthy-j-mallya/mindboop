@@ -124,6 +124,16 @@ describe("Routines", () => {
     expect(screen.queryByText("Ideas to start with")).not.toBeInTheDocument();
   });
 
+  it("gives each routine a handle to drag it into place", async () => {
+    renderRoutines([buildRoutine(), buildRoutine({ title: "Fold clothes" })]);
+
+    const [meditation, foldClothes] = within(
+      await screen.findByRole("list", { name: "Routines" }),
+    ).getAllByRole("listitem");
+    expect(within(meditation).getByRole("button", { name: "Reorder Meditation" })).toBeInTheDocument();
+    expect(within(foldClothes).getByRole("button", { name: "Reorder Fold clothes" })).toBeInTheDocument();
+  });
+
   it("adds a routine with a reminder on the days picked", async () => {
     const meditation = buildRoutine();
     const routine = buildRoutine({ title: "Shower" });

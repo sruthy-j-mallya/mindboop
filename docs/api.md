@@ -48,7 +48,7 @@ Every error response has one shape:
 | DELETE | `/api/life_areas/:id`                                      | `tasks_life_area_id` query param (optional)                                                         | 204, soft delete                    |
 | GET    | `/api/routines`                                            | –                                                                                                   | 200 `{ routines }`                  |
 | POST   | `/api/routines`                                            | Routine fields (see below)                                                                          | 201 `{ routine }`                   |
-| PATCH  | `/api/routines/:id`                                        | Routine fields (any)                                                                                | 200 `{ routine }`                   |
+| PATCH  | `/api/routines/:id`                                        | Routine fields and `position` (any)                                                                 | 200 `{ routine }`                   |
 | DELETE | `/api/routines/:id`                                        | –                                                                                                   | 204, soft delete                    |
 | GET    | `/api/routines/:routine_id/time_logs`                      | `from`, `to` query params (ISO 8601)                                                                | 200 `{ time_logs }`                 |
 | POST   | `/api/routines/:routine_id/steps`                          | `title`, `position` (optional)                                                                      | 201 `{ routine }`                   |
@@ -190,7 +190,7 @@ the Inbox.
 ## Routines
 
 Routines are timers a user starts again and again (a shower, meditation, folding clothes). `GET /api/routines` lists the
-signed-in user's undeleted routines, oldest first, unpaged, as `{ routines }`. Another user's routine gets a 403, and a
+signed-in user's undeleted routines in the order they set (a new one goes last), unpaged, as `{ routines }`. Another user's routine gets a 403, and a
 deleted or unknown one a 404.
 
 Each `routine` is `{ id, title, emoji, color, sound, duration_minutes, reminder_time, reminder_days, steps,
@@ -205,6 +205,8 @@ sessions_count, total_seconds, last_done_at, created_at, updated_at }` (`app/vie
   Reminders are shown by the client while the app is open.
 - `steps` is the routine's checklist, `[{ id, title }]` in order. It's read-only here; see Routine steps.
 - `sessions_count`, `total_seconds` and `last_done_at` count the routine's finished, undeleted sessions. They're read-only.
+- `position` (update only, write-only) is the index the routine lands on among the user's undeleted routines (0 first);
+  an index past the end puts it last. Anything but a whole number of 0 or more gets a 422 and nothing is saved.
 
 Anything else gets a 422. `DELETE /api/routines/:id` soft deletes the routine; its sessions stay, and keep its title on the
 Calendar.
