@@ -12,6 +12,8 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
+import useDroppedOrder from "@/hooks/useDroppedOrder";
+
 import DraftStep from "./DraftStep";
 import Step from "./Step";
 import type { StepsProps } from "./types";
@@ -19,7 +21,7 @@ import { STEP_ANNOUNCEMENTS } from "./utils";
 
 // Only shows the steps and reports changes; the caller decides where they're kept (form state or the API).
 const Steps = ({
-  steps,
+  steps: listedSteps,
   showCheckboxes = true,
   draft,
   onDraftChange,
@@ -30,6 +32,7 @@ const Steps = ({
   onMove,
 }: StepsProps) => {
   const listRef = useRef<HTMLUListElement>(null);
+  const [steps, showMove] = useDroppedOrder(listedSteps);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -38,10 +41,12 @@ const Steps = ({
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
 
-    onMove(
-      String(active.id),
-      steps.findIndex((step) => step.id === over.id),
-    );
+    const id = String(active.id);
+    const position = steps.findIndex((step) => step.id === over.id);
+    if (position === -1) return;
+
+    showMove(id, position);
+    onMove(id, position);
   };
 
   // The focused button goes away with its row, so focus moves to the next step's tick, or its text without ticks (or

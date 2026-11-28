@@ -85,4 +85,21 @@ class RoutineTest < ActiveSupport::TestCase
     assert_equal last.completed_at.to_i, stats[@routine.id].last_done_at.to_i
     assert_equal [ 0, 0, nil ], stats[other.id].values_at(:sessions_count, :total_seconds, :last_done_at)
   end
+
+  def test_that_a_new_routine_goes_last_within_its_user
+    newer = create(:routine, user: @routine.user)
+
+    assert_equal [ 0, 1 ], [ @routine, newer ].map(&:position)
+    assert_equal 0, create(:routine).position
+  end
+
+  def test_that_move_to_reorders_the_users_kept_routines
+    deleted, third = create_list(:routine, 2, user: @routine.user)
+    deleted.discard!
+
+    third.move_to!(0)
+
+    assert_equal [ third, @routine ], @routine.user.routines.kept.in_position_order.to_a
+    assert_equal 1, deleted.reload.position
+  end
 end

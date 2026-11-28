@@ -2,9 +2,10 @@ module Api
   class RoutinesController < BaseController
     before_action :set_routine, only: %i[ update destroy ]
 
-    # Not paged: a user keeps a handful of routines, and the page shows them all with their stats.
+    # Not paged: a user keeps a handful of routines, and the page shows them all with their stats, in the order the user
+    # set (a new one goes last).
     def index
-      @routines = policy_scope(Routine).kept.with_stats.preload(:steps).in_created_order
+      @routines = policy_scope(Routine).kept.with_stats.preload(:steps).in_position_order
     end
 
     def create
@@ -14,7 +15,10 @@ module Api
     end
 
     def update
-      @routine.update!(routine_params)
+      Routine.transaction do
+        @routine.update!(routine_params)
+        @routine.move_to!(params[:position]) if params.key?(:position)
+      end
       render :show
     end
 

@@ -2,6 +2,9 @@
 # one click. Nothing is ever due: a routine only counts what was done.
 class Routine < ApplicationRecord
   include Discard::Model
+  include Positionable
+
+  positioned_within :user_id
 
   MAX_TITLE_LENGTH = 60
   # A routine is worth a timer; quicker habits are out of scope.
@@ -10,8 +13,6 @@ class Routine < ApplicationRecord
   REMINDER_TIME_FORMAT = /\A([01]\d|2[0-3]):[0-5]\d\z/
   WEEKDAYS = (0..6)
 
-  # Oldest first, so a new routine goes at the bottom of the list.
-  scope :in_created_order, -> { order(:created_at, :id) }
   # Adds `sessions_count`, `total_seconds` and `last_done_at`, counting only finished, undeleted sessions.
   scope :with_stats, -> {
     left_outer_joins(:finished_time_logs).group(:id).select(

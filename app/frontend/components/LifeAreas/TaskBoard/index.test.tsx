@@ -308,7 +308,10 @@ describe("Inbox", () => {
       expect(update).toHaveBeenCalledWith({ id: task.id, isCompleted: true }, expect.anything()),
     );
     expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Book a dentist" })).not.toBeInTheDocument();
+    // The pane closes once the save settles, a moment after the refreshed list shows.
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: "Book a dentist" })).not.toBeInTheDocument(),
+    );
   });
 
   it("completes a task and closes its pane", async () => {
@@ -327,7 +330,8 @@ describe("Inbox", () => {
       expect(update).toHaveBeenCalledWith({ id: task.id, isCompleted: true }, expect.anything()),
     );
     expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Pay rent" })).not.toBeInTheDocument();
+    // The pane closes once the save settles, a moment after the refreshed list shows.
+    await waitFor(() => expect(screen.queryByRole("heading", { name: "Pay rent" })).not.toBeInTheDocument());
     expect(playCompletionSound).toHaveBeenCalledExactlyOnceWith("bell");
   });
 
@@ -367,7 +371,10 @@ describe("Inbox", () => {
 
     await waitFor(() => expect(destroy).toHaveBeenCalledWith(task.id, expect.anything()));
     expect(await screen.findByText("Your Inbox is empty")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Cancel the gym" })).not.toBeInTheDocument();
+    // The pane closes once the save settles, a moment after the refreshed list shows.
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: "Cancel the gym" })).not.toBeInTheDocument(),
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByText("Deleted “Cancel the gym”")).toBeInTheDocument();
   });

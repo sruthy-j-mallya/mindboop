@@ -8,6 +8,7 @@ import {
 import { cn } from "cn";
 import { CircleCheck, Plus, Trash2 } from "lucide-react";
 
+import type { LifeArea } from "@/apis/types";
 import { Button } from "@/components/ui/button";
 import { useLifeAreas } from "@/hooks/reactQuery/useLifeAreasApi";
 import { useTaskCounts } from "@/hooks/reactQuery/useTaskCountsApi";
@@ -23,14 +24,15 @@ import AreaItem from "./AreaItem";
 import InboxItem from "./InboxItem";
 import SuggestionPicker from "./SuggestionPicker";
 
-type AreaNavProps = { className?: string };
+// `lifeAreas` comes from the drag context, so a dropped area shows in its new place at once.
+type AreaNavProps = { lifeAreas: LifeArea[]; className?: string };
 
 // The Inbox, the completed and deleted tasks, then the areas in the user's order (changed by dragging), to switch between and drop tasks on (and to edit
 // or delete, from an area's right-click menu). A column on wide screens; on narrow ones the areas are a row that scrolls sideways. Until there are
 // areas, suggestions to pick from take their place.
-const AreaNav = ({ className }: AreaNavProps) => {
+const AreaNav = ({ lifeAreas, className }: AreaNavProps) => {
   const [isAdding, setIsAdding] = useState(false);
-  const { data: lifeAreas = [], isPending, error } = useLifeAreas();
+  const { isPending, error } = useLifeAreas();
   const { data: taskCounts = [] } = useTaskCounts();
   const isNarrow = useMediaQuery(NARROW_LAYOUT_QUERY);
   const isEmpty = !isPending && !error && lifeAreas.length === 0;

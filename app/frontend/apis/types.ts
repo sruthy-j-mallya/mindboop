@@ -333,7 +333,11 @@ export type CreateRoutinePayload = Pick<
   "title" | "emoji" | "color" | "sound" | "durationMinutes" | "reminderTime" | "reminderDays"
 >;
 
-export type UpdateRoutinePayload = Partial<CreateRoutinePayload> & Pick<Routine, "id">;
+// `position` is the index the routine lands on among the user's routines.
+export type UpdateRoutinePayload = Partial<CreateRoutinePayload> &
+  Pick<Routine, "id"> & { position?: number };
+
+export type MoveRoutinePayload = Pick<Routine, "id"> & { position: number };
 
 // `position` is the index the step lands on among the routine's steps; without it, a new step goes last.
 export type CreateRoutineStepPayload = Pick<RoutineStep, "title"> & { routineId: string; position?: number };
