@@ -1,13 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title><%= message.subject %></title>
+    <!--[if mso]>
+      <noscript>
+        <xml>
+          <o:OfficeDocumentSettings>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+          </o:OfficeDocumentSettings>
+        </xml>
+      </noscript>
+      <style>
+        table, td, h1, p, a { font-family: Arial, sans-serif !important; }
+      </style>
+    <![endif]-->
+    <%# Progressive enhancement only: every style that matters is inline, since many clients drop this block. %>
     <style>
-      /* Email styles need to be inline */
+      body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+      img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+      a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
+      @media only screen and (max-width: 620px) {
+        .email-content { padding: 28px 20px !important; }
+        .email-outer { padding: 16px 8px !important; }
+      }
     </style>
   </head>
 
-  <body>
-    <%= yield %>
+  <body style="margin: 0; padding: 0; background-color: <%= email_color(:background) %>;">
+    <% if content_for?(:preheader) %>
+      <%# The preview line inbox lists show after the subject; the trailing spacers stop clients padding it with body text. %>
+      <div style="display: none; max-height: 0; max-width: 0; overflow: hidden; opacity: 0; mso-hide: all; font-size: 1px; line-height: 1px; color: <%= email_color(:background) %>;">
+        <%= yield :preheader %><%= "&#847; &zwnj; &nbsp; ".html_safe * 30 %>
+      </div>
+    <% end %>
+
+    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="<%= email_color(:background) %>" style="background-color: <%= email_color(:background) %>;">
+      <tr>
+        <td align="center" class="email-outer" style="padding: 32px 16px;">
+          <!--[if mso]><table role="presentation" width="600" border="0" cellpadding="0" cellspacing="0" align="center"><tr><td><![endif]-->
+          <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto;">
+            <tr>
+              <td align="center" style="padding: 0 0 24px;">
+                <%= link_to root_url, target: "_blank", rel: "noopener", style: "text-decoration: none;" do %>
+                  <%= image_tag attachments["logo.png"].url, alt: "Mindboop", width: 72, height: 72,
+                        style: "display: block; width: 72px; height: 72px; margin: 0 auto; border: 0;" %>
+                  <span style="display: block; padding-top: 8px; font-family: <%= email_font_family %>; font-size: 20px; line-height: 28px; font-weight: 700; color: <%= email_color(:purple) %>;">Mindboop</span>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td bgcolor="<%= email_color(:card) %>" style="background-color: <%= email_color(:card) %>; border: 1px solid <%= email_color(:border) %>; border-top: 4px solid <%= email_color(:coral) %>; border-radius: 12px;">
+                <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td class="email-content" style="padding: 36px 40px; text-align: left;">
+                      <%= yield %>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 24px 16px 0; font-family: <%= email_font_family %>; font-size: 12px; line-height: 18px; color: <%= email_color(:muted) %>;">
+                This email was sent by
+                <%= link_to "Mindboop", root_url, style: "color: #{email_color(:muted)}; text-decoration: underline;" %>
+                to <%= message.to&.first %>.
+              </td>
+            </tr>
+          </table>
+          <!--[if mso]></td></tr></table><![endif]-->
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
